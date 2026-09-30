@@ -1,0 +1,377 @@
+import logging
+import smtplib
+import ssl
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from typing import Optional, Union
+from datetime import datetime
+from app.config import settings
+from app.utils.timezone import format_ist_datetime, format_ist_time
+
+logger = logging.getLogger(__name__)
+
+class EmailService:
+    def __init__(self):
+        self.enabled = True
+
+    def _send_email_via_resend(self, to_email: str, subject: str, html_content: str) -> bool:
+        """Transmits email via Resend HTTP REST API over Port 443 (bypasses all cloud SMTP firewall blocks)."""
+        try:
+            import httpx
+            from_addr = f"{settings.EMAILS_FROM_NAME} <{settings.EMAILS_FROM_EMAIL}>"
+            # If using free Resend default domain, fallback to onboarding@resend.dev if custom domain not verified
+            if "gmail.com" in settings.EMAILS_FROM_EMAIL.lower() and not getattr(settings, "RESEND_FROM_EMAIL", None):
+                from_addr = f"{settings.EMAILS_FROM_NAME} <onboarding@resend.dev>"
+            elif hasattr(settings, "RESEND_FROM_EMAIL") and getattr(settings, "RESEND_FROM_EMAIL", None):
+                from_addr = getattr(settings, "RESEND_FROM_EMAIL")
+
+            res = httpx.post(
+                "https://api.resend.com/emails",
+                headers={
+                    "Authorization": f"Bearer {settings.RESEND_API_KEY}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "from": from_addr,
+                    "to": [to_email],
+                    "subject": subject,
+                    "html": html_content
+                },
+                timeout=12.0
+            )
+            if res.status_code in (200, 201):
+                logger.info(f"⚡ Real Resend HTTP API (Port 443) email delivered to {to_email}")
+                print(f"⚡ Real Resend HTTP API (Port 443) email delivered to {to_email}")
+                return True
+            else:
+                logger.warning(f"⚠️ Resend HTTP API rejected with status {res.status_code}: {res.text}")
+                print(f"⚠️ Resend HTTP API rejected with status {res.status_code}: {res.text}")
+                return False
+        except Exception as e:
+            logger.warning(f"⚠️ Resend HTTP API exception: {e}")
+            print(f"⚠️ Resend HTTP API exception: {e}")
+            return False
+
+    def _send_email_via_sendgrid(self, to_email: str, subject: str, html_content: str) -> bool:
+        """Transmits email via SendGrid HTTP API over Port 443."""
+        try:
+            import httpx
+            res = httpx.post(
+                "https://api.sendgrid.com/v3/mail/send",
+                headers={
+                    "Authorization": f"Bearer {settings.SENDGRID_API_KEY}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "personalizations": [{"to": [{"email": to_email}]}],
+                    "from": {"email": settings.EMAILS_FROM_EMAIL, "name": settings.EMAILS_FROM_NAME},
+                    "subject": subject,
+                    "content": [{"type": "text/html", "value": html_content}]
+                },
+                timeout=12.0
+            )
+            if res.status_code in (200, 202):
+                logger.info(f"⚡ Real SendGrid HTTP API (Port 443) email delivered to {to_email}")
+                print(f"⚡ Real SendGrid HTTP API (Port 443) email delivered to {to_email}")
+                return True
+            else:
+                logger.warning(f"⚠️ SendGrid HTTP API rejected with status {res.status_code}: {res.text}")
+                print(f"⚠️ SendGrid HTTP API rejected with status {res.status_code}: {res.text}")
+                return False
+        except Exception as e:
+            logger.warning(f"⚠️ SendGrid HTTP API exception: {e}")
+            return False
+
+    def _send_smtp_email(self, to_email: str, subject: str, html_content: str):
+        """Transmits HTML email via Resend HTTP API (primary for Render) or SMTP server."""
+        # 1. Primary for Cloud: Resend HTTP REST API (Never blocked by cloud firewalls on Render/Vercel)
+        if getattr(settings, "RESEND_API_KEY", None):
+            if self._send_email_via_resend(to_email, subject, html_content):
+                return True
+
+        # 2. Secondary HTTP: SendGrid API
+        if getattr(settings, "SENDGRID_API_KEY", None):
+            if self._send_email_via_sendgrid(to_email, subject, html_content):
+                return True
+
+        # 3. Direct SMTP Server (SSL 465 then STARTTLS 587)
+        if settings.SMTP_HOST and settings.SMTP_USER and settings.SMTP_PASSWORD and not to_email.endswith("@aegeus.edu"):
+            msg = MIMEMultipart("alternative")
+            msg["Subject"] = subject
+            msg["From"] = f"{settings.EMAILS_FROM_NAME} <{settings.EMAILS_FROM_EMAIL}>"
+            msg["To"] = to_email
+            msg.attach(MIMEText(html_content, "html"))
+            
+            # Primary Attempt: SSL Port 465
+            try:
+                context = ssl.create_default_context()
+                with smtplib.SMTP_SSL(settings.SMTP_HOST, 465, context=context, timeout=30) as server:
+                    server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+                    server.send_message(msg)
+                logger.info(f"[SUCCESS] Real SMTP SSL (Port 465) email transmitted to {to_email}")
+                print(f"[SUCCESS] Real SMTP SSL (Port 465) email transmitted to {to_email}")
+                return True
+            except Exception as primary_err:
+                logger.warning(f"[WARNING] Primary SSL 465 failed ({primary_err}), attempting STARTTLS 587 fallback...")
+                print(f"[WARNING] Primary SSL 465 failed ({primary_err}), attempting STARTTLS 587 fallback...")
+                try:
+                    # Fallback Attempt: STARTTLS Port 587
+                    with smtplib.SMTP(settings.SMTP_HOST, 587, timeout=30) as server:
+                        server.starttls()
+                        server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+                        server.send_message(msg)
+                    logger.info(f"[SUCCESS] Fallback STARTTLS (Port 587) email transmitted to {to_email}")
+                    print(f"[SUCCESS] Fallback STARTTLS (Port 587) email transmitted to {to_email}")
+                    return True
+                except Exception as fallback_err:
+                    logger.error(
+                        f"[ERROR] Cloud Email Delivery Alert: Outbound SMTP blocked on server for {to_email}. "
+                        f"Errors: SSL 465={primary_err}, STARTTLS 587={fallback_err}. "
+                        f"NOTE: Render Free Tier blocks outbound SMTP ports 25/465/587 by default. "
+                        f"To enable email delivery on Render, add RESEND_API_KEY (free at resend.com) to your Render Environment Variables."
+                    )
+                    print(
+                        f"[ERROR] Cloud Email Delivery Alert: Outbound SMTP blocked on server for {to_email}. "
+                        f"Render Free Tier blocks outbound SMTP ports 25/465/587. "
+                        f"Set RESEND_API_KEY in Render Environment Variables for instant HTTPS delivery."
+                    )
+                    return False
+        else:
+            if not to_email.endswith("@aegeus.edu"):
+                logger.warning(
+                    f"[WARNING] SMTP credentials not configured. Missing SMTP_HOST ('{settings.SMTP_HOST}') or SMTP_USER ('{settings.SMTP_USER}'). "
+                    f"Set RESEND_API_KEY or SMTP credentials in your Render Environment Variables."
+                )
+            return False
+
+    def send_student_authorization_email(self, student_name: str, email: str, verification_token: str, roll_number: Optional[str] = None):
+        """Dispatches an authorization email requesting the student to verify their account or authorize with Google."""
+        verify_url = f"{settings.FRONTEND_URL}/verify-student?token={verification_token}"
+        subject = "Action Required: Authorize Your Testora Quiz Student Account"
+        
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #F7F4EF; padding: 24px; color: #242321;">
+            <div style="max-width: 580px; margin: 0 auto; background: #ffffff; border-radius: 12px; padding: 32px; border: 1px solid #E5E0D8;">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+                    <div style="background-color: #C84B18; color: #ffffff; padding: 8px 12px; border-radius: 8px; font-weight: bold; font-size: 16px;">Testora Quiz</div>
+                    <span style="font-size: 12px; color: #716D67;">Academic Authorization Portal</span>
+                </div>
+
+                <h2 style="color: #242321; margin-top: 0; font-size: 20px; font-weight: 700;">Authorize Your Student Account</h2>
+                <p style="font-size: 14px; line-height: 1.6;">Hello <b>{student_name}</b>,</p>
+                <p style="font-size: 14px; line-height: 1.6;">Your teacher has enrolled you into the institutional student directory. Please authorize your email to activate your account and generate your secure portal access password.</p>
+                
+                <div style="background-color: #F0ECE4; border: 1px solid #E5E0D8; border-radius: 8px; padding: 16px; margin: 20px 0; font-size: 13px;">
+                    <p style="margin: 4px 0;"><b>Enrolled Email:</b> <span style="color: #C84B18; font-family: monospace;">{email}</span></p>
+                    {f'<p style="margin: 4px 0;"><b>Roll Number:</b> {roll_number}</p>' if roll_number else ''}
+                    <p style="margin: 4px 0;"><b>Status:</b> <span style="color: #D97706; font-weight: 600;">Pending Authorization</span></p>
+                </div>
+                
+                <div style="margin: 28px 0; text-align: center;">
+                    <a href="{verify_url}" style="display: inline-block; background-color: #C84B18; color: #ffffff; padding: 12px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px; margin-bottom: 12px;">Authorize Student Account</a>
+                    <div style="margin-top: 8px;">
+                        <span style="font-size: 12px; color: #716D67;">or authorize instantly with your Google Workspace account:</span>
+                    </div>
+                    <a href="{verify_url}&provider=google" style="display: inline-block; background-color: #ffffff; color: #374151; padding: 10px 20px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 13px; border: 1px solid #D1D5DB; margin-top: 8px;">
+                        Sign in & Authorize with Google
+                    </a>
+                </div>
+                
+                <p style="font-size: 12px; color: #716D67; line-height: 1.5;">Once authorized, a unique secure password will automatically be generated and delivered to your inbox for direct email sign-in.</p>
+                
+                <hr style="border: none; border-top: 1px solid #E5E0D8; margin-top: 28px;" />
+                <p style="font-size: 11px; color: #716D67; margin-bottom: 0;">Testora Quiz Autonomous Examination System • Verification Request</p>
+            </div>
+        </body>
+        </html>
+        """
+        
+        logger.info(f"📧 [AUTHORIZATION EMAIL] Sent authorization email to {student_name} (email={email})")
+        self._send_smtp_email(email, subject, html_content)
+
+    def send_student_credentials_email(self, student_name: str, email: str, password: str):
+        """Dispatches generated student portal password after authorization is completed."""
+        portal_url = settings.FRONTEND_URL
+        subject = "Your Testora Quiz Student Portal Password & Credentials"
+        
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #F7F4EF; padding: 24px; color: #242321;">
+            <div style="max-width: 580px; margin: 0 auto; background: #ffffff; border-radius: 12px; padding: 32px; border: 1px solid #E5E0D8;">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+                    <div style="background-color: #059669; color: #ffffff; padding: 8px 12px; border-radius: 8px; font-weight: bold; font-size: 16px;">Verified</div>
+                    <span style="font-size: 12px; color: #716D67;">Testora Quiz Student Portal</span>
+                </div>
+
+                <h2 style="color: #242321; margin-top: 0; font-size: 20px; font-weight: 700;">Account Authorized Successfully!</h2>
+                <p style="font-size: 14px; line-height: 1.6;">Hello <b>{student_name}</b>,</p>
+                <p style="font-size: 14px; line-height: 1.6;">Your student account is now fully verified. Your secure student portal password has been generated below:</p>
+                
+                <div style="background-color: #F0ECE4; border: 1px solid #E5E0D8; border-radius: 8px; padding: 20px; margin: 20px 0; font-size: 14px;">
+                    <p style="margin: 6px 0;"><b>Portal Login Email:</b> <span style="color: #C84B18; font-family: monospace; font-size: 15px;">{email}</span></p>
+                    <p style="margin: 6px 0;"><b>Generated Password:</b> <span style="color: #047857; font-family: monospace; font-size: 17px; font-weight: bold; background: #ECFDF5; padding: 3px 8px; border-radius: 4px; border: 1px solid #A7F3D0;">{password}</span></p>
+                </div>
+                
+                <p style="font-size: 13px; line-height: 1.6;">You can sign in anytime using your email and generated password, or by clicking <b>"Continue with Google"</b> with your authorized email address:</p>
+                
+                <div style="margin: 24px 0; text-align: center;">
+                    <a href="{portal_url}" style="display: inline-block; background-color: #C84B18; color: #ffffff; padding: 12px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;">Sign in to Student Portal</a>
+                </div>
+                
+                <hr style="border: none; border-top: 1px solid #E5E0D8; margin-top: 28px;" />
+                <p style="font-size: 11px; color: #716D67; margin-bottom: 0;">Testora Quiz Autonomous Examination System • Confidential Access Credentials</p>
+            </div>
+        </body>
+        </html>
+        """
+        
+        logger.info(f"📧 [CREDENTIALS EMAIL] Dispatched generated credentials to {student_name} (email={email})")
+        self._send_smtp_email(email, subject, html_content)
+
+    def send_password_reset_email(self, user_name: str, email: str, reset_token: str):
+        """Dispatches a password reset recovery email containing a secure tokenized reset link."""
+        reset_url = f"{settings.FRONTEND_URL}/reset-password?token={reset_token}"
+        subject = "Testora Quiz — Password Reset Request"
+        
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head><meta charset="utf-8"></head>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #F7F4EF; padding: 24px; color: #242321;">
+            <div style="max-width: 580px; margin: 0 auto; background: #ffffff; border-radius: 12px; padding: 32px; border: 1px solid #E5E0D8;">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+                    <div style="background-color: #C84B18; color: #ffffff; padding: 8px 12px; border-radius: 8px; font-weight: bold; font-size: 16px;">Testora Quiz</div>
+                    <span style="font-size: 12px; color: #716D67;">Password Recovery</span>
+                </div>
+
+                <h2 style="color: #242321; margin-top: 0; font-size: 20px; font-weight: 700;">Password Reset Request</h2>
+                <p style="font-size: 14px; line-height: 1.6;">Hello <b>{user_name}</b>,</p>
+                <p style="font-size: 14px; line-height: 1.6;">We received a request to reset your password. Click the secure button below to set a new password for your account:</p>
+                
+                <div style="margin: 24px 0; text-align: center;">
+                    <a href="{reset_url}" style="display: inline-block; background-color: #C84B18; color: #ffffff; padding: 12px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;">Reset Account Password</a>
+                </div>
+                
+                <p style="font-size: 12px; color: #716D67;">Or copy and paste this link in your browser: <br/><span style="font-family: monospace; font-size: 11px; word-break: break-all;">{reset_url}</span></p>
+                
+                <hr style="border: none; border-top: 1px solid #E5E0D8; margin-top: 28px;" />
+                <p style="font-size: 11px; color: #716D67; margin-bottom: 0;">Testora Quiz Autonomous Examination System • If you did not request this, please ignore this email.</p>
+            </div>
+        </body>
+        </html>
+        """
+        
+        logger.info(f"📧 [PASSWORD RESET EMAIL] Dispatched reset link email to {user_name} (email={email})")
+        self._send_smtp_email(email, subject, html_content)
+
+    def send_student_welcome_email(self, student_name: str, email: str, password: str, roll_number: Optional[str] = None):
+        """Legacy helper maintained for backward compatibility."""
+        self.send_student_credentials_email(student_name, email, password)
+
+    def send_exam_credentials_email(
+        self, 
+        student_name: str, 
+        email: str, 
+        exam_name: str, 
+        exam_code: str, 
+        username: str, 
+        password: str,
+        start_time: Optional[Union[datetime, str]] = None,
+        end_time: Optional[Union[datetime, str]] = None
+    ):
+        """Dispatches an automated email to student containing test link, exam username, passcode PIN, and IST schedule."""
+        exam_link = f"{settings.FRONTEND_URL}/exam/{exam_code}"
+        subject = f"Exam Notification & Access Credentials — {exam_name}"
+        
+        schedule_html = ""
+        if start_time:
+            start_str = format_ist_datetime(start_time)
+            end_str = format_ist_datetime(end_time) if end_time else None
+            schedule_html = f"""
+            <div style="background-color: #FEF3C7; border: 1px solid #FDE68A; border-radius: 8px; padding: 12px 16px; margin: 15px 0; font-size: 13px;">
+                <p style="margin: 3px 0; color: #92400E; font-weight: bold;">Official Schedule (Indian Standard Time - IST):</p>
+                <p style="margin: 3px 0; color: #78350F;"><b>Starts:</b> {start_str}</p>
+                {f'<p style="margin: 3px 0; color: #78350F;"><b>Ends:</b> {end_str}</p>' if end_str else ''}
+            </div>
+            """
+        
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <body style="font-family: Arial, sans-serif; background-color: #FAF7F2; padding: 20px; color: #1C1917;">
+            <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; padding: 30px; border: 1px solid #E7E0D3;">
+                <h2 style="color: #9A3412; margin-top: 0;">Secured Exam Credentials & Portal Link</h2>
+                <p>Hello <b>{student_name}</b>,</p>
+                <p>You have been enrolled for the examination: <b>{exam_name}</b> (Code: <b style="color: #9A3412;">{exam_code}</b>).</p>
+                
+                {schedule_html}
+
+                <div style="background-color: #FBF9F5; border: 1px solid #E7E0D3; border-radius: 12px; padding: 20px; margin: 20px 0;">
+                    <p style="margin: 5px 0;"><b>Exam Session Username:</b> <span style="color: #9A3412; font-family: monospace; font-size: 16px;">{username}</span></p>
+                    <p style="margin: 5px 0;"><b>Exam Passcode / PIN:</b> <span style="color: #047857; font-family: monospace; font-size: 16px; background: #ECFDF5; padding: 2px 8px; border-radius: 4px;">{password}</span></p>
+                    <p style="margin: 5px 0;"><b>Exam Code:</b> {exam_code}</p>
+                </div>
+                
+                <p>Click the link below to enter the secure exam gateway when your exam window opens:</p>
+                <p><a href="{exam_link}" style="display: inline-block; background: #9A3412; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 10px; font-weight: bold;">Open Exam Portal Link</a></p>
+                
+                <hr style="border: none; border-top: 1px solid #E7E0D3; margin-top: 30px;" />
+                <p style="font-size: 11px; color: #78716C;">Testora Quiz Proctoring Portal • Confidential Student Credentials • All Times in Indian Standard Time (IST)</p>
+            </div>
+        </body>
+        </html>
+        """
+        
+        logger.info(f"📧 [EMAIL DISPATCHED] Exam credentials email dispatched for candidate {student_name} (email={email}, exam_code={exam_code}, username={username})")
+        self._send_smtp_email(email, subject, html_content)
+
+    def send_exam_reminder_15min_email(
+        self, 
+        student_name: str, 
+        email: str, 
+        exam_name: str, 
+        exam_code: str, 
+        username: str, 
+        password: str,
+        start_time_str: Union[datetime, str]
+    ):
+        """Dispatches an automated 15-minute pre-exam schedule reminder email."""
+        exam_link = f"{settings.FRONTEND_URL}/exam/{exam_code}"
+        subject = f"⏰ 15-Minute Exam Reminder — {exam_name}"
+        
+        display_start = format_ist_datetime(start_time_str) if isinstance(start_time_str, datetime) or "T" in str(start_time_str) else str(start_time_str)
+        if not display_start.endswith("IST"):
+            display_start = f"{display_start} IST"
+            
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <body style="font-family: Arial, sans-serif; background-color: #FAF7F2; padding: 20px; color: #1C1917;">
+            <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; padding: 30px; border: 1px solid #E7E0D3;">
+                <span style="background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A; padding: 4px 12px; border-radius: 99px; font-size: 11px; font-weight: bold; text-transform: uppercase;">Upcoming Exam Starting Soon</span>
+                <h2 style="color: #9A3412; margin-top: 10px;">Your Exam Begins in 15 Minutes</h2>
+                <p>Hello <b>{student_name}</b>,</p>
+                <p>This is an automated schedule reminder that your examination <b>{exam_name}</b> (Code: <b style="color: #9A3412;">{exam_code}</b>) is starting at <b>{display_start}</b>.</p>
+                
+                <div style="background-color: #FBF9F5; border: 1px solid #E7E0D3; border-radius: 12px; padding: 20px; margin: 20px 0;">
+                    <p style="margin: 5px 0;"><b>Session Username:</b> <span style="color: #9A3412; font-family: monospace; font-size: 16px;">{username}</span></p>
+                    <p style="margin: 5px 0;"><b>Passcode / PIN:</b> <span style="color: #047857; font-family: monospace; font-size: 16px; background: #ECFDF5; padding: 2px 8px; border-radius: 4px;">{password}</span></p>
+                </div>
+                
+                <p>Click below to join the waiting room countdown:</p>
+                <p><a href="{exam_link}" style="display: inline-block; background: #9A3412; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 10px; font-weight: bold;">Open Live Exam Gateway</a></p>
+                
+                <hr style="border: none; border-top: 1px solid #E7E0D3; margin-top: 30px;" />
+                <p style="font-size: 11px; color: #78716C;">Testora Quiz Proctoring Portal • Scheduled Window Notification • All Times in Indian Standard Time (IST)</p>
+            </div>
+        </body>
+        </html>
+        """
+        
+        logger.info(f"⏰ [REMINDER SENT] 15-min reminder sent to {student_name} (email={email}) for exam {exam_code}")
+        self._send_smtp_email(email, subject, html_content)
+
+email_service = EmailService()

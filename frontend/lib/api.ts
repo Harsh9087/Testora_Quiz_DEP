@@ -1,0 +1,79 @@
+const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+// Clean trailing slashes and redundant /api/v1 suffixes
+const baseHost = rawApiUrl.replace(/\/api\/v1\/?$/, "").replace(/\/+$/, "");
+
+export const API_BASE = baseHost;
+export const API_V1 = `${baseHost}/api/v1`;
+
+export function getFrontendBaseUrl(): string {
+  if (typeof window !== "undefined" && window.location.origin) {
+    return window.location.origin;
+  }
+  return "https://testora-quiz-f.onrender.com";
+}
+
+export function getWebSocketUrl(path: string): string {
+  const wsProtocol = API_BASE.startsWith("https") ? "wss" : "ws";
+  const host = API_BASE.replace(/^https?:\/\//, "");
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  return `${wsProtocol}://${host}${normalizedPath}`;
+}
+
+/**
+ * Authenticated fetch wrapper. Automatically injects Bearer token from argument or localStorage.
+ * Automatically handles 401 Unauthorized / expired token by clearing session.
+ */
+export async function apiFetch(
+  path: string,
+  options: RequestInit & { token?: string | null } = {}
+): Promise<Response> {
+  const { token, headers, ...rest } = options;
+  const h: Record<string, string> = { ...(headers as Record<string, string>) };
+  
+  // Resolve token from parameter or fallback to localStorage
+  const effectiveToken = token || (typeof window !== "undefined" ? localStorage.getItem("token") : null);
+  if (effectiveToken && !h["Authorization"]) {
+    h["Authorization"] = `Bearer ${effectiveToken}`;
+  }
+
+  // Inject Workspace ID if present in storage and not already set
+  if (typeof window !== "undefined") {
+    const wsId = localStorage.getItem("workspaceId");
+    if (wsId && !h["X-Workspace-Id"]) {
+      h["X-Workspace-Id"] = wsId;
+    }
+  }
+
+  if (!h["Content-Type"] && !(rest.body instanceof FormData)) {
+    h["Content-Type"] = "application/json";
+  }
+  // Don't set Content-Type for FormData — let the browser set the multipart boundary
+  if (rest.body instanceof FormData) {
+    delete h["Content-Type"];
+  }
+  
+  // Normalize path so /api/v1 is never duplicated
+  const normalizedPath = path.replace(/^\/api\/v1/, "");
+  const formattedPath = normalizedPath.startsWith("/") ? normalizedPath : `/${normalizedPath}`;
+  
+  const res = await fetch(`${API_V1}${formattedPath}`, { ...rest, headers: h });
+
+  // Automatic stale session cleanup on 401 for authenticated endpoints
+  if (
+    res.status === 401 && 
+    typeof window !== "undefined" && 
+    effectiveToken && 
+    !path.includes("/auth/login") &&
+    !path.includes("/auth/register") &&
+    !path.includes("/attempts/login") &&
+    !path.includes("/attempts/exam-status")
+  ) {
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    localStorage.removeItem("fullName");
+    localStorage.removeItem("institutionId");
+    window.location.href = "/login?expired=1";
+  }
+
+  return res;
+}

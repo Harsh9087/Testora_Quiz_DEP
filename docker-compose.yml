@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: testora_quiz_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/quiz.db:/app/quiz.db
+      - ./backend/uploads:/app/uploads
+    env_file:
+      - ./backend/.env
+    restart: always
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: testora_quiz_frontend
+    ports:
+      - "3000:3000"
+    environment:
+      # Ensure frontend knows where to reach backend from user browser
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+    env_file:
+      - ./frontend/.env
+    restart: always
+    depends_on:
+      - backend
