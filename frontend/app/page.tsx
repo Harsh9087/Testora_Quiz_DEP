@@ -151,7 +151,7 @@ export default function UnifiedHomePage() {
               </span>
             </div>
             <p className="text-[11px] text-[#716D67] dark:text-[#A8A29E] font-medium hidden md:block">
-              harsh suryavanshi
+              Autonomous AI Examination & Live Proctoring Platform
             </p>
           </div>
         </div>
