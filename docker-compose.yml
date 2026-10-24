@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
     container_name: testora_quiz_backend
     ports:
-      - "8000:8000"
+      - "8000:8001"
     volumes:
       - ./backend/quiz.db:/app/quiz.db
       - ./backend/uploads:/app/uploads
