@@ -82,7 +82,7 @@ jobs:
 
           for attempt in $(seq 1 12); do
             if curl -fsS http://127.0.0.1:3000/ >/dev/null \
-               && curl -fsS http://127.0.0.1:8001/docs >/dev/null; then
+              && curl -fsS http://127.0.0.1:8001/ >/dev/null; then
               echo "TestoraQuiz deployment and health checks passed."
               exit 0
             fi
