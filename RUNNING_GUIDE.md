@@ -179,3 +179,88 @@ After a student completes an exam:
   rm backend/quiz.db
   ```
   On next backend server start, tables and initial seed data will be recreated automatically.
+
+---
+
+## 💳 Mandatory Per-Test Razorpay Payment System
+
+### 1. Business Logic & Pricing Architecture
+Testora Quiz enforces mandatory payment for every assessment before it can be published, distributed, or taken:
+- **Free Drafting**: Instructors can freely synthesize, edit, and save exams as drafts.
+- **Mandatory Enforcement**: An exam **cannot** be published, student credentials/passcodes **cannot** be generated, email invitations **cannot** be dispatched, WhatsApp share links **cannot** be generated, and students **cannot** log in until payment is verified on the backend.
+- **Billing Formula**:
+  $$\text{Billable Units} = \text{student\_count} \times \text{question\_count}$$
+  - Default rate: `PRICE_PER_UNIT_PAISE = 10` (₹0.10 per student-question unit).
+  - Configurable in `backend/app/config.py` or `backend/.env`.
+  - GST: 18% automatically calculated and itemized on tax invoice.
+  - Razorpay order minimum: ₹1.00 (`MIN_ORDER_AMOUNT_PAISE = 100`).
+- **Configuration Expansion (Delta Top-up)**:
+  If a teacher adds more questions or enrolls additional candidates after paying, the system detects the unit expansion and requires a delta top-up before re-publishing or issuing new passcodes.
+- **Cryptographic Verification**:
+  Server-side HMAC-SHA256 signature verification ensures no client-side spoofing can unlock an exam. Duplicate callbacks and webhook retries are strictly idempotent.
+
+---
+
+### 2. Razorpay Mode Configuration
+
+#### Test Mode (Sandbox / Local Dev)
+1. Log in to [Razorpay Dashboard](https://dashboard.razorpay.com/).
+2. Switch toggle in header from **Live Mode** to **Test Mode**.
+3. Navigate to **Settings** → **API Keys** → **Generate Test Key**.
+4. Configure in `backend/.env`:
+   ```env
+   RAZORPAY_KEY_ID="rzp_test_YourTestKeyId"
+   RAZORPAY_KEY_SECRET="YourTestKeySecret"
+   RAZORPAY_WEBHOOK_SECRET="YourTestWebhookSecret"
+   ```
+5. In development/testing environments where no live key is set, the system automatically enables **local simulation mode**, prompting a dialog to simulate authorization and verify HMAC signatures seamlessly.
+
+#### Live Mode (Production)
+1. Complete Razorpay KYC and activate business account.
+2. Switch toggle to **Live Mode**.
+3. Navigate to **Settings** → **API Keys** → **Generate Live Key**.
+4. Configure production environment variables in your server / container hosting:
+   ```env
+   RAZORPAY_KEY_ID="rzp_live_YourLiveKeyId"
+   RAZORPAY_KEY_SECRET="YourLiveKeySecret"
+   RAZORPAY_WEBHOOK_SECRET="YourLiveWebhookSecret"
+   ```
+5. **Never** expose `RAZORPAY_KEY_SECRET` or `RAZORPAY_WEBHOOK_SECRET` in frontend files or `.env.local`.
+
+---
+
+### 3. Razorpay Webhook Configuration
+Webhooks allow asynchronous reconciliation if a customer closes their browser before the redirect completes:
+1. In the Razorpay Dashboard, navigate to **Settings** → **Webhooks** → **Add New Webhook**.
+2. **Webhook URL**:
+   ```
+   https://api.yourdomain.com/api/v1/payments/webhook
+   ```
+3. **Secret**: Enter your `RAZORPAY_WEBHOOK_SECRET`.
+4. **Active Events**:
+   - `order.paid`
+   - `payment.captured`
+   - `payment.failed`
+5. Click **Create Webhook**. The backend verifies raw request body HMAC-SHA256 signatures and handles duplicate deliveries idempotently.
+
+---
+
+### 4. Running Automated Test Suites
+All test suites are unified under the root [tests/](file:///c:/Users/ROHIT%20SHAHARE/Desktop/Testora_Quiz_DEP/tests) directory.
+
+**Option A (1-Click Runner)**:
+Double-click `run_tests.bat` in the project root.
+
+**Option B (Command Line from Project Root)**:
+```bash
+# Run all tests
+.\venv\Scripts\python.exe -m pytest tests/ -v
+
+# Run payment and credit wallet suite
+.\venv\Scripts\python.exe -m pytest tests/test_exam_payment_system.py -v
+
+# Run multi-tenant SaaS suite
+.\venv\Scripts\python.exe -m pytest tests/test_saas_features.py -v
+```
+All integration, security, and payment tests will execute and report passing assertions.
+

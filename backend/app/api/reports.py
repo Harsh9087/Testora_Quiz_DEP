@@ -280,7 +280,7 @@ def export_exam_csv(
         raise HTTPException(status_code=401, detail="Authentication required")
         
     try:
-        payload = jwt.decode(auth_token, settings.SECRET_KEY, algorithms=["HS256"])
+        payload = jwt.decode(auth_token, settings.SECRET_KEY, algorithms=["HS256"], options={"verify_exp": False})
         user_id = payload.get("sub")
         if not user_id:
             raise HTTPException(status_code=401, detail="Invalid token")
@@ -786,7 +786,7 @@ def export_printable_submission_response(
     user = None
     if auth_token:
         try:
-            payload = jwt.decode(auth_token, settings.SECRET_KEY, algorithms=["HS256"])
+            payload = jwt.decode(auth_token, settings.SECRET_KEY, algorithms=["HS256"], options={"verify_exp": False})
             user_id = payload.get("sub")
             if user_id:
                 user = db.query(User).filter(User.id == user_id, User.is_deleted == False).first()
@@ -1091,7 +1091,7 @@ def get_submission_certificate_html(
     user = None
     if auth_token:
         try:
-            payload = jwt.decode(auth_token, settings.SECRET_KEY, algorithms=["HS256"])
+            payload = jwt.decode(auth_token, settings.SECRET_KEY, algorithms=["HS256"], options={"verify_exp": False})
             user_id = payload.get("sub")
             if user_id:
                 user = db.query(User).filter(User.id == user_id, User.is_deleted == False).first()
@@ -1314,7 +1314,7 @@ def get_submission_report_card_html(
     user = None
     if auth_token:
         try:
-            payload = jwt.decode(auth_token, settings.SECRET_KEY, algorithms=["HS256"])
+            payload = jwt.decode(auth_token, settings.SECRET_KEY, algorithms=["HS256"], options={"verify_exp": False})
             user_id = payload.get("sub")
             if user_id:
                 user = db.query(User).filter(User.id == user_id, User.is_deleted == False).first()

@@ -44,9 +44,20 @@ class UserProfile(BaseModel):
     email: EmailStr
     full_name: str
     role: str
-    institution_id: Optional[str]
+    institution_id: Optional[str] = None
+    avatar_url: Optional[str] = None
+    credits_balance: int = 0
+    institution_name: Optional[str] = None
+    department_name: Optional[str] = None
+    roll_number: Optional[str] = None
+    division: Optional[str] = None
+    batch: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+class UpdateProfileRequest(BaseModel):
+    full_name: Optional[str] = None
+    avatar_url: Optional[str] = None
 
 
 class GoogleAuthPayload(BaseModel):

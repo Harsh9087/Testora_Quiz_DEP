@@ -47,7 +47,12 @@ def get_sqlite_path():
 if db_url.startswith("sqlite") or not db_url:
     if settings.ENVIRONMENT == "production":
         raise RuntimeError("FATAL: DATABASE_URL must point to a PostgreSQL database in production. SQLite is strictly prohibited.")
-    sqlite_path = get_sqlite_path() if not db_url else db_url
+    if db_url in ["sqlite:///quiz.db", "sqlite://quiz.db", ""]:
+        backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        backend_db = os.path.abspath(os.path.join(backend_dir, "quiz.db"))
+        sqlite_path = f"sqlite:///{backend_db}"
+    else:
+        sqlite_path = get_sqlite_path() if not db_url else db_url
     engine = create_sqlite_engine(sqlite_path)
 else:
     try:

@@ -6,6 +6,11 @@ from app.database import Base, get_db
 from app.main import app
 from app.models.institution import Institution, Department, Course, Subject
 from app.models.user import User, Student
+from app.models.payment import PaymentOrder, CreditTransaction
+from app.models.exam import Exam, ExamCredential
+from app.models.candidate import ExamCandidate
+from app.models.workspace import Workspace, WorkspaceMember
+from app.models.student_directory import StudentDirectory, DirectoryStudent
 from app.utils.security import get_password_hash
 from app.services.workspace_service import bootstrap_personal_workspace
 

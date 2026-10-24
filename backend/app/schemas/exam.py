@@ -43,6 +43,10 @@ class ExamResponse(BaseModel):
     end_time: Optional[datetime] = None
     exam_code: str
     is_published: Optional[bool] = False
+    is_paid: Optional[bool] = False
+    paid_student_count: Optional[int] = 0
+    paid_question_count: Optional[int] = 0
+    paid_amount_paise: Optional[int] = 0
     questions_json: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)

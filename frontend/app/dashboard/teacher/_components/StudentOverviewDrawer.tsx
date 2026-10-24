@@ -50,6 +50,16 @@ export default function StudentOverviewDrawer({
     }
   }, [studentId, token]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
   const handleInstantAuthorize = async () => {
     setIsAuthorizing(true);
     try {
@@ -99,8 +109,14 @@ export default function StudentOverviewDrawer({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/50 backdrop-blur-xs animate-fadeIn">
-      <div className="bg-white dark:bg-[#171615] border-l border-[#E5E0D8] dark:border-[#292524] w-full max-w-xl h-full shadow-2xl flex flex-col animate-slideLeft">
+    <div 
+      className="fixed inset-0 z-50 flex justify-end bg-black/50 backdrop-blur-xs animate-fadeIn"
+      onClick={onClose}
+    >
+      <div 
+        className="bg-white dark:bg-[#171615] border-l border-[#E5E0D8] dark:border-[#292524] w-full max-w-xl h-full shadow-2xl flex flex-col animate-slideLeft"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Drawer Header */}
         <div className="p-6 border-b border-[#E5E0D8] dark:border-[#292524] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">

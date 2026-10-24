@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { 
   Eye, Radio, StopCircle, Sparkles, Printer, Key, QrCode, Trash2, 
-  Download, X, Play, Search, Copy, Check, ExternalLink, ShieldCheck, Mail, CopyPlus
+  Download, X, Play, Search, Copy, Check, ExternalLink, ShieldCheck, Mail, CopyPlus,
+  CreditCard, Share2, Receipt
 } from "lucide-react";
 import { API_V1, apiFetch, getFrontendBaseUrl } from "../../../../lib/api";
 import { parseUtcDate, formatLocalizedDate, formatExamScheduleRange } from "../../../../lib/dateUtils";
@@ -20,6 +21,7 @@ interface LiveAssessmentsTableProps {
   onGenerateCredentials: (examId: string, examName: string) => void;
   onDownloadCredentialsCSV: (examId: string, examName: string) => void;
   onRefreshExams?: () => void;
+  onOpenPaymentModal?: (exam: any) => void;
 }
 
 export default function LiveAssessmentsTable({
@@ -33,6 +35,7 @@ export default function LiveAssessmentsTable({
   onGenerateCredentials,
   onDownloadCredentialsCSV,
   onRefreshExams,
+  onOpenPaymentModal,
 }: LiveAssessmentsTableProps) {
   const { token } = useAuthStore();
   const { showToast } = useToast();
@@ -86,7 +89,32 @@ export default function LiveAssessmentsTable({
     return { status: "live", label: "Live Active", dot: "bg-emerald-500 animate-pulse" };
   };
 
+  const handleShareWhatsApp = (exam: any) => {
+    if (!exam.is_paid) {
+      showToast("Payment required before distributing exam link via WhatsApp.", "error");
+      if (onOpenPaymentModal) onOpenPaymentModal(exam);
+      return;
+    }
+    const frontendUrl = getFrontendBaseUrl();
+    const portalUrl = `${frontendUrl}/exam/${exam.exam_code || exam.code}`;
+    const scheduleStr = formatExamScheduleRange(exam.start_time, exam.end_time);
+    const text = 
+      `🎓 *Testora Assessment Invitation*\n\n` +
+      `Assessment: *${exam.name}*\n` +
+      `Exam Code: *${exam.exam_code || exam.code}*\n` +
+      `Schedule Window: ${scheduleStr}\n\n` +
+      `Portal Link: ${portalUrl}\n\n` +
+      `Please use your assigned credentials to log in.`;
+    const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+    window.open(waUrl, "_blank", "noopener,noreferrer");
+  };
+
   const handleOpenCredentialsPreview = async (exam: any) => {
+    if (!exam.is_paid) {
+      showToast("Mandatory per-test payment required before generating student passcodes.", "error");
+      if (onOpenPaymentModal) onOpenPaymentModal(exam);
+      return;
+    }
     setLoadingCredsExamId(exam.id);
     setCredsSearch("");
     try {
@@ -102,6 +130,9 @@ export default function LiveAssessmentsTable({
         });
         showToast(`Loaded ${credsList.length} candidate credentials. Emails dispatched automatically.`, "success");
       } else {
+        if (res.status === 402 && onOpenPaymentModal) {
+          onOpenPaymentModal(exam);
+        }
         showToast("Failed to retrieve candidate credentials", "error");
       }
     } catch {
@@ -205,9 +236,22 @@ export default function LiveAssessmentsTable({
               <div key={exam.id} className="p-4 space-y-3 hover:bg-[#F0ECE4]/30 dark:hover:bg-[#1D1B19]/30 transition-colors">
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <div className="flex items-center gap-1.5 mb-1">
+                    <div className="flex items-center gap-1.5 mb-1 flex-wrap">
                       <span className={`w-2 h-2 rounded-full ${sched.dot}`} />
                       <span className="capitalize font-semibold text-[10px] text-[#716D67] dark:text-[#A8A29E]">{sched.label}</span>
+                      {exam.is_paid ? (
+                        <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 text-[9px] font-bold flex items-center gap-0.5">
+                          <Check className="h-2.5 w-2.5" /> Paid
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => onOpenPaymentModal && onOpenPaymentModal(exam)}
+                          className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 text-[9px] font-bold flex items-center gap-0.5 hover:opacity-80 cursor-pointer"
+                        >
+                          <CreditCard className="h-2.5 w-2.5 text-amber-600" /> Unpaid
+                        </button>
+                      )}
                     </div>
                     <h3 className="font-bold text-xs sm:text-sm text-[#242321] dark:text-[#F5F5F4]">{exam.name}</h3>
                     <div className="text-[11px] text-[#716D67] dark:text-[#A8A29E] font-mono mt-0.5">
@@ -287,13 +331,29 @@ export default function LiveAssessmentsTable({
                   {!exam.is_published && (
                     <button
                       type="button"
-                      onClick={() => onPublishExam(exam.id)}
+                      onClick={() => {
+                        if (!exam.is_paid && onOpenPaymentModal) {
+                          onOpenPaymentModal(exam);
+                        } else {
+                          onPublishExam(exam.id);
+                        }
+                      }}
                       className="px-2.5 py-1.5 rounded-lg bg-[#C84B18] text-white dark:bg-[#EA580C] text-[11px] font-semibold hover:opacity-90 flex items-center gap-1 cursor-pointer"
                     >
-                      <Sparkles className="h-3 w-3" />
-                      <span>Publish</span>
+                      {exam.is_paid ? <Sparkles className="h-3 w-3" /> : <CreditCard className="h-3 w-3" />}
+                      <span>{exam.is_paid ? "Publish" : "Pay & Publish"}</span>
                     </button>
                   )}
+
+                  <button
+                    type="button"
+                    onClick={() => handleShareWhatsApp(exam)}
+                    className="px-2.5 py-1.5 rounded-lg border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-[11px] font-semibold flex items-center gap-1 cursor-pointer"
+                    title={exam.is_paid ? "Share via WhatsApp" : "Locked: Pay to share via WhatsApp"}
+                  >
+                    <Share2 className="h-3 w-3" />
+                    <span>WhatsApp</span>
+                  </button>
 
                   <button
                     type="button"
@@ -377,6 +437,24 @@ export default function LiveAssessmentsTable({
                         <span className={`w-2 h-2 rounded-full ${sched.dot}`} />
                         <span className="capitalize font-medium text-[11px]">{sched.label}</span>
                       </div>
+                      <div className="mt-1">
+                        {exam.is_paid ? (
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                            <Check className="h-2.5 w-2.5 text-emerald-600" />
+                            <span>Paid</span>
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => onOpenPaymentModal && onOpenPaymentModal(exam)}
+                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 hover:bg-amber-100 cursor-pointer"
+                            title="Mandatory Razorpay Payment Required"
+                          >
+                            <CreditCard className="h-2.5 w-2.5 text-amber-600" />
+                            <span>Unpaid</span>
+                          </button>
+                        )}
+                      </div>
                     </td>
                     <td className="py-3.5 px-4">
                       <div className="font-semibold text-[#242321] dark:text-[#F5F5F4]">{exam.name}</div>
@@ -459,13 +537,43 @@ export default function LiveAssessmentsTable({
                         {!exam.is_published && (
                           <button
                             type="button"
-                            onClick={() => onPublishExam(exam.id)}
-                            className="px-2 py-1 rounded bg-[#C84B18] text-white dark:bg-[#EA580C] text-[10px] font-semibold hover:opacity-90 transition-all flex items-center gap-1"
-                            title="Publish Assessment Live to Students"
+                            onClick={() => {
+                              if (!exam.is_paid && onOpenPaymentModal) {
+                                onOpenPaymentModal(exam);
+                              } else {
+                                onPublishExam(exam.id);
+                              }
+                            }}
+                            className="px-2 py-1 rounded bg-[#C84B18] text-white dark:bg-[#EA580C] text-[10px] font-semibold hover:opacity-90 transition-all flex items-center gap-1 cursor-pointer"
+                            title={exam.is_paid ? "Publish Assessment Live to Students" : "Pay & Publish Assessment Live"}
                           >
-                            <Sparkles className="h-3 w-3" />
-                            <span>Publish</span>
+                            {exam.is_paid ? <Sparkles className="h-3 w-3" /> : <CreditCard className="h-3 w-3" />}
+                            <span>{exam.is_paid ? "Publish" : "Pay & Publish"}</span>
                           </button>
+                        )}
+
+                        {/* WhatsApp Invite Share Button */}
+                        <button
+                          type="button"
+                          onClick={() => handleShareWhatsApp(exam)}
+                          className="p-1.5 rounded border border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-all flex items-center gap-1 text-[10px] font-semibold cursor-pointer"
+                          title={exam.is_paid ? "Share Assessment Invitation via WhatsApp" : "Payment required to share on WhatsApp"}
+                        >
+                          <Share2 className="h-3.5 w-3.5" />
+                          <span className="hidden lg:inline">WhatsApp</span>
+                        </button>
+
+                        {/* Tax Invoice Download (if paid) */}
+                        {exam.is_paid && (
+                          <a
+                            href={`${API_V1}/payments/receipt/${exam.id}/html`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="p-1.5 rounded border border-[#E5E0D8] dark:border-[#292524] text-[#716D67] hover:text-[#C84B18] hover:bg-[#E5E0D8]/40 dark:hover:bg-[#292524] transition-all flex items-center"
+                            title="Download / Print Official Tax Invoice"
+                          >
+                            <Receipt className="h-3.5 w-3.5" />
+                          </a>
                         )}
 
                         {/* Printable Question Paper PDF */}
@@ -552,8 +660,14 @@ export default function LiveAssessmentsTable({
 
       {/* ═══════ QR CODE FLYER MODAL ═══════ */}
       {qrModalExam && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fadeIn">
-          <div className="bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 text-center relative">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fadeIn"
+          onClick={() => setQrModalExam(null)}
+        >
+          <div 
+            className="bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 text-center relative"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               onClick={() => setQrModalExam(null)}
               className="absolute top-4 right-4 p-1 rounded-lg text-[#716D67] hover:bg-[#E5E0D8]/40 dark:hover:bg-[#292524] transition-all"
@@ -614,8 +728,14 @@ export default function LiveAssessmentsTable({
 
       {/* ═══════ GENERATED CREDENTIALS PREVIEW MODAL ═══════ */}
       {credsModalData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-2 sm:p-4 animate-fadeIn">
-          <div className="bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl max-w-3xl w-full p-4 sm:p-6 shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-2 sm:p-4 animate-fadeIn"
+          onClick={() => setCredsModalData(null)}
+        >
+          <div 
+            className="bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl max-w-3xl w-full p-4 sm:p-6 shadow-2xl space-y-4 max-h-[90vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-[#E5E0D8] dark:border-[#292524] pb-4 shrink-0">
               <div className="flex items-center gap-3">

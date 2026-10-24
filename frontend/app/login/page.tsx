@@ -14,6 +14,7 @@ import {
   Mail, 
   Lock, 
   ArrowRight, 
+  ArrowLeft,
   Sparkles, 
   CheckCircle2, 
   KeyRound, 
@@ -43,6 +44,9 @@ function LoginContent() {
 
   // Auth Mode: "signin" | "signup"
   const [authMode, setAuthMode] = useState<"signin" | "signup">(isRegisterRoute ? "signup" : "signin");
+
+  // Step state: 1 = Mode selection & details, 2 = Auth credentials
+  const [currentStep, setCurrentStep] = useState<1 | 2>(1);
 
   // Registration Form State
   const [regFullName, setRegFullName] = useState("");
@@ -119,6 +123,10 @@ function LoginContent() {
       const targetParam = params.get("target");
       if (targetParam) {
         setTargetDestination(targetParam);
+      }
+      const stepParam = params.get("step");
+      if (stepParam === "2") {
+        setCurrentStep(2);
       }
       const demoParam = params.get("demo");
       if (demoParam === "teacher") {
@@ -238,9 +246,11 @@ function LoginContent() {
 
   useEffect(() => {
     if (typeof window !== "undefined" && (window as any).google?.accounts?.id) {
-      initGoogleGIS();
+      if (currentStep === 2) {
+        setTimeout(initGoogleGIS, 60);
+      }
     }
-  }, [theme, gisLoaded, authMode, regRole]);
+  }, [theme, gisLoaded, authMode, regRole, currentStep]);
 
   const toggleTheme = () => {
     const next = theme === "light" ? "dark" : "light";
@@ -386,7 +396,7 @@ function LoginContent() {
   const pwdStrength = getPasswordStrength(regPassword);
 
   return (
-    <div className="flex min-h-screen items-center justify-center relative overflow-hidden bg-[#F7F4EF] dark:bg-[#0F0E0D] px-4 py-8 sm:py-12 transition-colors duration-200">
+    <div className="flex min-h-screen items-center justify-center relative overflow-hidden bg-[#F7F4EF] dark:bg-[#0F0E0D] px-4 py-4 sm:py-6 transition-colors duration-200">
       <Script
         src="https://accounts.google.com/gsi/client"
         strategy="afterInteractive"
@@ -397,17 +407,8 @@ function LoginContent() {
       <div className="absolute -top-40 -left-40 w-96 h-96 bg-[#C84B18]/5 dark:bg-[#EA580C]/5 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-[#C84B18]/5 dark:bg-[#EA580C]/5 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Top Navigation Options: Guide Link & Theme Toggle */}
-      <div className="absolute top-4 left-4 right-4 z-20 flex items-center justify-between">
-        <a 
-          href="/guide"
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/80 dark:bg-[#171615]/80 border border-[#E5E0D8] dark:border-[#292524] text-xs font-semibold text-[#C84B18] dark:text-[#EA580C] hover:underline backdrop-blur-xs shadow-xs"
-        >
-          <BookOpen className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">← View Platform Usage Guide</span>
-          <span className="sm:hidden">Guide</span>
-        </a>
-
+      {/* Top Navigation Options: Theme Toggle */}
+      <div className="absolute top-4 right-4 z-20 flex items-center">
         <button
           onClick={toggleTheme}
           className="w-11 h-6 rounded-full bg-[#E5E0D8] dark:bg-[#292524] border border-[#E5E0D8] dark:border-[#292524] p-0.5 flex items-center shadow-2xs cursor-pointer transition-colors duration-300 relative focus:outline-none"
@@ -424,7 +425,7 @@ function LoginContent() {
         </button>
       </div>
 
-      <div className="w-full max-w-[460px] z-10 space-y-5 mt-12 sm:mt-8 pt-4 sm:pt-0">
+      <div className="w-full max-w-[460px] z-10 space-y-4 my-auto">
         
         {/* Logo & Platform Headline */}
         <div className="flex justify-center items-center gap-3">
@@ -438,487 +439,645 @@ function LoginContent() {
         </div>
 
         {/* Main Authentication Card */}
-        <div className="bg-white dark:bg-[#171615] rounded-2xl p-5 sm:p-8 border border-[#E5E0D8] dark:border-[#292524] shadow-sm relative overflow-hidden space-y-5">
+        <div className="bg-white dark:bg-[#171615] rounded-2xl p-5 sm:p-7 border border-[#E5E0D8] dark:border-[#292524] shadow-sm relative overflow-hidden space-y-4">
           <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#C84B18] via-amber-600 to-[#C84B18]" />
-          
-          <div>
-            <h2 className="text-2xl font-bold text-[#242321] dark:text-[#F5F5F4] tracking-tight">
-              {authMode === "signin" ? "Portal Sign In" : "Create New Account"}
-            </h2>
-            <p className="text-[#716D67] dark:text-[#A8A29E] text-xs mt-1">
-              {authMode === "signin" 
-                ? "Sign in to access your assessment workspace and analytics." 
-                : "Get started with your personalized quiz creation and proctoring workspace."}
-            </p>
-          </div>
 
-          {error && (
-            <div className="flex gap-2 items-center p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/50 text-rose-700 dark:text-rose-300 text-xs">
-              <AlertCircle className="h-4 w-4 shrink-0 text-rose-600 dark:text-rose-400" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          {/* ═══════ SIDE-BY-SIDE MODE SELECTION CARDS ═══════ */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="text-[11px] font-bold text-[#57534E] dark:text-[#A8A29E] uppercase tracking-wider flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-[#C84B18] dark:text-[#EA580C]" />
-                <span>Select Portal Mode</span>
-              </label>
-              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[#C84B18]/10 text-[#C84B18] dark:bg-[#EA580C]/15 dark:text-[#EA580C] border border-[#C84B18]/20">
-                {regRole === "teacher" ? "Instructor Mode" : "Candidate Mode"}
+          {/* ═══════ STEPPER PROGRESS BAR ═══════ */}
+          <div className="flex items-center justify-between gap-3 pb-2.5 border-b border-[#E5E0D8]/60 dark:border-[#292524]/60">
+            <button
+              type="button"
+              onClick={() => setCurrentStep(1)}
+              className={`flex items-center gap-2 text-xs font-bold transition-all cursor-pointer ${
+                currentStep === 1 
+                  ? "text-[#C84B18] dark:text-[#EA580C]" 
+                  : "text-[#716D67] hover:text-[#242321] dark:text-[#A8A29E] dark:hover:text-white"
+              }`}
+            >
+              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                currentStep === 1 
+                  ? "bg-[#C84B18] text-white dark:bg-[#EA580C]" 
+                  : "bg-emerald-600 text-white"
+              }`}>
+                {currentStep > 1 ? <Check className="w-3 h-3 stroke-[3]" /> : "1"}
               </span>
-            </div>
+              <span>1. Choose Mode</span>
+            </button>
 
-            {/* Always side-by-side on mobile, half screen, and desktop (grid-cols-2) */}
-            <div className="grid grid-cols-2 gap-3 sm:gap-4">
-              {/* Teacher / Educator Mode Card */}
-              <button
-                type="button"
-                onClick={() => {
-                  setRegRole("teacher");
-                  regRoleRef.current = "teacher";
-                  setTargetDestination("teacher_dashboard");
-                }}
-                className={`group relative rounded-2xl overflow-hidden border-2 text-center transition-all duration-300 cursor-pointer flex flex-col bg-white dark:bg-[#1C1A17] shadow-xs ${
-                  regRole === "teacher"
-                    ? "border-[#C84B18] dark:border-[#EA580C] ring-2 ring-[#C84B18]/30 shadow-md shadow-[#C84B18]/15 scale-[1.02]"
-                    : "border-[#E5E0D8] dark:border-[#292524] hover:border-[#C84B18]/50 opacity-80 hover:opacity-100 hover:scale-[1.01]"
-                }`}
-              >
-                {/* Photo / Visual on Top */}
-                <div className="relative w-full aspect-[4/3] xs:aspect-square overflow-hidden bg-[#F0ECE4] dark:bg-[#242321]">
-                  <img
-                    src="/images/teacher_mode.jpg"
-                    alt="Teacher Mode"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/10 pointer-events-none" />
+            <div className={`flex-1 h-0.5 rounded-full transition-all duration-300 ${
+              currentStep > 1 ? "bg-emerald-600 dark:bg-emerald-500" : "bg-[#E5E0D8] dark:bg-[#292524]"
+            }`} />
 
-                  {regRole === "teacher" ? (
-                    <div className="absolute top-2 right-2 bg-[#C84B18] text-white p-1 rounded-full shadow-sm">
-                      <Check className="w-3 h-3 stroke-[3]" />
-                    </div>
-                  ) : (
-                    <div className="absolute top-2 right-2 w-4 h-4 rounded-full border border-white/70 bg-black/30 backdrop-blur-xs" />
-                  )}
-
-                  <span className="absolute bottom-1.5 left-2 px-2 py-0.5 rounded-full text-[9px] font-bold bg-black/65 text-white backdrop-blur-xs">
-                    Instructor
-                  </span>
-                </div>
-
-                {/* Bold Centered Title on Bottom */}
-                <div className="p-2.5 sm:p-3 bg-white dark:bg-[#171615]">
-                  <h3 className="font-extrabold text-xs sm:text-sm text-[#242321] dark:text-[#F5F5F4] group-hover:text-[#C84B18] dark:group-hover:text-[#EA580C] transition-colors leading-tight">
-                    Teacher Mode
-                  </h3>
-                  <p className="text-[10px] text-[#716D67] dark:text-[#A8A29E] mt-0.5 truncate">
-                    Create & Proctor
-                  </p>
-                </div>
-              </button>
-
-              {/* Student / Candidate Mode Card */}
-              <button
-                type="button"
-                onClick={() => {
-                  setRegRole("student");
-                  regRoleRef.current = "student";
-                  setTargetDestination("student_dashboard");
-                }}
-                className={`group relative rounded-2xl overflow-hidden border-2 text-center transition-all duration-300 cursor-pointer flex flex-col bg-white dark:bg-[#1C1A17] shadow-xs ${
-                  regRole === "student"
-                    ? "border-emerald-600 dark:border-emerald-500 ring-2 ring-emerald-600/30 shadow-md shadow-emerald-600/15 scale-[1.02]"
-                    : "border-[#E5E0D8] dark:border-[#292524] hover:border-emerald-500/50 opacity-80 hover:opacity-100 hover:scale-[1.01]"
-                }`}
-              >
-                {/* Photo / Visual on Top */}
-                <div className="relative w-full aspect-[4/3] xs:aspect-square overflow-hidden bg-[#F0ECE4] dark:bg-[#242321]">
-                  <img
-                    src="/images/student_mode.jpg"
-                    alt="Student Mode"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/10 pointer-events-none" />
-
-                  {regRole === "student" ? (
-                    <div className="absolute top-2 right-2 bg-emerald-600 text-white p-1 rounded-full shadow-sm">
-                      <Check className="w-3 h-3 stroke-[3]" />
-                    </div>
-                  ) : (
-                    <div className="absolute top-2 right-2 w-4 h-4 rounded-full border border-white/70 bg-black/30 backdrop-blur-xs" />
-                  )}
-
-                  <span className="absolute bottom-1.5 left-2 px-2 py-0.5 rounded-full text-[9px] font-bold bg-black/65 text-white backdrop-blur-xs">
-                    Candidate
-                  </span>
-                </div>
-
-                {/* Bold Centered Title on Bottom */}
-                <div className="p-2.5 sm:p-3 bg-white dark:bg-[#171615]">
-                  <h3 className="font-extrabold text-xs sm:text-sm text-[#242321] dark:text-[#F5F5F4] group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors leading-tight">
-                    Student Mode
-                  </h3>
-                  <p className="text-[10px] text-[#716D67] dark:text-[#A8A29E] mt-0.5 truncate">
-                    Take Assessments
-                  </p>
-                </div>
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => setCurrentStep(2)}
+              className={`flex items-center gap-2 text-xs font-bold transition-all cursor-pointer ${
+                currentStep === 2 
+                  ? "text-[#C84B18] dark:text-[#EA580C]" 
+                  : "text-[#716D67] hover:text-[#242321] dark:text-[#A8A29E] dark:hover:text-white"
+              }`}
+            >
+              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                currentStep === 2 
+                  ? "bg-[#C84B18] text-white dark:bg-[#EA580C]" 
+                  : "bg-[#E5E0D8] dark:bg-[#292524] text-[#716D67] dark:text-[#A8A29E]"
+              }`}>
+                2
+              </span>
+              <span>2. {authMode === "signup" ? "Account Details" : "Sign In"}</span>
+            </button>
           </div>
 
           {/* ═══════════════════════════════════════════════════════════════
-              SIGN IN FORM
+              STEP 1: SELECT MODE & RICH FEATURE HIGHLIGHTS
               ═══════════════════════════════════════════════════════════════ */}
-          {authMode === "signin" ? (
-            <form onSubmit={handleSignInSubmit} className="space-y-4">
-              {/* Quick Demo Credentials 1-Click Fill */}
-              <div className="p-3 bg-[#FAF8F5] dark:bg-[#141312] border border-[#E5E0D8] dark:border-[#292524] rounded-xl space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold text-[#716D67] dark:text-[#A8A29E] uppercase tracking-wider">
-                    Quick Demo Credentials
-                  </span>
-                  <span className="text-[10px] text-[#716D67] dark:text-[#A8A29E]">Click to Auto-Fill</span>
+          {currentStep === 1 && (
+            <div className="space-y-4 animate-in fade-in duration-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold text-[#242321] dark:text-[#F5F5F4] tracking-tight">
+                    Select Portal Mode
+                  </h2>
+                  <p className="text-[#716D67] dark:text-[#A8A29E] text-xs mt-0.5">
+                    Choose your role to get tailored assessment tools & analytics
+                  </p>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEmail("teacher@aegeus.edu");
-                      setPassword("securepassword");
-                    }}
-                    className={`p-2 rounded-lg border text-left transition-all cursor-pointer ${
-                      email === "teacher@aegeus.edu"
-                        ? "border-[#C84B18] bg-[#C84B18]/10 text-[#C84B18] dark:border-[#EA580C] dark:text-[#EA580C]"
-                        : "border-[#E5E0D8] dark:border-[#292524] bg-white dark:bg-[#1C1A17] text-[#716D67] hover:text-[#242321] dark:hover:text-white"
-                    }`}
-                  >
-                    <div className="text-[11px] font-bold">👨‍🏫 Instructor</div>
-                    <div className="text-[9px] font-mono opacity-80 truncate">teacher@aegeus.edu</div>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEmail("student@aegeus.edu");
-                      setPassword("securepassword");
-                    }}
-                    className={`p-2 rounded-lg border text-left transition-all cursor-pointer ${
-                      email === "student@aegeus.edu"
-                        ? "border-emerald-600 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-500"
-                        : "border-[#E5E0D8] dark:border-[#292524] bg-white dark:bg-[#1C1A17] text-[#716D67] hover:text-[#242321] dark:hover:text-white"
-                    }`}
-                  >
-                    <div className="text-[11px] font-bold">🎓 Candidate</div>
-                    <div className="text-[9px] font-mono opacity-80 truncate">student@aegeus.edu</div>
-                  </button>
-                </div>
+                <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border transition-colors shrink-0 ${
+                  regRole === "teacher"
+                    ? "bg-[#C84B18]/10 text-[#C84B18] dark:bg-[#EA580C]/15 dark:text-[#EA580C] border-[#C84B18]/20"
+                    : "bg-[#7C3AED]/10 text-[#7C3AED] dark:bg-[#8B5CF6]/15 dark:text-[#A78BFA] border-[#7C3AED]/20"
+                }`}>
+                  {regRole === "teacher" ? "Instructor Mode" : "Candidate Mode"}
+                </span>
               </div>
 
-              {/* Email Field */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-[#57534E] dark:text-[#A8A29E] uppercase tracking-wider">
-                  User Name / Email
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="user@aegeus.edu"
-                    className="w-full bg-[#FBF9F5] dark:bg-[#1D1B19] border border-[#E5E0D8] dark:border-[#292524] rounded-xl pl-9.5 pr-3.5 py-2.5 text-sm text-[#242321] dark:text-[#F5F5F4] placeholder-[#A8A29E] focus:outline-none focus:ring-2 focus:ring-[#C84B18]/30 focus:border-[#C84B18] transition-all font-medium"
-                  />
-                  <Mail className="h-4 w-4 text-[#A8A29E] absolute left-3.5 top-1/2 -translate-y-1/2" />
-                </div>
-              </div>
+              {/* 3D Mode Cards Side-by-Side (Duo Characters) */}
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                {/* Teacher / Educator Mode Card */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRegRole("teacher");
+                    regRoleRef.current = "teacher";
+                    setTargetDestination("teacher_dashboard");
+                  }}
+                  className={`group relative rounded-2xl overflow-hidden border-2 text-center transition-all duration-300 cursor-pointer flex flex-col bg-white dark:bg-[#1C1A17] shadow-xs ${
+                    regRole === "teacher"
+                      ? "border-[#C84B18] dark:border-[#EA580C] ring-2 ring-[#C84B18]/30 shadow-md shadow-[#C84B18]/15 scale-[1.02]"
+                      : "border-[#E5E0D8] dark:border-[#292524] hover:border-[#C84B18]/50 opacity-80 hover:opacity-100 hover:scale-[1.01]"
+                  }`}
+                >
+                  <div className="relative w-full aspect-square overflow-hidden bg-[#F5F2EB] dark:bg-[#201D1A]">
+                    <img
+                      src="/images/teacher_mode_3d.jpg"
+                      alt="Teacher Mode Faculty"
+                      className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent pointer-events-none" />
 
-              {/* Password Field */}
-              <div className="space-y-1.5">
-                <div className="flex justify-between items-center">
-                  <label className="text-xs font-bold text-[#57534E] dark:text-[#A8A29E] uppercase tracking-wider">
-                    Password
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setForgotEmail(email);
-                      setForgotMessage(null);
-                      setForgotError(null);
-                      setForgotModalOpen(true);
-                    }}
-                    className="text-xs font-semibold text-[#C84B18] dark:text-[#EA580C] hover:underline cursor-pointer"
-                  >
-                    Forgot Password?
-                  </button>
-                </div>
-                <div className="relative">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full bg-[#FBF9F5] dark:bg-[#1D1B19] border border-[#E5E0D8] dark:border-[#292524] rounded-xl pl-9.5 pr-10 py-2.5 text-sm text-[#242321] dark:text-[#F5F5F4] placeholder-[#A8A29E] focus:outline-none focus:ring-2 focus:ring-[#C84B18]/30 focus:border-[#C84B18] transition-all font-medium"
-                  />
-                  <Lock className="h-4 w-4 text-[#A8A29E] absolute left-3.5 top-1/2 -translate-y-1/2" />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#A8A29E] hover:text-[#242321] dark:hover:text-white cursor-pointer"
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-              </div>
+                    {regRole === "teacher" ? (
+                      <div className="absolute top-2 right-2 bg-[#C84B18] text-white p-1 rounded-full shadow-sm">
+                        <Check className="w-3 h-3 stroke-[3]" />
+                      </div>
+                    ) : (
+                      <div className="absolute top-2 right-2 w-4 h-4 rounded-full border border-white/80 bg-black/25 backdrop-blur-xs" />
+                    )}
 
-              {/* Remember Me Option */}
-              <div className="flex items-center justify-between pt-1">
-                <label className="flex items-center gap-2 text-xs font-semibold text-[#716D67] dark:text-[#A8A29E] cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    className="rounded border-[#E5E0D8] dark:border-[#292524] text-[#C84B18] focus:ring-[#C84B18]/30 cursor-pointer h-3.5 w-3.5"
-                  />
-                  <span>Remember my login email</span>
-                </label>
-              </div>
-
-              {/* Sign In Submit Button */}
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-[#C84B18] hover:bg-[#B33E0F] dark:bg-[#EA580C] dark:hover:bg-[#C2410C] text-white font-bold rounded-xl py-3 text-xs transition-all shadow-md shadow-[#C84B18]/20 flex items-center justify-center gap-2 cursor-pointer"
-              >
-                {loading ? "Signing in..." : "Sign In to Portal"}
-                {!loading && <ArrowRight className="h-4 w-4" />}
-              </button>
-            </form>
-          ) : (
-            /* ═══════════════════════════════════════════════════════════════
-               CREATE ACCOUNT (SIGN UP) FORM
-               ═══════════════════════════════════════════════════════════════ */
-            <form onSubmit={handleRegisterSubmit} className="space-y-4">
-
-              {/* Full Name Field */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-[#57534E] dark:text-[#A8A29E] uppercase tracking-wider">
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={regFullName}
-                  onChange={(e) => setRegFullName(e.target.value)}
-                  placeholder="e.g. Dr. Sarah Jenkins"
-                  className="w-full bg-[#FBF9F5] dark:bg-[#1D1B19] border border-[#E5E0D8] dark:border-[#292524] rounded-xl px-3.5 py-2.5 text-sm text-[#242321] dark:text-[#F5F5F4] placeholder-[#A8A29E] focus:outline-none focus:ring-2 focus:ring-[#C84B18]/30 focus:border-[#C84B18] transition-all font-medium"
-                />
-              </div>
-
-              {/* Email Field */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-[#57534E] dark:text-[#A8A29E] uppercase tracking-wider">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <input
-                    type="email"
-                    required
-                    value={regEmail}
-                    onChange={(e) => setRegEmail(e.target.value)}
-                    placeholder="sarah@university.edu"
-                    className="w-full bg-[#FBF9F5] dark:bg-[#1D1B19] border border-[#E5E0D8] dark:border-[#292524] rounded-xl pl-9.5 pr-3.5 py-2.5 text-sm text-[#242321] dark:text-[#F5F5F4] placeholder-[#A8A29E] focus:outline-none focus:ring-2 focus:ring-[#C84B18]/30 focus:border-[#C84B18] transition-all font-medium"
-                  />
-                  <Mail className="h-4 w-4 text-[#A8A29E] absolute left-3.5 top-1/2 -translate-y-1/2" />
-                </div>
-              </div>
-
-              {/* Password Field with Strength Indicator */}
-              <div className="space-y-1.5">
-                <div className="flex justify-between items-center">
-                  <label className="text-xs font-bold text-[#57534E] dark:text-[#A8A29E] uppercase tracking-wider">
-                    Create Password
-                  </label>
-                  {regPassword && (
-                    <span className="text-[10px] font-bold text-[#716D67] dark:text-[#A8A29E]">
-                      Strength: <span className="font-semibold">{pwdStrength.text}</span>
+                    <span className="absolute bottom-1.5 left-2 px-2 py-0.5 rounded-full text-[9px] font-bold bg-[#242321]/75 text-white backdrop-blur-xs shadow-2xs">
+                      Faculty & Admins
                     </span>
-                  )}
-                </div>
-                <div className="relative">
-                  <input
-                    type={regShowPassword ? "text" : "password"}
-                    required
-                    value={regPassword}
-                    onChange={(e) => setRegPassword(e.target.value)}
-                    placeholder="At least 6 characters"
-                    className="w-full bg-[#FBF9F5] dark:bg-[#1D1B19] border border-[#E5E0D8] dark:border-[#292524] rounded-xl pl-9.5 pr-10 py-2.5 text-sm text-[#242321] dark:text-[#F5F5F4] placeholder-[#A8A29E] focus:outline-none focus:ring-2 focus:ring-[#C84B18]/30 focus:border-[#C84B18] transition-all font-medium"
-                  />
-                  <Lock className="h-4 w-4 text-[#A8A29E] absolute left-3.5 top-1/2 -translate-y-1/2" />
-                  <button
-                    type="button"
-                    onClick={() => setRegShowPassword(!regShowPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#A8A29E] hover:text-[#242321] dark:hover:text-white cursor-pointer"
-                  >
-                    {regShowPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-                {/* Strength Meter Bar */}
-                {regPassword && (
-                  <div className="grid grid-cols-4 gap-1 pt-1">
-                    {[1, 2, 3, 4].map((step) => (
-                      <div
-                        key={step}
-                        className={`h-1 rounded-full transition-all ${
-                          step <= pwdStrength.score ? pwdStrength.color : "bg-[#E5E0D8] dark:bg-[#292524]"
-                        }`}
-                      />
-                    ))}
                   </div>
-                )}
+
+                  <div className="p-2.5 sm:p-3 bg-white dark:bg-[#171615]">
+                    <h3 className="font-extrabold text-xs sm:text-sm text-[#242321] dark:text-[#F5F5F4] group-hover:text-[#C84B18] dark:group-hover:text-[#EA580C] transition-colors leading-tight">
+                      Teacher Mode
+                    </h3>
+                    <p className="text-[10px] text-[#716D67] dark:text-[#A8A29E] mt-0.5 truncate">
+                      Create & Proctor
+                    </p>
+                  </div>
+                </button>
+
+                {/* Student / Candidate Mode Card */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRegRole("student");
+                    regRoleRef.current = "student";
+                    setTargetDestination("student_dashboard");
+                  }}
+                  className={`group relative rounded-2xl overflow-hidden border-2 text-center transition-all duration-300 cursor-pointer flex flex-col bg-white dark:bg-[#1C1A17] shadow-xs ${
+                    regRole === "student"
+                      ? "border-[#7C3AED] dark:border-[#8B5CF6] ring-2 ring-[#7C3AED]/30 shadow-md shadow-[#7C3AED]/15 scale-[1.02]"
+                      : "border-[#E5E0D8] dark:border-[#292524] hover:border-[#7C3AED]/50 opacity-80 hover:opacity-100 hover:scale-[1.01]"
+                  }`}
+                >
+                  <div className="relative w-full aspect-square overflow-hidden bg-[#F5F2EB] dark:bg-[#201D1A]">
+                    <img
+                      src="/images/student_mode_3d.jpg"
+                      alt="Student Mode Candidates"
+                      className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent pointer-events-none" />
+
+                    {regRole === "student" ? (
+                      <div className="absolute top-2 right-2 bg-[#7C3AED] text-white p-1 rounded-full shadow-sm">
+                        <Check className="w-3 h-3 stroke-[3]" />
+                      </div>
+                    ) : (
+                      <div className="absolute top-2 right-2 w-4 h-4 rounded-full border border-white/80 bg-black/25 backdrop-blur-xs" />
+                    )}
+
+                    <span className="absolute bottom-1.5 left-2 px-2 py-0.5 rounded-full text-[9px] font-bold bg-[#242321]/75 text-white backdrop-blur-xs shadow-2xs">
+                      Candidate Group
+                    </span>
+                  </div>
+
+                  <div className="p-2.5 sm:p-3 bg-white dark:bg-[#171615]">
+                    <h3 className="font-extrabold text-xs sm:text-sm text-[#242321] dark:text-[#F5F5F4] group-hover:text-[#7C3AED] dark:group-hover:text-[#A78BFA] transition-colors leading-tight">
+                      Student Mode
+                    </h3>
+                    <p className="text-[10px] text-[#716D67] dark:text-[#A8A29E] mt-0.5 truncate">
+                      Take Assessments
+                    </p>
+                  </div>
+                </button>
               </div>
 
-              {/* Confirm Password Field */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-[#57534E] dark:text-[#A8A29E] uppercase tracking-wider">
-                  Confirm Password
-                </label>
-                <div className="relative">
-                  <input
-                    type={regShowPassword ? "text" : "password"}
-                    required
-                    value={regConfirmPassword}
-                    onChange={(e) => setRegConfirmPassword(e.target.value)}
-                    placeholder="Re-enter your password"
-                    className="w-full bg-[#FBF9F5] dark:bg-[#1D1B19] border border-[#E5E0D8] dark:border-[#292524] rounded-xl pl-9.5 pr-3.5 py-2.5 text-sm text-[#242321] dark:text-[#F5F5F4] placeholder-[#A8A29E] focus:outline-none focus:ring-2 focus:ring-[#C84B18]/30 focus:border-[#C84B18] transition-all font-medium"
-                  />
-                  <KeyRound className="h-4 w-4 text-[#A8A29E] absolute left-3.5 top-1/2 -translate-y-1/2" />
+              {/* Dynamic Mode Highlights / Info Card */}
+              {regRole === "teacher" ? (
+                <div className="bg-[#FAF8F5] dark:bg-[#1C1A17] border border-[#E5E0D8] dark:border-[#292524] rounded-xl p-3.5 space-y-2.5 transition-all">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-[#C84B18] dark:text-[#EA580C] uppercase tracking-wider flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Instructor Portal Highlights</span>
+                    </span>
+                    <span className="text-[10px] font-semibold text-[#716D67] dark:text-[#A8A29E]">
+                      Faculty & Admins
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 gap-2 text-xs">
+                    <div className="flex items-start gap-2.5">
+                      <div className="w-5 h-5 rounded-md bg-[#C84B18]/10 text-[#C84B18] dark:bg-[#EA580C]/15 dark:text-[#EA580C] flex items-center justify-center shrink-0 mt-0.5">
+                        <Sparkles className="w-3 h-3" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-[#242321] dark:text-[#F5F5F4] leading-tight">AI Quiz & Question Generator</p>
+                        <p className="text-[11px] text-[#716D67] dark:text-[#A8A29E]">Instantly generate multi-tier quizzes from syllabus files and custom topics.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2.5">
+                      <div className="w-5 h-5 rounded-md bg-[#C84B18]/10 text-[#C84B18] dark:bg-[#EA580C]/15 dark:text-[#EA580C] flex items-center justify-center shrink-0 mt-0.5">
+                        <ShieldCheck className="w-3 h-3" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-[#242321] dark:text-[#F5F5F4] leading-tight">Live Anti-Cheat Proctoring</p>
+                        <p className="text-[11px] text-[#716D67] dark:text-[#A8A29E]">Real-time face verification, tab switch telemetry & automated cheating logs.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2.5">
+                      <div className="w-5 h-5 rounded-md bg-[#C84B18]/10 text-[#C84B18] dark:bg-[#EA580C]/15 dark:text-[#EA580C] flex items-center justify-center shrink-0 mt-0.5">
+                        <CheckCircle2 className="w-3 h-3" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-[#242321] dark:text-[#F5F5F4] leading-tight">Automated Grading & Student Directories</p>
+                        <p className="text-[11px] text-[#716D67] dark:text-[#A8A29E]">Detailed analytics, class score distribution and student roster management.</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="bg-[#FAF8F5] dark:bg-[#1C1A17] border border-[#E5E0D8] dark:border-[#292524] rounded-xl p-3.5 space-y-2.5 transition-all">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-[#7C3AED] dark:text-[#A78BFA] uppercase tracking-wider flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Candidate Portal Highlights</span>
+                    </span>
+                    <span className="text-[10px] font-semibold text-[#716D67] dark:text-[#A8A29E]">
+                      Students & Learners
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 gap-2 text-xs">
+                    <div className="flex items-start gap-2.5">
+                      <div className="w-5 h-5 rounded-md bg-[#7C3AED]/10 text-[#7C3AED] dark:bg-[#8B5CF6]/15 dark:text-[#A78BFA] flex items-center justify-center shrink-0 mt-0.5">
+                        <FileCode2 className="w-3 h-3" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-[#242321] dark:text-[#F5F5F4] leading-tight">Distraction-Free Exam Interface</p>
+                        <p className="text-[11px] text-[#716D67] dark:text-[#A8A29E]">Clean full-screen quiz runner with auto-save and responsive question palette.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2.5">
+                      <div className="w-5 h-5 rounded-md bg-[#7C3AED]/10 text-[#7C3AED] dark:bg-[#8B5CF6]/15 dark:text-[#A78BFA] flex items-center justify-center shrink-0 mt-0.5">
+                        <CheckCircle2 className="w-3 h-3" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-[#242321] dark:text-[#F5F5F4] leading-tight">Instant Result Breakdown & Rationales</p>
+                        <p className="text-[11px] text-[#716D67] dark:text-[#A8A29E]">Immediate score feedback with clear explanations for all question solutions.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2.5">
+                      <div className="w-5 h-5 rounded-md bg-[#7C3AED]/10 text-[#7C3AED] dark:bg-[#8B5CF6]/15 dark:text-[#A78BFA] flex items-center justify-center shrink-0 mt-0.5">
+                        <ShieldCheck className="w-3 h-3" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-[#242321] dark:text-[#F5F5F4] leading-tight">Academic Profile & Credit Wallet</p>
+                        <p className="text-[11px] text-[#716D67] dark:text-[#A8A29E]">Dedicated student dashboard with test history and allocated wallet balance.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
-              {/* Sign Up Submit Button */}
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-[#C84B18] hover:bg-[#B33E0F] dark:bg-[#EA580C] dark:hover:bg-[#C2410C] text-white font-bold rounded-xl py-3 text-xs transition-all shadow-md shadow-[#C84B18]/20 flex items-center justify-center gap-2 cursor-pointer"
-              >
-                {loading ? "Creating Account..." : "Create Account & Get Started"}
-                {!loading && <ArrowRight className="h-4 w-4" />}
-              </button>
-            </form>
-          )}
-
-          {/* Divider */}
-          <div className="relative flex items-center justify-center">
-            <div className="border-t border-[#E5E0D8] dark:border-[#292524] w-full" />
-            <span className="bg-white dark:bg-[#171615] px-3 text-[11px] font-semibold text-[#716D67] dark:text-[#A8A29E] uppercase tracking-wider shrink-0">
-              or {authMode === "signup" ? "sign up with" : "continue with"}
-            </span>
-            <div className="border-t border-[#E5E0D8] dark:border-[#292524] w-full" />
-          </div>
-
-          {/* Google Identity Services Container */}
-          <div className="w-full flex justify-center min-h-[44px]">
-            <div id="google-signin-btn-container" className="w-full flex justify-center min-h-[44px]" />
-          </div>
-
-          {/* Bottom Switcher: Sign In vs Create Account */}
-          <div className="text-center text-xs text-[#716D67] dark:text-[#A8A29E] pt-1">
-            {authMode === "signin" ? (
-              <p>
-                Don&apos;t have an account?{" "}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAuthMode("signup");
-                    setError(null);
-                  }}
-                  className="font-bold text-[#C84B18] dark:text-[#EA580C] hover:underline cursor-pointer"
-                >
-                  Create one now →
-                </button>
-              </p>
-            ) : (
-              <p>
-                Already have an account?{" "}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAuthMode("signin");
-                    setError(null);
-                  }}
-                  className="font-bold text-[#C84B18] dark:text-[#EA580C] hover:underline cursor-pointer"
-                >
-                  Sign in here →
-                </button>
-              </p>
-            )}
-          </div>
-
-          {/* Direct Exam Code Gateway Toggle */}
-          <div className="pt-2 border-t border-[#E5E0D8]/60 dark:border-[#292524]/60">
-            {!showExamCodeGateway ? (
+              {/* Step 1 Actions: Next Button */}
               <button
                 type="button"
-                onClick={() => setShowExamCodeGateway(true)}
-                className="w-full text-center text-xs font-semibold text-[#716D67] dark:text-[#A8A29E] hover:text-[#C84B18] dark:hover:text-[#EA580C] transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                onClick={() => setCurrentStep(2)}
+                className="w-full bg-[#C84B18] hover:bg-[#B33E0F] dark:bg-[#EA580C] dark:hover:bg-[#C2410C] text-white font-bold rounded-xl py-3 text-xs transition-all shadow-md shadow-[#C84B18]/20 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
               >
-                <FileCode2 className="h-3.5 w-3.5" />
-                <span>Taking a Test? Enter Exam Code</span>
+                <span>Continue to {authMode === "signup" ? "Account Details" : "Sign In"}</span>
+                <ArrowRight className="h-4 w-4" />
               </button>
-            ) : (
-              <form onSubmit={handleDirectExamJump} className="space-y-2.5 bg-[#FBF9F5] dark:bg-[#1D1B19] p-3 rounded-xl border border-[#E5E0D8] dark:border-[#292524] overflow-hidden">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-[#57534E] dark:text-[#A8A29E] uppercase tracking-wider flex items-center gap-1.5">
-                    <FileCode2 className="h-3.5 w-3.5 text-[#C84B18] dark:text-[#EA580C]" />
-                    <span>Candidate Direct Access</span>
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setShowExamCodeGateway(false)}
-                    className="p-1 -mr-1 rounded-lg text-[#716D67] hover:text-[#242321] dark:hover:text-white hover:bg-[#E5E0D8]/50 dark:hover:bg-[#292524] transition-colors cursor-pointer"
-                    title="Close"
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </button>
+
+              {/* Taking a test shortcut */}
+              <div className="pt-1 text-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCurrentStep(2);
+                    setShowExamCodeGateway(true);
+                  }}
+                  className="text-xs font-semibold text-[#716D67] dark:text-[#A8A29E] hover:text-[#C84B18] dark:hover:text-[#EA580C] transition-colors inline-flex items-center gap-1.5 cursor-pointer"
+                >
+                  <FileCode2 className="h-3.5 w-3.5" />
+                  <span>Taking a Test? Enter Exam Code Directly →</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ═══════════════════════════════════════════════════════════════
+              STEP 2: AUTHENTICATION FORM (WITH BACK BUTTON)
+              ═══════════════════════════════════════════════════════════════ */}
+          {currentStep === 2 && (
+            <div className="space-y-4 animate-in fade-in duration-200">
+              {/* Step 2 Top Bar: Back Button & Active Role Badge */}
+              <div className="flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => setCurrentStep(1)}
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#716D67] hover:text-[#242321] dark:text-[#A8A29E] dark:hover:text-white transition-colors cursor-pointer py-1 px-2.5 rounded-lg hover:bg-[#F0ECE4]/60 dark:hover:bg-[#292524] border border-[#E5E0D8]/60 dark:border-[#292524]"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>Back to Mode</span>
+                </button>
+
+                <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border ${
+                  regRole === "teacher"
+                    ? "bg-[#C84B18]/10 text-[#C84B18] dark:bg-[#EA580C]/15 dark:text-[#EA580C] border-[#C84B18]/20"
+                    : "bg-[#7C3AED]/10 text-[#7C3AED] dark:bg-[#8B5CF6]/15 dark:text-[#A78BFA] border-[#7C3AED]/20"
+                }`}>
+                  <img
+                    src={regRole === "teacher" ? "/images/teacher_mode_3d.jpg" : "/images/student_mode_3d.jpg"}
+                    alt=""
+                    className="w-4 h-4 rounded-full object-cover"
+                  />
+                  <span>{regRole === "teacher" ? "Instructor Mode" : "Candidate Mode"}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="relative flex-1 min-w-0">
+              </div>
+
+              <div>
+                <h2 className="text-xl font-bold text-[#242321] dark:text-[#F5F5F4] tracking-tight">
+                  {authMode === "signin" ? "Portal Sign In" : "Create New Account"}
+                </h2>
+                <p className="text-[#716D67] dark:text-[#A8A29E] text-xs mt-0.5">
+                  {authMode === "signin" 
+                    ? `Sign in to access your ${regRole === "teacher" ? "instructor workspace" : "student portal"}`
+                    : `Get started with your personalized ${regRole === "teacher" ? "teacher" : "student"} account`}
+                </p>
+              </div>
+
+              {error && (
+                <div className="flex gap-2 items-center p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/50 text-rose-700 dark:text-rose-300 text-xs">
+                  <AlertCircle className="h-4 w-4 shrink-0 text-rose-600 dark:text-rose-400" />
+                  <span>{error}</span>
+                </div>
+              )}
+
+              {/* ═══════════════════════════════════════════════════════════════
+                  SIGN IN FORM
+                  ═══════════════════════════════════════════════════════════════ */}
+              {authMode === "signin" ? (
+                <form onSubmit={handleSignInSubmit} className="space-y-4">
+                  {/* Email Field */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-[#57534E] dark:text-[#A8A29E] uppercase tracking-wider">
+                      User Name / Email
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="user@aegeus.edu"
+                        className="w-full bg-[#FBF9F5] dark:bg-[#1D1B19] border border-[#E5E0D8] dark:border-[#292524] rounded-xl pl-9.5 pr-3.5 py-2.5 text-sm text-[#242321] dark:text-[#F5F5F4] placeholder-[#A8A29E] focus:outline-none focus:ring-2 focus:ring-[#C84B18]/30 focus:border-[#C84B18] transition-all font-medium"
+                      />
+                      <Mail className="h-4 w-4 text-[#A8A29E] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    </div>
+                  </div>
+
+                  {/* Password Field */}
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between items-center">
+                      <label className="text-xs font-bold text-[#57534E] dark:text-[#A8A29E] uppercase tracking-wider">
+                        Password
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setForgotEmail(email);
+                          setForgotMessage(null);
+                          setForgotError(null);
+                          setForgotModalOpen(true);
+                        }}
+                        className="text-xs font-semibold text-[#C84B18] dark:text-[#EA580C] hover:underline cursor-pointer"
+                      >
+                        Forgot Password?
+                      </button>
+                    </div>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        required
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="w-full bg-[#FBF9F5] dark:bg-[#1D1B19] border border-[#E5E0D8] dark:border-[#292524] rounded-xl pl-9.5 pr-10 py-2.5 text-sm text-[#242321] dark:text-[#F5F5F4] placeholder-[#A8A29E] focus:outline-none focus:ring-2 focus:ring-[#C84B18]/30 focus:border-[#C84B18] transition-all font-medium"
+                      />
+                      <Lock className="h-4 w-4 text-[#A8A29E] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#A8A29E] hover:text-[#242321] dark:hover:text-white cursor-pointer"
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Remember Me Option */}
+                  <div className="flex items-center justify-between pt-1">
+                    <label className="flex items-center gap-2 text-xs font-semibold text-[#716D67] dark:text-[#A8A29E] cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                        className="rounded border-[#E5E0D8] dark:border-[#292524] text-[#C84B18] focus:ring-[#C84B18]/30 cursor-pointer h-3.5 w-3.5"
+                      />
+                      <span>Remember my login email</span>
+                    </label>
+                  </div>
+
+                  {/* Sign In Submit Button */}
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-[#C84B18] hover:bg-[#B33E0F] dark:bg-[#EA580C] dark:hover:bg-[#C2410C] text-white font-bold rounded-xl py-3 text-xs transition-all shadow-md shadow-[#C84B18]/20 flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    {loading ? "Signing in..." : "Sign In to Portal"}
+                    {!loading && <ArrowRight className="h-4 w-4" />}
+                  </button>
+                </form>
+              ) : (
+                /* ═══════════════════════════════════════════════════════════════
+                   CREATE ACCOUNT (SIGN UP) FORM
+                   ═══════════════════════════════════════════════════════════════ */
+                <form onSubmit={handleRegisterSubmit} className="space-y-4">
+                  {/* Full Name Field */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-[#57534E] dark:text-[#A8A29E] uppercase tracking-wider">
+                      Full Name
+                    </label>
                     <input
                       type="text"
                       required
-                      value={examCodeInput}
-                      onChange={(e) => setExamCodeInput(e.target.value)}
-                      placeholder="e.g. ex-com-1234"
-                      className="w-full h-9 bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-lg px-2.5 text-xs text-[#242321] dark:text-[#F5F5F4] placeholder:text-[#A8A29E] focus:outline-none focus:ring-1 focus:ring-[#C84B18]"
+                      value={regFullName}
+                      onChange={(e) => setRegFullName(e.target.value)}
+                      placeholder="e.g. Dr. Sarah Jenkins"
+                      className="w-full bg-[#FBF9F5] dark:bg-[#1D1B19] border border-[#E5E0D8] dark:border-[#292524] rounded-xl px-3.5 py-2.5 text-sm text-[#242321] dark:text-[#F5F5F4] placeholder-[#A8A29E] focus:outline-none focus:ring-2 focus:ring-[#C84B18]/30 focus:border-[#C84B18] transition-all font-medium"
                     />
                   </div>
+
+                  {/* Email Field */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-[#57534E] dark:text-[#A8A29E] uppercase tracking-wider">
+                      Email Address
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="email"
+                        required
+                        value={regEmail}
+                        onChange={(e) => setRegEmail(e.target.value)}
+                        placeholder="sarah@university.edu"
+                        className="w-full bg-[#FBF9F5] dark:bg-[#1D1B19] border border-[#E5E0D8] dark:border-[#292524] rounded-xl pl-9.5 pr-3.5 py-2.5 text-sm text-[#242321] dark:text-[#F5F5F4] placeholder-[#A8A29E] focus:outline-none focus:ring-2 focus:ring-[#C84B18]/30 focus:border-[#C84B18] transition-all font-medium"
+                      />
+                      <Mail className="h-4 w-4 text-[#A8A29E] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    </div>
+                  </div>
+
+                  {/* Password Field with Strength Indicator */}
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between items-center">
+                      <label className="text-xs font-bold text-[#57534E] dark:text-[#A8A29E] uppercase tracking-wider">
+                        Create Password
+                      </label>
+                      {regPassword && (
+                        <span className="text-[10px] font-bold text-[#716D67] dark:text-[#A8A29E]">
+                          Strength: <span className="font-semibold">{pwdStrength.text}</span>
+                        </span>
+                      )}
+                    </div>
+                    <div className="relative">
+                      <input
+                        type={regShowPassword ? "text" : "password"}
+                        required
+                        value={regPassword}
+                        onChange={(e) => setRegPassword(e.target.value)}
+                        placeholder="At least 6 characters"
+                        className="w-full bg-[#FBF9F5] dark:bg-[#1D1B19] border border-[#E5E0D8] dark:border-[#292524] rounded-xl pl-9.5 pr-10 py-2.5 text-sm text-[#242321] dark:text-[#F5F5F4] placeholder-[#A8A29E] focus:outline-none focus:ring-2 focus:ring-[#C84B18]/30 focus:border-[#C84B18] transition-all font-medium"
+                      />
+                      <Lock className="h-4 w-4 text-[#A8A29E] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <button
+                        type="button"
+                        onClick={() => setRegShowPassword(!regShowPassword)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#A8A29E] hover:text-[#242321] dark:hover:text-white cursor-pointer"
+                      >
+                        {regShowPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                    {/* Strength Meter Bar */}
+                    {regPassword && (
+                      <div className="grid grid-cols-4 gap-1 pt-1">
+                        {[1, 2, 3, 4].map((step) => (
+                          <div
+                            key={step}
+                            className={`h-1 rounded-full transition-all ${
+                              step <= pwdStrength.score ? pwdStrength.color : "bg-[#E5E0D8] dark:bg-[#292524]"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Confirm Password Field */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-[#57534E] dark:text-[#A8A29E] uppercase tracking-wider">
+                      Confirm Password
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={regShowPassword ? "text" : "password"}
+                        required
+                        value={regConfirmPassword}
+                        onChange={(e) => setRegConfirmPassword(e.target.value)}
+                        placeholder="Re-enter your password"
+                        className="w-full bg-[#FBF9F5] dark:bg-[#1D1B19] border border-[#E5E0D8] dark:border-[#292524] rounded-xl pl-9.5 pr-3.5 py-2.5 text-sm text-[#242321] dark:text-[#F5F5F4] placeholder-[#A8A29E] focus:outline-none focus:ring-2 focus:ring-[#C84B18]/30 focus:border-[#C84B18] transition-all font-medium"
+                      />
+                      <KeyRound className="h-4 w-4 text-[#A8A29E] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    </div>
+                  </div>
+
+                  {/* Sign Up Submit Button */}
                   <button
                     type="submit"
-                    className="h-9 px-3.5 bg-[#C84B18] text-white rounded-lg text-xs font-bold hover:bg-[#B33E0F] active:scale-[0.98] transition-all flex items-center justify-center gap-1 shrink-0 cursor-pointer shadow-xs whitespace-nowrap"
+                    disabled={loading}
+                    className="w-full bg-[#C84B18] hover:bg-[#B33E0F] dark:bg-[#EA580C] dark:hover:bg-[#C2410C] text-white font-bold rounded-xl py-3 text-xs transition-all shadow-md shadow-[#C84B18]/20 flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <span>Take Exam</span>
-                    <ArrowRight className="h-3 w-3" />
+                    {loading ? "Creating Account..." : "Create Account & Get Started"}
+                    {!loading && <ArrowRight className="h-4 w-4" />}
                   </button>
-                </div>
-              </form>
-            )}
-          </div>
+                </form>
+              )}
+
+              {/* Divider */}
+              <div className="relative flex items-center justify-center">
+                <div className="border-t border-[#E5E0D8] dark:border-[#292524] w-full" />
+                <span className="bg-white dark:bg-[#171615] px-3 text-[11px] font-semibold text-[#716D67] dark:text-[#A8A29E] uppercase tracking-wider shrink-0">
+                  or {authMode === "signup" ? "sign up with" : "continue with"}
+                </span>
+                <div className="border-t border-[#E5E0D8] dark:border-[#292524] w-full" />
+              </div>
+
+              {/* Google Identity Services Container */}
+              <div className="w-full flex justify-center min-h-[44px]">
+                <div id="google-signin-btn-container" className="w-full flex justify-center min-h-[44px]" />
+              </div>
+
+              {/* Bottom Switcher: Sign In vs Create Account */}
+              <div className="text-center text-xs text-[#716D67] dark:text-[#A8A29E] pt-1">
+                {authMode === "signin" ? (
+                  <p>
+                    Don&apos;t have an account?{" "}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAuthMode("signup");
+                        setError(null);
+                      }}
+                      className="font-bold text-[#C84B18] dark:text-[#EA580C] hover:underline cursor-pointer"
+                    >
+                      Create one now →
+                    </button>
+                  </p>
+                ) : (
+                  <p>
+                    Already have an account?{" "}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAuthMode("signin");
+                        setError(null);
+                      }}
+                      className="font-bold text-[#C84B18] dark:text-[#EA580C] hover:underline cursor-pointer"
+                    >
+                      Sign in here →
+                    </button>
+                  </p>
+                )}
+              </div>
+
+              {/* Direct Exam Code Gateway Toggle */}
+              <div className="pt-2 border-t border-[#E5E0D8]/60 dark:border-[#292524]/60">
+                {!showExamCodeGateway ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowExamCodeGateway(true)}
+                    className="w-full text-center text-xs font-semibold text-[#716D67] dark:text-[#A8A29E] hover:text-[#C84B18] dark:hover:text-[#EA580C] transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <FileCode2 className="h-3.5 w-3.5" />
+                    <span>Taking a Test? Enter Exam Code</span>
+                  </button>
+                ) : (
+                  <form onSubmit={handleDirectExamJump} className="space-y-2.5 bg-[#FBF9F5] dark:bg-[#1D1B19] p-3 rounded-xl border border-[#E5E0D8] dark:border-[#292524] overflow-hidden">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-[#57534E] dark:text-[#A8A29E] uppercase tracking-wider flex items-center gap-1.5">
+                        <FileCode2 className="h-3.5 w-3.5 text-[#C84B18] dark:text-[#EA580C]" />
+                        <span>Candidate Direct Access</span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setShowExamCodeGateway(false)}
+                        className="p-1 -mr-1 rounded-lg text-[#716D67] hover:text-[#242321] dark:hover:text-white hover:bg-[#E5E0D8]/50 dark:hover:bg-[#292524] transition-colors cursor-pointer"
+                        title="Close"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="relative flex-1 min-w-0">
+                        <input
+                          type="text"
+                          required
+                          value={examCodeInput}
+                          onChange={(e) => setExamCodeInput(e.target.value)}
+                          placeholder="e.g. ex-com-1234"
+                          className="w-full h-9 bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-lg px-2.5 text-xs text-[#242321] dark:text-[#F5F5F4] placeholder:text-[#A8A29E] focus:outline-none focus:ring-1 focus:ring-[#C84B18]"
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        className="h-9 px-3.5 bg-[#C84B18] text-white rounded-lg text-xs font-bold hover:bg-[#B33E0F] active:scale-[0.98] transition-all flex items-center justify-center gap-1 shrink-0 cursor-pointer shadow-xs whitespace-nowrap"
+                      >
+                        <span>Take Exam</span>
+                        <ArrowRight className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </form>
+                )}
+              </div>
+            </div>
+          )}
         </div>
         
         {/* Footer Security Badge */}
         <div className="flex items-center justify-center gap-1.5 text-[#716D67] dark:text-[#A8A29E] text-xs">
           <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-          <span>Secured with Aegis Multi-factor & Anti-cheat Telemetry.</span>
+          <span>Encrypted & Secured Autonomous Examination Portal</span>
         </div>
       </div>
 
       {/* ═══════ FORGOT PASSWORD MODAL ═══════ */}
       {forgotModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-3 sm:p-4 animate-in fade-in">
-          <div className="bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl p-4 sm:p-6 max-w-md w-full shadow-2xl space-y-4 relative max-h-[92vh] overflow-y-auto">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-3 sm:p-4 animate-in fade-in"
+          onClick={() => setForgotModalOpen(false)}
+        >
+          <div 
+            className="bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl p-4 sm:p-6 max-w-md w-full shadow-2xl space-y-4 relative max-h-[92vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               onClick={() => setForgotModalOpen(false)}
               className="absolute top-4 right-4 text-[#716D67] hover:text-[#242321] dark:hover:text-white p-1 rounded-lg hover:bg-[#F0ECE4]/50 dark:hover:bg-[#292524]"

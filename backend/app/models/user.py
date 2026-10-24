@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, ForeignKey, Boolean, DateTime
+from sqlalchemy import Column, String, ForeignKey, Boolean, DateTime, Integer
 from sqlalchemy.orm import relationship
 from app.models.base import TimeStampedModel
 
@@ -19,6 +19,7 @@ class User(TimeStampedModel):
     avatar_url = Column(String(500), nullable=True)
     last_login_at = Column(DateTime, nullable=True)
     reset_token = Column(String(255), nullable=True)
+    credits_balance = Column(Integer, default=0, nullable=False)
     
     institution = relationship("Institution", back_populates="users")
     student_profile = relationship("Student", back_populates="user", uselist=False, cascade="all, delete-orphan")

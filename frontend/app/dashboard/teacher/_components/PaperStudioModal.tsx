@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { 
   X, Sparkles, Printer, FileText, Save, StopCircle, Trash2, Check, 
-  RefreshCw, Plus, CheckCircle, Play
+  RefreshCw, Plus, CheckCircle, Play, CreditCard
 } from "lucide-react";
 import { API_V1, apiFetch } from "../../../../lib/api";
 import { useAuthStore } from "../../../../store/authStore";
@@ -17,6 +17,7 @@ interface PaperStudioModalProps {
   onPublishExam: (examId: string) => void;
   onEndExamEarly: (examId: string, examName: string) => void;
   onDeleteExam: (examId: string) => void;
+  onOpenPaymentModal?: (exam: any) => void;
 }
 
 export default function PaperStudioModal({
@@ -26,6 +27,7 @@ export default function PaperStudioModal({
   onPublishExam,
   onEndExamEarly,
   onDeleteExam,
+  onOpenPaymentModal,
 }: PaperStudioModalProps) {
   const { token } = useAuthStore();
   const { showToast } = useToast();
@@ -135,8 +137,14 @@ export default function PaperStudioModal({
   if (!exam) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-2 sm:p-4 animate-fadeIn">
-      <div className="bg-[#FFFFFF] dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl max-w-4xl w-full mx-2 sm:mx-auto p-3.5 sm:p-6 shadow-2xl space-y-4 max-h-[92dvh] flex flex-col">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-2 sm:p-4 animate-fadeIn"
+      onClick={onClose}
+    >
+      <div 
+        className="bg-[#FFFFFF] dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl max-w-4xl w-full mx-2 sm:mx-auto p-3.5 sm:p-6 shadow-2xl space-y-4 max-h-[92dvh] flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E5E0D8] dark:border-[#292524] pb-3 sm:pb-4 shrink-0">
           <div className="min-w-0">
@@ -487,13 +495,17 @@ export default function PaperStudioModal({
               <button
                 type="button"
                 onClick={() => {
-                  onPublishExam(exam.id);
+                  if (!exam.is_paid && onOpenPaymentModal) {
+                    onOpenPaymentModal(exam);
+                  } else {
+                    onPublishExam(exam.id);
+                  }
                   onClose();
                 }}
-                className="btn-primary flex items-center gap-1.5"
+                className="btn-primary flex items-center gap-1.5 cursor-pointer"
               >
-                <Sparkles className="h-3.5 w-3.5" />
-                <span>Publish Assessment Live</span>
+                {exam.is_paid ? <Sparkles className="h-3.5 w-3.5" /> : <CreditCard className="h-3.5 w-3.5" />}
+                <span>{exam.is_paid ? "Publish Assessment Live" : "Pay & Publish Live"}</span>
               </button>
             )}
           </div>
@@ -502,8 +514,14 @@ export default function PaperStudioModal({
 
       {/* ═══════ AI PAPER QUALITY & FAIRNESS AUDIT REPORT MODAL ═══════ */}
       {auditModalData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4 animate-fadeIn">
-          <div className="bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl max-w-lg w-full mx-3 sm:mx-auto p-4 sm:p-6 shadow-2xl space-y-4 relative max-h-[92vh] overflow-y-auto">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4 animate-fadeIn"
+          onClick={() => setAuditModalData(null)}
+        >
+          <div 
+            className="bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl max-w-lg w-full mx-3 sm:mx-auto p-4 sm:p-6 shadow-2xl space-y-4 relative max-h-[92vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               onClick={() => setAuditModalData(null)}
               className="absolute top-4 right-4 text-[#716D67] hover:text-[#242321] p-1 rounded-md"

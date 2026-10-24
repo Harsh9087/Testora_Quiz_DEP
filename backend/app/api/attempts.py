@@ -223,6 +223,12 @@ def login_student(login_in: ExamLogin, exam_code: str, db: Session = Depends(get
     if not exam:
         raise HTTPException(status_code=404, detail="Exam not active or invalid code")
         
+    if not exam.is_paid:
+        raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail="This examination is currently locked pending instructor payment completion."
+        )
+        
     # Verify timeframe
     now = now_utc()
     exam_start = to_utc_instant(exam.start_time) or (now - timedelta(seconds=10))
@@ -425,6 +431,13 @@ def get_instructions_info(
     actual_token = resolve_exam_token(token, authorization)
     sub = get_submission_by_token(actual_token, db)
     exam = sub.exam
+    
+    if not exam or not exam.is_paid:
+        raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail="This examination is currently locked pending instructor payment completion."
+        )
+        
     cand = sub.candidate
     cred = sub.credential
 
@@ -534,6 +547,12 @@ def start_exam(
         if not exam or not exam.is_published:
             raise HTTPException(status_code=400, detail="Assessment is not published or active")
 
+        if not exam.is_paid:
+            raise HTTPException(
+                status_code=status.HTTP_402_PAYMENT_REQUIRED,
+                detail="This examination is currently locked pending instructor payment completion."
+            )
+
         now = now_utc()
         exam_start = to_utc_instant(exam.start_time) or (now - timedelta(seconds=10))
         exam_end = to_utc_instant(exam.end_time) or (exam_start + timedelta(days=30))
@@ -591,6 +610,12 @@ def get_exam_info(
     actual_token = resolve_exam_token(token, authorization)
     sub = get_submission_by_token(actual_token, db)
     exam = sub.exam
+    
+    if not exam or not exam.is_paid:
+        raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail="This examination is currently locked pending instructor payment completion."
+        )
     
     is_completed = sub.status in ["submitted", "auto_submitted"]
     evaluated_answers = json.loads(sub.answers_json) if (is_completed and sub.answers_json) else {}
@@ -930,6 +955,12 @@ def direct_start_for_student(
     exam = db.query(Exam).filter(Exam.exam_code == exam_code, Exam.is_published == True).first()
     if not exam:
         raise HTTPException(status_code=404, detail="Assessment not active or invalid code")
+        
+    if not exam.is_paid:
+        raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail="This examination is currently locked pending instructor payment completion."
+        )
         
     student = db.query(Student).filter(Student.user_id == current_user.id, Student.is_deleted == False).first()
     if not student:

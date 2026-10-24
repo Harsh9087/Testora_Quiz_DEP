@@ -28,6 +28,12 @@ class Exam(TimeStampedModel):
     settings_json = Column(Text, nullable=True)
     is_deleted = Column(Boolean, default=False)
     
+    # Per-Test Payment and Monetization Status
+    is_paid = Column(Boolean, default=False, nullable=False)
+    paid_student_count = Column(Integer, default=0, nullable=False)
+    paid_question_count = Column(Integer, default=0, nullable=False)
+    paid_amount_paise = Column(Integer, default=0, nullable=False)
+    
     subject = relationship("Subject", back_populates="exams")
     workspace = relationship("Workspace", back_populates="exams")
     creator = relationship("User", foreign_keys=[created_by])
@@ -39,6 +45,7 @@ class Exam(TimeStampedModel):
     student_overrides = relationship("ExamStudentOverride", back_populates="exam", cascade="all, delete-orphan")
     credentials = relationship("ExamCredential", back_populates="exam", cascade="all, delete-orphan")
     submissions = relationship("ExamSubmission", back_populates="exam", cascade="all, delete-orphan")
+    payments = relationship("PaymentOrder", back_populates="exam", cascade="all, delete-orphan", foreign_keys="[PaymentOrder.exam_id]")
 
 class ExamCredential(TimeStampedModel):
     __tablename__ = "exam_credentials"

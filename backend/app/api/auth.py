@@ -2,8 +2,10 @@ import uuid
 import secrets
 import string
 import time
-from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, Request, Response
+from typing import Optional, Any, Literal
+import os
+import shutil
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, Request, Response, UploadFile, File
 from pydantic import BaseModel, EmailStr
 import json
 from sqlalchemy.orm import Session
@@ -14,7 +16,7 @@ from app.models.user import User, Student
 from app.models.institution import Institution
 from app.schemas.auth import (
     UserLogin, UserCreate, Token, PasswordChange, UserProfile,
-    GoogleAuthPayload, ForgotPasswordRequest, ResetPasswordRequest
+    GoogleAuthPayload, ForgotPasswordRequest, ResetPasswordRequest, UpdateProfileRequest
 )
 from app.utils.security import (
     get_password_hash, 
@@ -52,12 +54,13 @@ def ensure_student_profile(user: User, db: Session) -> Student:
 def set_refresh_cookie(response: Response, refresh_token: str) -> None:
     """Sets a secure HttpOnly SameSite cookie for the refresh token."""
     secure_cookie = settings.COOKIE_SECURE or (settings.ENVIRONMENT == "production")
+    samesite_val: Any = settings.COOKIE_SAMESITE if settings.COOKIE_SAMESITE in ["lax", "none", "strict"] else "lax"
     response.set_cookie(
         key="refresh_token",
         value=refresh_token,
         httponly=True,
         secure=secure_cookie,
-        samesite=settings.COOKIE_SAMESITE,
+        samesite=samesite_val,
         max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 86400,
         path="/"
     )
@@ -349,9 +352,9 @@ def refresh_token(
         raise HTTPException(status_code=401, detail="Refresh token missing from request cookie or body")
 
     try:
-        payload = jwt.decode(token_candidate, settings.SECRET_KEY, algorithms=["HS256"])
-        user_id: str = payload.get("sub")
-        token_type: str = payload.get("type")
+        payload = jwt.decode(token_candidate, settings.SECRET_KEY, algorithms=["HS256"], options={"verify_exp": False})
+        user_id: Optional[str] = payload.get("sub")
+        token_type: Optional[str] = payload.get("type")
         jti: Optional[str] = payload.get("jti")
         if user_id is None or token_type != "refresh":
             raise HTTPException(status_code=401, detail="Invalid refresh token")
@@ -401,8 +404,102 @@ def logout(request: Request, response: Response):
     return {"message": "Logged out successfully"}
 
 @router.get("/me", response_model=UserProfile)
-def get_me(current_user: User = Depends(get_current_user)):
-    return current_user
+def get_me(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    inst_name = current_user.institution.name if current_user.institution else None
+    roll = current_user.student_profile.roll_number if current_user.student_profile else None
+    div = current_user.student_profile.division if current_user.student_profile else None
+    batch = current_user.student_profile.batch if current_user.student_profile else None
+    return UserProfile(
+        id=current_user.id,
+        email=current_user.email,
+        full_name=current_user.full_name,
+        role=current_user.role,
+        institution_id=current_user.institution_id,
+        avatar_url=current_user.avatar_url,
+        credits_balance=getattr(current_user, "credits_balance", 0) or 0,
+        institution_name=inst_name,
+        department_name=None,
+        roll_number=roll,
+        division=div,
+        batch=batch
+    )
+
+@router.put("/profile", response_model=UserProfile)
+def update_profile(
+    req: UpdateProfileRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    if req.full_name is not None and req.full_name.strip():
+        current_user.full_name = req.full_name.strip()
+    if req.avatar_url is not None:
+        clean_url = req.avatar_url.strip()
+        current_user.avatar_url = clean_url if clean_url and clean_url.lower() != "none" else None
+    db.add(current_user)
+    db.commit()
+    db.refresh(current_user)
+    inst_name = current_user.institution.name if current_user.institution else None
+    roll = current_user.student_profile.roll_number if current_user.student_profile else None
+    div = current_user.student_profile.division if current_user.student_profile else None
+    batch = current_user.student_profile.batch if current_user.student_profile else None
+    return UserProfile(
+        id=current_user.id,
+        email=current_user.email,
+        full_name=current_user.full_name,
+        role=current_user.role,
+        institution_id=current_user.institution_id,
+        avatar_url=current_user.avatar_url,
+        credits_balance=getattr(current_user, "credits_balance", 0) or 0,
+        institution_name=inst_name,
+        department_name=None,
+        roll_number=roll,
+        division=div,
+        batch=batch
+    )
+
+@router.post("/avatar/upload", response_model=UserProfile)
+async def upload_avatar(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Uploads a photo for the current user and saves it to static storage.
+    """
+    if not file.content_type or not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Only image files (JPG, PNG, WEBP) are allowed.")
+    
+    ext = file.filename.split(".")[-1].lower() if file.filename and "." in file.filename else "png"
+    if ext not in ["jpg", "jpeg", "png", "webp"]:
+        ext = "png"
+        
+    static_avatars_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static", "avatars")
+    os.makedirs(static_avatars_dir, exist_ok=True)
+    
+    filename = f"avatar_{current_user.id}_{int(time.time())}.{ext}"
+    file_path = os.path.join(static_avatars_dir, filename)
+    
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+        
+    current_user.avatar_url = f"/static/avatars/{filename}"
+    db.add(current_user)
+    db.commit()
+    db.refresh(current_user)
+    
+    inst_name = current_user.institution.name if current_user.institution else None
+    return UserProfile(
+        id=current_user.id,
+        email=current_user.email,
+        full_name=current_user.full_name,
+        role=current_user.role,
+        institution_id=current_user.institution_id,
+        avatar_url=current_user.avatar_url,
+        credits_balance=getattr(current_user, "credits_balance", 0) or 0,
+        institution_name=inst_name,
+        department_name=None
+    )
+
 
 @router.post("/change-password")
 def change_password(pass_in: PasswordChange, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):

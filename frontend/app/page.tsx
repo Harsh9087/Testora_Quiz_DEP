@@ -33,6 +33,7 @@ import {
   HelpCircle,
   LogIn
 } from "lucide-react";
+import AIAgentGuideWidget from "../components/AIAgentGuideWidget";
 
 export default function UnifiedHomePage() {
   const router = useRouter();
@@ -158,24 +159,18 @@ export default function UnifiedHomePage() {
 
         {/* Action Controls & User Auth Bar */}
         <div className="flex items-center gap-2.5 sm:gap-3">
-          {/* Quick Anchor Links */}
+          {/* Important Paths Only */}
           <button
             onClick={() => scrollToSection("mode-selection")}
-            className="hidden lg:inline-flex text-xs font-semibold text-[#716D67] dark:text-[#A8A29E] hover:text-[#C84B18] dark:hover:text-[#EA580C] transition-colors px-2 py-1 cursor-pointer"
+            className="hidden sm:inline-flex text-xs font-semibold text-[#716D67] dark:text-[#A8A29E] hover:text-[#C84B18] dark:hover:text-[#EA580C] transition-colors px-2 py-1 cursor-pointer"
           >
             Select Mode
           </button>
           <button
             onClick={() => scrollToSection("platform-guide")}
-            className="hidden lg:inline-flex text-xs font-semibold text-[#716D67] dark:text-[#A8A29E] hover:text-[#C84B18] dark:hover:text-[#EA580C] transition-colors px-2 py-1 cursor-pointer"
+            className="hidden sm:inline-flex text-xs font-semibold text-[#716D67] dark:text-[#A8A29E] hover:text-[#C84B18] dark:hover:text-[#EA580C] transition-colors px-2 py-1 cursor-pointer"
           >
-            User Guide
-          </button>
-          <button
-            onClick={() => scrollToSection("demo-credentials")}
-            className="hidden lg:inline-flex text-xs font-semibold text-[#716D67] dark:text-[#A8A29E] hover:text-[#C84B18] dark:hover:text-[#EA580C] transition-colors px-2 py-1 cursor-pointer"
-          >
-            Demo Accounts
+            Platform Guide
           </button>
 
           {/* Dark / Light Theme Toggle */}
@@ -194,25 +189,36 @@ export default function UnifiedHomePage() {
             </div>
           </button>
 
-          {/* User Auth Status or Login CTAs */}
+          {/* User Auth Status with Profile Avatar Icon */}
           {mounted && token ? (
             <div className="flex items-center gap-2">
-              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] text-xs">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="font-semibold text-[#242321] dark:text-[#F5F5F4] max-w-[120px] truncate">{fullName || "User"}</span>
-                <span className="text-[10px] uppercase font-bold text-[#C84B18] dark:text-[#EA580C] bg-[#C84B18]/10 dark:bg-[#EA580C]/15 px-1.5 py-0.5 rounded">
-                  {role}
-                </span>
-              </div>
+              <button
+                onClick={() => router.push(isTeacher ? "/dashboard/teacher" : "/dashboard/student")}
+                className="flex items-center gap-2 p-1 pr-2.5 rounded-full bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] hover:border-[#C84B18] transition-all shadow-2xs cursor-pointer group"
+                title={`Logged in as ${fullName} (${role}) — Click to open Dashboard`}
+              >
+                <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-[#9C3810] to-[#C84B18] text-white font-bold text-xs flex items-center justify-center shadow-2xs">
+                  {fullName ? fullName.charAt(0).toUpperCase() : <User className="w-3.5 h-3.5" />}
+                </div>
+                <div className="text-left hidden sm:block">
+                  <span className="text-xs font-bold text-[#242321] dark:text-[#F5F5F4] max-w-[100px] truncate block leading-tight group-hover:text-[#C84B18]">
+                    {fullName || "User"}
+                  </span>
+                  <span className="text-[9px] uppercase font-extrabold text-[#C84B18] dark:text-[#EA580C] leading-none block">
+                    {role}
+                  </span>
+                </div>
+              </button>
+              
               <button
                 onClick={() => {
                   logout();
                   router.push("/login");
                 }}
-                className="p-2 rounded-xl bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] text-[#716D67] hover:text-rose-600 transition-colors shadow-2xs cursor-pointer"
+                className="p-2 rounded-full bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] text-[#716D67] hover:text-rose-600 transition-colors shadow-2xs cursor-pointer"
                 title="Sign Out"
               >
-                <LogOut className="h-4 w-4" />
+                <LogOut className="h-3.5 w-3.5" />
               </button>
             </div>
           ) : (
@@ -271,14 +277,13 @@ export default function UnifiedHomePage() {
             
             <div>
               {/* Photo Banner on Top */}
-              <div className="relative w-full aspect-[4/3] sm:aspect-[16/10] overflow-hidden bg-[#F0ECE4] dark:bg-[#242321]">
+              <div className="relative w-full aspect-[16/11] sm:aspect-[16/10] overflow-hidden bg-[#FAF8F5] dark:bg-[#1A1918] flex items-center justify-center p-2 sm:p-3">
                 <img
-                  src="/images/teacher_mode.jpg"
+                  src="/images/teacher_mode_3d.jpg"
                   alt="Instructor Studio"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  className="w-full h-full object-contain group-hover:scale-102 transition-transform duration-500 rounded-lg"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/10 pointer-events-none" />
-                <span className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 text-[9px] sm:text-[11px] font-bold tracking-wider uppercase px-2 sm:px-2.5 py-0.5 rounded-full bg-black/60 text-white backdrop-blur-xs border border-white/20">
+                <span className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 text-[9px] sm:text-[11px] font-bold tracking-wider uppercase px-2.5 py-1 rounded-full bg-[#242321]/80 text-white backdrop-blur-xs border border-white/20 shadow-xs">
                   Instructor Studio
                 </span>
               </div>
@@ -328,14 +333,13 @@ export default function UnifiedHomePage() {
             
             <div>
               {/* Photo Banner on Top */}
-              <div className="relative w-full aspect-[4/3] sm:aspect-[16/10] overflow-hidden bg-[#F0ECE4] dark:bg-[#242321]">
+              <div className="relative w-full aspect-[16/11] sm:aspect-[16/10] overflow-hidden bg-[#FAF8F5] dark:bg-[#1A1918] flex items-center justify-center p-2 sm:p-3">
                 <img
-                  src="/images/student_mode.jpg"
+                  src="/images/student_mode_3d.jpg"
                   alt="Candidate Portal"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  className="w-full h-full object-contain group-hover:scale-102 transition-transform duration-500 rounded-lg"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/10 pointer-events-none" />
-                <span className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 text-[9px] sm:text-[11px] font-bold tracking-wider uppercase px-2 sm:px-2.5 py-0.5 rounded-full bg-black/60 text-white backdrop-blur-xs border border-white/20">
+                <span className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 text-[9px] sm:text-[11px] font-bold tracking-wider uppercase px-2.5 py-1 rounded-full bg-[#242321]/80 text-white backdrop-blur-xs border border-white/20 shadow-xs">
                   Candidate Portal
                 </span>
               </div>
@@ -577,113 +581,6 @@ export default function UnifiedHomePage() {
           </div>
         </section>
 
-        {/* ══════════════════════════════════════════════════════════════════════
-            DEMO CREDENTIALS SECTION
-        ══════════════════════════════════════════════════════════════════════ */}
-        <section id="demo-credentials" className="max-w-5xl mx-auto space-y-4 pt-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#716D67]">
-              <KeyRound className="h-4 w-4 text-[#C84B18]" />
-              <span>Instant Demo Accounts</span>
-            </div>
-            <span className="text-[11px] text-[#716D67]">Click any account to copy credentials</span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Teacher Demo Card */}
-            <div className="p-5 rounded-2xl bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] shadow-xs space-y-3 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="p-1.5 rounded-lg bg-[#C84B18]/10 text-[#C84B18] dark:bg-[#EA580C]/15 dark:text-[#EA580C]">
-                      <FileEdit className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-xs text-[#242321] dark:text-[#F5F5F4]">Instructor / Teacher Demo</h4>
-                      <span className="text-[10px] text-[#716D67]">Dr. Sarah Jenkins · Full creator privileges</span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => copyToClipboard("teacher@aegeus.edu\nsecurepassword", "teacher")}
-                    className="px-2.5 py-1 rounded-lg bg-[#F7F4EF] dark:bg-[#141312] border border-[#E5E0D8] dark:border-[#292524] text-[11px] font-semibold text-[#716D67] hover:text-[#242321] flex items-center gap-1 cursor-pointer transition-colors"
-                  >
-                    {copiedCred === "teacher" ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
-                    <span>{copiedCred === "teacher" ? "Copied!" : "Copy"}</span>
-                  </button>
-                </div>
-                <div className="font-mono text-xs p-2.5 rounded-xl bg-[#F7F4EF] dark:bg-[#141312] border border-[#E5E0D8] dark:border-[#292524] space-y-1 mt-3">
-                  <div className="flex justify-between"><span className="text-[#716D67]">Email:</span> <b className="text-[#242321] dark:text-[#F5F5F4]">teacher@aegeus.edu</b></div>
-                  <div className="flex justify-between"><span className="text-[#716D67]">Pass:</span> <b className="text-[#C84B18] dark:text-[#EA580C]">securepassword</b></div>
-                </div>
-              </div>
-              <button
-                type="button"
-                disabled={loggingInRole === "teacher"}
-                onClick={() => handleQuickDemoLogin("teacher@aegeus.edu", "securepassword", "teacher")}
-                className="w-full py-2 px-3 bg-[#C84B18] hover:bg-[#B33E0F] dark:bg-[#EA580C] dark:hover:bg-[#C2410C] text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50"
-              >
-                {loggingInRole === "teacher" ? (
-                  <>
-                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Launching Studio...</span>
-                  </>
-                ) : (
-                  <>
-                    <LogIn className="h-3.5 w-3.5" />
-                    <span>1-Click Launch Instructor Studio</span>
-                  </>
-                )}
-              </button>
-            </div>
-
-            {/* Student Demo Card */}
-            <div className="p-5 rounded-2xl bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] shadow-xs space-y-3 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400">
-                      <GraduationCap className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-xs text-[#242321] dark:text-[#F5F5F4]">Student / Candidate Demo</h4>
-                      <span className="text-[10px] text-[#716D67]">Alex Johnson · Enrolled candidate testing portal</span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => copyToClipboard("student@aegeus.edu\nsecurepassword", "student")}
-                    className="px-2.5 py-1 rounded-lg bg-[#F7F4EF] dark:bg-[#141312] border border-[#E5E0D8] dark:border-[#292524] text-[11px] font-semibold text-[#716D67] hover:text-[#242321] flex items-center gap-1 cursor-pointer transition-colors"
-                  >
-                    {copiedCred === "student" ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
-                    <span>{copiedCred === "student" ? "Copied!" : "Copy"}</span>
-                  </button>
-                </div>
-                <div className="font-mono text-xs p-2.5 rounded-xl bg-[#F7F4EF] dark:bg-[#141312] border border-[#E5E0D8] dark:border-[#292524] space-y-1 mt-3">
-                  <div className="flex justify-between"><span className="text-[#716D67]">Email:</span> <b className="text-[#242321] dark:text-[#F5F5F4]">student@aegeus.edu</b></div>
-                  <div className="flex justify-between"><span className="text-[#716D67]">Pass:</span> <b className="text-emerald-600 dark:text-emerald-400">securepassword</b></div>
-                </div>
-              </div>
-              <button
-                type="button"
-                disabled={loggingInRole === "student"}
-                onClick={() => handleQuickDemoLogin("student@aegeus.edu", "securepassword", "student")}
-                className="w-full py-2 px-3 bg-emerald-700 hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50"
-              >
-                {loggingInRole === "student" ? (
-                  <>
-                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Launching Portal...</span>
-                  </>
-                ) : (
-                  <>
-                    <LogIn className="h-3.5 w-3.5" />
-                    <span>1-Click Launch Candidate Portal</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </section>
-
       </main>
 
       {/* ══════════════════════════════════════════════════════════════════════
@@ -704,6 +601,9 @@ export default function UnifiedHomePage() {
           </div>
         </div>
       </footer>
+
+      {/* Floating Interactive AI Agent Guide Assistant */}
+      <AIAgentGuideWidget />
 
     </div>
   );

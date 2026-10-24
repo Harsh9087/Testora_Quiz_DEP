@@ -21,6 +21,7 @@ import {
   Moon,
   Layers,
   FileText,
+  User,
   Users,
   BarChart2,
   Sliders,
@@ -30,8 +31,14 @@ import {
   ArrowLeft,
   Sparkles,
   ShieldAlert,
-  ChevronRight
+  ChevronRight,
+  CreditCard,
+  Coins,
+  ClipboardList,
+  Wand2
 } from "lucide-react";
+import SubscriptionModal from "./teacher/_components/SubscriptionModal";
+import CreditRechargeModal from "./teacher/_components/CreditRechargeModal";
 
 export default function DashboardLayout({
   children,
@@ -46,12 +53,26 @@ export default function DashboardLayout({
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [themeMode, setThemeMode] = useState<"light" | "dark">("light");
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+  const [creditRechargeModalOpen, setCreditRechargeModalOpen] = useState(false);
+  const [userCredits, setUserCredits] = useState<number | null>(null);
+  const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
   const [currentTab, setCurrentTab] = useState<string>("exams");
   
   // Notification Center State
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [notifOpen, setNotifOpen] = useState<boolean>(false);
+
+  const fetchUserCredits = async () => {
+    if (!token) return;
+    try {
+      const res = await apiFetch("/payments/credits/balance", { token });
+      if (res.ok) {
+        const data = await res.json();
+        setUserCredits(data.credits_balance ?? 0);
+      }
+    } catch {}
+  };
 
   const fetchNotifications = async () => {
     if (!token) return;
@@ -98,7 +119,11 @@ export default function DashboardLayout({
     applyTheme(mode);
     
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 20000);
+    fetchUserCredits();
+    const interval = setInterval(() => {
+      fetchNotifications();
+      fetchUserCredits();
+    }, 20000);
     return () => clearInterval(interval);
   }, [token]);
 
@@ -182,8 +207,7 @@ export default function DashboardLayout({
       router.push(`/dashboard/teacher#${tab}`);
     }
   };
-
-  const isTeacher = role === "teacher" || role === "inst_admin" || role === "super_admin";
+  const isTeacher = pathname?.startsWith("/dashboard/teacher") || (mounted && (role === "teacher" || role === "inst_admin" || role === "super_admin"));
 
   const closeSidebarMobile = () => {
     if (typeof window !== "undefined" && window.innerWidth < 768) {
@@ -235,7 +259,13 @@ export default function DashboardLayout({
             <div className={`truncate ${sidebarCollapsed ? "md:hidden" : ""}`}>
               <div className="flex items-center gap-1.5">
                 <h1 className="font-extrabold text-sm text-[#242321] dark:text-[#F5F5F4] tracking-tight truncate">Testora Quiz</h1>
-                <span className="px-1.5 py-0.2 text-[9px] font-bold bg-[#C84B18]/10 text-[#C84B18] dark:bg-[#EA580C]/15 dark:text-[#EA580C] rounded">PRO</span>
+                <button 
+                  onClick={() => setSubscriptionModalOpen(true)}
+                  className="px-1.5 py-0.2 text-[9px] font-bold bg-[#C84B18]/10 text-[#C84B18] dark:bg-[#EA580C]/15 dark:text-[#EA580C] hover:bg-[#C84B18] hover:text-white rounded transition-colors cursor-pointer"
+                  title="Manage Subscription & Razorpay Billing"
+                >
+                  PRO
+                </button>
               </div>
               <p className="text-[11px] text-[#716D67] dark:text-[#A8A29E] mt-0.5 font-medium truncate">Academic Studio</p>
             </div>
@@ -385,6 +415,46 @@ export default function DashboardLayout({
                       </span>
                     )}
                   </button>
+
+                  {/* Forms & Registrations Tab */}
+                  <button 
+                    onClick={() => navToTab("forms")}
+                    className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                      sidebarCollapsed ? "md:justify-center md:px-0" : ""
+                    } ${
+                      currentTab === "forms"
+                        ? "bg-[#C84B18] text-white shadow-sm shadow-[#C84B18]/25"
+                        : "text-[#57534E] dark:text-[#A8A29E] hover:text-[#242321] dark:hover:text-[#F5F5F4] hover:bg-[#F7F4EF] dark:hover:bg-[#201D1A]"
+                    }`}
+                  >
+                    <ClipboardList className={`h-4.5 w-4.5 shrink-0 ${currentTab === "forms" ? "text-white" : "text-[#716D67] group-hover:text-[#C84B18]"}`} />
+                    <span className={sidebarCollapsed ? "md:hidden" : ""}>Forms & Registrations</span>
+                    {sidebarCollapsed && (
+                      <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#1F1E1D] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
+                        Student Data Collection Forms
+                      </span>
+                    )}
+                  </button>
+
+                  {/* AI Custom Form Builder Tab */}
+                  <button 
+                    onClick={() => navToTab("custom-forms")}
+                    className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                      sidebarCollapsed ? "md:justify-center md:px-0" : ""
+                    } ${
+                      currentTab === "custom-forms"
+                        ? "bg-blue-600 text-white shadow-sm shadow-blue-600/25"
+                        : "text-[#57534E] dark:text-[#A8A29E] hover:text-[#242321] dark:hover:text-[#F5F5F4] hover:bg-[#F7F4EF] dark:hover:bg-[#201D1A]"
+                    }`}
+                  >
+                    <Wand2 className={`h-4.5 w-4.5 shrink-0 ${currentTab === "custom-forms" ? "text-white" : "text-[#716D67] group-hover:text-blue-600"}`} />
+                    <span className={sidebarCollapsed ? "md:hidden" : ""}>AI Form Builder</span>
+                    {sidebarCollapsed && (
+                      <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#1F1E1D] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
+                        AI-Powered Custom Form Builder
+                      </span>
+                    )}
+                  </button>
                 </>
               ) : (
                 <a
@@ -449,17 +519,59 @@ export default function DashboardLayout({
             )}
 
             <div className="space-y-1">
+              {isTeacher && (
+                <>
+                  <button 
+                    onClick={() => { closeSidebarMobile(); setCreditRechargeModalOpen(true); }}
+                    className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-[#57534E] dark:text-[#A8A29E] hover:text-[#242321] dark:hover:text-[#F5F5F4] hover:bg-[#F7F4EF] dark:hover:bg-[#201D1A] transition-all cursor-pointer ${
+                      sidebarCollapsed ? "md:justify-center md:px-0" : ""
+                    }`}
+                  >
+                    <Coins className="h-4.5 w-4.5 shrink-0 text-amber-500 group-hover:text-amber-600" />
+                    <span className={sidebarCollapsed ? "md:hidden" : ""}>
+                      Prepaid Credits ({mounted && userCredits !== null ? userCredits.toLocaleString() : "0"})
+                    </span>
+                    {sidebarCollapsed && (
+                      <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#1F1E1D] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
+                        Prepaid Credits ({mounted && userCredits !== null ? userCredits.toLocaleString() : "0"})
+                      </span>
+                    )}
+                  </button>
+
+                  <button 
+                    onClick={() => { closeSidebarMobile(); setSubscriptionModalOpen(true); }}
+                    className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-[#57534E] dark:text-[#A8A29E] hover:text-[#242321] dark:hover:text-[#F5F5F4] hover:bg-[#F7F4EF] dark:hover:bg-[#201D1A] transition-all cursor-pointer ${
+                      sidebarCollapsed ? "md:justify-center md:px-0" : ""
+                    }`}
+                  >
+                    <CreditCard className="h-4.5 w-4.5 shrink-0 text-[#716D67] group-hover:text-[#C84B18]" />
+                    <span className={sidebarCollapsed ? "md:hidden" : ""}>Subscription & Billing</span>
+                    {sidebarCollapsed && (
+                      <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#1F1E1D] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
+                        Subscription & Billing (Razorpay)
+                      </span>
+                    )}
+                  </button>
+                </>
+              )}
+
               <button 
-                onClick={() => { closeSidebarMobile(); setSettingsModalOpen(true); }}
-                className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-[#57534E] dark:text-[#A8A29E] hover:text-[#242321] dark:hover:text-[#F5F5F4] hover:bg-[#F7F4EF] dark:hover:bg-[#201D1A] transition-all cursor-pointer ${
+                onClick={() => { closeSidebarMobile(); router.push(role === "student" ? "/dashboard/student/profile" : "/dashboard/teacher/profile"); }}
+                className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                   sidebarCollapsed ? "md:justify-center md:px-0" : ""
+                } ${
+                  pathname === "/dashboard/teacher/profile" || pathname === "/dashboard/student/profile"
+                    ? "bg-[#C84B18] text-white shadow-sm shadow-[#C84B18]/25"
+                    : "text-[#57534E] dark:text-[#A8A29E] hover:text-[#242321] dark:hover:text-[#F5F5F4] hover:bg-[#F7F4EF] dark:hover:bg-[#201D1A]"
                 }`}
               >
-                <Sliders className="h-4.5 w-4.5 shrink-0 text-[#716D67] group-hover:text-[#C84B18]" />
-                <span className={sidebarCollapsed ? "md:hidden" : ""}>Settings & Profile</span>
+                <Sliders className={`h-4.5 w-4.5 shrink-0 ${pathname === "/dashboard/teacher/profile" || pathname === "/dashboard/student/profile" ? "text-white" : "text-[#716D67] group-hover:text-[#C84B18]"}`} />
+                <span className={sidebarCollapsed ? "md:hidden" : ""}>
+                  {role === "student" ? "My Profile & Wallet" : "Profile & Billing Summary"}
+                </span>
                 {sidebarCollapsed && (
                   <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#1F1E1D] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
-                    System & Profile Settings
+                    {role === "student" ? "My Profile & Wallet" : "Profile & Billing Summary"}
                   </span>
                 )}
               </button>
@@ -472,19 +584,22 @@ export default function DashboardLayout({
            ══════════════════════════════════════════════════════ */}
         <div className="p-3 border-t border-[#E5E0D8] dark:border-[#292524] bg-[#FAF8F5] dark:bg-[#141312] shrink-0">
           <div className={`flex items-center gap-3 ${sidebarCollapsed ? "md:flex-col md:justify-center" : "justify-between"}`}>
-            <div className={`flex items-center gap-2.5 overflow-hidden ${sidebarCollapsed ? "md:justify-center" : ""}`}>
+            <div 
+              onClick={() => { closeSidebarMobile(); router.push(role === "student" ? "/dashboard/student/profile" : "/dashboard/teacher/profile"); }}
+              className={`flex items-center gap-2.5 overflow-hidden cursor-pointer hover:opacity-85 transition-opacity ${sidebarCollapsed ? "md:justify-center" : ""}`}
+              title="Click to view full Profile & Credits Wallet"
+            >
               <div 
-                className="h-9 w-9 rounded-xl bg-[#C84B18] dark:bg-[#EA580C] text-white flex items-center justify-center font-bold text-xs shadow-sm shrink-0 cursor-pointer"
-                title={mounted && fullName ? fullName : "User Account"}
+                className="h-9 w-9 rounded-xl bg-[#FAF8F5] dark:bg-[#201D1A] border border-[#E5E0D8] dark:border-[#292524] text-[#716D67] dark:text-[#A8A29E] flex items-center justify-center shadow-xs shrink-0"
               >
-                {mounted && fullName ? fullName.charAt(0).toUpperCase() : "U"}
+                <User className="h-4.5 w-4.5 text-[#716D67] dark:text-[#A8A29E]" />
               </div>
               <div className={`overflow-hidden ${sidebarCollapsed ? "md:hidden" : ""}`}>
                 <div className="text-xs font-bold text-[#242321] dark:text-[#F5F5F4] truncate">
                   {mounted && fullName ? fullName : "User Account"}
                 </div>
                 <div className="text-[10px] text-[#716D67] dark:text-[#A8A29E] font-medium capitalize truncate">
-                  {mounted && role ? role : "Teacher"} · Testora Quiz
+                  {mounted && role ? role : (isTeacher ? "Teacher" : "Student")} · Testora Quiz
                 </div>
               </div>
             </div>
@@ -521,8 +636,14 @@ export default function DashboardLayout({
             <div className="flex items-center gap-1.5 sm:gap-2 text-xs text-[#716D67] dark:text-[#A8A29E] min-w-0">
               <span className="hidden sm:inline font-medium">Testora Quiz</span>
               <span className="hidden sm:inline">/</span>
-              <span className="font-bold text-[#242321] dark:text-[#F5F5F4] truncate max-w-[120px] sm:max-w-none">
-                {pathname === "/dashboard/teacher" ? "Creator Studio" : "Student Portal"}
+              <span className="font-bold text-[#242321] dark:text-[#F5F5F4] truncate max-w-[140px] sm:max-w-none">
+                {pathname === "/dashboard/teacher/profile"
+                  ? "Teacher Profile & Account"
+                  : pathname === "/dashboard/student/profile"
+                  ? "Student Profile & Account"
+                  : pathname === "/dashboard/teacher"
+                  ? "Creator Studio"
+                  : "Student Portal"}
               </span>
               <a 
                 href="/" 
@@ -547,8 +668,30 @@ export default function DashboardLayout({
             </div>
           </div>
 
-          {/* Right Action Menu: Help, Notifications, Theme Toggle */}
+          {/* Right Action Menu: Credit Wallet, Help, Notifications, Theme Toggle */}
           <div className="flex items-center gap-2.5">
+            {/* Credit Wallet Pill (Teacher/Admin or Student with Credits) */}
+            {(isTeacher || (mounted && userCredits !== null && userCredits > 0)) && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (isTeacher) {
+                    setCreditRechargeModalOpen(true);
+                  } else {
+                    router.push("/dashboard/student/profile");
+                  }
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300 border border-amber-300/60 dark:border-amber-800/60 text-xs font-bold hover:bg-amber-500/20 transition-all cursor-pointer shadow-2xs"
+                title={isTeacher ? "Prepaid Credit Balance — Click to Recharge" : "Available Student Credits"}
+              >
+                <Coins className="h-3.5 w-3.5 text-amber-500" />
+                <span>{mounted && userCredits !== null ? `${userCredits.toLocaleString()} Credits` : "0 Credits"}</span>
+                {isTeacher && (
+                  <span className="text-[10px] font-extrabold px-1 rounded bg-amber-500/20 text-amber-800 dark:text-amber-200">+</span>
+                )}
+              </button>
+            )}
+
             <a 
               href="/guide"
               className="p-2 rounded-xl text-[#716D67] dark:text-[#A8A29E] hover:text-[#242321] dark:hover:text-[#F5F5F4] hover:bg-[#FAF8F5] dark:hover:bg-[#201D1A] transition-colors"
@@ -574,7 +717,12 @@ export default function DashboardLayout({
 
               {/* Notification Flyout */}
               {notifOpen && (
-                <div className="fixed sm:absolute inset-x-3 sm:inset-x-auto sm:right-0 top-16 sm:top-auto sm:mt-2 w-auto sm:w-96 bg-white dark:bg-[#1C1A17] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in duration-200">
+                <>
+                  <div 
+                    className="fixed inset-0 z-40"
+                    onClick={() => setNotifOpen(false)}
+                  />
+                  <div className="fixed sm:absolute inset-x-3 sm:inset-x-auto sm:right-0 top-16 sm:top-auto sm:mt-2 w-auto sm:w-96 bg-white dark:bg-[#1C1A17] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in duration-200">
                   <div className="p-3.5 border-b border-[#E5E0D8] dark:border-[#292524] flex items-center justify-between bg-[#FAF8F5] dark:bg-[#141312]">
                     <div className="flex items-center gap-2">
                       <Bell className="h-4 w-4 text-[#C84B18]" />
@@ -638,7 +786,8 @@ export default function DashboardLayout({
                       ))
                     )}
                   </div>
-                </div>
+                  </div>
+                </>
               )}
             </div>
 
@@ -655,7 +804,7 @@ export default function DashboardLayout({
                   themeMode === "dark" ? "translate-x-5 text-white" : "translate-x-0 text-[#C84B18]"
                 }`}
               >
-                {themeMode === "light" ? <Sun className="h-2.5 w-2.5" /> : <Moon className="h-2.5 w-2.5" />}
+                {mounted && themeMode === "dark" ? <Moon className="h-2.5 w-2.5" /> : <Sun className="h-2.5 w-2.5" />}
               </div>
             </button>
           </div>
@@ -667,79 +816,20 @@ export default function DashboardLayout({
         </main>
       </div>
 
-      {/* ══════════════════════════════════════════════════════
-          SETTINGS MODAL
-         ══════════════════════════════════════════════════════ */}
-      {settingsModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4 animate-in fade-in">
-          <div className="bg-[#FFFFFF] dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl max-w-md w-full p-4 sm:p-6 shadow-2xl space-y-4 sm:space-y-5 max-h-[92vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-[#E5E0D8] dark:border-[#292524] pb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-[#C84B18]/10 text-[#C84B18] dark:bg-[#EA580C]/15 dark:text-[#EA580C] rounded-xl border border-[#C84B18]/20">
-                  <Sliders className="h-4.5 w-4.5" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-base text-[#242321] dark:text-[#F5F5F4]">System & Profile Settings</h3>
-                  <p className="text-xs text-[#716D67] dark:text-[#A8A29E]">Workspace and account preferences</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setSettingsModalOpen(false)}
-                className="p-1.5 rounded-lg text-[#716D67] hover:bg-[#F0ECE4] dark:hover:bg-[#201D1A] transition-colors cursor-pointer"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
+      {/* Credit Recharge Modal */}
+      <CreditRechargeModal
+        isOpen={creditRechargeModalOpen}
+        onClose={() => setCreditRechargeModalOpen(false)}
+        onRechargeSuccess={(newBal) => {
+          setUserCredits(newBal);
+        }}
+      />
 
-            <div className="space-y-4 text-xs">
-              <div className="space-y-1.5 p-4 rounded-xl bg-[#FAF8F5] dark:bg-[#141312] border border-[#E5E0D8] dark:border-[#292524]">
-                <div className="font-bold text-sm text-[#242321] dark:text-[#F5F5F4]">{mounted && fullName ? fullName : "User Account"}</div>
-                <div className="text-[11px] text-[#716D67] dark:text-[#A8A29E] font-medium">Role: <span className="font-bold text-[#C84B18] uppercase">{mounted && role ? role : "TEACHER"}</span></div>
-                <div className="text-[11px] text-[#716D67] dark:text-[#A8A29E]">Institution: Testora Quiz Academy</div>
-              </div>
-
-              <div className="flex items-center justify-between p-3.5 rounded-xl bg-[#FAF8F5] dark:bg-[#141312] border border-[#E5E0D8] dark:border-[#292524]">
-                <div>
-                  <label className="font-bold text-[#242321] dark:text-[#F5F5F4] uppercase tracking-wider text-[10px] block">Appearance Theme</label>
-                  <p className="text-[11px] text-[#716D67] dark:text-[#A8A29E] mt-0.5">
-                    Currently set to <span className="font-semibold capitalize text-[#C84B18] dark:text-[#EA580C]">{themeMode} mode</span>
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={toggleTheme}
-                  className="w-11 h-6 rounded-full bg-[#E5E0D8] dark:bg-[#292524] border border-[#E5E0D8] dark:border-[#292524] p-0.5 flex items-center shadow-2xs cursor-pointer transition-colors duration-300 relative focus:outline-none shrink-0"
-                  title={`Switch to ${themeMode === "light" ? "Dark" : "Light"} mode`}
-                  aria-label="Toggle Theme"
-                >
-                  <div
-                    className={`w-5 h-5 rounded-full bg-white dark:bg-[#EA580C] shadow-2xs border border-[#E5E0D8] dark:border-transparent transform transition-transform duration-300 flex items-center justify-center ${
-                      themeMode === "dark" ? "translate-x-5 text-white" : "translate-x-0 text-[#C84B18]"
-                    }`}
-                  >
-                    {themeMode === "light" ? <Sun className="h-2.5 w-2.5" /> : <Moon className="h-2.5 w-2.5" />}
-                  </div>
-                </button>
-              </div>
-
-              <div className="pt-3 border-t border-[#E5E0D8] dark:border-[#292524] flex justify-between items-center">
-                <button
-                  onClick={() => { logout(); router.push("/login"); }}
-                  className="px-4 py-2 rounded-xl text-red-600 border border-red-200 dark:border-red-900/50 hover:bg-red-50 dark:hover:bg-red-950/30 font-semibold cursor-pointer transition-colors"
-                >
-                  Sign Out
-                </button>
-                <button
-                  onClick={() => setSettingsModalOpen(false)}
-                  className="px-5 py-2 bg-[#C84B18] hover:bg-[#B33F12] text-white font-semibold rounded-xl shadow-sm cursor-pointer transition-colors"
-                >
-                  Done
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Razorpay Subscription Modal */}
+      <SubscriptionModal 
+        isOpen={subscriptionModalOpen} 
+        onClose={() => setSubscriptionModalOpen(false)} 
+      />
     </div>
   );
 }

@@ -208,10 +208,18 @@ export default function StudentDashboard() {
             <button
               onClick={() => fetchData(true)}
               disabled={isRefreshing}
-              className="px-3.5 py-1.5 rounded-lg border border-[#E5E0D8] dark:border-[#292524] hover:bg-[#F0ECE4]/60 dark:hover:bg-[#292524] text-xs font-semibold text-[#716D67] dark:text-[#A8A29E] flex items-center gap-1.5 transition-all shadow-xs shrink-0"
+              className="px-3.5 py-1.5 rounded-lg border border-[#E5E0D8] dark:border-[#292524] hover:bg-[#F0ECE4]/60 dark:hover:bg-[#292524] text-xs font-semibold text-[#716D67] dark:text-[#A8A29E] flex items-center gap-1.5 transition-all shadow-xs shrink-0 cursor-pointer"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin text-[#C84B18]" : ""}`} />
               <span>{isRefreshing ? "Refreshing..." : "Refresh Portal"}</span>
+            </button>
+
+            <button
+              onClick={() => router.push("/dashboard/student/profile")}
+              className="px-3.5 py-1.5 rounded-lg border border-[#C84B18]/30 bg-[#C84B18]/10 hover:bg-[#C84B18]/20 text-[#C84B18] dark:text-[#EA580C] text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs shrink-0 cursor-pointer"
+            >
+              <User className="h-3.5 w-3.5" />
+              <span>My Profile</span>
             </button>
           </div>
         </div>

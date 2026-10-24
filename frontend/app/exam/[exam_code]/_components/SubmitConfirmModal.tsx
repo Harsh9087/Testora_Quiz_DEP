@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { AlertCircle, CheckCircle2, Flag, FileQuestion, ArrowRight, X } from "lucide-react";
 
 interface SubmitConfirmModalProps {
@@ -19,6 +20,16 @@ export default function SubmitConfirmModal({
   onCancel,
   loading,
 }: SubmitConfirmModalProps) {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !loading) {
+        onCancel();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [loading, onCancel]);
+
   const answeredCount = questions.filter((q) => {
     const a = answers[q.id];
     return a !== undefined && a !== null && String(a).trim() !== "";
@@ -28,8 +39,16 @@ export default function SubmitConfirmModal({
   const unansweredCount = questions.length - answeredCount;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4 animate-fadeIn">
-      <div className="bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl max-w-md w-full p-4 sm:p-6 shadow-2xl space-y-4 sm:space-y-5 max-h-[92vh] overflow-y-auto">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4 animate-fadeIn"
+      onClick={() => {
+        if (!loading) onCancel();
+      }}
+    >
+      <div 
+        className="bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl max-w-md w-full p-4 sm:p-6 shadow-2xl space-y-4 sm:space-y-5 max-h-[92vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between border-b border-[#E5E0D8] dark:border-[#292524] pb-3">
           <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-lg bg-[#C84B18]/10 text-[#C84B18]">

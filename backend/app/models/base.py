@@ -1,4 +1,5 @@
 import uuid
+from typing import Any
 from sqlalchemy import Column, DateTime, Boolean, String
 from app.database import Base
 from app.utils.timezone import now_utc

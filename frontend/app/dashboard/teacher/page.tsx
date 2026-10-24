@@ -15,7 +15,8 @@ import {
   Users, BarChart3, GraduationCap, Clock, 
   Sparkles, ArrowRight, ArrowLeft, Radio, FileSpreadsheet,
   UploadCloud, FileUp, FileText, Loader2, CheckCircle2, X,
-  Lightbulb, HelpCircle, Sliders, Scale, Layers, Calculator
+  Lightbulb, HelpCircle, Sliders, Scale, Layers, Calculator,
+  ClipboardList, Wand2
 } from "lucide-react";
 
 import StudentDirectoryManager from "./_components/StudentDirectoryManager";
@@ -25,8 +26,12 @@ import QuestionBankManager from "./_components/QuestionBankManager";
 import LiveAssessmentsTable from "./_components/LiveAssessmentsTable";
 import PaperStudioModal from "./_components/PaperStudioModal";
 import LiveProctoringModal from "./_components/LiveProctoringModal";
+import ExamPaymentModal from "./_components/ExamPaymentModal";
+import CreditRechargeModal from "./_components/CreditRechargeModal";
 import GradebookAnalytics from "./_components/GradebookAnalytics";
 import UploadKBModal from "./_components/UploadKBModal";
+import FormsRegistrationManager from "./_components/FormsRegistrationManager";
+import CustomFormsManager from "./_components/CustomFormsManager";
 import { fetchStudentDirectories } from "@/lib/api/studentDirectories";
 import { StudentDirectory } from "@/types/studentDirectory";
 
@@ -145,6 +150,7 @@ export default function TeacherDashboard() {
   const [exams, setExams] = useState<any[]>([]);
   const [summaries, setSummaries] = useState<any | null>(null);
   const [kbSubjects, setKbSubjects] = useState<any[]>([]);
+  const [registrationFormsCount, setRegistrationFormsCount] = useState<number>(0);
   
   // Step 1 Direct KB Upload state
   const [step1SourceMode, setStep1SourceMode] = useState<"select" | "upload">("select");
@@ -159,6 +165,8 @@ export default function TeacherDashboard() {
   const [previewExam, setPreviewExam] = useState<any | null>(null);
   const [liveProctorExam, setLiveProctorExam] = useState<any | null>(null);
   const [liveProctorAlerts, setLiveProctorAlerts] = useState<any[]>([]);
+  const [paymentModalExam, setPaymentModalExam] = useState<any | null>(null);
+  const [isRechargeOpen, setIsRechargeOpen] = useState(false);
 
   // Form: Exam Generator
   const [examName, setExamName] = useState("");
@@ -278,11 +286,12 @@ export default function TeacherDashboard() {
       if (typeof window !== "undefined") {
         setWorkspaceName(localStorage.getItem("workspaceName") || "Teacher Workspace");
       }
-      const [docsRes, examsRes, subjectsRes, dirsRes] = await Promise.all([
+      const [docsRes, examsRes, subjectsRes, dirsRes, formsRes] = await Promise.all([
         apiFetch("/kb/documents", { token }).catch(() => null),
         apiFetch("/exams/", { token }).catch(() => null),
         apiFetch("/kb/subjects", { token }).catch(() => null),
         fetchStudentDirectories(token).catch(() => []),
+        apiFetch("/registration-forms", { token }).catch(() => null),
       ]);
 
       if (docsRes && docsRes.ok) setDocuments(await docsRes.json().catch(() => []));
@@ -293,6 +302,10 @@ export default function TeacherDashboard() {
         if (dirsRes.length > 0 && !selectedDirectoryId) {
           setSelectedDirectoryId(dirsRes[0].id);
         }
+      }
+      if (formsRes && formsRes.ok) {
+        const formsData = await formsRes.json().catch(() => []);
+        setRegistrationFormsCount(Array.isArray(formsData) ? formsData.length : 0);
       }
     } catch (e) {
       console.warn("fetchData notice:", e);
@@ -361,7 +374,16 @@ export default function TeacherDashboard() {
         showToast("Assessment published live to eligible candidates!", "success");
         fetchData();
       } else {
-        showToast("Failed to publish assessment", "error");
+        if (res.status === 402) {
+          const target = exams.find((e) => e.id === examId);
+          if (target) {
+            setPaymentModalExam(target);
+            showToast("Per-test Razorpay payment required before publishing.", "warning");
+            return;
+          }
+        }
+        const err = await res.json().catch(() => ({}));
+        showToast(err.detail || "Failed to publish assessment", "error");
       }
     } catch {
       showToast("Network error publishing exam", "error");
@@ -747,11 +769,11 @@ export default function TeacherDashboard() {
 
         <div className="bg-[#FFFFFF] dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-xl p-3.5 sm:p-4 shadow-xs">
           <div className="text-[11px] font-medium text-[#716D67] dark:text-[#A8A29E] uppercase tracking-wider flex items-center gap-1.5">
-            <Sparkles className="h-3.5 w-3.5 text-[#C84B18]" />
-            <span>AI Studio</span>
+            <ClipboardList className="h-3.5 w-3.5 text-[#C84B18]" />
+            <span>Registration Forms</span>
           </div>
-          <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">Ready</div>
-          <div className="text-[10px] text-[#716D67] mt-0.5">Gemini Co-Pilot Active</div>
+          <div className="text-2xl font-bold text-[#242321] dark:text-[#F5F5F4] mt-1">{registrationFormsCount}</div>
+          <div className="text-[10px] text-[#716D67] mt-0.5">Online Student Forms</div>
         </div>
       </div>
 
@@ -835,6 +857,32 @@ export default function TeacherDashboard() {
         </button>
 
         <button
+          onClick={() => switchSectionTab("forms")}
+          className={`px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer ${
+            activeSectionTab === "forms"
+              ? "bg-[#C84B18] text-white shadow-xs"
+              : "bg-[#FFFFFF] dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] text-[#716D67] hover:text-[#242321] dark:hover:text-[#F5F5F4]"
+          }`}
+        >
+          <ClipboardList className="h-3.5 w-3.5" />
+          <span className="sm:hidden">Forms ({registrationFormsCount})</span>
+          <span className="hidden sm:inline">Forms & Registrations ({registrationFormsCount})</span>
+        </button>
+
+        <button
+          onClick={() => switchSectionTab("custom-forms")}
+          className={`px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer ${
+            activeSectionTab === "custom-forms"
+              ? "bg-blue-600 text-white shadow-xs"
+              : "bg-[#FFFFFF] dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] text-[#716D67] hover:text-[#242321] dark:hover:text-[#F5F5F4]"
+          }`}
+        >
+          <Wand2 className="h-3.5 w-3.5" />
+          <span className="sm:hidden">Custom Forms</span>
+          <span className="hidden sm:inline">AI Form Builder</span>
+        </button>
+
+        <button
           onClick={() => switchSectionTab("reports")}
           className={`px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer ${
             activeSectionTab === "reports"
@@ -867,6 +915,7 @@ export default function TeacherDashboard() {
           onDeleteExam={handleDeleteExam}
           onGenerateCredentials={handleGenerateCredentials}
           onDownloadCredentialsCSV={handleDownloadCredentialsCSV}
+          onOpenPaymentModal={(exam) => setPaymentModalExam(exam)}
         />
       </section>
       )}
@@ -2419,6 +2468,20 @@ export default function TeacherDashboard() {
       </section>
       )}
 
+      {/* ═══════ SECTION 5B: STUDENT DATA COLLECTION FORMS ═══════ */}
+      {(activeSectionTab === "all" || activeSectionTab === "forms") && (
+      <section id="forms" className="scroll-mt-16 space-y-4">
+        <FormsRegistrationManager token={token} />
+      </section>
+      )}
+
+      {/* ═══════ SECTION 5C: AI CUSTOM FORM BUILDER ═══════ */}
+      {(activeSectionTab === "all" || activeSectionTab === "custom-forms") && (
+      <section id="custom-forms" className="scroll-mt-16 space-y-4">
+        <CustomFormsManager token={token} />
+      </section>
+      )}
+
       {/* Inline Create Directory Modal */}
       <CreateDirectoryModal
         isOpen={isCreateDirModalOpen}
@@ -2467,6 +2530,7 @@ export default function TeacherDashboard() {
           onPublishExam={handlePublishExam}
           onEndExamEarly={handleEndExamEarly}
           onDeleteExam={handleDeleteExam}
+          onOpenPaymentModal={(exam) => setPaymentModalExam(exam)}
         />
       )}
 
@@ -2479,6 +2543,34 @@ export default function TeacherDashboard() {
           onEndExamEarly={handleEndExamEarly}
         />
       )}
+
+      {/* ═══════ MANDATORY EXAM RAZORPAY PAYMENT MODAL ═══════ */}
+      {paymentModalExam && (
+        <ExamPaymentModal
+          isOpen={!!paymentModalExam}
+          exam={paymentModalExam}
+          onClose={() => setPaymentModalExam(null)}
+          onPaymentSuccess={() => {
+            fetchData();
+          }}
+          onAutoPublish={() => {
+            fetchData();
+          }}
+          onOpenRecharge={() => {
+            setPaymentModalExam(null);
+            setIsRechargeOpen(true);
+          }}
+        />
+      )}
+
+      {/* ═══════ PREPAID CREDIT WALLET RECHARGE MODAL ═══════ */}
+      <CreditRechargeModal
+        isOpen={isRechargeOpen}
+        onClose={() => setIsRechargeOpen(false)}
+        onRechargeSuccess={() => {
+          fetchData();
+        }}
+      />
     </div>
   );
 }

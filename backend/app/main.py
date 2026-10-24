@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import os
 from app.config import settings
 from app.database import engine, Base
-from app.api import auth, students, kb, exams, attempts, reports, notifications, institutions, academic, assessment_groups, workspaces, student_directories
+from app.api import auth, students, kb, exams, attempts, reports, notifications, institutions, academic, assessment_groups, workspaces, student_directories, payments, registration_forms, custom_forms
 
 import app.models
 
@@ -301,6 +301,15 @@ app.include_router(notifications.router, prefix=settings.API_V1_STR)
 app.include_router(institutions.router, prefix=settings.API_V1_STR)
 app.include_router(academic.router, prefix=settings.API_V1_STR)
 app.include_router(assessment_groups.router, prefix=settings.API_V1_STR)
+app.include_router(payments.router, prefix=settings.API_V1_STR)
+app.include_router(registration_forms.router, prefix=settings.API_V1_STR)
+app.include_router(custom_forms.router, prefix=settings.API_V1_STR)
+
+# Static files for avatars and uploads
+from fastapi.staticfiles import StaticFiles
+static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
+os.makedirs(os.path.join(static_dir, "avatars"), exist_ok=True)
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 @app.get("/")
 def read_root():

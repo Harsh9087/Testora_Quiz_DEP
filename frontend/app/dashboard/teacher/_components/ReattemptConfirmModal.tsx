@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, RotateCcw, AlertTriangle, ShieldCheck, Clock, Check } from "lucide-react";
 import { apiFetch } from "../../../../lib/api";
 import { useAuthStore } from "../../../../store/authStore";
@@ -27,6 +27,16 @@ export default function ReattemptConfirmModal({
   const [reasonNote, setReasonNote] = useState("");
   const [acknowledged, setAcknowledged] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !submitting) {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [submitting, onClose]);
 
   const handleGrant = async () => {
     if (!acknowledged || submitting) return;
@@ -58,8 +68,16 @@ export default function ReattemptConfirmModal({
   };
 
   return (
-    <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fadeIn">
-      <div className="bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
+    <div 
+      className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fadeIn"
+      onClick={() => {
+        if (!submitting) onClose();
+      }}
+    >
+      <div 
+        className="bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl space-y-4 max-h-[90vh] flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-[#E5E0D8] dark:border-[#292524]">
           <div className="flex items-center gap-2.5">

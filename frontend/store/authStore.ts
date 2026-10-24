@@ -7,6 +7,7 @@ interface AuthState {
   fullName: string | null;
   institutionId: string | null;
   setAuth: (token: string, role: string, fullName: string, institutionId?: string) => void;
+  updateFullName: (name: string) => void;
   logout: () => void;
   syncFromStorage: () => void;
 }
@@ -29,6 +30,13 @@ export const useAuthStore = create<AuthState>()(
           }
         }
         set({ token, role, fullName, institutionId: institutionId || null });
+      },
+
+      updateFullName: (name: string) => {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('fullName', name);
+        }
+        set({ fullName: name });
       },
       
       logout: () => {

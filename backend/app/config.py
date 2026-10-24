@@ -10,8 +10,8 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     SECRET_KEY: str = "super-secret-key-change-in-production"
     ENVIRONMENT: str = "development"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15  # Short-lived access token (15 mins)
-    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 5256000  # 10 years (persistent session until manual logout)
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 3650       # 10 years
     COOKIE_SECURE: bool = False
     COOKIE_SAMESITE: str = "lax"
     
@@ -27,6 +27,54 @@ class Settings(BaseSettings):
     # Google OAuth / Identity Services
     GOOGLE_CLIENT_ID: str = ""
     GOOGLE_CLIENT_SECRET: str = ""
+    
+    # Razorpay Payment Gateway
+    RAZORPAY_KEY_ID: str = ""
+    RAZORPAY_KEY_SECRET: str = ""
+    RAZORPAY_WEBHOOK_SECRET: Optional[str] = None
+    
+    # Pricing & Credit Rates (paise integer calculations)
+    PRICE_PER_UNIT_PAISE: int = 10  # 10 paise per student-question attempt (₹0.10)
+    GST_PERCENTAGE: int = 18        # 18% GST
+    CREDIT_PER_UNIT: int = 1        # 1 Credit per student-question attempt
+    MIN_ORDER_AMOUNT_PAISE: int = 100 # Razorpay minimum order value is ₹1.00 (100 paise)
+
+    # Configurable Prepaid Credit Recharge Packages
+    RECHARGE_PACKAGES: list = [
+        {
+            "id": "pkg_1000",
+            "name": "Starter Recharge",
+            "credits": 1000,
+            "amount_paise": 9900,
+            "formatted_amount": "₹99",
+            "rate_per_credit": "₹0.10",
+            "popular": False,
+            "badge": "Standard",
+            "description": "1,000 Credits • Ideal for smaller assessments & quizzes"
+        },
+        {
+            "id": "pkg_2200",
+            "name": "Standard Value",
+            "credits": 2200,
+            "amount_paise": 19900,
+            "formatted_amount": "₹199",
+            "rate_per_credit": "₹0.09",
+            "popular": True,
+            "badge": "10% Extra",
+            "description": "2,200 Credits • Includes 200 Bonus Credits for regular midterms"
+        },
+        {
+            "id": "pkg_6000",
+            "name": "Institutional Power",
+            "credits": 6000,
+            "amount_paise": 49900,
+            "formatted_amount": "₹499",
+            "rate_per_credit": "₹0.08",
+            "popular": False,
+            "badge": "20% Extra",
+            "description": "6,000 Credits • Includes 1,000 Bonus Credits for full departments"
+        }
+    ]
     
     # Storage & Uploads
     STORAGE_PATH: Optional[str] = None

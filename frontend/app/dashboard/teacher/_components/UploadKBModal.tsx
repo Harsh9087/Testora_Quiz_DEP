@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { X, UploadCloud, FileText, Loader2, CheckCircle2, BookOpen, Layers } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { useToast } from "@/components/Toast";
@@ -27,6 +27,18 @@ export default function UploadKBModal({
   const [subjectId, setSubjectId] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !isUploading) {
+        onClose();
+      }
+    };
+    if (isOpen) {
+      window.addEventListener("keydown", handleKeyDown);
+    }
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, isUploading, onClose]);
 
   if (!isOpen) return null;
 
@@ -101,8 +113,16 @@ export default function UploadKBModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
-      <div className="bg-white dark:bg-[#171615] rounded-2xl border border-[#E5E0D8] dark:border-[#292524] p-4 sm:p-6 max-w-lg w-full mx-3 sm:mx-auto shadow-2xl space-y-4 sm:space-y-5 relative max-h-[92vh] flex flex-col overflow-y-auto">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in"
+      onClick={() => {
+        if (!isUploading) onClose();
+      }}
+    >
+      <div 
+        className="bg-white dark:bg-[#171615] rounded-2xl border border-[#E5E0D8] dark:border-[#292524] p-4 sm:p-6 max-w-lg w-full mx-3 sm:mx-auto shadow-2xl space-y-4 sm:space-y-5 relative max-h-[92vh] flex flex-col overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[#E5E0D8] dark:border-[#292524] pb-3 shrink-0">
           <div className="flex items-center gap-2.5">
