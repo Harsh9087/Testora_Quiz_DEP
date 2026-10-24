@@ -39,6 +39,8 @@ import {
 } from "lucide-react";
 import SubscriptionModal from "./teacher/_components/SubscriptionModal";
 import CreditRechargeModal from "./teacher/_components/CreditRechargeModal";
+import ThemeToggle from "../../components/ThemeToggle";
+import AppLogo from "../../components/AppLogo";
 
 export default function DashboardLayout({
   children,
@@ -232,7 +234,7 @@ export default function DashboardLayout({
 
 
   return (
-    <div className="flex h-screen bg-[#FAF8F5] dark:bg-[#0F0E0D] overflow-hidden text-[#242321] dark:text-[#F5F5F4]">
+    <div className="flex h-screen bg-[#F8FAFC] dark:bg-[#0B1120] overflow-hidden text-[#111827] dark:text-[#F1F5F9]">
       
       {/* Mobile Backdrop Overlay */}
       {sidebarOpen && (
@@ -246,29 +248,31 @@ export default function DashboardLayout({
           SIDEBAR NAVIGATION (Expanded: 260px | Collapsed: 72px)
          ══════════════════════════════════════════════════════ */}
       <aside 
-        className={`fixed md:static inset-y-0 left-0 z-50 bg-[#FFFFFF] dark:bg-[#171615] border-r border-[#E5E0D8] dark:border-[#292524] flex flex-col shrink-0 transition-all duration-300 ease-in-out shadow-lg md:shadow-none w-72 max-w-[85vw] ${
+        className={`fixed md:static inset-y-0 left-0 z-50 bg-white dark:bg-[#0F172A] border-r border-slate-200 dark:border-[#263449] flex flex-col shrink-0 transition-all duration-300 ease-in-out shadow-lg md:shadow-none w-72 max-w-[85vw] ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         } ${sidebarCollapsed ? "md:!w-[72px]" : "md:w-64"}`}
       >
         {/* Brand Header */}
-        <div className="h-16 px-4 border-b border-[#E5E0D8] dark:border-[#292524] flex items-center justify-between shrink-0 bg-[#FFFFFF] dark:bg-[#171615]">
-          <div className={`flex items-center gap-3 overflow-hidden ${sidebarCollapsed ? "md:justify-center md:w-full" : ""}`}>
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-[#C84B18] to-[#EA580C] text-white flex items-center justify-center shadow-md shadow-[#C84B18]/20 shrink-0">
-              <School className="h-5 w-5" />
-            </div>
-            <div className={`truncate ${sidebarCollapsed ? "md:hidden" : ""}`}>
-              <div className="flex items-center gap-1.5">
-                <h1 className="font-extrabold text-sm text-[#242321] dark:text-[#F5F5F4] tracking-tight truncate">Testora Quiz</h1>
+        <div className="h-16 px-4 border-b border-slate-200 dark:border-[#263449] flex items-center justify-between shrink-0 bg-white dark:bg-[#0F172A]">
+          <div className={`flex items-center gap-2 overflow-hidden ${sidebarCollapsed ? "md:justify-center md:w-full" : ""}`}>
+            {sidebarCollapsed ? (
+              <a href="/" title="Testora Quiz" className="p-1 rounded-xl hover:opacity-90 transition-opacity flex items-center justify-center">
+                <AppLogo variant="stacked" height={32} />
+              </a>
+            ) : (
+              <div className="flex items-center gap-2 overflow-hidden">
+                <a href="/" title="Testora Quiz" className="hover:opacity-95 transition-opacity shrink-0">
+                  <AppLogo variant="row" height={28} />
+                </a>
                 <button 
                   onClick={() => setSubscriptionModalOpen(true)}
-                  className="px-1.5 py-0.2 text-[9px] font-bold bg-[#C84B18]/10 text-[#C84B18] dark:bg-[#EA580C]/15 dark:text-[#EA580C] hover:bg-[#C84B18] hover:text-white rounded transition-colors cursor-pointer"
+                  className="px-1.5 py-0.5 text-[9px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 hover:bg-blue-600 hover:text-white rounded transition-colors cursor-pointer shrink-0"
                   title="Manage Subscription & Razorpay Billing"
                 >
                   PRO
                 </button>
               </div>
-              <p className="text-[11px] text-[#716D67] dark:text-[#A8A29E] mt-0.5 font-medium truncate">Academic Studio</p>
-            </div>
+            )}
           </div>
           
           <button 
@@ -323,14 +327,14 @@ export default function DashboardLayout({
                       sidebarCollapsed ? "md:justify-center md:px-0" : ""
                     } ${
                       currentTab === "exams"
-                        ? "bg-[#C84B18] text-white shadow-sm shadow-[#C84B18]/25"
-                        : "text-[#57534E] dark:text-[#A8A29E] hover:text-[#242321] dark:hover:text-[#F5F5F4] hover:bg-[#F7F4EF] dark:hover:bg-[#201D1A]"
+                        ? "bg-[#EFF6FF] dark:bg-[#172B4D] text-[#1E3A8A] dark:text-[#60A5FA] font-bold border-l-4 border-[#2563EB] dark:border-[#3B82F6] shadow-2xs"
+                        : "text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9] hover:bg-[#F1F5F9] dark:hover:bg-[#17243A]"
                     }`}
                   >
-                    <GraduationCap className={`h-4.5 w-4.5 shrink-0 ${currentTab === "exams" ? "text-white" : "text-[#716D67] group-hover:text-[#C84B18]"}`} />
+                    <GraduationCap className={`h-4.5 w-4.5 shrink-0 ${currentTab === "exams" ? "text-[#2563EB] dark:text-[#60A5FA]" : "text-[#64748B] dark:text-[#A3B1C6] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA]"}`} />
                     <span className={sidebarCollapsed ? "md:hidden" : ""}>Assessments</span>
                     {sidebarCollapsed && (
-                      <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#1F1E1D] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
+                      <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
                         Assessments
                       </span>
                     )}
@@ -343,14 +347,14 @@ export default function DashboardLayout({
                       sidebarCollapsed ? "md:justify-center md:px-0" : ""
                     } ${
                       currentTab === "create"
-                        ? "bg-[#C84B18] text-white shadow-sm shadow-[#C84B18]/25"
-                        : "text-[#57534E] dark:text-[#A8A29E] hover:text-[#242321] dark:hover:text-[#F5F5F4] hover:bg-[#F7F4EF] dark:hover:bg-[#201D1A]"
+                        ? "bg-[#EFF6FF] dark:bg-[#172B4D] text-[#1E3A8A] dark:text-[#60A5FA] font-bold border-l-4 border-[#2563EB] dark:border-[#3B82F6] shadow-2xs"
+                        : "text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9] hover:bg-[#F1F5F9] dark:hover:bg-[#17243A]"
                     }`}
                   >
-                    <FileText className={`h-4.5 w-4.5 shrink-0 ${currentTab === "create" ? "text-white" : "text-[#716D67] group-hover:text-[#C84B18]"}`} />
+                    <FileText className={`h-4.5 w-4.5 shrink-0 ${currentTab === "create" ? "text-[#2563EB] dark:text-[#60A5FA]" : "text-[#64748B] dark:text-[#A3B1C6] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA]"}`} />
                     <span className={sidebarCollapsed ? "md:hidden" : ""}>Create Quiz</span>
                     {sidebarCollapsed && (
-                      <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#1F1E1D] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
+                      <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
                         Create Quiz Wizard
                       </span>
                     )}
@@ -363,14 +367,14 @@ export default function DashboardLayout({
                       sidebarCollapsed ? "md:justify-center md:px-0" : ""
                     } ${
                       currentTab === "bank"
-                        ? "bg-[#C84B18] text-white shadow-sm shadow-[#C84B18]/25"
-                        : "text-[#57534E] dark:text-[#A8A29E] hover:text-[#242321] dark:hover:text-[#F5F5F4] hover:bg-[#F7F4EF] dark:hover:bg-[#201D1A]"
+                        ? "bg-[#EFF6FF] dark:bg-[#172B4D] text-[#1E3A8A] dark:text-[#60A5FA] font-bold border-l-4 border-[#2563EB] dark:border-[#3B82F6] shadow-2xs"
+                        : "text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9] hover:bg-[#F1F5F9] dark:hover:bg-[#17243A]"
                     }`}
                   >
-                    <Layers className={`h-4.5 w-4.5 shrink-0 ${currentTab === "bank" ? "text-white" : "text-[#716D67] group-hover:text-[#C84B18]"}`} />
+                    <Layers className={`h-4.5 w-4.5 shrink-0 ${currentTab === "bank" ? "text-[#2563EB] dark:text-[#60A5FA]" : "text-[#64748B] dark:text-[#A3B1C6] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA]"}`} />
                     <span className={sidebarCollapsed ? "md:hidden" : ""}>Question Bank</span>
                     {sidebarCollapsed && (
-                      <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#1F1E1D] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
+                      <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
                         Question Bank
                       </span>
                     )}
@@ -383,14 +387,14 @@ export default function DashboardLayout({
                       sidebarCollapsed ? "md:justify-center md:px-0" : ""
                     } ${
                       currentTab === "kb"
-                        ? "bg-[#C84B18] text-white shadow-sm shadow-[#C84B18]/25"
-                        : "text-[#57534E] dark:text-[#A8A29E] hover:text-[#242321] dark:hover:text-[#F5F5F4] hover:bg-[#F7F4EF] dark:hover:bg-[#201D1A]"
+                        ? "bg-[#EFF6FF] dark:bg-[#172B4D] text-[#1E3A8A] dark:text-[#60A5FA] font-bold border-l-4 border-[#2563EB] dark:border-[#3B82F6] shadow-2xs"
+                        : "text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9] hover:bg-[#F1F5F9] dark:hover:bg-[#17243A]"
                     }`}
                   >
-                    <BookOpen className={`h-4.5 w-4.5 shrink-0 ${currentTab === "kb" ? "text-white" : "text-[#716D67] group-hover:text-[#C84B18]"}`} />
+                    <BookOpen className={`h-4.5 w-4.5 shrink-0 ${currentTab === "kb" ? "text-[#2563EB] dark:text-[#60A5FA]" : "text-[#64748B] dark:text-[#A3B1C6] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA]"}`} />
                     <span className={sidebarCollapsed ? "md:hidden" : ""}>Knowledge Base</span>
                     {sidebarCollapsed && (
-                      <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#1F1E1D] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
+                      <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
                         Knowledge Base (RAG)
                       </span>
                     )}
@@ -403,14 +407,14 @@ export default function DashboardLayout({
                       sidebarCollapsed ? "md:justify-center md:px-0" : ""
                     } ${
                       currentTab === "students"
-                        ? "bg-[#C84B18] text-white shadow-sm shadow-[#C84B18]/25"
-                        : "text-[#57534E] dark:text-[#A8A29E] hover:text-[#242321] dark:hover:text-[#F5F5F4] hover:bg-[#F7F4EF] dark:hover:bg-[#201D1A]"
+                        ? "bg-[#EFF6FF] dark:bg-[#172B4D] text-[#1E3A8A] dark:text-[#60A5FA] font-bold border-l-4 border-[#2563EB] dark:border-[#3B82F6] shadow-2xs"
+                        : "text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9] hover:bg-[#F1F5F9] dark:hover:bg-[#17243A]"
                     }`}
                   >
-                    <Users className={`h-4.5 w-4.5 shrink-0 ${currentTab === "students" ? "text-white" : "text-[#716D67] group-hover:text-[#C84B18]"}`} />
+                    <Users className={`h-4.5 w-4.5 shrink-0 ${currentTab === "students" ? "text-[#2563EB] dark:text-[#60A5FA]" : "text-[#64748B] dark:text-[#A3B1C6] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA]"}`} />
                     <span className={sidebarCollapsed ? "md:hidden" : ""}>Student Directory</span>
                     {sidebarCollapsed && (
-                      <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#1F1E1D] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
+                      <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
                         Student Directories & Cohorts
                       </span>
                     )}
@@ -423,14 +427,14 @@ export default function DashboardLayout({
                       sidebarCollapsed ? "md:justify-center md:px-0" : ""
                     } ${
                       currentTab === "forms"
-                        ? "bg-[#C84B18] text-white shadow-sm shadow-[#C84B18]/25"
-                        : "text-[#57534E] dark:text-[#A8A29E] hover:text-[#242321] dark:hover:text-[#F5F5F4] hover:bg-[#F7F4EF] dark:hover:bg-[#201D1A]"
+                        ? "bg-[#EFF6FF] dark:bg-[#172B4D] text-[#1E3A8A] dark:text-[#60A5FA] font-bold border-l-4 border-[#2563EB] dark:border-[#3B82F6] shadow-2xs"
+                        : "text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9] hover:bg-[#F1F5F9] dark:hover:bg-[#17243A]"
                     }`}
                   >
-                    <ClipboardList className={`h-4.5 w-4.5 shrink-0 ${currentTab === "forms" ? "text-white" : "text-[#716D67] group-hover:text-[#C84B18]"}`} />
+                    <ClipboardList className={`h-4.5 w-4.5 shrink-0 ${currentTab === "forms" ? "text-[#2563EB] dark:text-[#60A5FA]" : "text-[#64748B] dark:text-[#A3B1C6] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA]"}`} />
                     <span className={sidebarCollapsed ? "md:hidden" : ""}>Forms & Registrations</span>
                     {sidebarCollapsed && (
-                      <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#1F1E1D] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
+                      <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
                         Student Data Collection Forms
                       </span>
                     )}
@@ -443,14 +447,14 @@ export default function DashboardLayout({
                       sidebarCollapsed ? "md:justify-center md:px-0" : ""
                     } ${
                       currentTab === "custom-forms"
-                        ? "bg-blue-600 text-white shadow-sm shadow-blue-600/25"
-                        : "text-[#57534E] dark:text-[#A8A29E] hover:text-[#242321] dark:hover:text-[#F5F5F4] hover:bg-[#F7F4EF] dark:hover:bg-[#201D1A]"
+                        ? "bg-[#EFF6FF] dark:bg-[#172B4D] text-[#1E3A8A] dark:text-[#60A5FA] font-bold border-l-4 border-[#2563EB] dark:border-[#3B82F6] shadow-2xs"
+                        : "text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9] hover:bg-[#F1F5F9] dark:hover:bg-[#17243A]"
                     }`}
                   >
-                    <Wand2 className={`h-4.5 w-4.5 shrink-0 ${currentTab === "custom-forms" ? "text-white" : "text-[#716D67] group-hover:text-blue-600"}`} />
+                    <Wand2 className={`h-4.5 w-4.5 shrink-0 ${currentTab === "custom-forms" ? "text-[#2563EB] dark:text-[#60A5FA]" : "text-[#64748B] dark:text-[#A3B1C6] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA]"}`} />
                     <span className={sidebarCollapsed ? "md:hidden" : ""}>AI Form Builder</span>
                     {sidebarCollapsed && (
-                      <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#1F1E1D] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
+                      <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
                         AI-Powered Custom Form Builder
                       </span>
                     )}
@@ -460,14 +464,14 @@ export default function DashboardLayout({
                 <a
                   href="/dashboard/student"
                   onClick={closeSidebarMobile}
-                  className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold bg-[#C84B18]/10 text-[#C84B18] dark:bg-[#EA580C]/15 dark:text-[#EA580C] border border-[#C84B18]/20 transition-all ${
+                  className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold bg-[#EFF6FF] text-[#1E3A8A] dark:bg-[#172B4D] dark:text-[#60A5FA] border border-[#2563EB]/20 transition-all ${
                     sidebarCollapsed ? "md:justify-center md:px-0" : ""
                   }`}
                 >
-                  <UserCheck className="h-4.5 w-4.5 shrink-0" />
+                  <UserCheck className="h-4.5 w-4.5 shrink-0 text-[#2563EB] dark:text-[#60A5FA]" />
                   <span className={sidebarCollapsed ? "md:hidden" : ""}>Student Portal</span>
                   {sidebarCollapsed && (
-                    <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#1F1E1D] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
+                    <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
                       Student Exam Portal
                     </span>
                   )}
@@ -479,11 +483,11 @@ export default function DashboardLayout({
           {/* SECTION: ANALYTICS (Creator Mode Only) */}
           {pathname === "/dashboard/teacher" && (
             <div className="space-y-1.5">
-              <div className={`text-[10px] font-bold text-[#8C827A] dark:text-[#8C827A] px-3 mb-2 uppercase tracking-widest ${sidebarCollapsed ? "md:hidden" : ""}`}>
+              <div className={`text-[10px] font-bold text-[#64748B] dark:text-[#A3B1C6] px-3 mb-2 uppercase tracking-widest ${sidebarCollapsed ? "md:hidden" : ""}`}>
                 Analytics & Reports
               </div>
               {sidebarCollapsed && (
-                <div className="hidden md:block w-6 h-0.5 bg-[#E5E0D8] dark:bg-[#292524] mx-auto mb-2 rounded" />
+                <div className="hidden md:block w-6 h-0.5 bg-[#E2E8F0] dark:border-[#263449] mx-auto mb-2 rounded" />
               )}
               
               <div className="space-y-1">
@@ -493,14 +497,14 @@ export default function DashboardLayout({
                     sidebarCollapsed ? "md:justify-center md:px-0" : ""
                   } ${
                     currentTab === "reports"
-                      ? "bg-[#C84B18] text-white shadow-sm shadow-[#C84B18]/25"
-                      : "text-[#57534E] dark:text-[#A8A29E] hover:text-[#242321] dark:hover:text-[#F5F5F4] hover:bg-[#F7F4EF] dark:hover:bg-[#201D1A]"
+                      ? "bg-[#EFF6FF] dark:bg-[#172B4D] text-[#1E3A8A] dark:text-[#60A5FA] font-bold border-l-4 border-[#2563EB] dark:border-[#3B82F6] shadow-2xs"
+                      : "text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9] hover:bg-[#F1F5F9] dark:hover:bg-[#17243A]"
                   }`}
                 >
-                  <BarChart2 className={`h-4.5 w-4.5 shrink-0 ${currentTab === "reports" ? "text-white" : "text-[#716D67] group-hover:text-[#C84B18]"}`} />
+                  <BarChart2 className={`h-4.5 w-4.5 shrink-0 ${currentTab === "reports" ? "text-[#2563EB] dark:text-[#60A5FA]" : "text-[#64748B] dark:text-[#A3B1C6] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA]"}`} />
                   <span className={sidebarCollapsed ? "md:hidden" : ""}>Results & Gradebook</span>
                   {sidebarCollapsed && (
-                    <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#1F1E1D] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
+                    <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
                       Results & Gradebook Analytics
                     </span>
                   )}
@@ -511,11 +515,11 @@ export default function DashboardLayout({
 
           {/* SECTION: SYSTEM & PREFERENCES */}
           <div className="space-y-1.5">
-            <div className={`text-[10px] font-bold text-[#8C827A] dark:text-[#8C827A] px-3 mb-2 uppercase tracking-widest ${sidebarCollapsed ? "md:hidden" : ""}`}>
+            <div className={`text-[10px] font-bold text-[#64748B] dark:text-[#A3B1C6] px-3 mb-2 uppercase tracking-widest ${sidebarCollapsed ? "md:hidden" : ""}`}>
               Preferences
             </div>
             {sidebarCollapsed && (
-              <div className="hidden md:block w-6 h-0.5 bg-[#E5E0D8] dark:bg-[#292524] mx-auto mb-2 rounded" />
+              <div className="hidden md:block w-6 h-0.5 bg-[#E2E8F0] dark:border-[#263449] mx-auto mb-2 rounded" />
             )}
 
             <div className="space-y-1">
@@ -523,7 +527,7 @@ export default function DashboardLayout({
                 <>
                   <button 
                     onClick={() => { closeSidebarMobile(); setCreditRechargeModalOpen(true); }}
-                    className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-[#57534E] dark:text-[#A8A29E] hover:text-[#242321] dark:hover:text-[#F5F5F4] hover:bg-[#F7F4EF] dark:hover:bg-[#201D1A] transition-all cursor-pointer ${
+                    className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9] hover:bg-[#F1F5F9] dark:hover:bg-[#17243A] transition-all cursor-pointer ${
                       sidebarCollapsed ? "md:justify-center md:px-0" : ""
                     }`}
                   >
@@ -532,7 +536,7 @@ export default function DashboardLayout({
                       Prepaid Credits ({mounted && userCredits !== null ? userCredits.toLocaleString() : "0"})
                     </span>
                     {sidebarCollapsed && (
-                      <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#1F1E1D] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
+                      <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
                         Prepaid Credits ({mounted && userCredits !== null ? userCredits.toLocaleString() : "0"})
                       </span>
                     )}
@@ -540,14 +544,14 @@ export default function DashboardLayout({
 
                   <button 
                     onClick={() => { closeSidebarMobile(); setSubscriptionModalOpen(true); }}
-                    className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-[#57534E] dark:text-[#A8A29E] hover:text-[#242321] dark:hover:text-[#F5F5F4] hover:bg-[#F7F4EF] dark:hover:bg-[#201D1A] transition-all cursor-pointer ${
+                    className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9] hover:bg-[#F1F5F9] dark:hover:bg-[#17243A] transition-all cursor-pointer ${
                       sidebarCollapsed ? "md:justify-center md:px-0" : ""
                     }`}
                   >
-                    <CreditCard className="h-4.5 w-4.5 shrink-0 text-[#716D67] group-hover:text-[#C84B18]" />
+                    <CreditCard className="h-4.5 w-4.5 shrink-0 text-[#64748B] dark:text-[#A3B1C6] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA]" />
                     <span className={sidebarCollapsed ? "md:hidden" : ""}>Subscription & Billing</span>
                     {sidebarCollapsed && (
-                      <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#1F1E1D] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
+                      <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
                         Subscription & Billing (Razorpay)
                       </span>
                     )}
@@ -561,16 +565,16 @@ export default function DashboardLayout({
                   sidebarCollapsed ? "md:justify-center md:px-0" : ""
                 } ${
                   pathname === "/dashboard/teacher/profile" || pathname === "/dashboard/student/profile"
-                    ? "bg-[#C84B18] text-white shadow-sm shadow-[#C84B18]/25"
-                    : "text-[#57534E] dark:text-[#A8A29E] hover:text-[#242321] dark:hover:text-[#F5F5F4] hover:bg-[#F7F4EF] dark:hover:bg-[#201D1A]"
+                    ? "bg-[#EFF6FF] dark:bg-[#172B4D] text-[#1E3A8A] dark:text-[#60A5FA] font-bold border-l-4 border-[#2563EB] dark:border-[#3B82F6] shadow-2xs"
+                    : "text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9] hover:bg-[#F1F5F9] dark:hover:bg-[#17243A]"
                 }`}
               >
-                <Sliders className={`h-4.5 w-4.5 shrink-0 ${pathname === "/dashboard/teacher/profile" || pathname === "/dashboard/student/profile" ? "text-white" : "text-[#716D67] group-hover:text-[#C84B18]"}`} />
+                <Sliders className={`h-4.5 w-4.5 shrink-0 ${pathname === "/dashboard/teacher/profile" || pathname === "/dashboard/student/profile" ? "text-[#2563EB] dark:text-[#60A5FA]" : "text-[#64748B] dark:text-[#A3B1C6] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA]"}`} />
                 <span className={sidebarCollapsed ? "md:hidden" : ""}>
                   {role === "student" ? "My Profile & Wallet" : "Profile & Billing Summary"}
                 </span>
                 {sidebarCollapsed && (
-                  <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#1F1E1D] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
+                  <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
                     {role === "student" ? "My Profile & Wallet" : "Profile & Billing Summary"}
                   </span>
                 )}
@@ -647,7 +651,7 @@ export default function DashboardLayout({
               </span>
               <a 
                 href="/" 
-                className="ml-2 hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#C84B18]/10 text-[#C84B18] dark:bg-[#EA580C]/15 dark:text-[#EA580C] hover:bg-[#C84B18]/20 text-xs font-semibold transition-all border border-[#C84B18]/20"
+                className="ml-2 hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#EFF6FF] text-[#1E3A8A] dark:bg-[#172B4D] dark:text-[#60A5FA] hover:bg-blue-100 dark:hover:bg-blue-950/60 text-xs font-semibold transition-all border border-[#2563EB]/20"
                 title="Switch Workspace Mode"
               >
                 <ArrowLeft className="h-3.5 w-3.5" />
@@ -659,11 +663,11 @@ export default function DashboardLayout({
           {/* Center Search Input */}
           <div className="hidden md:flex items-center flex-1 max-w-md mx-6">
             <div className="relative w-full">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#716D67] dark:text-[#A8A29E]" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#64748B] dark:text-[#A3B1C6]" />
               <input 
                 type="text" 
                 placeholder="Search assessments, candidate cohorts, questions..." 
-                className="w-full bg-[#FAF8F5] dark:bg-[#141312] border border-[#E5E0D8] dark:border-[#292524] rounded-xl pl-9 pr-4 py-2 text-xs text-[#242321] dark:text-[#F5F5F4] placeholder-[#716D67] dark:placeholder-[#A8A29E] focus:outline-none focus:ring-1 focus:ring-[#C84B18] transition-all"
+                className="w-full bg-[#F8FAFC] dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-xl pl-9 pr-4 py-2 text-xs text-[#111827] dark:text-[#F1F5F9] placeholder-[#64748B] dark:placeholder-[#A3B1C6] focus:outline-none focus:ring-1 focus:ring-[#2563EB] transition-all"
               />
             </div>
           </div>
@@ -694,7 +698,7 @@ export default function DashboardLayout({
 
             <a 
               href="/guide"
-              className="p-2 rounded-xl text-[#716D67] dark:text-[#A8A29E] hover:text-[#242321] dark:hover:text-[#F5F5F4] hover:bg-[#FAF8F5] dark:hover:bg-[#201D1A] transition-colors"
+              className="p-2 rounded-xl text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9] hover:bg-[#F1F5F9] dark:hover:bg-[#17243A] transition-colors"
               title="Documentation Guide"
             >
               <HelpCircle className="h-4.5 w-4.5" />
@@ -704,12 +708,12 @@ export default function DashboardLayout({
             <div className="relative">
               <button 
                 onClick={() => setNotifOpen(!notifOpen)}
-                className="p-2 rounded-xl text-[#716D67] dark:text-[#A8A29E] hover:text-[#242321] dark:hover:text-[#F5F5F4] hover:bg-[#FAF8F5] dark:hover:bg-[#201D1A] relative transition-colors cursor-pointer" 
+                className="p-2 rounded-xl text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9] hover:bg-[#F1F5F9] dark:hover:bg-[#17243A] relative transition-colors cursor-pointer" 
                 title="Notifications"
               >
                 <Bell className="h-4.5 w-4.5" />
                 {unreadCount > 0 && (
-                  <span className="absolute 1 top-1 right-1 h-4 w-4 rounded-full bg-[#C84B18] text-white text-[9px] font-bold flex items-center justify-center shadow-xs">
+                  <span className="absolute 1 top-1 right-1 h-4 w-4 rounded-full bg-[#2563EB] text-white text-[9px] font-bold flex items-center justify-center shadow-xs">
                     {unreadCount > 9 ? "9+" : unreadCount}
                   </span>
                 )}
@@ -722,13 +726,13 @@ export default function DashboardLayout({
                     className="fixed inset-0 z-40"
                     onClick={() => setNotifOpen(false)}
                   />
-                  <div className="fixed sm:absolute inset-x-3 sm:inset-x-auto sm:right-0 top-16 sm:top-auto sm:mt-2 w-auto sm:w-96 bg-white dark:bg-[#1C1A17] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in duration-200">
-                  <div className="p-3.5 border-b border-[#E5E0D8] dark:border-[#292524] flex items-center justify-between bg-[#FAF8F5] dark:bg-[#141312]">
+                  <div className="fixed sm:absolute inset-x-3 sm:inset-x-auto sm:right-0 top-16 sm:top-auto sm:mt-2 w-auto sm:w-96 bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in duration-200">
+                  <div className="p-3.5 border-b border-[#E2E8F0] dark:border-[#263449] flex items-center justify-between bg-[#F8FAFC] dark:bg-[#0F172A]">
                     <div className="flex items-center gap-2">
-                      <Bell className="h-4 w-4 text-[#C84B18]" />
-                      <span className="text-xs font-bold text-[#242321] dark:text-[#F5F5F4]">Notifications</span>
+                      <Bell className="h-4 w-4 text-[#2563EB]" />
+                      <span className="text-xs font-bold text-[#111827] dark:text-[#F1F5F9]">Notifications</span>
                       {unreadCount > 0 && (
-                        <span className="text-[10px] bg-[#C84B18]/10 text-[#C84B18] px-2 py-0.5 rounded-full font-bold">
+                        <span className="text-[10px] bg-blue-100 text-[#1E3A8A] dark:bg-blue-950/60 dark:text-[#60A5FA] px-2 py-0.5 rounded-full font-bold">
                           {unreadCount} new
                         </span>
                       )}
@@ -736,16 +740,16 @@ export default function DashboardLayout({
                     {unreadCount > 0 && (
                       <button 
                         onClick={markAllRead}
-                        className="text-[11px] text-[#C84B18] hover:underline font-semibold cursor-pointer"
+                        className="text-[11px] text-[#2563EB] hover:underline font-semibold cursor-pointer"
                       >
                         Mark all read
                       </button>
                     )}
                   </div>
 
-                  <div className="max-h-80 overflow-y-auto divide-y divide-[#E5E0D8]/60 dark:divide-[#292524]">
+                  <div className="max-h-80 overflow-y-auto divide-y divide-[#E2E8F0]/60 dark:divide-[#263449]">
                     {notifications.length === 0 ? (
-                      <div className="p-8 text-center text-xs text-[#716D67] dark:text-[#A8A29E]">
+                      <div className="p-8 text-center text-xs text-[#64748B] dark:text-[#A3B1C6]">
                         <Bell className="h-6 w-6 mx-auto mb-2 opacity-30" />
                         <span>No new notifications</span>
                       </div>
@@ -753,23 +757,23 @@ export default function DashboardLayout({
                       notifications.map((n) => (
                         <div 
                           key={n.id} 
-                          className={`p-3.5 text-xs transition-all hover:bg-[#FAF8F5] dark:hover:bg-[#201D1A] flex items-start justify-between gap-2.5 ${
-                            !n.is_read ? "bg-[#C84B18]/5 dark:bg-[#EA580C]/10 font-medium" : ""
+                          className={`p-3.5 text-xs transition-all hover:bg-[#F8FAFC] dark:hover:bg-[#17243A] flex items-start justify-between gap-2.5 ${
+                            !n.is_read ? "bg-[#EFF6FF] dark:bg-[#172B4D]/60 font-medium" : ""
                           }`}
                         >
                           <div className="space-y-1 flex-1">
                             <div className="flex items-center justify-between">
-                              <span className="font-semibold text-[#242321] dark:text-[#F5F5F4]">{n.title}</span>
-                              <span className="text-[10px] text-[#716D67] dark:text-[#A8A29E]">
+                              <span className="font-semibold text-[#111827] dark:text-[#F1F5F9]">{n.title}</span>
+                              <span className="text-[10px] text-[#64748B] dark:text-[#A3B1C6]">
                                 {n.created_at ? new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
                               </span>
                             </div>
-                            <p className="text-[11px] text-[#716D67] dark:text-[#A8A29E] leading-relaxed">{n.message}</p>
+                            <p className="text-[11px] text-[#64748B] dark:text-[#A3B1C6] leading-relaxed">{n.message}</p>
                             {n.link && (
                               <a 
                                 href={n.link}
                                 onClick={() => { markRead(n.id); setNotifOpen(false); }}
-                                className="inline-flex items-center gap-1 text-[11px] text-[#C84B18] hover:underline font-medium mt-1"
+                                className="inline-flex items-center gap-1 text-[11px] text-[#2563EB] hover:underline font-medium mt-1"
                               >
                                 View details &rarr;
                               </a>
@@ -778,7 +782,7 @@ export default function DashboardLayout({
                           {!n.is_read && (
                             <button 
                               onClick={() => markRead(n.id)}
-                              className="h-2 w-2 rounded-full bg-[#C84B18] hover:scale-125 transition-all shrink-0 mt-1.5 cursor-pointer"
+                              className="h-2 w-2 rounded-full bg-[#2563EB] hover:scale-125 transition-all shrink-0 mt-1.5 cursor-pointer"
                               title="Mark read"
                             />
                           )}
@@ -791,27 +795,13 @@ export default function DashboardLayout({
               )}
             </div>
 
-            {/* Dark / Light Theme Toggle (Home Screen Style) */}
-            <button
-              type="button"
-              onClick={toggleTheme}
-              className="w-11 h-6 rounded-full bg-[#E5E0D8] dark:bg-[#292524] border border-[#E5E0D8] dark:border-[#292524] p-0.5 flex items-center shadow-2xs cursor-pointer transition-colors duration-300 relative focus:outline-none shrink-0"
-              title={`Switch to ${themeMode === "light" ? "Dark" : "Light"} mode`}
-              aria-label="Toggle Theme"
-            >
-              <div
-                className={`w-5 h-5 rounded-full bg-white dark:bg-[#EA580C] shadow-2xs border border-[#E5E0D8] dark:border-transparent transform transition-transform duration-300 flex items-center justify-center ${
-                  themeMode === "dark" ? "translate-x-5 text-white" : "translate-x-0 text-[#C84B18]"
-                }`}
-              >
-                {mounted && themeMode === "dark" ? <Moon className="h-2.5 w-2.5" /> : <Sun className="h-2.5 w-2.5" />}
-              </div>
-            </button>
+            {/* Universal Theme Toggle (Light / Dark / System Default) */}
+            <ThemeToggle />
           </div>
         </header>
 
         {/* Main Content Body */}
-        <main className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 bg-[#FAF8F5] dark:bg-[#0F0E0D] bg-texture-dots">
+        <main className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 bg-[#F8FAFC] dark:bg-[#0B1120] bg-texture-dots">
           {children}
         </main>
       </div>

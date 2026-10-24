@@ -211,20 +211,20 @@ export default function LiveAssessmentsTable({
   }) || [];
 
   return (
-    <div className="bg-[#FFFFFF] dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-lg overflow-hidden space-y-0">
-      <div className="p-4 border-b border-[#E5E0D8] dark:border-[#292524] flex items-center justify-between">
+    <div className="bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-xl overflow-hidden space-y-0 shadow-sm transition-colors">
+      <div className="p-4 border-b border-[#E2E8F0] dark:border-[#263449] flex items-center justify-between bg-[#F8FAFC] dark:bg-[#17243A]">
         <div>
-          <h2 className="text-sm font-semibold text-[#242321] dark:text-[#F5F5F4]">Recent Assessments</h2>
-          <p className="text-xs text-[#716D67] dark:text-[#A8A29E] mt-0.5">
+          <h2 className="text-sm font-bold text-[#111827] dark:text-[#F1F5F9]">Recent Assessments</h2>
+          <p className="text-xs text-[#64748B] dark:text-[#A3B1C6] mt-0.5">
             Manage your AI synthesized examinations, live proctoring rooms, and candidate credentials.
           </p>
         </div>
       </div>
 
       {/* Mobile Card List View (< 768px) */}
-      <div className="block md:hidden divide-y divide-[#E5E0D8] dark:divide-[#292524]">
+      <div className="block md:hidden divide-y divide-[#E2E8F0] dark:divide-[#263449]">
         {exams.length === 0 ? (
-          <div className="py-8 px-4 text-center text-xs text-[#716D67]">
+          <div className="py-8 px-4 text-center text-xs text-[#64748B] dark:text-[#A3B1C6]">
             No assessments created yet. Click "Create Assessment" to synthesize a new examination.
           </div>
         ) : (
@@ -233,12 +233,12 @@ export default function LiveAssessmentsTable({
             const isLoadingCreds = loadingCredsExamId === exam.id;
 
             return (
-              <div key={exam.id} className="p-4 space-y-3 hover:bg-[#F0ECE4]/30 dark:hover:bg-[#1D1B19]/30 transition-colors">
+              <div key={exam.id} className="p-4 space-y-3 hover:bg-[#F8FAFC] dark:hover:bg-[#17243A] transition-colors">
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <div className="flex items-center gap-1.5 mb-1 flex-wrap">
                       <span className={`w-2 h-2 rounded-full ${sched.dot}`} />
-                      <span className="capitalize font-semibold text-[10px] text-[#716D67] dark:text-[#A8A29E]">{sched.label}</span>
+                      <span className="capitalize font-semibold text-[10px] text-[#64748B] dark:text-[#A3B1C6]">{sched.label}</span>
                       {exam.is_paid ? (
                         <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 text-[9px] font-bold flex items-center gap-0.5">
                           <Check className="h-2.5 w-2.5" /> Paid
@@ -253,16 +253,16 @@ export default function LiveAssessmentsTable({
                         </button>
                       )}
                     </div>
-                    <h3 className="font-bold text-xs sm:text-sm text-[#242321] dark:text-[#F5F5F4]">{exam.name}</h3>
-                    <div className="text-[11px] text-[#716D67] dark:text-[#A8A29E] font-mono mt-0.5">
-                      Code: <span className="font-bold text-[#C84B18]">{exam.exam_code}</span>
+                    <h3 className="font-bold text-xs sm:text-sm text-[#111827] dark:text-[#F1F5F9]">{exam.name}</h3>
+                    <div className="text-[11px] text-[#64748B] dark:text-[#A3B1C6] font-mono mt-0.5">
+                      Code: <span className="font-bold text-[#2563EB] dark:text-[#60A5FA]">{exam.exam_code}</span>
                     </div>
                   </div>
                   
                   <button
                     type="button"
                     onClick={() => setQrModalExam(exam)}
-                    className="p-2 rounded-lg border border-[#E5E0D8] dark:border-[#292524] text-[#716D67] hover:text-[#242321] shrink-0"
+                    className="p-2 rounded-lg border border-[#E2E8F0] dark:border-[#263449] text-[#64748B] hover:text-[#111827] dark:hover:text-[#F1F5F9] shrink-0"
                     title="QR Code"
                   >
                     <QrCode className="h-4 w-4" />
@@ -406,19 +406,19 @@ export default function LiveAssessmentsTable({
       <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-left text-xs border-collapse">
           <thead>
-            <tr className="border-b border-[#E5E0D8] dark:border-[#292524] text-[#716D67] dark:text-[#A8A29E]">
-              <th className="py-3 px-4 font-medium">Status</th>
-              <th className="py-3 px-4 font-medium">Title & Code</th>
-              <th className="py-3 px-4 font-medium">Questions</th>
-              <th className="py-3 px-4 font-medium">Duration</th>
-              <th className="py-3 px-4 font-medium">Schedule Window</th>
-              <th className="py-3 px-4 font-medium text-right">Actions</th>
+            <tr className="border-b border-[#E2E8F0] dark:border-[#263449] bg-[#F8FAFC] dark:bg-[#17243A] text-[#64748B] dark:text-[#A3B1C6]">
+              <th className="py-3 px-4 font-semibold">Status</th>
+              <th className="py-3 px-4 font-semibold">Title & Code</th>
+              <th className="py-3 px-4 font-semibold">Questions</th>
+              <th className="py-3 px-4 font-semibold">Duration</th>
+              <th className="py-3 px-4 font-semibold">Schedule Window</th>
+              <th className="py-3 px-4 font-semibold text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#E5E0D8] dark:divide-[#292524]">
+          <tbody className="divide-y divide-[#E2E8F0] dark:divide-[#263449]">
             {exams.length === 0 ? (
               <tr>
-                <td colSpan={6} className="py-8 text-center text-xs text-[#716D67]">
+                <td colSpan={6} className="py-8 text-center text-xs text-[#64748B] dark:text-[#A3B1C6]">
                   No assessments created yet. Click "Create Assessment" to synthesize a new examination.
                 </td>
               </tr>
@@ -430,7 +430,7 @@ export default function LiveAssessmentsTable({
                 return (
                   <tr
                     key={exam.id}
-                    className="hover:bg-[#F0ECE4]/30 dark:hover:bg-[#1D1B19]/30 transition-colors"
+                    className="hover:bg-[#F8FAFC] dark:hover:bg-[#17243A] transition-colors"
                   >
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-1.5">
@@ -457,18 +457,18 @@ export default function LiveAssessmentsTable({
                       </div>
                     </td>
                     <td className="py-3.5 px-4">
-                      <div className="font-semibold text-[#242321] dark:text-[#F5F5F4]">{exam.name}</div>
-                      <div className="text-[11px] text-[#716D67] dark:text-[#A8A29E] font-mono mt-0.5">
+                      <div className="font-semibold text-[#111827] dark:text-[#F1F5F9]">{exam.name}</div>
+                      <div className="text-[11px] text-[#64748B] dark:text-[#A3B1C6] font-mono mt-0.5">
                         {exam.exam_code}
                       </div>
                     </td>
-                    <td className="py-3.5 px-4 text-[#716D67] dark:text-[#A8A29E]">
+                    <td className="py-3.5 px-4 text-[#64748B] dark:text-[#A3B1C6]">
                       {exam.questions_count || (exam.questions_json ? JSON.parse(exam.questions_json).length : 0)} Qs ({exam.total_marks} pts)
                     </td>
-                    <td className="py-3.5 px-4 text-[#716D67] dark:text-[#A8A29E]">
+                    <td className="py-3.5 px-4 text-[#64748B] dark:text-[#A3B1C6]">
                       {exam.duration_minutes}m
                     </td>
-                    <td className="py-3.5 px-4 text-[11px] text-[#716D67] dark:text-[#A8A29E]">
+                    <td className="py-3.5 px-4 text-[11px] text-[#64748B] dark:text-[#A3B1C6]">
                       {formatExamScheduleRange(exam.start_time, exam.end_time)}
                     </td>
                     <td className="py-3.5 px-4 text-right relative">
@@ -478,7 +478,7 @@ export default function LiveAssessmentsTable({
                           <button
                             type="button"
                             onClick={() => setLiveProctorExamId(exam.id)}
-                            className="p-1.5 rounded border border-rose-300 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition-all flex items-center gap-1 text-[10px] font-semibold"
+                            className="p-1.5 rounded border border-rose-300 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition-all flex items-center gap-1 text-[10px] font-semibold cursor-pointer"
                             title="Open Real-time Live Proctoring Room"
                           >
                             <Radio className="h-3.5 w-3.5 text-rose-600 dark:text-rose-400 animate-pulse" />
@@ -503,10 +503,10 @@ export default function LiveAssessmentsTable({
                           type="button"
                           disabled={cloningExamId === exam.id}
                           onClick={() => handleCloneExam(exam)}
-                          className="p-1.5 rounded border border-[#E5E0D8] dark:border-[#292524] text-[#716D67] hover:text-[#C84B18] hover:bg-[#E5E0D8]/40 dark:hover:bg-[#292524] transition-all flex items-center gap-1 text-[10px] font-semibold"
+                          className="p-1.5 rounded border border-[#E2E8F0] dark:border-[#263449] text-[#64748B] hover:text-[#2563EB] hover:bg-[#E2E8F0]/40 dark:hover:bg-[#263449] transition-all flex items-center gap-1 text-[10px] font-semibold cursor-pointer"
                           title="Clone Assessment as New Draft"
                         >
-                          <CopyPlus className="h-3.5 w-3.5 text-[#C84B18]" />
+                          <CopyPlus className="h-3.5 w-3.5 text-[#2563EB]" />
                           <span className="hidden sm:inline">Clone</span>
                         </button>
 
@@ -514,7 +514,7 @@ export default function LiveAssessmentsTable({
                         <button
                           type="button"
                           onClick={() => onPreviewExam(exam)}
-                          className="p-1.5 rounded border border-[#E5E0D8] dark:border-[#292524] text-[#716D67] hover:text-[#C84B18] hover:bg-[#E5E0D8]/40 dark:hover:bg-[#292524] transition-all"
+                          className="p-1.5 rounded border border-[#E2E8F0] dark:border-[#263449] text-[#64748B] hover:text-[#2563EB] hover:bg-[#E2E8F0]/40 dark:hover:bg-[#263449] transition-all cursor-pointer"
                           title="Interactive Question Studio & Preview"
                         >
                           <Eye className="h-3.5 w-3.5" />
@@ -525,7 +525,7 @@ export default function LiveAssessmentsTable({
                           <button
                             type="button"
                             onClick={() => onEndExamEarly(exam.id, exam.name)}
-                            className="px-2 py-1 rounded border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/60 transition-all flex items-center gap-1 text-[10px] font-semibold"
+                            className="px-2 py-1 rounded border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/60 transition-all flex items-center gap-1 text-[10px] font-semibold cursor-pointer"
                             title="End Live Assessment Early"
                           >
                             <StopCircle className="h-3 w-3 text-amber-600 dark:text-amber-400" />
@@ -544,7 +544,7 @@ export default function LiveAssessmentsTable({
                                 onPublishExam(exam.id);
                               }
                             }}
-                            className="px-2 py-1 rounded bg-[#C84B18] text-white dark:bg-[#EA580C] text-[10px] font-semibold hover:opacity-90 transition-all flex items-center gap-1 cursor-pointer"
+                            className="px-2 py-1 rounded bg-[#2563EB] text-white hover:bg-[#1D4ED8] text-[10px] font-semibold transition-all flex items-center gap-1 cursor-pointer shadow-xs"
                             title={exam.is_paid ? "Publish Assessment Live to Students" : "Pay & Publish Assessment Live"}
                           >
                             {exam.is_paid ? <Sparkles className="h-3 w-3" /> : <CreditCard className="h-3 w-3" />}
@@ -665,26 +665,26 @@ export default function LiveAssessmentsTable({
           onClick={() => setQrModalExam(null)}
         >
           <div 
-            className="bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 text-center relative"
+            className="bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 text-center relative transition-colors"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={() => setQrModalExam(null)}
-              className="absolute top-4 right-4 p-1 rounded-lg text-[#716D67] hover:bg-[#E5E0D8]/40 dark:hover:bg-[#292524] transition-all"
+              className="absolute top-4 right-4 p-1 rounded-lg text-[#64748B] hover:bg-[#E2E8F0]/40 dark:hover:bg-[#263449] transition-all cursor-pointer"
             >
               <X className="h-5 w-5" />
             </button>
 
             <div className="space-y-1">
-              <div className="inline-flex p-3 rounded-2xl bg-[#C84B18]/10 text-[#C84B18] mb-1">
+              <div className="inline-flex p-3 rounded-2xl bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172B4D] dark:text-[#60A5FA] border border-[#2563EB]/20 mb-1">
                 <QrCode className="h-6 w-6" />
               </div>
-              <h3 className="text-base font-bold text-[#242321] dark:text-[#F5F5F4]">{qrModalExam.name}</h3>
-              <p className="text-xs text-[#716D67]">Scan with mobile camera to launch exam portal</p>
+              <h3 className="text-base font-bold text-[#111827] dark:text-[#F1F5F9]">{qrModalExam.name}</h3>
+              <p className="text-xs text-[#64748B] dark:text-[#A3B1C6]">Scan with mobile camera to launch exam portal</p>
             </div>
 
             {/* High-Resolution QR Code */}
-            <div className="bg-white p-4 inline-block mx-auto rounded-xl border border-[#E5E0D8] shadow-inner">
+            <div className="bg-white p-4 inline-block mx-auto rounded-xl border border-[#E2E8F0] shadow-inner">
               <img
                 src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
                   `${getFrontendBaseUrl()}/exam/${qrModalExam.exam_code}`
@@ -695,8 +695,8 @@ export default function LiveAssessmentsTable({
             </div>
 
             <div className="space-y-2 text-xs">
-              <div className="bg-[#F7F4EF] dark:bg-[#141312] border border-[#E5E0D8] dark:border-[#292524] rounded-xl p-2.5 flex items-center justify-between gap-2">
-                <span className="font-mono font-bold text-[#C84B18] truncate text-[11px]">
+              <div className="bg-[#F8FAFC] dark:bg-[#17243A] border border-[#E2E8F0] dark:border-[#263449] rounded-xl p-2.5 flex items-center justify-between gap-2">
+                <span className="font-mono font-bold text-[#2563EB] dark:text-[#60A5FA] truncate text-[11px]">
                   {getFrontendBaseUrl()}/exam/{qrModalExam.exam_code}
                 </span>
                 <button
@@ -704,20 +704,20 @@ export default function LiveAssessmentsTable({
                     navigator.clipboard.writeText(`${getFrontendBaseUrl()}/exam/${qrModalExam.exam_code}`);
                     showToast("Exam portal URL copied to clipboard!", "success");
                   }}
-                  className="bg-white dark:bg-[#1D1B19] border border-[#E5E0D8] dark:border-[#292524] px-2 py-1 rounded text-xs font-bold text-[#C84B18] hover:bg-[#F0ECE4] shrink-0"
+                  className="bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] px-2 py-1 rounded text-xs font-bold text-[#2563EB] dark:text-[#60A5FA] hover:bg-[#F8FAFC] shrink-0 cursor-pointer"
                 >
                   Copy
                 </button>
               </div>
 
-              <div className="text-[11px] text-[#716D67]">
-                Exam Code: <b className="font-mono text-[#C84B18]">{qrModalExam.exam_code}</b>
+              <div className="text-[11px] text-[#64748B] dark:text-[#A3B1C6]">
+                Exam Code: <b className="font-mono text-[#2563EB] dark:text-[#60A5FA]">{qrModalExam.exam_code}</b>
               </div>
             </div>
 
             <button
               onClick={() => window.print()}
-              className="btn-primary w-full py-2.5 text-xs font-bold flex items-center justify-center gap-1.5"
+              className="w-full py-2.5 text-xs font-bold rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white flex items-center justify-center gap-1.5 shadow-md cursor-pointer transition-all"
             >
               <Printer className="h-4 w-4" />
               <span>Print QR Code Flyer</span>
@@ -733,27 +733,27 @@ export default function LiveAssessmentsTable({
           onClick={() => setCredsModalData(null)}
         >
           <div 
-            className="bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl max-w-3xl w-full p-4 sm:p-6 shadow-2xl space-y-4 max-h-[90vh] flex flex-col"
+            className="bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-2xl max-w-3xl w-full p-4 sm:p-6 shadow-2xl space-y-4 max-h-[90vh] flex flex-col transition-colors"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-[#E5E0D8] dark:border-[#292524] pb-4 shrink-0">
+            <div className="flex items-center justify-between border-b border-[#E2E8F0] dark:border-[#263449] pb-4 shrink-0">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-[#C84B18]/10 text-[#C84B18] dark:bg-[#EA580C]/15 dark:text-[#EA580C] rounded-xl border border-[#C84B18]/20">
+                <div className="p-2.5 bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172B4D] dark:text-[#60A5FA] rounded-xl border border-[#2563EB]/20">
                   <Key className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-base text-[#242321] dark:text-[#F5F5F4]">
+                  <h3 className="font-bold text-base text-[#111827] dark:text-[#F1F5F9]">
                     Candidate Access Credentials Preview
                   </h3>
-                  <p className="text-xs text-[#716D67] dark:text-[#A8A29E]">
-                    Assessment: <b className="text-[#C84B18]">{credsModalData.examName}</b> ({credsModalData.examCode}) • {credsModalData.creds.length} Candidates Enrolled
+                  <p className="text-xs text-[#64748B] dark:text-[#A3B1C6]">
+                    Assessment: <b className="text-[#2563EB] dark:text-[#60A5FA]">{credsModalData.examName}</b> ({credsModalData.examCode}) • {credsModalData.creds.length} Candidates Enrolled
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setCredsModalData(null)}
-                className="p-1.5 rounded-lg text-[#716D67] hover:bg-[#E5E0D8]/40 dark:hover:bg-[#292524] transition-all"
+                className="p-1.5 rounded-lg text-[#64748B] hover:bg-[#E2E8F0]/40 dark:hover:bg-[#263449] transition-all cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -762,13 +762,13 @@ export default function LiveAssessmentsTable({
             {/* Search & Bulk Copy / Resend Toolbar */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
               <div className="relative flex-1">
-                <Search className="h-3.5 w-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#716D67]" />
+                <Search className="h-3.5 w-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#64748B]" />
                 <input
                   type="text"
                   value={credsSearch}
                   onChange={(e) => setCredsSearch(e.target.value)}
                   placeholder="Search candidate name, email, roll number, or username..."
-                  className="w-full bg-[#F7F4EF] dark:bg-[#141312] border border-[#E5E0D8] dark:border-[#292524] rounded-lg pl-8 pr-3 py-1.5 text-xs text-[#242321] dark:text-[#F5F5F4] focus:outline-none focus:ring-1 focus:ring-[#C84B18]"
+                  className="w-full bg-[#F8FAFC] dark:bg-[#17243A] border border-[#E2E8F0] dark:border-[#263449] rounded-lg pl-8 pr-3 py-1.5 text-xs text-[#111827] dark:text-[#F1F5F9] focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
                 />
               </div>
 
@@ -777,11 +777,11 @@ export default function LiveAssessmentsTable({
                   type="button"
                   disabled={isResendingAll}
                   onClick={handleResendAllEmails}
-                  className="px-3 py-1.5 rounded-lg border border-[#C84B18]/30 bg-[#C84B18]/10 text-xs font-semibold text-[#C84B18] hover:bg-[#C84B18]/20 flex items-center gap-1.5 transition-all shadow-xs"
+                  className="px-3 py-1.5 rounded-lg border border-[#2563EB]/30 bg-[#EFF6FF] dark:bg-[#172B4D] text-xs font-semibold text-[#2563EB] dark:text-[#60A5FA] hover:bg-[#DBEAFE] dark:hover:bg-[#1E3A8A]/50 flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
                   title="Resend access passcodes email to all enrolled candidates"
                 >
                   {isResendingAll ? (
-                    <div className="w-3.5 h-3.5 border-2 border-[#C84B18] border-t-transparent rounded-full animate-spin" />
+                    <div className="w-3.5 h-3.5 border-2 border-[#2563EB] border-t-transparent rounded-full animate-spin" />
                   ) : (
                     <Mail className="h-3.5 w-3.5" />
                   )}
@@ -791,25 +791,25 @@ export default function LiveAssessmentsTable({
                 <button
                   type="button"
                   onClick={handleCopyAllCredentials}
-                  className="px-3 py-1.5 rounded-lg border border-[#E5E0D8] dark:border-[#292524] bg-white dark:bg-[#171615] text-xs font-semibold text-[#716D67] hover:text-[#242321] dark:hover:text-white flex items-center gap-1.5 transition-all shadow-xs"
+                  className="px-3 py-1.5 rounded-lg border border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-[#111C31] text-xs font-semibold text-[#64748B] hover:text-[#111827] dark:hover:text-white flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
                   title="Copy formatted list of all candidate credentials"
                 >
-                  <Copy className="h-3.5 w-3.5 text-[#C84B18]" />
+                  <Copy className="h-3.5 w-3.5 text-[#2563EB] dark:text-[#60A5FA]" />
                   <span>Copy All</span>
                 </button>
               </div>
             </div>
 
             {/* Credentials Preview (Mobile Cards + Desktop Table) */}
-            <div className="overflow-x-auto overflow-y-auto flex-1 border border-[#E5E0D8] dark:border-[#292524] rounded-xl bg-[#F7F4EF]/40 dark:bg-[#141312]/40">
+            <div className="overflow-x-auto overflow-y-auto flex-1 border border-[#E2E8F0] dark:border-[#263449] rounded-xl bg-[#F8FAFC]/50 dark:bg-[#17243A]/50">
               {filteredCreds.length === 0 ? (
-                <div className="py-8 text-center text-xs text-[#716D67]">
+                <div className="py-8 text-center text-xs text-[#64748B] dark:text-[#A3B1C6]">
                   {credsSearch ? "No credentials match your search." : "No credentials generated yet."}
                 </div>
               ) : (
                 <>
                   {/* Mobile Stacked Card View (< 768px) */}
-                  <div className="block md:hidden divide-y divide-[#E5E0D8] dark:divide-[#292524]">
+                  <div className="block md:hidden divide-y divide-[#E2E8F0] dark:divide-[#263449]">
                     {filteredCreds.map((c, idx) => {
                       const rowKey = `${c.username}_${idx}`;
                       const isCopied = copiedKey === rowKey;
@@ -887,7 +887,7 @@ export default function LiveAssessmentsTable({
                   {/* Desktop Table View (>= 768px) */}
                   <div className="hidden md:block">
                     <table className="w-full text-xs text-left border-collapse">
-                      <thead className="bg-[#E5E0D8]/60 dark:bg-[#292524] text-[#716D67] dark:text-[#A8A29E] uppercase font-bold sticky top-0 z-10">
+                      <thead className="bg-[#F8FAFC] dark:bg-[#17243A] text-[#64748B] dark:text-[#A3B1C6] uppercase font-bold sticky top-0 z-10 border-b border-[#E2E8F0] dark:border-[#263449]">
                         <tr>
                           <th className="py-2.5 px-3">Candidate</th>
                           <th className="py-2.5 px-3">Roll No.</th>
@@ -896,26 +896,26 @@ export default function LiveAssessmentsTable({
                           <th className="py-2.5 px-3 text-right">Actions</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-[#E5E0D8] dark:divide-[#292524]">
+                      <tbody className="divide-y divide-[#E2E8F0] dark:divide-[#263449]">
                         {filteredCreds.map((c, idx) => {
                           const rowKey = `${c.username}_${idx}`;
                           const isCopied = copiedKey === rowKey;
                           const isSendingEmail = resendingStudentId === (c.student_id || c.student_name);
 
                           return (
-                            <tr key={idx} className="hover:bg-[#F0ECE4]/60 dark:hover:bg-[#1D1B19] transition-all">
+                            <tr key={idx} className="hover:bg-[#F8FAFC] dark:hover:bg-[#17243A] transition-all">
                               <td className="py-2.5 px-3">
-                                <div className="font-semibold text-[#242321] dark:text-[#F5F5F4]">
+                                <div className="font-semibold text-[#111827] dark:text-[#F1F5F9]">
                                   {c.student_name || "Enrolled Student"}
                                 </div>
                                 {c.email && (
-                                  <div className="text-[10px] text-[#716D67] font-mono">{c.email}</div>
+                                  <div className="text-[10px] text-[#64748B] dark:text-[#A3B1C6] font-mono">{c.email}</div>
                                 )}
                               </td>
-                              <td className="py-2.5 px-3 font-mono text-[#716D67] text-[11px]">
+                              <td className="py-2.5 px-3 font-mono text-[#64748B] dark:text-[#A3B1C6] text-[11px]">
                                 {c.roll_number || "—"}
                               </td>
-                              <td className="py-2.5 px-3 font-mono font-bold text-[#C84B18] text-[11px]">
+                              <td className="py-2.5 px-3 font-mono font-bold text-[#2563EB] dark:text-[#60A5FA] text-[11px]">
                                 {c.username}
                               </td>
                               <td className="py-2.5 px-3">
@@ -929,11 +929,11 @@ export default function LiveAssessmentsTable({
                                     type="button"
                                     disabled={isSendingEmail}
                                     onClick={() => handleResendSingleCredEmail(c.student_id, c.student_name, c.email)}
-                                    className="px-2 py-1 rounded border border-[#E5E0D8] dark:border-[#292524] text-[11px] font-semibold text-[#716D67] hover:text-[#C84B18] hover:bg-white dark:hover:bg-[#292524] transition-all inline-flex items-center gap-1"
+                                    className="px-2 py-1 rounded border border-[#E2E8F0] dark:border-[#263449] text-[11px] font-semibold text-[#64748B] hover:text-[#2563EB] hover:bg-white dark:hover:bg-[#111C31] transition-all inline-flex items-center gap-1 cursor-pointer"
                                     title={`Resend passcode email to ${c.email || c.student_name}`}
                                   >
                                     {isSendingEmail ? (
-                                      <div className="w-3 h-3 border-2 border-[#C84B18] border-t-transparent rounded-full animate-spin" />
+                                      <div className="w-3 h-3 border-2 border-[#2563EB] border-t-transparent rounded-full animate-spin" />
                                     ) : (
                                       <Mail className="h-3 w-3" />
                                     )}
@@ -943,7 +943,7 @@ export default function LiveAssessmentsTable({
                                   <button
                                     type="button"
                                     onClick={() => handleCopySingleCred(`User: ${c.username}\nPIN: ${c.password}\nPortal: ${getFrontendBaseUrl()}/exam/${credsModalData.examCode}`, rowKey)}
-                                    className="px-2 py-1 rounded border border-[#E5E0D8] dark:border-[#292524] text-[11px] font-semibold text-[#716D67] hover:text-[#C84B18] hover:bg-white dark:hover:bg-[#292524] transition-all inline-flex items-center gap-1"
+                                    className="px-2 py-1 rounded border border-[#E2E8F0] dark:border-[#263449] text-[11px] font-semibold text-[#64748B] hover:text-[#2563EB] hover:bg-white dark:hover:bg-[#111C31] transition-all inline-flex items-center gap-1 cursor-pointer"
                                     title="Copy candidate login credentials"
                                   >
                                     {isCopied ? (
@@ -971,8 +971,8 @@ export default function LiveAssessmentsTable({
             </div>
 
             {/* Modal Bottom Actions */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0 pt-3 border-t border-[#E5E0D8] dark:border-[#292524]">
-              <div className="text-[11px] text-[#716D67] flex items-center gap-1.5">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0 pt-3 border-t border-[#E2E8F0] dark:border-[#263449]">
+              <div className="text-[11px] text-[#64748B] dark:text-[#A3B1C6] flex items-center gap-1.5">
                 <ShieldCheck className="h-4 w-4 text-emerald-600" />
                 <span>Passcodes are sent automatically to students' authorized emails.</span>
               </div>
@@ -981,7 +981,7 @@ export default function LiveAssessmentsTable({
                 <button
                   type="button"
                   onClick={() => onDownloadCredentialsCSV(credsModalData.examId, credsModalData.examName)}
-                  className="flex-1 sm:flex-none btn-primary py-2 px-4 text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs"
+                  className="flex-1 sm:flex-none py-2 px-4 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-md transition-all cursor-pointer"
                 >
                   <Download className="h-3.5 w-3.5" />
                   <span>Download Passcodes CSV</span>
@@ -989,7 +989,7 @@ export default function LiveAssessmentsTable({
                 <button
                   type="button"
                   onClick={() => setCredsModalData(null)}
-                  className="px-4 py-2 rounded-xl border border-[#E5E0D8] dark:border-[#292524] text-xs font-semibold text-[#716D67] hover:text-[#242321] dark:hover:text-white"
+                  className="px-4 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#263449] text-xs font-semibold text-[#64748B] hover:text-[#111827] dark:hover:text-white cursor-pointer"
                 >
                   Close
                 </button>

@@ -53,7 +53,7 @@ export default function ExamHeaderHUD({
   const isCriticalTime = timeRemainingSeconds <= 120; // <= 2 min
 
   return (
-    <header className="sticky top-0 z-40 bg-[#FFFFFF]/95 dark:bg-[#171615]/95 backdrop-blur-md border-b border-[#E5E0D8] dark:border-[#292524] shadow-xs pt-safe">
+    <header className="sticky top-0 z-40 bg-[#FFFFFF]/95 dark:bg-[#111C31]/95 backdrop-blur-md border-b border-[#E2E8F0] dark:border-[#263449] shadow-xs pt-safe">
       {/* Teacher Simulation Top Banner */}
       {isSimulation && (
         <div className="bg-amber-500/10 dark:bg-amber-500/20 border-b border-amber-500/30 px-3 sm:px-4 py-1.5 flex items-center justify-between text-xs text-amber-900 dark:text-amber-300">
@@ -76,16 +76,16 @@ export default function ExamHeaderHUD({
       <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between gap-2 sm:gap-4">
         {/* Left: Exam Info & Candidate */}
         <div className="min-w-0 flex items-center gap-2 sm:gap-3">
-          <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg bg-[#C84B18]/10 text-[#C84B18] dark:bg-[#EA580C]/15 dark:text-[#EA580C] flex items-center justify-center font-bold font-serif text-sm sm:text-base shrink-0">
-            EQ
+          <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg bg-gradient-to-br from-[#1E3A8A] to-[#2563EB] text-white flex items-center justify-center font-bold text-xs sm:text-sm tracking-wide shadow-xs shrink-0">
+            TQ
           </div>
           <div className="truncate">
-            <h1 className="text-xs sm:text-base font-bold text-[#242321] dark:text-[#F5F5F4] truncate">
+            <h1 className="text-xs sm:text-base font-bold text-[#111827] dark:text-[#F1F5F9] truncate">
               {examName}
             </h1>
-            <p className="text-[10px] sm:text-[11px] text-[#716D67] dark:text-[#A8A29E] truncate">
+            <p className="text-[10px] sm:text-[11px] text-[#64748B] dark:text-[#A3B1C6] truncate">
               <span className="hidden sm:inline">Candidate: </span>
-              <span className="font-semibold text-[#242321] dark:text-[#F5F5F4]">{candidateName}</span>
+              <span className="font-semibold text-[#111827] dark:text-[#F1F5F9]">{candidateName}</span>
             </p>
           </div>
         </div>
@@ -98,15 +98,15 @@ export default function ExamHeaderHUD({
                 ? "bg-rose-500/15 border-rose-500 text-rose-600 dark:text-rose-400 animate-pulse shadow-rose-500/20 shadow-md"
                 : isLowTime
                 ? "bg-amber-500/15 border-amber-500 text-amber-700 dark:text-amber-400 shadow-xs"
-                : "bg-[#F7F4EF] dark:bg-[#141312] border-[#E5E0D8] dark:border-[#292524] text-[#242321] dark:text-[#F5F5F4]"
+                : "bg-[#F8FAFC] dark:bg-[#0B1120] border-[#E2E8F0] dark:border-[#263449] text-[#111827] dark:text-[#F1F5F9]"
             }`}
           >
-            <Timer className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${isCriticalTime ? "text-rose-600 animate-spin" : isLowTime ? "text-amber-600" : "text-[#C84B18]"}`} />
+            <Timer className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${isCriticalTime ? "text-rose-600 animate-spin" : isLowTime ? "text-amber-600" : "text-[#2563EB] dark:text-[#60A5FA]"}`} />
             <span>{formatTime(timeRemainingSeconds)}</span>
           </div>
           {deadlineIST && (
-            <span className="text-[9px] sm:text-[10px] text-[#716D67] dark:text-[#A8A29E] font-medium hidden sm:inline">
-              Deadline: <span className="font-semibold text-[#242321] dark:text-[#F5F5F4]">{deadlineIST}</span>
+            <span className="text-[9px] sm:text-[10px] text-[#64748B] dark:text-[#A3B1C6] font-medium hidden sm:inline">
+              Deadline: <span className="font-semibold text-[#111827] dark:text-[#F1F5F9]">{deadlineIST}</span>
             </span>
           )}
         </div>
@@ -114,7 +114,7 @@ export default function ExamHeaderHUD({
         {/* Right: Tools & Status Controls */}
         <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
           {/* Cloud Sync Status */}
-          <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#F7F4EF] dark:bg-[#141312] border border-[#E5E0D8] dark:border-[#292524] text-[11px] text-[#716D67] dark:text-[#A8A29E]">
+          <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#F8FAFC] dark:bg-[#0B1120] border border-[#E2E8F0] dark:border-[#263449] text-[11px] text-[#64748B] dark:text-[#A3B1C6]">
             {syncStatus === "Synced" ? (
               <>
                 <Cloud className="h-3.5 w-3.5 text-emerald-600" />
@@ -122,7 +122,7 @@ export default function ExamHeaderHUD({
               </>
             ) : syncStatus === "Saving..." ? (
               <>
-                <div className="w-2.5 h-2.5 rounded-full border-2 border-[#C84B18] border-t-transparent animate-spin" />
+                <div className="w-2.5 h-2.5 rounded-full border-2 border-[#2563EB] border-t-transparent animate-spin" />
                 <span>Saving...</span>
               </>
             ) : (
@@ -150,8 +150,8 @@ export default function ExamHeaderHUD({
             onClick={onToggleCalculator}
             className={`p-1.5 sm:p-2 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
               isCalculatorOpen
-                ? "bg-[#C84B18] text-white border-[#C84B18]"
-                : "border-[#E5E0D8] dark:border-[#292524] bg-white dark:bg-[#171615] text-[#716D67] hover:text-[#242321] dark:hover:text-white"
+                ? "bg-[#2563EB] text-white border-[#2563EB]"
+                : "border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-[#111C31] text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9]"
             }`}
             title="Toggle Scientific Calculator"
           >
@@ -163,7 +163,7 @@ export default function ExamHeaderHUD({
           <button
             type="button"
             onClick={onToggleFullscreen}
-            className="hidden sm:flex p-1.5 sm:p-2 rounded-xl border border-[#E5E0D8] dark:border-[#292524] bg-white dark:bg-[#171615] text-[#716D67] hover:text-[#242321] dark:hover:text-white transition-all cursor-pointer"
+            className="hidden sm:flex p-1.5 sm:p-2 rounded-xl border border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-[#111C31] text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9] transition-all cursor-pointer"
             title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen Mode"}
           >
             {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}

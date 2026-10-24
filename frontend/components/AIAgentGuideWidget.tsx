@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { 
   Bot, 
   Sparkles, 
@@ -112,6 +112,157 @@ export default function AIAgentGuideWidget() {
   const [selectedTopicId, setSelectedTopicId] = useState<string>("forms-registrations");
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Movable / Draggable icon state
+  const [position, setPosition] = useState<{ x: number; y: number } | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragRef = useRef<{
+    startX: number;
+    startY: number;
+    elemX: number;
+    elemY: number;
+    hasMoved: boolean;
+  }>({
+    startX: 0,
+    startY: 0,
+    elemX: 0,
+    elemY: 0,
+    hasMoved: false,
+  });
+
+  const BTN_SIZE = 52;
+  const PADDING = 12;
+
+  // Initialize position on client mount
+  useEffect(() => {
+    const initPosition = () => {
+      try {
+        const saved = localStorage.getItem("testora_guide_widget_pos");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (typeof parsed.x === "number" && typeof parsed.y === "number") {
+            const maxX = Math.max(PADDING, window.innerWidth - BTN_SIZE - PADDING);
+            const maxY = Math.max(PADDING, window.innerHeight - BTN_SIZE - PADDING);
+            setPosition({
+              x: Math.min(Math.max(PADDING, parsed.x), maxX),
+              y: Math.min(Math.max(PADDING, parsed.y), maxY),
+            });
+            return;
+          }
+        }
+      } catch {
+        // Fallback to default position
+      }
+
+      // Default: bottom-right corner
+      setPosition({
+        x: Math.max(PADDING, window.innerWidth - BTN_SIZE - 20),
+        y: Math.max(PADDING, window.innerHeight - BTN_SIZE - 20),
+      });
+    };
+
+    initPosition();
+
+    const handleResize = () => {
+      setPosition((prev) => {
+        if (!prev) return prev;
+        const maxX = Math.max(PADDING, window.innerWidth - BTN_SIZE - PADDING);
+        const maxY = Math.max(PADDING, window.innerHeight - BTN_SIZE - PADDING);
+        return {
+          x: Math.min(Math.max(PADDING, prev.x), maxX),
+          y: Math.min(Math.max(PADDING, prev.y), maxY),
+        };
+      });
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
+    if (e.button !== 0) return; // Only primary mouse button
+
+    const currentX = position?.x ?? Math.max(PADDING, window.innerWidth - BTN_SIZE - 20);
+    const currentY = position?.y ?? Math.max(PADDING, window.innerHeight - BTN_SIZE - 20);
+
+    dragRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      elemX: currentX,
+      elemY: currentY,
+      hasMoved: false,
+    };
+
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // ignore
+    }
+    setIsDragging(true);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLButtonElement>) => {
+    if (!isDragging) return;
+
+    const dx = e.clientX - dragRef.current.startX;
+    const dy = e.clientY - dragRef.current.startY;
+
+    if (!dragRef.current.hasMoved && Math.hypot(dx, dy) > 4) {
+      dragRef.current.hasMoved = true;
+    }
+
+    const maxX = Math.max(PADDING, window.innerWidth - BTN_SIZE - PADDING);
+    const maxY = Math.max(PADDING, window.innerHeight - BTN_SIZE - PADDING);
+
+    const nextX = Math.min(Math.max(PADDING, dragRef.current.elemX + dx), maxX);
+    const nextY = Math.min(Math.max(PADDING, dragRef.current.elemY + dy), maxY);
+
+    setPosition({ x: nextX, y: nextY });
+  };
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLButtonElement>) => {
+    if (!isDragging) return;
+
+    try {
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      }
+    } catch {
+      // ignore
+    }
+    setIsDragging(false);
+
+    if (dragRef.current.hasMoved) {
+      // It was a drag: persist position to localStorage
+      const dx = e.clientX - dragRef.current.startX;
+      const dy = e.clientY - dragRef.current.startY;
+      const maxX = Math.max(PADDING, window.innerWidth - BTN_SIZE - PADDING);
+      const maxY = Math.max(PADDING, window.innerHeight - BTN_SIZE - PADDING);
+      const finalX = Math.min(Math.max(PADDING, dragRef.current.elemX + dx), maxX);
+      const finalY = Math.min(Math.max(PADDING, dragRef.current.elemY + dy), maxY);
+      try {
+        localStorage.setItem("testora_guide_widget_pos", JSON.stringify({ x: finalX, y: finalY }));
+      } catch {
+        // ignore
+      }
+    } else {
+      // It was a click without movement: open modal
+      setIsOpen(true);
+    }
+  };
+
+  const handlePointerCancel = (e: React.PointerEvent<HTMLButtonElement>) => {
+    if (isDragging) {
+      try {
+        if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+          e.currentTarget.releasePointerCapture(e.pointerId);
+        }
+      } catch {
+        // ignore
+      }
+      setIsDragging(false);
+    }
+  };
+
   const selectedTopic = GUIDE_TOPICS.find((t) => t.id === selectedTopicId) || GUIDE_TOPICS[0];
 
   const filteredTopics = GUIDE_TOPICS.filter(
@@ -123,29 +274,43 @@ export default function AIAgentGuideWidget() {
 
   return (
     <>
-      {/* ═══════ FLOATING AI AGENT TRIGGER BUTTON ═══════ */}
-      <div className="fixed bottom-5 right-5 z-40">
+      {/* ═══════ MOVABLE FLOATING SMALL ICON (NO TEXT) ═══════ */}
+      <div
+        className="fixed z-40 select-none touch-none"
+        style={
+          position
+            ? { left: `${position.x}px`, top: `${position.y}px` }
+            : { right: "20px", bottom: "20px" }
+        }
+      >
         <button
-          onClick={() => setIsOpen(true)}
-          className="group relative flex items-center gap-2.5 px-3.5 py-2.5 rounded-full bg-gradient-to-r from-[#9C3810] via-[#C84B18] to-[#EA580C] text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer border border-white/20"
-          title="Open AI Platform Guide & Assistant"
+          type="button"
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerCancel}
+          onDragStart={(e) => e.preventDefault()}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              setIsOpen(true);
+            }
+          }}
+          className={`group relative w-[52px] h-[52px] rounded-full bg-gradient-to-tr from-[#9C3810] via-[#C84B18] to-[#EA580C] text-white shadow-xl hover:shadow-2xl hover:shadow-[#C84B18]/30 border-2 border-white/25 flex items-center justify-center transition-shadow duration-200 ${
+            isDragging
+              ? "cursor-grabbing scale-105"
+              : "cursor-grab hover:scale-105 active:scale-95 transition-transform duration-200"
+          }`}
+          title="Platform Guide (Click to open, Drag to move anywhere)"
+          aria-label="Platform Guide"
         >
-          {/* Agent Avatar Icon */}
-          <div className="relative">
-            <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-xs flex items-center justify-center">
-              <Bot className="w-4.5 h-4.5 text-white" />
-            </div>
-            {/* Online Pulse Indicator */}
-            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#C84B18] animate-pulse" />
+          {/* Circular inner icon container */}
+          <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-xs flex items-center justify-center pointer-events-none">
+            <Bot className="w-5 h-5 text-white drop-shadow-xs" />
           </div>
 
-          <div className="text-left hidden sm:block pr-1">
-            <div className="text-[11px] font-extrabold tracking-tight leading-none flex items-center gap-1">
-              <span>Platform Guide</span>
-              <Sparkles className="w-3 h-3 text-amber-300" />
-            </div>
-            <span className="text-[9px] text-white/80 font-medium">How to use features</span>
-          </div>
+          {/* Online status indicator dot */}
+          <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#C84B18] shadow-xs animate-pulse pointer-events-none" />
         </button>
       </div>
 

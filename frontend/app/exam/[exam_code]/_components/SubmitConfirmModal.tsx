@@ -46,28 +46,28 @@ export default function SubmitConfirmModal({
       }}
     >
       <div 
-        className="bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl max-w-md w-full p-4 sm:p-6 shadow-2xl space-y-4 sm:space-y-5 max-h-[92vh] overflow-y-auto"
+        className="bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-2xl max-w-md w-full p-4 sm:p-6 shadow-2xl space-y-4 sm:space-y-5 max-h-[92vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-[#E5E0D8] dark:border-[#292524] pb-3">
+        <div className="flex items-center justify-between border-b border-[#E2E8F0] dark:border-[#263449] pb-3">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-lg bg-[#C84B18]/10 text-[#C84B18]">
+            <div className="p-2 rounded-lg bg-[#EFF6FF] dark:bg-[#172B4D] text-[#2563EB] dark:text-[#60A5FA]">
               <AlertCircle className="h-5 w-5" />
             </div>
-            <h3 className="font-bold text-sm text-[#242321] dark:text-[#F5F5F4]">
+            <h3 className="font-bold text-sm text-[#111827] dark:text-[#F1F5F9]">
               Confirm Exam Submission
             </h3>
           </div>
           <button
             onClick={onCancel}
             disabled={loading}
-            className="p-1 rounded-lg text-[#716D67] hover:bg-[#E5E0D8]/40 dark:hover:bg-[#292524]"
+            className="p-1 rounded-lg text-[#64748B] hover:bg-[#F1F5F9] dark:hover:bg-[#17243A] transition-colors"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        <p className="text-xs text-[#716D67] dark:text-[#A8A29E]">
+        <p className="text-xs text-[#64748B] dark:text-[#A3B1C6]">
           Are you sure you want to finish and submit your responses? Once submitted, your answers will be locked and graded.
         </p>
 
@@ -115,7 +115,7 @@ export default function SubmitConfirmModal({
             type="button"
             onClick={onCancel}
             disabled={loading}
-            className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-[#E5E0D8] dark:border-[#292524] text-xs font-semibold text-[#716D67] hover:text-[#242321] dark:hover:text-white transition-all text-center cursor-pointer"
+            className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-[#E2E8F0] dark:border-[#263449] text-xs font-semibold text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9] transition-all text-center cursor-pointer"
           >
             Return to Test
           </button>

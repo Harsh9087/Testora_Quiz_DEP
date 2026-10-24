@@ -11,13 +11,14 @@ import {
   Bookmark, 
   CheckCircle2, 
   AlertCircle, 
-  Sparkles,
   ArrowRight,
   ShieldCheck,
   Send,
   Building2
 } from "lucide-react";
-import { API_BASE, API_V1 } from "../../../lib/api";
+import { API_V1 } from "../../../lib/api";
+import ThemeToggle from "../../../components/ThemeToggle";
+import AppLogo from "../../../components/AppLogo";
 
 interface FormMeta {
   title: string;
@@ -62,7 +63,7 @@ export default function StudentRegistrationPublicPage() {
         } else {
           setMetaError("Unable to load registration form. Please check your link.");
         }
-      } catch (err: any) {
+      } catch {
         setMetaError("Network error loading registration form.");
       } finally {
         setLoadingMeta(false);
@@ -110,13 +111,11 @@ export default function StudentRegistrationPublicPage() {
       if (res.ok) {
         setSubmittedSuccess(true);
       } else {
-        const data = await res.json().catch(() => ({}));
+        const err = await res.json().catch(() => ({}));
         if (res.status === 409) {
-          setSubmitError(data.detail || "You have already registered with this Roll Number or Email.");
-        } else if (res.status === 400) {
-          setSubmitError(data.detail || "This form is currently closed for submissions.");
+          setSubmitError(err.detail || "A student with this email or roll number has already registered.");
         } else {
-          setSubmitError(data.detail || "Failed to submit registration. Please try again.");
+          setSubmitError(err.detail || "Failed to submit registration. Please try again.");
         }
       }
     } catch {
@@ -128,25 +127,25 @@ export default function StudentRegistrationPublicPage() {
 
   if (loadingMeta) {
     return (
-      <div className="min-h-screen bg-[#FAF8F5] flex flex-col items-center justify-center p-4">
-        <div className="w-10 h-10 border-3 border-[#C84B18] border-t-transparent rounded-full animate-spin mb-4" />
-        <p className="text-sm font-semibold text-[#716D67]">Loading student registration form...</p>
+      <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0B1120] flex flex-col items-center justify-center p-4 transition-colors">
+        <div className="w-10 h-10 border-3 border-[#2563EB] dark:border-[#3B82F6] border-t-transparent rounded-full animate-spin mb-4" />
+        <p className="text-sm font-semibold text-[#64748B] dark:text-[#A3B1C6]">Loading student registration form...</p>
       </div>
     );
   }
 
   if (metaError || !formMeta) {
     return (
-      <div className="min-h-screen bg-[#FAF8F5] flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-2xl p-6 sm:p-8 border border-[#E5E0D8] shadow-sm text-center space-y-4">
-          <div className="w-14 h-14 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center mx-auto">
+      <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0B1120] flex items-center justify-center p-4 transition-colors">
+        <div className="max-w-md w-full bg-white dark:bg-[#111C31] rounded-2xl p-6 sm:p-8 border border-[#E2E8F0] dark:border-[#263449] shadow-xl text-center space-y-4">
+          <div className="w-14 h-14 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 rounded-2xl flex items-center justify-center mx-auto border border-rose-200 dark:border-rose-800">
             <AlertCircle className="w-7 h-7" />
           </div>
-          <h2 className="text-xl font-bold text-[#242321]">Form Unavailable</h2>
-          <p className="text-sm text-[#716D67]">{metaError || "Registration form not found."}</p>
+          <h2 className="text-xl font-bold text-[#111827] dark:text-[#F1F5F9]">Form Unavailable</h2>
+          <p className="text-sm text-[#64748B] dark:text-[#A3B1C6]">{metaError || "Registration form not found."}</p>
           <a
             href="/"
-            className="inline-flex items-center justify-center px-4 py-2 text-xs font-bold text-[#C84B18] bg-[#C84B18]/10 rounded-xl hover:bg-[#C84B18]/15 transition-all"
+            className="inline-flex items-center justify-center px-4 py-2 text-xs font-bold text-white bg-[#2563EB] hover:bg-[#1D4ED8] rounded-xl shadow-md transition-all"
           >
             Go to TestoraQuiz Home
           </a>
@@ -156,64 +155,61 @@ export default function StudentRegistrationPublicPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5] flex flex-col justify-between p-4 sm:p-6 lg:p-8 text-[#242321]">
+    <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0B1120] flex flex-col justify-between p-4 sm:p-6 lg:p-8 text-[#111827] dark:text-[#F1F5F9] transition-colors">
       <div className="max-w-2xl w-full mx-auto space-y-5 my-auto">
         
         {/* Brand Banner */}
-        <div className="flex items-center justify-between pb-2 border-b border-[#E5E0D8]">
+        <div className="flex items-center justify-between pb-3 border-b border-[#E2E8F0] dark:border-[#263449]">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#9C3810] via-[#C84B18] to-[#E05D24] flex items-center justify-center text-white shadow-xs">
-              <GraduationCap className="h-5 w-5" />
-            </div>
-            <div>
-              <span className="font-extrabold text-sm tracking-tight text-[#242321]">Testora Quiz</span>
-              <span className="block text-[10px] text-[#716D67] font-medium">Student Directory Registration</span>
-            </div>
+            <AppLogo variant="row" height={30} />
           </div>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            {formMeta.is_active ? "Registration Open" : "Form Closed"}
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              {formMeta.is_active ? "Registration Open" : "Form Closed"}
+            </span>
+            <ThemeToggle />
+          </div>
         </div>
 
         {submittedSuccess ? (
           /* Submission Success View */
-          <div className="bg-white rounded-2xl border border-emerald-200 p-6 sm:p-10 shadow-sm text-center space-y-5 animate-in fade-in duration-300">
-            <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-xs">
+          <div className="bg-white dark:bg-[#111C31] rounded-2xl border border-emerald-200 dark:border-emerald-800 p-6 sm:p-10 shadow-xl text-center space-y-5 animate-in fade-in duration-300">
+            <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto shadow-md">
               <CheckCircle2 className="w-9 h-9" />
             </div>
             
             <div className="space-y-1.5">
-              <h1 className="text-2xl font-extrabold text-[#242321]">Registration Submitted!</h1>
-              <p className="text-sm text-[#716D67]">
-                Thank you, <span className="font-semibold text-[#242321]">{fullName}</span>. Your details have been successfully recorded for:
+              <h1 className="text-2xl font-extrabold text-[#111827] dark:text-[#F1F5F9]">Registration Submitted!</h1>
+              <p className="text-sm text-[#64748B] dark:text-[#A3B1C6]">
+                Thank you, <span className="font-semibold text-[#111827] dark:text-[#F1F5F9]">{fullName}</span>. Your details have been successfully recorded for:
               </p>
-              <div className="inline-block mt-1 px-3 py-1 bg-[#FAF8F5] border border-[#E5E0D8] rounded-lg text-xs font-bold text-[#C84B18]">
+              <div className="inline-block mt-1 px-3 py-1 bg-[#EFF6FF] dark:bg-[#172B4D] border border-[#2563EB]/30 rounded-lg text-xs font-bold text-[#2563EB] dark:text-[#60A5FA]">
                 {formMeta.title}
               </div>
             </div>
 
             {/* Submitted Summary Box */}
-            <div className="bg-[#FAF8F5] border border-[#E5E0D8] rounded-xl p-4 text-left grid grid-cols-2 gap-3 text-xs">
+            <div className="bg-[#F8FAFC] dark:bg-[#17243A] border border-[#E2E8F0] dark:border-[#263449] rounded-xl p-4 text-left grid grid-cols-2 gap-3 text-xs">
               <div>
-                <span className="text-[#716D67] block">Roll Number:</span>
-                <span className="font-bold text-[#242321]">{rollNumber}</span>
+                <span className="text-[#64748B] dark:text-[#A3B1C6] block">Roll Number:</span>
+                <span className="font-bold text-[#111827] dark:text-[#F1F5F9]">{rollNumber}</span>
               </div>
               <div>
-                <span className="text-[#716D67] block">Email:</span>
-                <span className="font-bold text-[#242321] truncate block">{email}</span>
+                <span className="text-[#64748B] dark:text-[#A3B1C6] block">Email:</span>
+                <span className="font-bold text-[#111827] dark:text-[#F1F5F9] truncate block">{email}</span>
               </div>
               <div>
-                <span className="text-[#716D67] block">Section:</span>
-                <span className="font-bold text-[#242321]">{section}</span>
+                <span className="text-[#64748B] dark:text-[#A3B1C6] block">Section:</span>
+                <span className="font-bold text-[#111827] dark:text-[#F1F5F9]">{section}</span>
               </div>
               <div>
-                <span className="text-[#716D67] block">Branch / Dept:</span>
-                <span className="font-bold text-[#242321]">{branch}</span>
+                <span className="text-[#64748B] dark:text-[#A3B1C6] block">Branch / Dept:</span>
+                <span className="font-bold text-[#111827] dark:text-[#F1F5F9]">{branch}</span>
               </div>
             </div>
 
-            <p className="text-xs text-[#716D67]">
+            <p className="text-xs text-[#64748B] dark:text-[#A3B1C6]">
               Your instructor can now automatically import your profile into the course roster. You do not need to do anything further.
             </p>
 
@@ -225,44 +221,44 @@ export default function StudentRegistrationPublicPage() {
                 setRollNumber("");
                 setContactNumber("");
               }}
-              className="text-xs font-semibold text-[#C84B18] hover:underline cursor-pointer"
+              className="text-xs font-semibold text-[#2563EB] dark:text-[#60A5FA] hover:underline cursor-pointer"
             >
               Submit another response
             </button>
           </div>
         ) : (
           /* Form Content Card */
-          <div className="bg-white rounded-2xl border border-[#E5E0D8] p-5 sm:p-8 shadow-xs space-y-6">
+          <div className="bg-white dark:bg-[#111C31] rounded-2xl border border-[#E2E8F0] dark:border-[#263449] p-5 sm:p-8 shadow-xl space-y-6">
             
             {/* Form Title & Description Header */}
-            <div className="space-y-2 border-b border-[#E5E0D8] pb-5">
-              <h1 className="text-xl sm:text-2xl font-extrabold text-[#242321] tracking-tight">
+            <div className="space-y-2 border-b border-[#E2E8F0] dark:border-[#263449] pb-5">
+              <h1 className="text-xl sm:text-2xl font-extrabold text-[#111827] dark:text-[#F1F5F9] tracking-tight">
                 {formMeta.title}
               </h1>
               {formMeta.description && (
-                <p className="text-xs sm:text-sm text-[#716D67] leading-relaxed">
+                <p className="text-xs sm:text-sm text-[#64748B] dark:text-[#A3B1C6] leading-relaxed">
                   {formMeta.description}
                 </p>
               )}
-              <div className="flex items-center gap-2 pt-1 text-[11px] text-[#8C827A]">
-                <ShieldCheck className="h-3.5 w-3.5 text-[#C84B18]" />
+              <div className="flex items-center gap-2 pt-1 text-[11px] text-[#64748B] dark:text-[#A3B1C6]">
+                <ShieldCheck className="h-3.5 w-3.5 text-[#2563EB] dark:text-[#60A5FA]" />
                 <span>Predefined 6-field student record format</span>
               </div>
             </div>
 
             {/* Error Notification */}
             {submitError && (
-              <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-start gap-2.5 animate-in fade-in duration-200">
+              <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-start gap-2.5 animate-in fade-in duration-200">
                 <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
                 <span className="font-medium">{submitError}</span>
               </div>
             )}
 
             {!formMeta.is_active ? (
-              <div className="p-6 bg-[#FAF8F5] border border-[#E5E0D8] rounded-xl text-center space-y-2">
-                <AlertCircle className="h-6 w-6 text-amber-600 mx-auto" />
-                <p className="text-sm font-bold text-[#242321]">Submissions Closed</p>
-                <p className="text-xs text-[#716D67]">
+              <div className="p-6 bg-[#F8FAFC] dark:bg-[#17243A] border border-[#E2E8F0] dark:border-[#263449] rounded-xl text-center space-y-2">
+                <AlertCircle className="h-6 w-6 text-amber-500 mx-auto" />
+                <p className="text-sm font-bold text-[#111827] dark:text-[#F1F5F9]">Submissions Closed</p>
+                <p className="text-xs text-[#64748B] dark:text-[#A3B1C6]">
                   The instructor has paused or closed registration for this form. Please contact your faculty.
                 </p>
               </div>
@@ -271,12 +267,12 @@ export default function StudentRegistrationPublicPage() {
                 
                 {/* 1. Full Name */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-[#242321] flex items-center justify-between">
+                  <label className="text-xs font-bold text-[#111827] dark:text-[#F1F5F9] flex items-center justify-between">
                     <span className="flex items-center gap-1.5">
-                      <User className="h-3.5 w-3.5 text-[#C84B18]" />
+                      <User className="h-3.5 w-3.5 text-[#2563EB] dark:text-[#60A5FA]" />
                       Full Name
                     </span>
-                    <span className="text-[10px] text-[#C84B18] font-bold">Mandatory *</span>
+                    <span className="text-[10px] text-[#2563EB] dark:text-[#60A5FA] font-bold">Mandatory *</span>
                   </label>
                   <input
                     type="text"
@@ -284,18 +280,18 @@ export default function StudentRegistrationPublicPage() {
                     placeholder="e.g. Rahul Sharma"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[#E5E0D8] focus:border-[#C84B18] focus:ring-1 focus:ring-[#C84B18] outline-none transition-all placeholder:text-[#A8A29E]"
+                    className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-[#17243A] text-[#111827] dark:text-[#F1F5F9] focus:border-[#2563EB] dark:focus:border-[#3B82F6] focus:ring-1 focus:ring-[#2563EB] outline-none transition-all placeholder:text-[#94A3B8]"
                   />
                 </div>
 
                 {/* 2. Email Address */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-[#242321] flex items-center justify-between">
+                  <label className="text-xs font-bold text-[#111827] dark:text-[#F1F5F9] flex items-center justify-between">
                     <span className="flex items-center gap-1.5">
-                      <Mail className="h-3.5 w-3.5 text-[#C84B18]" />
+                      <Mail className="h-3.5 w-3.5 text-[#2563EB] dark:text-[#60A5FA]" />
                       Email Address
                     </span>
-                    <span className="text-[10px] text-[#C84B18] font-bold">Mandatory *</span>
+                    <span className="text-[10px] text-[#2563EB] dark:text-[#60A5FA] font-bold">Mandatory *</span>
                   </label>
                   <input
                     type="email"
@@ -303,7 +299,7 @@ export default function StudentRegistrationPublicPage() {
                     placeholder="e.g. rahul.sharma@college.edu"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[#E5E0D8] focus:border-[#C84B18] focus:ring-1 focus:ring-[#C84B18] outline-none transition-all placeholder:text-[#A8A29E]"
+                    className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-[#17243A] text-[#111827] dark:text-[#F1F5F9] focus:border-[#2563EB] dark:focus:border-[#3B82F6] focus:ring-1 focus:ring-[#2563EB] outline-none transition-all placeholder:text-[#94A3B8]"
                   />
                 </div>
 
@@ -311,12 +307,12 @@ export default function StudentRegistrationPublicPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* 3. Roll Number */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-[#242321] flex items-center justify-between">
+                    <label className="text-xs font-bold text-[#111827] dark:text-[#F1F5F9] flex items-center justify-between">
                       <span className="flex items-center gap-1.5">
-                        <Hash className="h-3.5 w-3.5 text-[#C84B18]" />
+                        <Hash className="h-3.5 w-3.5 text-[#2563EB] dark:text-[#60A5FA]" />
                         Roll Number / Student ID
                       </span>
-                      <span className="text-[10px] text-[#C84B18] font-bold">*</span>
+                      <span className="text-[10px] text-[#2563EB] dark:text-[#60A5FA] font-bold">*</span>
                     </label>
                     <input
                       type="text"
@@ -324,18 +320,18 @@ export default function StudentRegistrationPublicPage() {
                       placeholder="e.g. CS-2026-042"
                       value={rollNumber}
                       onChange={(e) => setRollNumber(e.target.value.toUpperCase())}
-                      className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[#E5E0D8] focus:border-[#C84B18] focus:ring-1 focus:ring-[#C84B18] outline-none transition-all uppercase placeholder:normal-case placeholder:text-[#A8A29E]"
+                      className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-[#17243A] text-[#111827] dark:text-[#F1F5F9] focus:border-[#2563EB] dark:focus:border-[#3B82F6] focus:ring-1 focus:ring-[#2563EB] outline-none transition-all uppercase placeholder:normal-case placeholder:text-[#94A3B8]"
                     />
                   </div>
 
                   {/* 4. Contact Number */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-[#242321] flex items-center justify-between">
+                    <label className="text-xs font-bold text-[#111827] dark:text-[#F1F5F9] flex items-center justify-between">
                       <span className="flex items-center gap-1.5">
-                        <Phone className="h-3.5 w-3.5 text-[#C84B18]" />
+                        <Phone className="h-3.5 w-3.5 text-[#2563EB] dark:text-[#60A5FA]" />
                         Contact Number
                       </span>
-                      <span className="text-[10px] text-[#C84B18] font-bold">*</span>
+                      <span className="text-[10px] text-[#2563EB] dark:text-[#60A5FA] font-bold">*</span>
                     </label>
                     <input
                       type="tel"
@@ -343,7 +339,7 @@ export default function StudentRegistrationPublicPage() {
                       placeholder="e.g. +91 98765 43210"
                       value={contactNumber}
                       onChange={(e) => setContactNumber(e.target.value)}
-                      className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[#E5E0D8] focus:border-[#C84B18] focus:ring-1 focus:ring-[#C84B18] outline-none transition-all placeholder:text-[#A8A29E]"
+                      className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-[#17243A] text-[#111827] dark:text-[#F1F5F9] focus:border-[#2563EB] dark:focus:border-[#3B82F6] focus:ring-1 focus:ring-[#2563EB] outline-none transition-all placeholder:text-[#94A3B8]"
                     />
                   </div>
                 </div>
@@ -352,12 +348,12 @@ export default function StudentRegistrationPublicPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* 5. Section */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-[#242321] flex items-center justify-between">
+                    <label className="text-xs font-bold text-[#111827] dark:text-[#F1F5F9] flex items-center justify-between">
                       <span className="flex items-center gap-1.5">
-                        <Bookmark className="h-3.5 w-3.5 text-[#C84B18]" />
+                        <Bookmark className="h-3.5 w-3.5 text-[#2563EB] dark:text-[#60A5FA]" />
                         Section / Division
                       </span>
-                      <span className="text-[10px] text-[#C84B18] font-bold">*</span>
+                      <span className="text-[10px] text-[#2563EB] dark:text-[#60A5FA] font-bold">*</span>
                     </label>
                     <input
                       type="text"
@@ -365,18 +361,18 @@ export default function StudentRegistrationPublicPage() {
                       placeholder="e.g. Section C"
                       value={section}
                       onChange={(e) => setSection(e.target.value)}
-                      className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[#E5E0D8] focus:border-[#C84B18] focus:ring-1 focus:ring-[#C84B18] outline-none transition-all placeholder:text-[#A8A29E]"
+                      className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-[#17243A] text-[#111827] dark:text-[#F1F5F9] focus:border-[#2563EB] dark:focus:border-[#3B82F6] focus:ring-1 focus:ring-[#2563EB] outline-none transition-all placeholder:text-[#94A3B8]"
                     />
                   </div>
 
                   {/* 6. Branch */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-[#242321] flex items-center justify-between">
+                    <label className="text-xs font-bold text-[#111827] dark:text-[#F1F5F9] flex items-center justify-between">
                       <span className="flex items-center gap-1.5">
-                        <Building2 className="h-3.5 w-3.5 text-[#C84B18]" />
+                        <Building2 className="h-3.5 w-3.5 text-[#2563EB] dark:text-[#60A5FA]" />
                         Branch / Department
                       </span>
-                      <span className="text-[10px] text-[#C84B18] font-bold">*</span>
+                      <span className="text-[10px] text-[#2563EB] dark:text-[#60A5FA] font-bold">*</span>
                     </label>
                     <input
                       type="text"
@@ -384,7 +380,7 @@ export default function StudentRegistrationPublicPage() {
                       placeholder="e.g. AIML / Computer Science"
                       value={branch}
                       onChange={(e) => setBranch(e.target.value)}
-                      className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[#E5E0D8] focus:border-[#C84B18] focus:ring-1 focus:ring-[#C84B18] outline-none transition-all placeholder:text-[#A8A29E]"
+                      className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-[#17243A] text-[#111827] dark:text-[#F1F5F9] focus:border-[#2563EB] dark:focus:border-[#3B82F6] focus:ring-1 focus:ring-[#2563EB] outline-none transition-all placeholder:text-[#94A3B8]"
                     />
                   </div>
                 </div>
@@ -394,7 +390,7 @@ export default function StudentRegistrationPublicPage() {
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="w-full py-3 px-4 bg-[#C84B18] hover:bg-[#B33F10] text-white rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-xs cursor-pointer transition-all disabled:opacity-60"
+                    className="w-full py-3 px-4 bg-[#2563EB] hover:bg-[#1D4ED8] text-white rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-md cursor-pointer transition-all disabled:opacity-60"
                   >
                     {submitting ? (
                       <>
@@ -408,7 +404,7 @@ export default function StudentRegistrationPublicPage() {
                       </>
                     )}
                   </button>
-                  <p className="text-[11px] text-[#8C827A] text-center mt-2">
+                  <p className="text-[11px] text-[#64748B] dark:text-[#A3B1C6] text-center mt-2">
                     No login required. Your information is securely sent directly to your course instructor.
                   </p>
                 </div>
@@ -419,8 +415,8 @@ export default function StudentRegistrationPublicPage() {
           </div>
         )}
 
-        <div className="text-center text-[11px] text-[#8C827A] space-y-1">
-          <p>Powered by <span className="font-semibold text-[#242321]">TestoraQuiz</span> — Automated Examination & Student Management</p>
+        <div className="text-center text-[11px] text-[#64748B] dark:text-[#A3B1C6] space-y-1">
+          <p>Powered by <span className="font-semibold text-[#111827] dark:text-[#F1F5F9]">TestoraQuiz</span> — Automated Examination & Student Management</p>
         </div>
 
       </div>

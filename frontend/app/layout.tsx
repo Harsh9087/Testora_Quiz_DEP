@@ -10,8 +10,8 @@ export const viewport: Viewport = {
   userScalable: false,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#F7F4EF" },
-    { media: "(prefers-color-scheme: dark)", color: "#0F0E0D" },
+    { media: "(prefers-color-scheme: light)", color: "#F8FAFC" },
+    { media: "(prefers-color-scheme: dark)", color: "#0B1120" },
   ],
 };
 
@@ -42,8 +42,15 @@ export default function RootLayout({
             __html: `
               (function() {
                 try {
-                  var m = localStorage.getItem('theme_mode') || localStorage.getItem('theme');
-                  var isDark = (m === 'dark');
+                  var pref = localStorage.getItem('theme_preference') || localStorage.getItem('theme_mode') || 'system';
+                  var isDark = false;
+                  if (pref === 'dark') {
+                    isDark = true;
+                  } else if (pref === 'light') {
+                    isDark = false;
+                  } else {
+                    isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                  }
                   if (isDark) {
                     document.documentElement.classList.add('dark');
                     document.documentElement.setAttribute('data-theme', 'dark');
@@ -57,7 +64,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="antialiased min-h-screen selection:bg-amber-800/20 selection:text-amber-900">
+      <body className="antialiased min-h-screen selection:bg-blue-600/20 selection:text-blue-900 dark:selection:text-blue-200">
         <Providers>{children}</Providers>
       </body>
     </html>

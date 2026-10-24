@@ -674,8 +674,8 @@ export default function TeacherDashboard() {
     }
   };
 
-  const labelCls = "block text-xs font-semibold text-[#242321] dark:text-[#F5F5F4] mb-1 uppercase tracking-wider";
-  const inputCls = "w-full bg-[#F7F4EF] dark:bg-[#141312] border border-[#E5E0D8] dark:border-[#292524] rounded-lg px-3 py-2 text-xs text-[#242321] dark:text-[#F5F5F4] focus:outline-none focus:ring-1 focus:ring-[#C84B18]";
+  const labelCls = "block text-xs font-semibold text-[#111827] dark:text-[#F1F5F9] mb-1 uppercase tracking-wider";
+  const inputCls = "w-full bg-[#F8FAFC] dark:bg-[#0B1120] border border-[#E2E8F0] dark:border-[#263449] rounded-lg px-3 py-2 text-xs text-[#111827] dark:text-[#F1F5F9] focus:outline-none focus:ring-1 focus:ring-[#2563EB]";
 
   const WIZARD_STEPS = [
     {
@@ -711,15 +711,15 @@ export default function TeacherDashboard() {
   return (
     <div className="space-y-8 animate-fadeIn">
       {/* Top Header & Metrics Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#E5E0D8] dark:border-[#292524] pb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#E2E8F0] dark:border-[#263449] pb-6">
         <div>
-          <span className="text-xs font-semibold text-[#C84B18] dark:text-[#EA580C] uppercase tracking-wider">
+          <span className="text-xs font-semibold text-[#1E3A8A] dark:text-[#60A5FA] uppercase tracking-wider">
             Academic Instructor Workspace
           </span>
-          <h1 className="text-2xl font-serif font-bold text-[#242321] dark:text-[#F5F5F4] mt-1">
+          <h1 className="text-2xl font-serif font-bold text-[#111827] dark:text-[#F1F5F9] mt-1">
             Teacher Command Center
           </h1>
-          <p className="text-xs text-[#716D67] dark:text-[#A8A29E] mt-0.5">
+          <p className="text-xs text-[#64748B] dark:text-[#A3B1C6] mt-0.5">
             Welcome, <b>{mounted && fullName ? fullName : "Instructor"}</b>. Autonomous AI assessment synthesis & proctoring platform.
           </p>
         </div>
@@ -740,51 +740,51 @@ export default function TeacherDashboard() {
 
       {/* KPI Cards Row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-        <div className="bg-[#FFFFFF] dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-xl p-3.5 sm:p-4 shadow-xs">
-          <div className="text-[11px] font-medium text-[#716D67] dark:text-[#A8A29E] uppercase tracking-wider flex items-center gap-1.5">
-            <Calendar className="h-3.5 w-3.5 text-[#C84B18]" />
+        <div className="bg-[#FFFFFF] dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-xl p-3.5 sm:p-4 shadow-xs">
+          <div className="text-[11px] font-medium text-[#64748B] dark:text-[#A3B1C6] uppercase tracking-wider flex items-center gap-1.5">
+            <Calendar className="h-3.5 w-3.5 text-[#2563EB]" />
             <span>Assessments</span>
           </div>
-          <div className="text-2xl font-bold text-[#242321] dark:text-[#F5F5F4] mt-1">{exams.length}</div>
-          <div className="text-[10px] text-[#716D67] mt-0.5">{exams.filter((e) => e.is_published).length} Published Live</div>
+          <div className="text-2xl font-bold text-[#111827] dark:text-[#F1F5F9] mt-1">{exams.length}</div>
+          <div className="text-[10px] text-[#64748B] mt-0.5">{exams.filter((e) => e.is_published).length} Published Live</div>
         </div>
 
-        <div className="bg-[#FFFFFF] dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-xl p-3.5 sm:p-4 shadow-xs">
-          <div className="text-[11px] font-medium text-[#716D67] dark:text-[#A8A29E] uppercase tracking-wider flex items-center gap-1.5">
-            <BookOpen className="h-3.5 w-3.5 text-[#C84B18]" />
+        <div className="bg-[#FFFFFF] dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-xl p-3.5 sm:p-4 shadow-xs">
+          <div className="text-[11px] font-medium text-[#64748B] dark:text-[#A3B1C6] uppercase tracking-wider flex items-center gap-1.5">
+            <BookOpen className="h-3.5 w-3.5 text-[#2563EB]" />
             <span>Vector Docs</span>
           </div>
-          <div className="text-2xl font-bold text-[#242321] dark:text-[#F5F5F4] mt-1">{documents.length}</div>
-          <div className="text-[10px] text-[#716D67] mt-0.5">RAG Indexed Sources</div>
+          <div className="text-2xl font-bold text-[#111827] dark:text-[#F1F5F9] mt-1">{documents.length}</div>
+          <div className="text-[10px] text-[#64748B] mt-0.5">RAG Indexed Sources</div>
         </div>
 
-        <div className="bg-[#FFFFFF] dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-xl p-3.5 sm:p-4 shadow-xs">
-          <div className="text-[11px] font-medium text-[#716D67] dark:text-[#A8A29E] uppercase tracking-wider flex items-center gap-1.5">
-            <Users className="h-3.5 w-3.5 text-[#C84B18]" />
+        <div className="bg-[#FFFFFF] dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-xl p-3.5 sm:p-4 shadow-xs">
+          <div className="text-[11px] font-medium text-[#64748B] dark:text-[#A3B1C6] uppercase tracking-wider flex items-center gap-1.5">
+            <Users className="h-3.5 w-3.5 text-[#2563EB]" />
             <span>Cohorts & Classes</span>
           </div>
-          <div className="text-2xl font-bold text-[#242321] dark:text-[#F5F5F4] mt-1">{kbSubjects.length}</div>
-          <div className="text-[10px] text-[#716D67] mt-0.5">Academic Mappings</div>
+          <div className="text-2xl font-bold text-[#111827] dark:text-[#F1F5F9] mt-1">{kbSubjects.length}</div>
+          <div className="text-[10px] text-[#64748B] mt-0.5">Academic Mappings</div>
         </div>
 
-        <div className="bg-[#FFFFFF] dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-xl p-3.5 sm:p-4 shadow-xs">
-          <div className="text-[11px] font-medium text-[#716D67] dark:text-[#A8A29E] uppercase tracking-wider flex items-center gap-1.5">
-            <ClipboardList className="h-3.5 w-3.5 text-[#C84B18]" />
+        <div className="bg-[#FFFFFF] dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-xl p-3.5 sm:p-4 shadow-xs">
+          <div className="text-[11px] font-medium text-[#64748B] dark:text-[#A3B1C6] uppercase tracking-wider flex items-center gap-1.5">
+            <ClipboardList className="h-3.5 w-3.5 text-[#2563EB]" />
             <span>Registration Forms</span>
           </div>
-          <div className="text-2xl font-bold text-[#242321] dark:text-[#F5F5F4] mt-1">{registrationFormsCount}</div>
-          <div className="text-[10px] text-[#716D67] mt-0.5">Online Student Forms</div>
+          <div className="text-2xl font-bold text-[#111827] dark:text-[#F1F5F9] mt-1">{registrationFormsCount}</div>
+          <div className="text-[10px] text-[#64748B] mt-0.5">Online Student Forms</div>
         </div>
       </div>
 
       {/* View Switcher Pill Bar */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-[#E5E0D8] dark:border-[#292524] scrollbar-none touch-pan-x">
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-[#E2E8F0] dark:border-[#263449] scrollbar-none touch-pan-x">
         <button
           onClick={() => switchSectionTab("all")}
           className={`px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 cursor-pointer ${
             activeSectionTab === "all"
-              ? "bg-[#C84B18] text-white shadow-xs"
-              : "bg-[#FFFFFF] dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] text-[#716D67] hover:text-[#242321] dark:hover:text-[#F5F5F4]"
+              ? "bg-[#2563EB] text-white shadow-xs"
+              : "bg-[#FFFFFF] dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] text-[#64748B] hover:text-[#111827] dark:hover:text-[#F1F5F9]"
           }`}
         >
           <span className="sm:hidden">All</span>
@@ -795,8 +795,8 @@ export default function TeacherDashboard() {
           onClick={() => switchSectionTab("exams")}
           className={`px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer ${
             activeSectionTab === "exams"
-              ? "bg-[#C84B18] text-white shadow-xs"
-              : "bg-[#FFFFFF] dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] text-[#716D67] hover:text-[#242321] dark:hover:text-[#F5F5F4]"
+              ? "bg-[#2563EB] text-white shadow-xs"
+              : "bg-[#FFFFFF] dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] text-[#64748B] hover:text-[#111827] dark:hover:text-[#F1F5F9]"
           }`}
         >
           <GraduationCap className="h-3.5 w-3.5" />
@@ -808,8 +808,8 @@ export default function TeacherDashboard() {
           onClick={() => switchSectionTab("create")}
           className={`px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer ${
             activeSectionTab === "create"
-              ? "bg-[#C84B18] text-white shadow-xs"
-              : "bg-[#FFFFFF] dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] text-[#716D67] hover:text-[#242321] dark:hover:text-[#F5F5F4]"
+              ? "bg-[#2563EB] text-white shadow-xs"
+              : "bg-[#FFFFFF] dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] text-[#64748B] hover:text-[#111827] dark:hover:text-[#F1F5F9]"
           }`}
         >
           <Plus className="h-3.5 w-3.5" />
@@ -821,8 +821,8 @@ export default function TeacherDashboard() {
           onClick={() => switchSectionTab("bank")}
           className={`px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer ${
             activeSectionTab === "bank"
-              ? "bg-[#C84B18] text-white shadow-xs"
-              : "bg-[#FFFFFF] dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] text-[#716D67] hover:text-[#242321] dark:hover:text-[#F5F5F4]"
+              ? "bg-[#2563EB] text-white shadow-xs"
+              : "bg-[#FFFFFF] dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] text-[#64748B] hover:text-[#111827] dark:hover:text-[#F1F5F9]"
           }`}
         >
           <Sparkles className="h-3.5 w-3.5" />
@@ -834,8 +834,8 @@ export default function TeacherDashboard() {
           onClick={() => switchSectionTab("kb")}
           className={`px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer ${
             activeSectionTab === "kb"
-              ? "bg-[#C84B18] text-white shadow-xs"
-              : "bg-[#FFFFFF] dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] text-[#716D67] hover:text-[#242321] dark:hover:text-[#F5F5F4]"
+              ? "bg-[#2563EB] text-white shadow-xs"
+              : "bg-[#FFFFFF] dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] text-[#64748B] hover:text-[#111827] dark:hover:text-[#F1F5F9]"
           }`}
         >
           <BookOpen className="h-3.5 w-3.5" />
@@ -847,8 +847,8 @@ export default function TeacherDashboard() {
           onClick={() => switchSectionTab("students")}
           className={`px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer ${
             activeSectionTab === "students"
-              ? "bg-[#C84B18] text-white shadow-xs"
-              : "bg-[#FFFFFF] dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] text-[#716D67] hover:text-[#242321] dark:hover:text-[#F5F5F4]"
+              ? "bg-[#2563EB] text-white shadow-xs"
+              : "bg-[#FFFFFF] dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] text-[#64748B] hover:text-[#111827] dark:hover:text-[#F1F5F9]"
           }`}
         >
           <Users className="h-3.5 w-3.5" />
@@ -860,8 +860,8 @@ export default function TeacherDashboard() {
           onClick={() => switchSectionTab("forms")}
           className={`px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer ${
             activeSectionTab === "forms"
-              ? "bg-[#C84B18] text-white shadow-xs"
-              : "bg-[#FFFFFF] dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] text-[#716D67] hover:text-[#242321] dark:hover:text-[#F5F5F4]"
+              ? "bg-[#2563EB] text-white shadow-xs"
+              : "bg-[#FFFFFF] dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] text-[#64748B] hover:text-[#111827] dark:hover:text-[#F1F5F9]"
           }`}
         >
           <ClipboardList className="h-3.5 w-3.5" />
@@ -873,8 +873,8 @@ export default function TeacherDashboard() {
           onClick={() => switchSectionTab("custom-forms")}
           className={`px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer ${
             activeSectionTab === "custom-forms"
-              ? "bg-blue-600 text-white shadow-xs"
-              : "bg-[#FFFFFF] dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] text-[#716D67] hover:text-[#242321] dark:hover:text-[#F5F5F4]"
+              ? "bg-[#2563EB] text-white shadow-xs"
+              : "bg-[#FFFFFF] dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] text-[#64748B] hover:text-[#111827] dark:hover:text-[#F1F5F9]"
           }`}
         >
           <Wand2 className="h-3.5 w-3.5" />
@@ -886,8 +886,8 @@ export default function TeacherDashboard() {
           onClick={() => switchSectionTab("reports")}
           className={`px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer ${
             activeSectionTab === "reports"
-              ? "bg-[#C84B18] text-white shadow-xs"
-              : "bg-[#FFFFFF] dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] text-[#716D67] hover:text-[#242321] dark:hover:text-[#F5F5F4]"
+              ? "bg-[#2563EB] text-white shadow-xs"
+              : "bg-[#FFFFFF] dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] text-[#64748B] hover:text-[#111827] dark:hover:text-[#F1F5F9]"
           }`}
         >
           <BarChart3 className="h-3.5 w-3.5" />
@@ -929,28 +929,28 @@ export default function TeacherDashboard() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="p-1.5 rounded-lg bg-[#C84B18]/10 text-[#C84B18] dark:text-[#EA580C]">
+                  <span className="p-1.5 rounded-lg bg-[#EFF6FF] text-[#1E3A8A] dark:bg-[#172B4D] dark:text-[#60A5FA]">
                     <Sparkles className="h-4 w-4" />
                   </span>
-                  <h2 className="text-base font-bold text-[#242321] dark:text-[#F5F5F4]">
+                  <h2 className="text-base font-bold text-[#111827] dark:text-[#F1F5F9]">
                     Create New Assessment
                   </h2>
                 </div>
-                <p className="text-xs text-[#716D67] dark:text-[#A8A29E] mt-0.5">
+                <p className="text-xs text-[#64748B] dark:text-[#A3B1C6] mt-0.5">
                   Follow the 4 calibrated steps below or tap any tab to jump directly.
                 </p>
               </div>
 
               {/* Step Progress Pill & Toggle Buttons */}
               <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
-                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#C84B18]/10 text-[#C84B18] dark:text-[#EA580C] text-xs font-bold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#C84B18] dark:bg-[#EA580C] animate-pulse" />
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EFF6FF] text-[#1E3A8A] dark:bg-[#172B4D] dark:text-[#60A5FA] text-xs font-bold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#2563EB] animate-pulse" />
                   <span>Step {createStep} of 4: {WIZARD_STEPS[createStep - 1].shortTitle}</span>
                 </div>
                 <button
                   type="button"
                   onClick={() => setExpandedStep(expandedStep ? null : createStep)}
-                  className="px-2.5 py-1 text-xs font-semibold rounded-lg border border-[#E5E0D8] dark:border-[#292524] hover:bg-[#F7F4EF] dark:hover:bg-[#1D1B19] text-[#716D67] dark:text-[#A8A29E] transition-colors cursor-pointer"
+                  className="px-2.5 py-1 text-xs font-semibold rounded-lg border border-[#E2E8F0] dark:border-[#263449] hover:bg-[#F8FAFC] dark:hover:bg-[#17243A] text-[#64748B] dark:text-[#A3B1C6] transition-colors cursor-pointer"
                 >
                   {expandedStep ? "Hide / Minimize Step" : "Expand Step"}
                 </button>
@@ -958,9 +958,9 @@ export default function TeacherDashboard() {
             </div>
 
             {/* Visual Progress Line */}
-            <div className="w-full bg-[#E5E0D8]/60 dark:bg-[#292524] h-1.5 rounded-full overflow-hidden">
+            <div className="w-full bg-[#E2E8F0]/60 dark:bg-[#263449] h-1.5 rounded-full overflow-hidden">
               <div 
-                className="bg-gradient-to-r from-[#C84B18] to-emerald-500 h-full transition-all duration-300 rounded-full"
+                className="bg-gradient-to-r from-[#2563EB] to-emerald-500 h-full transition-all duration-300 rounded-full"
                 style={{ width: `${(createStep / 4) * 100}%` }}
               />
             </div>
@@ -982,20 +982,20 @@ export default function TeacherDashboard() {
                     }}
                     className={`p-2.5 sm:p-3 rounded-xl border text-left transition-all cursor-pointer flex items-center gap-2.5 relative group ${
                       isActive && isExpanded
-                        ? "bg-white dark:bg-[#1D1B19] border-[#C84B18] dark:border-[#EA580C] shadow-xs ring-1 ring-[#C84B18]/30"
+                        ? "bg-white dark:bg-[#172B4D] border-[#2563EB] dark:border-[#3B82F6] shadow-xs ring-1 ring-[#2563EB]/30"
                         : isActive
-                        ? "bg-[#C84B18]/5 dark:bg-[#EA580C]/10 border-[#C84B18]/50"
+                        ? "bg-[#EFF6FF] dark:bg-[#172B4D]/60 border-[#2563EB]/50"
                         : isCompleted
                         ? "bg-emerald-50/40 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800/60 hover:border-emerald-400"
-                        : "bg-[#F7F4EF]/50 dark:bg-[#141312]/50 border-[#E5E0D8] dark:border-[#292524] hover:bg-white dark:hover:bg-[#1D1B19] hover:border-[#C84B18]/40"
+                        : "bg-[#F8FAFC]/50 dark:bg-[#0B1120]/50 border-[#E2E8F0] dark:border-[#263449] hover:bg-white dark:hover:bg-[#111C31] hover:border-[#2563EB]/40"
                     }`}
                   >
                     <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 font-bold text-xs transition-colors ${
                       isActive
-                        ? "bg-[#C84B18] dark:bg-[#EA580C] text-white shadow-xs"
+                        ? "bg-[#2563EB] text-white shadow-xs"
                         : isCompleted
                         ? "bg-emerald-600 text-white"
-                        : "bg-[#E5E0D8] dark:bg-[#292524] text-[#716D67] group-hover:bg-[#C84B18]/10 group-hover:text-[#C84B18]"
+                        : "bg-[#E2E8F0] dark:bg-[#263449] text-[#64748B] group-hover:bg-[#EFF6FF] group-hover:text-[#2563EB]"
                     }`}>
                       {isCompleted ? <Check className="h-4 w-4" /> : s.step}
                     </div>
@@ -1004,18 +1004,18 @@ export default function TeacherDashboard() {
                       <div className="flex items-center justify-between">
                         <span className={`text-xs font-bold truncate ${
                           isActive
-                            ? "text-[#C84B18] dark:text-[#EA580C]"
+                            ? "text-[#2563EB] dark:text-[#60A5FA]"
                             : isCompleted
                             ? "text-emerald-700 dark:text-emerald-400"
-                            : "text-[#242321] dark:text-[#F5F5F4]"
+                            : "text-[#111827] dark:text-[#F1F5F9]"
                         }`}>
                           {s.shortTitle}
                         </span>
                         {isActive && isExpanded && (
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#C84B18] dark:bg-[#EA580C] shrink-0" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#2563EB] dark:bg-[#60A5FA] shrink-0" />
                         )}
                       </div>
-                      <p className="text-[10px] text-[#716D67] dark:text-[#A8A29E] truncate">
+                      <p className="text-[10px] text-[#64748B] dark:text-[#A3B1C6] truncate">
                         {s.summary}
                       </p>
                     </div>
@@ -1031,10 +1031,10 @@ export default function TeacherDashboard() {
             {/* STEP 1: CONTENT SOURCE */}
             <div className={`border rounded-2xl transition-all overflow-hidden ${
               createStep === 1
-                ? "bg-white dark:bg-[#171615] border-[#C84B18]/40 shadow-sm ring-1 ring-[#C84B18]/20"
+                ? "bg-white dark:bg-[#111C31] border-[#2563EB]/40 shadow-sm ring-1 ring-[#2563EB]/20"
                 : createStep > 1
-                ? "bg-white dark:bg-[#171615] border-[#E5E0D8] dark:border-[#292524]"
-                : "bg-[#F7F4EF]/60 dark:bg-[#141312]/60 border-[#E5E0D8] dark:border-[#292524] opacity-85"
+                ? "bg-white dark:bg-[#111C31] border-[#E2E8F0] dark:border-[#263449]"
+                : "bg-[#F8FAFC]/60 dark:bg-[#0B1120]/60 border-[#E2E8F0] dark:border-[#263449] opacity-85"
             }`}>
               {/* Step 1 Header Button */}
               <button

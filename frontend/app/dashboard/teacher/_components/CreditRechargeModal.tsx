@@ -11,7 +11,6 @@ import {
   Sparkles,
   Zap,
   ArrowRight,
-  ExternalLink,
   Receipt,
   Printer
 } from "lucide-react";
@@ -152,7 +151,6 @@ export default function CreditRechargeModal({
         !orderData.key_id;
 
       if (isSimulated || !scriptLoaded) {
-        // Fallback simulation for local dev
         const userConfirmed = window.confirm(
           `[Razorpay Credit Recharge Simulation]\n\n` +
           `Package: ${orderData.package_name}\n` +
@@ -187,7 +185,7 @@ export default function CreditRechargeModal({
           email: orderData.user_email || "",
         },
         theme: {
-          color: "#C84B18",
+          color: "#2563EB",
         },
         modal: {
           ondismiss: () => {
@@ -267,27 +265,27 @@ export default function CreditRechargeModal({
       }}
     >
       <div 
-        className="w-full max-w-lg bg-[#FAF8F5] dark:bg-[#181614] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-scaleUp"
+        className="w-full max-w-lg bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-scaleUp transition-colors"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#E5E0D8] dark:border-[#292524] bg-white dark:bg-[#1C1A18]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#E2E8F0] dark:border-[#263449] bg-[#F8FAFC] dark:bg-[#17243A]">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400">
+            <div className="p-2 rounded-xl bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172B4D] dark:text-[#60A5FA] border border-[#2563EB]/20">
               <Coins className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-base font-serif font-bold text-[#242321] dark:text-[#F5F5F4] leading-tight">
+              <h2 className="text-base font-bold text-[#111827] dark:text-[#F1F5F9] leading-tight">
                 Prepaid Credit Wallet
               </h2>
-              <p className="text-[11px] text-[#716D67] dark:text-[#A8A29E]">
+              <p className="text-[11px] text-[#64748B] dark:text-[#A3B1C6]">
                 Recharge credits to unlock and publish assessments instantly
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-[#716D67] hover:text-[#242321] dark:hover:text-[#F5F5F4] hover:bg-[#E5E0D8]/40 dark:hover:bg-[#292524] transition-colors"
+            className="p-1.5 rounded-lg text-[#64748B] hover:text-[#111827] dark:hover:text-[#F1F5F9] hover:bg-[#E2E8F0]/40 dark:hover:bg-[#263449] transition-colors cursor-pointer"
           >
             <X className="h-4 w-4" />
           </button>
@@ -296,17 +294,17 @@ export default function CreditRechargeModal({
         {/* Body */}
         <div className="p-6 overflow-y-auto space-y-5">
           {/* Current Balance Bar */}
-          <div className="p-4 rounded-xl border border-amber-200 dark:border-amber-900/40 bg-gradient-to-r from-amber-50/60 to-orange-50/40 dark:from-amber-950/20 dark:to-orange-950/10 flex items-center justify-between">
+          <div className="p-4 rounded-xl border border-[#2563EB]/30 bg-gradient-to-r from-[#EFF6FF] to-blue-50/60 dark:from-[#172B4D]/60 dark:to-[#17243A] flex items-center justify-between">
             <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#2563EB] dark:text-[#60A5FA]">
                 Current Available Balance
               </span>
-              <div className="text-2xl font-black text-[#242321] dark:text-[#F5F5F4] mt-0.5 flex items-baseline gap-1.5">
+              <div className="text-2xl font-black text-[#111827] dark:text-[#F1F5F9] mt-0.5 flex items-baseline gap-1.5">
                 <span>{currentBalance.toLocaleString()}</span>
-                <span className="text-xs font-semibold text-[#716D67] dark:text-[#A8A29E]">credits</span>
+                <span className="text-xs font-semibold text-[#64748B] dark:text-[#A3B1C6]">credits</span>
               </div>
             </div>
-            <div className="p-2.5 rounded-full bg-white dark:bg-[#24211E] shadow-sm text-amber-500 border border-amber-200/60 dark:border-amber-900/40">
+            <div className="p-2.5 rounded-full bg-white dark:bg-[#111C31] shadow-sm text-[#2563EB] dark:text-[#60A5FA] border border-[#2563EB]/20">
               <Sparkles className="h-5 w-5" />
             </div>
           </div>
@@ -318,25 +316,25 @@ export default function CreditRechargeModal({
                 <CheckCircle2 className="h-8 w-8" />
               </div>
               <div className="space-y-1">
-                <h3 className="font-serif font-bold text-lg text-[#242321] dark:text-[#F5F5F4]">
+                <h3 className="font-bold text-lg text-[#111827] dark:text-[#F1F5F9]">
                   Recharge Verified & Credited!
                 </h3>
-                <p className="text-xs text-[#716D67] dark:text-[#A8A29E]">
+                <p className="text-xs text-[#64748B] dark:text-[#A3B1C6]">
                   +{successInfo.credits_added.toLocaleString()} credits have been added to your wallet.
                 </p>
               </div>
 
-              <div className="p-3.5 rounded-xl border border-[#E5E0D8] dark:border-[#292524] bg-white dark:bg-[#1E1C1A] text-left text-xs space-y-1.5">
+              <div className="p-3.5 rounded-xl border border-[#E2E8F0] dark:border-[#263449] bg-[#F8FAFC] dark:bg-[#17243A] text-left text-xs space-y-1.5">
                 <div className="flex justify-between items-center">
-                  <span className="text-[#716D67] dark:text-[#A8A29E]">Updated Total Balance:</span>
-                  <span className="font-bold text-base text-amber-600 dark:text-amber-400">
+                  <span className="text-[#64748B] dark:text-[#A3B1C6]">Updated Total Balance:</span>
+                  <span className="font-bold text-base text-[#2563EB] dark:text-[#60A5FA]">
                     {successInfo.new_balance.toLocaleString()} Credits
                   </span>
                 </div>
                 {successInfo.invoice_number && (
-                  <div className="flex justify-between items-center text-[11px] pt-1 border-t border-[#E5E0D8] dark:border-[#292524]">
-                    <span className="text-[#716D67] dark:text-[#A8A29E]">Tax Invoice:</span>
-                    <span className="font-mono font-medium text-stone-700 dark:text-stone-300">
+                  <div className="flex justify-between items-center text-[11px] pt-1 border-t border-[#E2E8F0] dark:border-[#263449]">
+                    <span className="text-[#64748B] dark:text-[#A3B1C6]">Tax Invoice:</span>
+                    <span className="font-mono font-medium text-[#111827] dark:text-[#F1F5F9]">
                       {successInfo.invoice_number}
                     </span>
                   </div>
@@ -347,15 +345,15 @@ export default function CreditRechargeModal({
                 <button
                   type="button"
                   onClick={handlePrintReceipt}
-                  className="w-full py-2.5 px-4 rounded-xl border border-[#E5E0D8] dark:border-[#292524] bg-white dark:bg-[#201D1B] hover:bg-stone-50 dark:hover:bg-[#282522] text-[#242321] dark:text-[#F5F5F4] text-xs font-semibold flex items-center justify-center gap-2 transition-colors"
+                  className="w-full py-2.5 px-4 rounded-xl border border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-[#111C31] hover:bg-[#F8FAFC] dark:hover:bg-[#17243A] text-[#111827] dark:text-[#F1F5F9] text-xs font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
                 >
-                  <Printer className="h-4 w-4 text-[#C84B18]" />
+                  <Printer className="h-4 w-4 text-[#2563EB] dark:text-[#60A5FA]" />
                   <span>Download / Print Recharge Tax Invoice</span>
                 </button>
                 <button
                   type="button"
                   onClick={onClose}
-                  className="w-full py-2.5 px-4 rounded-xl bg-[#C84B18] dark:bg-[#EA580C] hover:opacity-90 text-white text-xs font-bold transition-opacity"
+                  className="w-full py-2.5 px-4 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold transition-all shadow-md cursor-pointer"
                 >
                   Done / Return to Dashboard
                 </button>
@@ -365,8 +363,8 @@ export default function CreditRechargeModal({
             <>
               {loading ? (
                 <div className="py-12 flex flex-col items-center justify-center gap-3">
-                  <RefreshCw className="h-6 w-6 text-[#C84B18] animate-spin" />
-                  <p className="text-xs text-[#716D67] dark:text-[#A8A29E]">Loading packages...</p>
+                  <RefreshCw className="h-6 w-6 text-[#2563EB] dark:text-[#3B82F6] animate-spin" />
+                  <p className="text-xs text-[#64748B] dark:text-[#A3B1C6]">Loading packages...</p>
                 </div>
               ) : errorMessage ? (
                 <div className="p-3.5 rounded-xl border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300 text-xs flex items-start gap-2">
@@ -378,10 +376,10 @@ export default function CreditRechargeModal({
               ) : (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-[#242321] dark:text-[#F5F5F4]">
+                    <span className="text-xs font-bold text-[#111827] dark:text-[#F1F5F9]">
                       Select Credit Package
                     </span>
-                    <span className="text-[11px] text-[#716D67] dark:text-[#A8A29E]">
+                    <span className="text-[11px] text-[#64748B] dark:text-[#A3B1C6]">
                       1 credit = 1 student attempt
                     </span>
                   </div>
@@ -396,8 +394,8 @@ export default function CreditRechargeModal({
                           onClick={() => setSelectedPackageId(pkg.id)}
                           className={`p-3.5 rounded-xl border cursor-pointer transition-all relative ${
                             isSelected
-                              ? "border-[#C84B18] bg-white dark:bg-[#201D1B] shadow-sm ring-1 ring-[#C84B18]/30"
-                              : "border-[#E5E0D8] dark:border-[#292524] bg-white/60 dark:bg-[#1E1C1A]/60 hover:border-stone-400 dark:hover:border-stone-600"
+                              ? "border-[#2563EB] dark:border-[#3B82F6] bg-[#EFF6FF]/60 dark:bg-[#172B4D]/60 shadow-sm ring-1 ring-[#2563EB]/40"
+                              : "border-[#E2E8F0] dark:border-[#263449] bg-white/70 dark:bg-[#17243A]/50 hover:border-[#2563EB]/40"
                           }`}
                         >
                           <div className="flex items-center justify-between">
@@ -405,20 +403,20 @@ export default function CreditRechargeModal({
                               <div
                                 className={`w-4 h-4 rounded-full border flex items-center justify-center ${
                                   isSelected
-                                    ? "border-[#C84B18] bg-[#C84B18]"
-                                    : "border-stone-400 dark:border-stone-600"
+                                    ? "border-[#2563EB] bg-[#2563EB]"
+                                    : "border-[#94A3B8] dark:border-[#64748B]"
                                 }`}
                               >
                                 {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                               </div>
-                              <span className="font-bold text-xs text-[#242321] dark:text-[#F5F5F4]">
+                              <span className="font-bold text-xs text-[#111827] dark:text-[#F1F5F9]">
                                 {pkg.name}
                               </span>
                               {pkg.badge && (
                                 <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
                                   pkg.popular 
-                                    ? "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300"
-                                    : "bg-stone-100 text-stone-700 dark:bg-stone-800 dark:text-stone-300"
+                                    ? "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300/40"
+                                    : "bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-300/40"
                                 }`}>
                                   {pkg.badge}
                                 </span>
@@ -426,21 +424,21 @@ export default function CreditRechargeModal({
                             </div>
 
                             <div className="text-right">
-                              <div className="text-sm font-bold text-[#C84B18] dark:text-[#EA580C]">
+                              <div className="text-sm font-bold text-[#2563EB] dark:text-[#60A5FA]">
                                 {pkg.formatted_amount}
                               </div>
-                              <div className="text-[10px] text-[#716D67] dark:text-[#A8A29E]">
+                              <div className="text-[10px] text-[#64748B] dark:text-[#A3B1C6]">
                                 {pkg.rate_per_credit} / credit
                               </div>
                             </div>
                           </div>
 
-                          <div className="mt-2 pt-2 border-t border-[#E5E0D8]/60 dark:border-[#292524]/60 flex items-center justify-between text-xs">
-                            <span className="font-semibold text-stone-800 dark:text-stone-200 flex items-center gap-1">
+                          <div className="mt-2 pt-2 border-t border-[#E2E8F0] dark:border-[#263449] flex items-center justify-between text-xs">
+                            <span className="font-semibold text-[#111827] dark:text-[#F1F5F9] flex items-center gap-1">
                               <Zap className="h-3.5 w-3.5 text-amber-500" />
                               {pkg.credits.toLocaleString()} Credits
                             </span>
-                            <span className="text-[11px] text-[#716D67] dark:text-[#A8A29E]">
+                            <span className="text-[11px] text-[#64748B] dark:text-[#A3B1C6]">
                               {pkg.description.split("•")[1] || pkg.description}
                             </span>
                           </div>
@@ -450,13 +448,13 @@ export default function CreditRechargeModal({
                   </div>
 
                   {/* Security notes */}
-                  <div className="flex items-center justify-center gap-4 text-[10px] text-[#716D67] dark:text-[#A8A29E] pt-2">
+                  <div className="flex items-center justify-center gap-4 text-[10px] text-[#64748B] dark:text-[#A3B1C6] pt-2">
                     <div className="flex items-center gap-1">
                       <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
                       <span>Razorpay Verified</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <Receipt className="h-3.5 w-3.5 text-stone-500" />
+                      <Receipt className="h-3.5 w-3.5 text-[#2563EB]" />
                       <span>Instant Tax Invoice Included</span>
                     </div>
                   </div>
@@ -468,12 +466,12 @@ export default function CreditRechargeModal({
 
         {/* Footer */}
         {!successInfo && (
-          <div className="px-6 py-4 border-t border-[#E5E0D8] dark:border-[#292524] bg-white/50 dark:bg-[#181614]/50 flex items-center justify-between gap-3">
+          <div className="px-6 py-4 border-t border-[#E2E8F0] dark:border-[#263449] bg-[#F8FAFC]/80 dark:bg-[#17243A]/80 flex items-center justify-between gap-3">
             <button
               type="button"
               onClick={onClose}
               disabled={processing}
-              className="px-4 py-2 rounded-xl border border-[#E5E0D8] dark:border-[#292524] text-xs font-medium text-[#716D67] hover:text-[#242321] dark:hover:text-[#F5F5F4] transition-colors"
+              className="px-4 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#263449] text-xs font-medium text-[#64748B] hover:text-[#111827] dark:hover:text-[#F1F5F9] transition-colors cursor-pointer"
             >
               Cancel
             </button>
@@ -482,7 +480,7 @@ export default function CreditRechargeModal({
               type="button"
               disabled={loading || processing || !selectedPackageId}
               onClick={handleRecharge}
-              className="px-5 py-2.5 rounded-xl bg-[#C84B18] dark:bg-[#EA580C] hover:opacity-90 disabled:opacity-50 text-white text-xs font-bold flex items-center gap-2 shadow-sm cursor-pointer transition-all"
+              className="px-5 py-2.5 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] disabled:opacity-50 text-white text-xs font-bold flex items-center gap-2 shadow-md cursor-pointer transition-all"
             >
               {processing ? (
                 <RefreshCw className="h-3.5 w-3.5 animate-spin" />

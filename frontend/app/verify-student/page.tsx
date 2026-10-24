@@ -6,6 +6,9 @@ import { CheckCircle2, AlertCircle, ShieldCheck, Mail, ArrowRight, School, Spark
 import { apiFetch } from "../../lib/api";
 import { useAuthStore } from "../../store/authStore";
 
+import ThemeToggle from "../../components/ThemeToggle";
+import AppLogo from "../../components/AppLogo";
+
 function VerifyStudentContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -62,7 +65,6 @@ function VerifyStudentContent() {
   };
 
   const handleGoogleAuthorize = async () => {
-    // Simulated Google OAuth authorization popup / client token
     setLoading(true);
     try {
       const emailToAuth = verifiedEmail || prompt("Enter your Google Account email to authorize:", "student@aegeus.edu");
@@ -95,21 +97,23 @@ function VerifyStudentContent() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#F7F4EF] dark:bg-[#0F0E0D] px-4 py-12 text-[#242321] dark:text-[#F5F5F4]">
-      <div className="w-full max-w-md bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl p-8 shadow-xl space-y-6 text-center">
-        
+    <div className="relative flex min-h-screen items-center justify-center bg-[#F8FAFC] dark:bg-[#0B1120] px-4 py-12 text-[#111827] dark:text-[#F1F5F9] transition-colors">
+      <div className="absolute top-4 right-4 z-10">
+        <ThemeToggle />
+      </div>
+
+      <div className="w-full max-w-md bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-2xl p-8 shadow-xl space-y-6 text-center">
         {/* Brand */}
-        <div className="flex items-center justify-center gap-2.5">
-          <div className="p-2 rounded-xl bg-[#C84B18] dark:bg-[#EA580C] text-white">
-            <School className="h-6 w-6" />
-          </div>
-          <span className="font-extrabold text-xl tracking-tight">Testora Quiz</span>
+        <div className="flex items-center justify-center">
+          <a href="/" title="Testora Quiz Home">
+            <AppLogo variant="row" height={36} />
+          </a>
         </div>
 
         {loading ? (
           <div className="py-12 space-y-4">
-            <div className="w-10 h-10 border-3 border-[#C84B18] dark:border-[#EA580C] border-t-transparent rounded-full animate-spin mx-auto" />
-            <h2 className="text-sm font-semibold text-[#716D67] dark:text-[#A8A29E]">Authorizing Student Profile...</h2>
+            <div className="w-10 h-10 border-3 border-[#2563EB] dark:border-[#3B82F6] border-t-transparent rounded-full animate-spin mx-auto" />
+            <h2 className="text-sm font-semibold text-[#64748B] dark:text-[#A3B1C6]">Authorizing Student Profile...</h2>
           </div>
         ) : success ? (
           <div className="space-y-5 animate-fadeIn">
@@ -118,30 +122,30 @@ function VerifyStudentContent() {
             </div>
 
             <div className="space-y-1">
-              <h2 className="text-xl font-bold text-[#242321] dark:text-[#F5F5F4]">Account Authorized!</h2>
-              <p className="text-xs text-[#716D67] dark:text-[#A8A29E] leading-relaxed">
+              <h2 className="text-xl font-bold text-[#111827] dark:text-[#F1F5F9]">Account Authorized!</h2>
+              <p className="text-xs text-[#64748B] dark:text-[#A3B1C6] leading-relaxed">
                 Welcome <b>{verifiedName}</b> ({verifiedEmail}). Your student profile is verified.
               </p>
             </div>
 
             {/* Notice Card */}
-            <div className="bg-[#F0ECE4]/60 dark:bg-[#1D1B19] border border-[#E5E0D8] dark:border-[#292524] rounded-xl p-4 text-left text-xs space-y-3">
-              <div className="flex items-center gap-2 font-semibold text-[#242321] dark:text-[#F5F5F4]">
-                <Mail className="h-4 w-4 text-[#C84B18]" />
+            <div className="bg-[#F8FAFC] dark:bg-[#17243A] border border-[#E2E8F0] dark:border-[#263449] rounded-xl p-4 text-left text-xs space-y-3">
+              <div className="flex items-center gap-2 font-semibold text-[#111827] dark:text-[#F1F5F9]">
+                <Mail className="h-4 w-4 text-[#2563EB] dark:text-[#60A5FA]" />
                 <span>Generated Password & Credentials</span>
               </div>
-              <p className="text-[11px] text-[#716D67] dark:text-[#A8A29E] leading-relaxed">
+              <p className="text-[11px] text-[#64748B] dark:text-[#A3B1C6] leading-relaxed">
                 A secure portal access password has been generated and sent to your email inbox (<b>{verifiedEmail}</b>).
               </p>
 
               {generatedPassword && (
-                <div className="bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-lg p-3 space-y-1">
-                  <div className="text-[10px] uppercase font-bold text-[#716D67] dark:text-[#A8A29E] tracking-wider">Your Student Portal Password:</div>
-                  <div className="flex items-center justify-between font-mono text-sm font-bold text-[#047857] dark:text-emerald-400">
+                <div className="bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-lg p-3 space-y-1">
+                  <div className="text-[10px] uppercase font-bold text-[#64748B] dark:text-[#A3B1C6] tracking-wider">Your Student Portal Password:</div>
+                  <div className="flex items-center justify-between font-mono text-sm font-bold text-emerald-600 dark:text-emerald-400">
                     <span>{generatedPassword}</span>
                     <button
                       onClick={copyPassword}
-                      className="text-xs px-2 py-1 rounded bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 transition-all font-sans cursor-pointer"
+                      className="text-xs px-2.5 py-1 rounded-md bg-[#EFF6FF] dark:bg-[#172B4D] border border-[#2563EB]/30 text-[#2563EB] dark:text-[#60A5FA] hover:bg-[#DBEAFE] dark:hover:bg-[#1E3A8A]/50 transition-all font-sans cursor-pointer font-medium"
                     >
                       {copiedPwd ? "Copied!" : "Copy Password"}
                     </button>
@@ -153,7 +157,7 @@ function VerifyStudentContent() {
             <div className="space-y-3 pt-2">
               <button
                 onClick={() => router.push("/")}
-                className="btn-primary w-full py-2.5 flex items-center justify-center gap-2 text-xs font-semibold"
+                className="w-full py-2.5 px-4 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white flex items-center justify-center gap-2 text-xs font-semibold shadow-md transition-all cursor-pointer"
               >
                 <span>Sign in with Generated Password</span>
                 <ArrowRight className="h-4 w-4" />
@@ -161,7 +165,7 @@ function VerifyStudentContent() {
 
               <button
                 onClick={handleGoogleAuthorize}
-                className="w-full py-2.5 px-4 bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-lg text-xs font-semibold text-[#242321] dark:text-[#F5F5F4] hover:bg-[#F0ECE4]/50 dark:hover:bg-[#292524] flex items-center justify-center gap-2.5 transition-all shadow-xs"
+                className="w-full py-2.5 px-4 bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-xl text-xs font-semibold text-[#111827] dark:text-[#F1F5F9] hover:bg-[#F8FAFC] dark:hover:bg-[#17243A] flex items-center justify-center gap-2.5 transition-all shadow-xs cursor-pointer"
               >
                 <svg className="h-4 w-4" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -180,8 +184,8 @@ function VerifyStudentContent() {
             </div>
 
             <div className="space-y-1">
-              <h2 className="text-lg font-bold text-[#242321] dark:text-[#F5F5F4]">Verification Link Expired</h2>
-              <p className="text-xs text-[#716D67] dark:text-[#A8A29E]">
+              <h2 className="text-lg font-bold text-[#111827] dark:text-[#F1F5F9]">Verification Link Expired</h2>
+              <p className="text-xs text-[#64748B] dark:text-[#A3B1C6]">
                 {errorMessage || "This authorization link is invalid or has already been used."}
               </p>
             </div>
@@ -189,7 +193,7 @@ function VerifyStudentContent() {
             <div className="space-y-3 pt-2">
               <button
                 onClick={handleGoogleAuthorize}
-                className="w-full py-2.5 px-4 bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-lg text-xs font-semibold text-[#242321] dark:text-[#F5F5F4] hover:bg-[#F0ECE4]/50 dark:hover:bg-[#292524] flex items-center justify-center gap-2.5 transition-all shadow-xs"
+                className="w-full py-2.5 px-4 bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-xl text-xs font-semibold text-[#111827] dark:text-[#F1F5F9] hover:bg-[#F8FAFC] dark:hover:bg-[#17243A] flex items-center justify-center gap-2.5 transition-all shadow-xs cursor-pointer"
               >
                 <svg className="h-4 w-4" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -202,7 +206,7 @@ function VerifyStudentContent() {
 
               <button
                 onClick={() => router.push("/")}
-                className="w-full py-2 text-xs font-semibold text-[#716D67] hover:text-[#242321]"
+                className="w-full py-2 text-xs font-semibold text-[#64748B] hover:text-[#111827] dark:hover:text-[#F1F5F9] cursor-pointer"
               >
                 Return to Login
               </button>
@@ -217,7 +221,7 @@ function VerifyStudentContent() {
 export default function VerifyStudentPage() {
   return (
     <Suspense fallback={
-      <div className="flex min-h-screen items-center justify-center bg-[#F7F4EF] dark:bg-[#0F0E0D] text-xs text-[#716D67]">
+      <div className="flex min-h-screen items-center justify-center bg-[#F8FAFC] dark:bg-[#0B1120] text-xs text-[#64748B] dark:text-[#A3B1C6]">
         Loading verification...
       </div>
     }>

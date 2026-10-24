@@ -21,11 +21,14 @@ import {
   X,
   FileCode2,
   BookOpen,
-  Check
+  Check,
+  ExternalLink
 } from "lucide-react";
 
 import Script from "next/script";
 import { apiFetch } from "../../lib/api";
+import ThemeToggle from "../../components/ThemeToggle";
+import AppLogo from "../../components/AppLogo";
 
 function LoginContent() {
   const router = useRouter();
@@ -396,7 +399,7 @@ function LoginContent() {
   const pwdStrength = getPasswordStrength(regPassword);
 
   return (
-    <div className="flex min-h-screen items-center justify-center relative overflow-hidden bg-[#F7F4EF] dark:bg-[#0F0E0D] px-4 py-4 sm:py-6 transition-colors duration-200">
+    <div className="flex min-h-screen items-center justify-center relative overflow-hidden bg-[#F8FAFC] dark:bg-[#0B1120] px-4 py-4 sm:py-6 transition-colors duration-200">
       <Script
         src="https://accounts.google.com/gsi/client"
         strategy="afterInteractive"
@@ -404,43 +407,26 @@ function LoginContent() {
       />
       
       {/* Subtle Ambient Decorative Circles */}
-      <div className="absolute -top-40 -left-40 w-96 h-96 bg-[#C84B18]/5 dark:bg-[#EA580C]/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-[#C84B18]/5 dark:bg-[#EA580C]/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -top-40 -left-40 w-96 h-96 bg-blue-600/5 dark:bg-blue-400/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-blue-600/5 dark:bg-blue-400/5 rounded-full blur-3xl pointer-events-none" />
 
       {/* Top Navigation Options: Theme Toggle */}
       <div className="absolute top-4 right-4 z-20 flex items-center">
-        <button
-          onClick={toggleTheme}
-          className="w-11 h-6 rounded-full bg-[#E5E0D8] dark:bg-[#292524] border border-[#E5E0D8] dark:border-[#292524] p-0.5 flex items-center shadow-2xs cursor-pointer transition-colors duration-300 relative focus:outline-none"
-          title={`Switch to ${theme === "light" ? "Dark" : "Light"} mode`}
-          aria-label="Toggle Theme"
-        >
-          <div
-            className={`w-5 h-5 rounded-full bg-white dark:bg-[#EA580C] shadow-2xs border border-[#E5E0D8] dark:border-transparent transform transition-transform duration-300 flex items-center justify-center ${
-              theme === "dark" ? "translate-x-5 text-white" : "translate-x-0 text-[#C84B18]"
-            }`}
-          >
-            {theme === "light" ? <Sun className="h-2.5 w-2.5" /> : <Moon className="h-2.5 w-2.5" />}
-          </div>
-        </button>
+        <ThemeToggle />
       </div>
 
       <div className="w-full max-w-[460px] z-10 space-y-4 my-auto">
         
         {/* Logo & Platform Headline */}
-        <div className="flex justify-center items-center gap-3">
-          <div className="p-3 rounded-xl bg-[#C84B18] dark:bg-[#EA580C] text-white shadow-md shadow-[#C84B18]/15">
-            <School className="h-7 w-7" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-black tracking-tight text-[#242321] dark:text-[#F5F5F4] leading-none">Testora Quiz</h1>
-            <p className="text-xs text-[#716D67] dark:text-[#A8A29E] font-medium tracking-wide mt-1">Autonomous Examination Portal</p>
-          </div>
+        <div className="flex flex-col justify-center items-center text-center pb-1">
+          <a href="/" title="Testora Quiz Home" className="transition-transform hover:scale-105 duration-200">
+            <AppLogo variant="stacked" height={88} />
+          </a>
         </div>
 
         {/* Main Authentication Card */}
-        <div className="bg-white dark:bg-[#171615] rounded-2xl p-5 sm:p-7 border border-[#E5E0D8] dark:border-[#292524] shadow-sm relative overflow-hidden space-y-4">
-          <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#C84B18] via-amber-600 to-[#C84B18]" />
+        <div className="bg-white dark:bg-[#111C31] rounded-2xl p-5 sm:p-7 border border-[#E2E8F0] dark:border-[#263449] shadow-sm relative overflow-hidden space-y-4">
+          <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#1E3A8A] via-[#2563EB] to-[#1E3A8A]" />
 
           {/* ═══════ STEPPER PROGRESS BAR ═══════ */}
           <div className="flex items-center justify-between gap-3 pb-2.5 border-b border-[#E5E0D8]/60 dark:border-[#292524]/60">
@@ -1061,10 +1047,25 @@ function LoginContent() {
           )}
         </div>
         
-        {/* Footer Security Badge */}
-        <div className="flex items-center justify-center gap-1.5 text-[#716D67] dark:text-[#A8A29E] text-xs">
-          <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-          <span>Encrypted & Secured Autonomous Examination Portal</span>
+        {/* Footer Security Badge & Developer Credit */}
+        <div className="flex items-center justify-center gap-3 text-xs text-[#64748B] dark:text-[#A3B1C6]">
+          <div className="flex items-center gap-1 font-medium text-[11px]">
+            <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+            <span>AES-256 Secure</span>
+          </div>
+          <span className="text-slate-300 dark:text-slate-700">•</span>
+          <div className="flex items-center gap-1 text-[11px]">
+            <span>Developed by</span>
+            <a 
+              href="https://dpramp.com" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="inline-flex items-center gap-0.5 font-bold text-[#2563EB] dark:text-[#60A5FA] hover:underline"
+            >
+              <span>dpramp.com</span>
+              <ExternalLink className="w-2.5 h-2.5" />
+            </a>
+          </div>
         </div>
       </div>
 

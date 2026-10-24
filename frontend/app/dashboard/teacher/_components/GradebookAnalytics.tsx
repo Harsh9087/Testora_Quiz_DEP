@@ -87,14 +87,14 @@ export default function GradebookAnalytics({ exams }: GradebookAnalyticsProps) {
   return (
     <div className="space-y-6">
       {/* Top Bar: Quiz Selector & 1-Click CSV Export */}
-      <div className="bg-[#FFFFFF] dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-xl p-4 sm:p-5 shadow-xs space-y-4">
+      <div className="bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-xl p-4 sm:p-5 shadow-sm space-y-4 transition-colors">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h2 className="text-base font-bold text-[#242321] dark:text-[#F5F5F4] flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-[#C84B18]" />
+            <h2 className="text-base font-bold text-[#111827] dark:text-[#F1F5F9] flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-[#2563EB] dark:text-[#60A5FA]" />
               <span>Generalized Classroom Quiz Analytics</span>
             </h2>
-            <p className="text-xs text-[#716D67] dark:text-[#A8A29E] mt-0.5">
+            <p className="text-xs text-[#64748B] dark:text-[#A3B1C6] mt-0.5">
               Select a quiz to view generalized cohort performance, score distributions, and individual student results.
             </p>
           </div>
@@ -102,18 +102,18 @@ export default function GradebookAnalytics({ exams }: GradebookAnalyticsProps) {
           {reportAnalytics && (
             <button
               onClick={() => handleDownloadGradebookCSV(reportAnalytics.exam_id, reportAnalytics.exam_name)}
-              className="px-3.5 py-1.5 rounded-lg border border-[#E5E0D8] dark:border-[#292524] hover:bg-[#F0ECE4]/60 dark:hover:bg-[#292524] text-xs font-semibold text-[#242321] dark:text-[#F5F5F4] flex items-center gap-1.5 self-start sm:self-auto transition-all shadow-xs"
+              className="px-3.5 py-1.5 rounded-lg border border-[#E2E8F0] dark:border-[#263449] hover:bg-[#F8FAFC] dark:hover:bg-[#17243A] text-xs font-semibold text-[#111827] dark:text-[#F1F5F9] flex items-center gap-1.5 self-start sm:self-auto transition-all shadow-xs cursor-pointer"
             >
-              <Download className="h-3.5 w-3.5 text-[#C84B18]" />
+              <Download className="h-3.5 w-3.5 text-[#2563EB] dark:text-[#60A5FA]" />
               <span>Export Gradebook CSV</span>
             </button>
           )}
         </div>
 
         {/* Assessment Selector Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-1 border-t border-[#E5E0D8] dark:border-[#292524]">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-1 border-t border-[#E2E8F0] dark:border-[#263449]">
           {exams.length === 0 ? (
-            <div className="text-xs text-[#716D67] py-2">No assessments created yet.</div>
+            <div className="text-xs text-[#64748B] dark:text-[#A3B1C6] py-2">No assessments created yet.</div>
           ) : (
             exams.map((ex) => {
               const isSelected = ex.id === selectedReportExamId;
@@ -121,10 +121,10 @@ export default function GradebookAnalytics({ exams }: GradebookAnalyticsProps) {
                 <button
                   key={ex.id}
                   onClick={() => loadExamAnalytics(ex.id)}
-                  className={`px-3.5 py-2 rounded-lg text-xs font-semibold shrink-0 transition-all border ${
+                  className={`px-3.5 py-2 rounded-lg text-xs font-semibold shrink-0 transition-all border cursor-pointer ${
                     isSelected
-                      ? "bg-[#C84B18] text-white border-[#C84B18] shadow-xs"
-                      : "bg-[#F0ECE4]/40 dark:bg-[#1D1B19] border-[#E5E0D8] dark:border-[#292524] text-[#716D67] dark:text-[#A8A29E] hover:text-[#242321] dark:hover:text-white"
+                      ? "bg-[#2563EB] text-white border-[#2563EB] shadow-xs"
+                      : "bg-[#F8FAFC] dark:bg-[#17243A] border-[#E2E8F0] dark:border-[#263449] text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-white"
                   }`}
                 >
                   <div className="flex items-center gap-2">
@@ -139,75 +139,75 @@ export default function GradebookAnalytics({ exams }: GradebookAnalyticsProps) {
       </div>
 
       {loadingReport ? (
-        <div className="bg-[#FFFFFF] dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-xl p-16 text-center space-y-3">
-          <div className="w-8 h-8 border-2 border-[#C84B18] border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-xs text-[#716D67] font-medium">Computing Classroom Analytics & Distributions...</p>
+        <div className="bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-xl p-16 text-center space-y-3">
+          <div className="w-8 h-8 border-2 border-[#2563EB] dark:border-[#3B82F6] border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-xs text-[#64748B] dark:text-[#A3B1C6] font-medium">Computing Classroom Analytics & Distributions...</p>
         </div>
       ) : reportAnalytics ? (
         <div className="space-y-6">
           {/* ════ Generalized Summary Metric KPI Cards ════ */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-4">
-            <div className="bg-[#FFFFFF] dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-xl p-4 shadow-xs">
-              <div className="text-[11px] font-medium text-[#716D67] dark:text-[#A8A29E] uppercase tracking-wider">
+            <div className="bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-xl p-4 shadow-xs">
+              <div className="text-[11px] font-medium text-[#64748B] dark:text-[#A3B1C6] uppercase tracking-wider">
                 Attendance
               </div>
-              <div className="text-2xl font-bold text-[#242321] dark:text-[#F5F5F4] mt-1">
+              <div className="text-2xl font-bold text-[#111827] dark:text-[#F1F5F9] mt-1">
                 {reportAnalytics.attended_count}{" "}
-                <span className="text-xs text-[#716D67] font-normal">/ {reportAnalytics.total_enrolled}</span>
+                <span className="text-xs text-[#64748B] dark:text-[#A3B1C6] font-normal">/ {reportAnalytics.total_enrolled}</span>
               </div>
-              <div className="text-[10px] text-[#716D67] mt-0.5">{formatNum(reportAnalytics.attendance_rate)}% Participation</div>
+              <div className="text-[10px] text-[#64748B] dark:text-[#A3B1C6] mt-0.5">{formatNum(reportAnalytics.attendance_rate)}% Participation</div>
             </div>
 
-            <div className="bg-[#FFFFFF] dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-xl p-4 shadow-xs">
-              <div className="text-[11px] font-medium text-[#716D67] dark:text-[#A8A29E] uppercase tracking-wider">
+            <div className="bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-xl p-4 shadow-xs">
+              <div className="text-[11px] font-medium text-[#64748B] dark:text-[#A3B1C6] uppercase tracking-wider">
                 Class Average
               </div>
-              <div className="text-2xl font-bold text-[#C84B18] dark:text-[#EA580C] mt-1">
+              <div className="text-2xl font-bold text-[#2563EB] dark:text-[#60A5FA] mt-1">
                 {formatNum(reportAnalytics.average_score)}{" "}
-                <span className="text-xs text-[#716D67] font-normal">/ {formatNum(reportAnalytics.total_marks)}</span>
+                <span className="text-xs text-[#64748B] dark:text-[#A3B1C6] font-normal">/ {formatNum(reportAnalytics.total_marks)}</span>
               </div>
-              <div className="text-[10px] text-[#716D67] mt-0.5">{formatNum(reportAnalytics.average_percentage)}% Average</div>
+              <div className="text-[10px] text-[#64748B] dark:text-[#A3B1C6] mt-0.5">{formatNum(reportAnalytics.average_percentage)}% Average</div>
             </div>
 
-            <div className="bg-[#FFFFFF] dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-xl p-4 shadow-xs">
-              <div className="text-[11px] font-medium text-[#716D67] dark:text-[#A8A29E] uppercase tracking-wider">
+            <div className="bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-xl p-4 shadow-xs">
+              <div className="text-[11px] font-medium text-[#64748B] dark:text-[#A3B1C6] uppercase tracking-wider">
                 Pass Rate
               </div>
               <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
                 {formatNum(reportAnalytics.pass_rate)}%
               </div>
-              <div className="text-[10px] text-[#716D67] mt-0.5">
+              <div className="text-[10px] text-[#64748B] dark:text-[#A3B1C6] mt-0.5">
                 {reportAnalytics.pass_count} Passed · {reportAnalytics.fail_count} Failed
               </div>
             </div>
 
-            <div className="bg-[#FFFFFF] dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-xl p-4 shadow-xs">
-              <div className="text-[11px] font-medium text-[#716D67] dark:text-[#A8A29E] uppercase tracking-wider">
+            <div className="bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-xl p-4 shadow-xs">
+              <div className="text-[11px] font-medium text-[#64748B] dark:text-[#A3B1C6] uppercase tracking-wider">
                 Highest Score
               </div>
               <div className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1 truncate">
                 {formatNum(reportAnalytics.highest_score)}
               </div>
-              <div className="text-[10px] text-[#716D67] mt-0.5">Top candidate score</div>
+              <div className="text-[10px] text-[#64748B] dark:text-[#A3B1C6] mt-0.5">Top candidate score</div>
             </div>
 
-            <div className="bg-[#FFFFFF] dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-xl p-4 shadow-xs col-span-2 lg:col-span-1">
-              <div className="text-[11px] font-medium text-[#716D67] dark:text-[#A8A29E] uppercase tracking-wider">
+            <div className="bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-xl p-4 shadow-xs col-span-2 lg:col-span-1">
+              <div className="text-[11px] font-medium text-[#64748B] dark:text-[#A3B1C6] uppercase tracking-wider">
                 Lowest Score
               </div>
               <div className="text-2xl font-bold text-rose-600 dark:text-rose-400 mt-1 truncate">
                 {formatNum(reportAnalytics.lowest_score)}
               </div>
-              <div className="text-[10px] text-[#716D67] mt-0.5">Passing: {formatNum(reportAnalytics.passing_marks)} Marks</div>
+              <div className="text-[10px] text-[#64748B] dark:text-[#A3B1C6] mt-0.5">Passing: {formatNum(reportAnalytics.passing_marks)} Marks</div>
             </div>
           </div>
 
           {/* ════ Score Distribution & Topic Difficulty Analysis ════ */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Score Distribution Brackets */}
-            <div className="lg:col-span-6 bg-[#FFFFFF] dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-xl p-4 sm:p-5 space-y-4 shadow-xs">
-              <h3 className="text-sm font-bold text-[#242321] dark:text-[#F5F5F4] flex items-center gap-2">
-                <BarChart3 className="h-4 w-4 text-[#C84B18]" />
+            <div className="lg:col-span-6 bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-xl p-4 sm:p-5 space-y-4 shadow-xs">
+              <h3 className="text-sm font-bold text-[#111827] dark:text-[#F1F5F9] flex items-center gap-2">
+                <BarChart3 className="h-4 w-4 text-[#2563EB] dark:text-[#60A5FA]" />
                 <span>Cohort Score Distribution</span>
               </h3>
 
@@ -239,12 +239,12 @@ export default function GradebookAnalytics({ exams }: GradebookAnalyticsProps) {
                   return (
                     <div key={bracket.label} className="space-y-1">
                       <div className="flex justify-between text-xs">
-                        <span className="font-semibold text-[#242321] dark:text-[#F5F5F4]">{bracket.label}</span>
-                        <span className="font-bold text-[#716D67] dark:text-[#A8A29E]">
+                        <span className="font-semibold text-[#111827] dark:text-[#F1F5F9]">{bracket.label}</span>
+                        <span className="font-bold text-[#64748B] dark:text-[#A3B1C6]">
                           {bracket.count} students ({pct}%)
                         </span>
                       </div>
-                      <div className="w-full bg-[#E5E0D8] dark:bg-[#292524] h-2.5 rounded-full overflow-hidden">
+                      <div className="w-full bg-[#E2E8F0] dark:bg-[#263449] h-2.5 rounded-full overflow-hidden">
                         <div
                           className={`h-full ${bracket.color} rounded-full transition-all`}
                           style={{ width: `${pct}%` }}
@@ -257,9 +257,9 @@ export default function GradebookAnalytics({ exams }: GradebookAnalyticsProps) {
             </div>
 
             {/* Topic Difficulty & Error Trends */}
-            <div className="lg:col-span-6 bg-[#FFFFFF] dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-xl p-4 sm:p-5 space-y-4 shadow-xs">
-              <h3 className="text-sm font-bold text-[#242321] dark:text-[#F5F5F4] flex items-center gap-2">
-                <BookOpen className="h-4 w-4 text-[#C84B18]" />
+            <div className="lg:col-span-6 bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-xl p-4 sm:p-5 space-y-4 shadow-xs">
+              <h3 className="text-sm font-bold text-[#111827] dark:text-[#F1F5F9] flex items-center gap-2">
+                <BookOpen className="h-4 w-4 text-[#2563EB] dark:text-[#60A5FA]" />
                 <span>Topic Difficulty & Accuracy Trends</span>
               </h3>
 
@@ -268,10 +268,10 @@ export default function GradebookAnalytics({ exams }: GradebookAnalyticsProps) {
                   reportAnalytics.topic_analytics.map((t: any) => (
                     <div
                       key={t.topic}
-                      className="p-3 rounded-lg bg-[#F0ECE4]/40 dark:bg-[#1D1B19]/50 border border-[#E5E0D8] dark:border-[#292524] space-y-1.5"
+                      className="p-3 rounded-lg bg-[#F8FAFC] dark:bg-[#17243A] border border-[#E2E8F0] dark:border-[#263449] space-y-1.5"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-semibold text-[#242321] dark:text-[#F5F5F4]">{t.topic}</span>
+                        <span className="font-semibold text-[#111827] dark:text-[#F1F5F9]">{t.topic}</span>
                         <span
                           className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                             t.accuracy >= 75
@@ -284,7 +284,7 @@ export default function GradebookAnalytics({ exams }: GradebookAnalyticsProps) {
                           {t.accuracy}% Class Accuracy ({t.difficulty})
                         </span>
                       </div>
-                      <div className="w-full bg-[#E5E0D8] dark:bg-[#292524] h-1.5 rounded-full overflow-hidden">
+                      <div className="w-full bg-[#E2E8F0] dark:bg-[#263449] h-1.5 rounded-full overflow-hidden">
                         <div
                           className={`h-full rounded-full transition-all ${
                             t.accuracy >= 75
@@ -299,7 +299,7 @@ export default function GradebookAnalytics({ exams }: GradebookAnalyticsProps) {
                     </div>
                   ))
                 ) : (
-                  <div className="text-xs text-[#716D67] py-6 text-center">
+                  <div className="text-xs text-[#64748B] dark:text-[#A3B1C6] py-6 text-center">
                     Topic analysis will populate as student submissions are recorded.
                   </div>
                 )}
@@ -308,38 +308,38 @@ export default function GradebookAnalytics({ exams }: GradebookAnalyticsProps) {
           </div>
 
           {/* ════ Student Performance Roster Table ════ */}
-          <div className="bg-[#FFFFFF] dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-xl p-4 sm:p-5 space-y-4 shadow-xs">
+          <div className="bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-xl p-4 sm:p-5 space-y-4 shadow-xs">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-bold text-[#242321] dark:text-[#F5F5F4] flex items-center gap-2">
-                  <Trophy className="h-4 w-4 text-[#C84B18]" />
+                <h3 className="text-sm font-bold text-[#111827] dark:text-[#F1F5F9] flex items-center gap-2">
+                  <Trophy className="h-4 w-4 text-[#2563EB] dark:text-[#60A5FA]" />
                   <span>Student Results & Proctoring Audit</span>
                 </h3>
-                <p className="text-xs text-[#716D67] dark:text-[#A8A29E] mt-0.5">
+                <p className="text-xs text-[#64748B] dark:text-[#A3B1C6] mt-0.5">
                   Individual student rankings, earned marks, and anti-cheat telemetry.
                 </p>
               </div>
-              <span className="text-xs font-semibold px-2.5 py-1 rounded bg-[#E5E0D8]/60 dark:bg-[#292524] text-[#716D67] dark:text-[#A8A29E]">
+              <span className="text-xs font-semibold px-2.5 py-1 rounded bg-[#EFF6FF] dark:bg-[#172B4D] text-[#2563EB] dark:text-[#60A5FA] border border-[#2563EB]/20">
                 {reportAnalytics.submissions?.length || 0} Submissions
               </span>
             </div>
 
-            {/* Mobile Stacked Card View (< 768px): 100% visible at a single glance without horizontal scrolling */}
-            <div className="block md:hidden divide-y divide-[#E5E0D8] dark:divide-[#292524]">
+            {/* Mobile Stacked Card View (< 768px) */}
+            <div className="block md:hidden divide-y divide-[#E2E8F0] dark:divide-[#263449]">
               {reportAnalytics.submissions && reportAnalytics.submissions.length > 0 ? (
                 reportAnalytics.submissions.map((sub: any) => (
                   <div key={sub.submission_id} className="py-3.5 space-y-2.5 first:pt-0 last:pb-0">
                     {/* Top Row: Rank, Student Name, Status */}
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className="font-mono font-bold text-xs bg-[#FAF8F5] dark:bg-[#201D1A] border border-[#E5E0D8] dark:border-[#292524] px-2 py-0.5 rounded-md text-[#C84B18] dark:text-[#EA580C] shrink-0">
+                        <span className="font-mono font-bold text-xs bg-[#EFF6FF] dark:bg-[#172B4D] border border-[#2563EB]/20 px-2 py-0.5 rounded-md text-[#2563EB] dark:text-[#60A5FA] shrink-0">
                           #{sub.rank}
                         </span>
                         <div className="min-w-0">
-                          <div className="font-bold text-xs text-[#242321] dark:text-[#F5F5F4] truncate">
+                          <div className="font-bold text-xs text-[#111827] dark:text-[#F1F5F9] truncate">
                             {sub.student_name}
                           </div>
-                          <div className="text-[10px] text-[#716D67] dark:text-[#A8A29E] truncate">
+                          <div className="text-[10px] text-[#64748B] dark:text-[#A3B1C6] truncate">
                             {sub.email}
                           </div>
                         </div>
@@ -356,26 +356,26 @@ export default function GradebookAnalytics({ exams }: GradebookAnalyticsProps) {
                     </div>
 
                     {/* Middle Row: Score, Percentage, Roll Number, Proctor Flags */}
-                    <div className="grid grid-cols-2 gap-2 bg-[#FAF8F5] dark:bg-[#141312] p-2.5 rounded-xl border border-[#E5E0D8]/70 dark:border-[#292524] text-[11px]">
+                    <div className="grid grid-cols-2 gap-2 bg-[#F8FAFC] dark:bg-[#17243A] p-2.5 rounded-xl border border-[#E2E8F0] dark:border-[#263449] text-[11px]">
                       <div>
-                        <span className="text-[10px] text-[#716D67] dark:text-[#A8A29E] block">Score</span>
-                        <span className="font-bold text-[#242321] dark:text-[#F5F5F4]">
+                        <span className="text-[10px] text-[#64748B] dark:text-[#A3B1C6] block">Score</span>
+                        <span className="font-bold text-[#111827] dark:text-[#F1F5F9]">
                           {formatNum(sub.score)} / {formatNum(sub.max_score)}
                         </span>{" "}
-                        <span className="font-bold text-[#C84B18] dark:text-[#EA580C]">
+                        <span className="font-bold text-[#2563EB] dark:text-[#60A5FA]">
                           ({formatNum(sub.percentage)}%)
                         </span>
                       </div>
 
                       <div>
-                        <span className="text-[10px] text-[#716D67] dark:text-[#A8A29E] block">Roll Number</span>
-                        <span className="font-mono text-[#242321] dark:text-[#F5F5F4] break-all">
+                        <span className="text-[10px] text-[#64748B] dark:text-[#A3B1C6] block">Roll Number</span>
+                        <span className="font-mono text-[#111827] dark:text-[#F1F5F9] break-all">
                           {sub.roll_number || "N/A"}
                         </span>
                       </div>
 
-                      <div className="col-span-2 flex items-center justify-between pt-1.5 border-t border-[#E5E0D8]/50 dark:border-[#292524]">
-                        <span className="text-[10px] text-[#716D67] dark:text-[#A8A29E]">Proctor Audit:</span>
+                      <div className="col-span-2 flex items-center justify-between pt-1.5 border-t border-[#E2E8F0] dark:border-[#263449]">
+                        <span className="text-[10px] text-[#64748B] dark:text-[#A3B1C6]">Proctor Audit:</span>
                         {sub.proctor_alerts > 0 ? (
                           <span className="px-1.5 py-0.5 rounded bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300 text-[10px] font-semibold border border-rose-200">
                             {sub.proctor_alerts} Incident{sub.proctor_alerts > 1 ? "s" : ""}
@@ -392,7 +392,7 @@ export default function GradebookAnalytics({ exams }: GradebookAnalyticsProps) {
                     <button
                       type="button"
                       onClick={() => inspectStudentAnswerSheet(sub.submission_id)}
-                      className="w-full py-2 px-3 rounded-lg border border-[#E5E0D8] dark:border-[#292524] bg-white dark:bg-[#171615] hover:bg-[#FAF8F5] text-[#716D67] hover:text-[#C84B18] text-xs font-semibold flex items-center justify-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                      className="w-full py-2 px-3 rounded-lg border border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-[#111C31] hover:bg-[#F8FAFC] text-[#64748B] hover:text-[#2563EB] text-xs font-semibold flex items-center justify-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
                     >
                       <FileText className="h-3.5 w-3.5" />
                       <span>View Answer Sheet & Proctor Audit</span>
@@ -400,7 +400,7 @@ export default function GradebookAnalytics({ exams }: GradebookAnalyticsProps) {
                   </div>
                 ))
               ) : (
-                <div className="py-8 text-center text-xs text-[#716D67]">
+                <div className="py-8 text-center text-xs text-[#64748B] dark:text-[#A3B1C6]">
                   No student attempts submitted for this quiz yet.
                 </div>
               )}
@@ -410,7 +410,7 @@ export default function GradebookAnalytics({ exams }: GradebookAnalyticsProps) {
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse min-w-[620px]">
                 <thead>
-                  <tr className="border-b border-[#E5E0D8] dark:border-[#292524] text-[#716D67] dark:text-[#A8A29E]">
+                  <tr className="border-b border-[#E2E8F0] dark:border-[#263449] bg-[#F8FAFC] dark:bg-[#17243A] text-[#64748B] dark:text-[#A3B1C6]">
                     <th className="py-2.5 px-3 font-semibold">Rank</th>
                     <th className="py-2.5 px-3 font-semibold">Candidate</th>
                     <th className="py-2.5 px-3 font-semibold">Roll Number</th>
@@ -421,23 +421,23 @@ export default function GradebookAnalytics({ exams }: GradebookAnalyticsProps) {
                     <th className="py-2.5 px-3 font-semibold text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#E5E0D8] dark:divide-[#292524]">
+                <tbody className="divide-y divide-[#E2E8F0] dark:divide-[#263449]">
                   {reportAnalytics.submissions && reportAnalytics.submissions.length > 0 ? (
                     reportAnalytics.submissions.map((sub: any) => (
                       <tr
                         key={sub.submission_id}
-                        className="hover:bg-[#F0ECE4]/30 dark:hover:bg-[#1D1B19]/30 transition-colors"
+                        className="hover:bg-[#F8FAFC] dark:hover:bg-[#17243A] transition-colors"
                       >
-                        <td className="py-3 px-3 font-bold font-mono">#{sub.rank}</td>
+                        <td className="py-3 px-3 font-bold font-mono text-[#2563EB] dark:text-[#60A5FA]">#{sub.rank}</td>
                         <td className="py-3 px-3">
-                          <div className="font-semibold text-[#242321] dark:text-[#F5F5F4]">{sub.student_name}</div>
-                          <div className="text-[11px] text-[#716D67]">{sub.email}</div>
+                          <div className="font-semibold text-[#111827] dark:text-[#F1F5F9]">{sub.student_name}</div>
+                          <div className="text-[11px] text-[#64748B] dark:text-[#A3B1C6]">{sub.email}</div>
                         </td>
-                        <td className="py-3 px-3 font-mono text-[#716D67]">{sub.roll_number || "N/A"}</td>
-                        <td className="py-3 px-3 font-bold text-[#242321] dark:text-[#F5F5F4]">
+                        <td className="py-3 px-3 font-mono text-[#64748B] dark:text-[#A3B1C6]">{sub.roll_number || "N/A"}</td>
+                        <td className="py-3 px-3 font-bold text-[#111827] dark:text-[#F1F5F9]">
                           {formatNum(sub.score)} / {formatNum(sub.max_score)}
                         </td>
-                        <td className="py-3 px-3 font-bold text-[#C84B18] dark:text-[#EA580C]">{formatNum(sub.percentage)}%</td>
+                        <td className="py-3 px-3 font-bold text-[#2563EB] dark:text-[#60A5FA]">{formatNum(sub.percentage)}%</td>
                         <td className="py-3 px-3">
                           <span
                             className={`px-2 py-0.5 rounded text-[10px] font-bold ${
@@ -463,7 +463,7 @@ export default function GradebookAnalytics({ exams }: GradebookAnalyticsProps) {
                         <td className="py-3 px-3 text-right">
                           <button
                             onClick={() => inspectStudentAnswerSheet(sub.submission_id)}
-                            className="px-2.5 py-1 rounded border border-[#E5E0D8] dark:border-[#292524] text-[#716D67] hover:text-[#C84B18] hover:bg-[#E5E0D8]/40 dark:hover:bg-[#292524] text-[11px] font-semibold transition-all"
+                            className="px-2.5 py-1 rounded border border-[#E2E8F0] dark:border-[#263449] text-[#64748B] hover:text-[#2563EB] hover:bg-[#F8FAFC] dark:hover:bg-[#17243A] text-[11px] font-semibold transition-all cursor-pointer"
                           >
                             View Sheet
                           </button>
@@ -472,7 +472,7 @@ export default function GradebookAnalytics({ exams }: GradebookAnalyticsProps) {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={8} className="py-8 text-center text-xs text-[#716D67]">
+                      <td colSpan={8} className="py-8 text-center text-xs text-[#64748B] dark:text-[#A3B1C6]">
                         No student attempts submitted for this quiz yet.
                       </td>
                     </tr>
@@ -487,26 +487,26 @@ export default function GradebookAnalytics({ exams }: GradebookAnalyticsProps) {
       {/* ═══════ STUDENT ANSWER SHEET INSPECTION MODAL ═══════ */}
       {studentAnswerModal && (
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-2 sm:p-4 animate-fadeIn"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-2 sm:p-4 animate-fadeIn"
           onClick={() => setStudentAnswerModal(null)}
         >
           <div 
-            className="bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl max-w-3xl w-full p-4 sm:p-6 shadow-2xl space-y-4 max-h-[92vh] flex flex-col"
+            className="bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-2xl max-w-3xl w-full p-4 sm:p-6 shadow-2xl space-y-4 max-h-[92vh] flex flex-col transition-colors"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E5E0D8] dark:border-[#292524] pb-3 shrink-0">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E2E8F0] dark:border-[#263449] pb-3 shrink-0">
               <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-[#C84B18]/10 text-[#C84B18] dark:bg-[#EA580C]/15 dark:text-[#EA580C] rounded-lg">
+                <div className="p-2 bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172B4D] dark:text-[#60A5FA] rounded-lg border border-[#2563EB]/20">
                   <FileText className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-sm text-[#242321] dark:text-[#F5F5F4]">
+                  <h3 className="font-bold text-sm text-[#111827] dark:text-[#F1F5F9]">
                     Candidate Evaluation Sheet — {studentAnswerModal.student_name}
                   </h3>
-                  <p className="text-xs text-[#716D67] dark:text-[#A8A29E]">
+                  <p className="text-xs text-[#64748B] dark:text-[#A3B1C6]">
                     Exam: <b>{studentAnswerModal.exam_name}</b> | Roll:{" "}
                     <b>{studentAnswerModal.roll_number || "N/A"}</b> | Score:{" "}
-                    <b className="text-[#C84B18]">
+                    <b className="text-[#2563EB] dark:text-[#60A5FA]">
                       {studentAnswerModal.score} / {studentAnswerModal.max_score} ({studentAnswerModal.percentage}%)
                     </b>
                   </p>
@@ -517,7 +517,7 @@ export default function GradebookAnalytics({ exams }: GradebookAnalyticsProps) {
                   href={`${API_V1}/reports/submission-detail/${studentAnswerModal.submission_id}/printable`}
                   target="_blank"
                   rel="noreferrer"
-                  className="px-3 py-1.5 rounded-lg bg-[#C84B18]/10 text-[#C84B18] hover:bg-[#C84B18]/20 font-bold text-xs flex items-center gap-1.5 transition-all"
+                  className="px-3 py-1.5 rounded-lg bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172B4D] dark:text-[#60A5FA] hover:bg-[#DBEAFE] font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer border border-[#2563EB]/20"
                   title="Open Official Student Response Booklet (PDF/Print)"
                 >
                   <FileText className="h-3.5 w-3.5" />
@@ -526,7 +526,7 @@ export default function GradebookAnalytics({ exams }: GradebookAnalyticsProps) {
                 </a>
                 <button
                   onClick={() => setStudentAnswerModal(null)}
-                  className="p-1.5 rounded-lg text-[#716D67] hover:bg-[#E5E0D8]/50 dark:hover:bg-[#292524]"
+                  className="p-1.5 rounded-lg text-[#64748B] hover:bg-[#E2E8F0]/50 dark:hover:bg-[#263449] cursor-pointer"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -548,7 +548,7 @@ export default function GradebookAnalytics({ exams }: GradebookAnalyticsProps) {
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <span className="font-bold text-[#716D67]">
+                        <span className="font-bold text-[#64748B] dark:text-[#A3B1C6]">
                           Q{idx + 1}. {q.question_text || q.question}
                         </span>
                         <span
@@ -563,7 +563,7 @@ export default function GradebookAnalytics({ exams }: GradebookAnalyticsProps) {
                       <div className="pl-4 space-y-1.5 text-[11px]">
                         <div>
                           <b>Student Response:</b>{" "}
-                          <span className="font-mono text-[#242321] dark:text-[#F5F5F4]">
+                          <span className="font-mono text-[#111827] dark:text-[#F1F5F9]">
                             {String(q.user_answer_text || q.user_answer || "No response provided.")}
                           </span>
                         </div>
@@ -579,7 +579,7 @@ export default function GradebookAnalytics({ exams }: GradebookAnalyticsProps) {
                           </div>
                         )}
                         {q.explanation && (
-                          <div className="text-[#716D67] pt-1">
+                          <div className="text-[#64748B] dark:text-[#A3B1C6] pt-1">
                             <b>Explanation:</b> {q.explanation}
                           </div>
                         )}
@@ -588,21 +588,24 @@ export default function GradebookAnalytics({ exams }: GradebookAnalyticsProps) {
                   );
                 })
               ) : (
-                <div className="py-8 text-center text-xs text-[#716D67]">No question evaluations found.</div>
+                <div className="py-8 text-center text-xs text-[#64748B] dark:text-[#A3B1C6]">No question evaluations found.</div>
               )}
             </div>
 
-            <div className="pt-3 border-t border-[#E5E0D8] dark:border-[#292524] flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-2.5 sm:gap-0 shrink-0">
+            <div className="pt-3 border-t border-[#E2E8F0] dark:border-[#263449] flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-2.5 sm:gap-0 shrink-0">
               <a
                 href={`${API_V1}/reports/submission-detail/${studentAnswerModal.submission_id}/printable`}
                 target="_blank"
                 rel="noreferrer"
-                className="text-xs text-[#C84B18] font-bold hover:underline flex items-center gap-1"
+                className="text-xs text-[#2563EB] dark:text-[#60A5FA] font-bold hover:underline flex items-center gap-1"
               >
                 <FileText className="h-3.5 w-3.5" />
                 <span>Open Full Printable Answer Booklet</span>
               </a>
-              <button onClick={() => setStudentAnswerModal(null)} className="btn-primary px-5">
+              <button 
+                onClick={() => setStudentAnswerModal(null)} 
+                className="px-5 py-2.5 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold transition-all shadow-md cursor-pointer"
+              >
                 Close Sheet
               </button>
             </div>

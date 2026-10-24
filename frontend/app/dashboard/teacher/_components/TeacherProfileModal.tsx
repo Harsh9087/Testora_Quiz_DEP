@@ -29,6 +29,7 @@ import {
 import { apiFetch, API_V1 } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/components/Toast";
+import PlatformSettingsAndGuide from "@/components/PlatformSettingsAndGuide";
 
 interface UserProfileData {
   id: string;
@@ -78,7 +79,7 @@ interface TeacherProfileModalProps {
   onToggleTheme?: () => void;
 }
 
-type TabType = "OVERVIEW" | "TRANSACTIONS" | "CREDITS_LEDGER";
+type TabType = "OVERVIEW" | "TRANSACTIONS" | "CREDITS_LEDGER" | "SETTINGS_GUIDE";
 
 export default function TeacherProfileModal({
   isOpen,
@@ -304,6 +305,19 @@ export default function TeacherProfileModal({
           >
             <Coins className="h-3.5 w-3.5 text-amber-500" />
             <span>Credits Ledger ({creditTx.length})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("SETTINGS_GUIDE")}
+            className={`px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
+              activeTab === "SETTINGS_GUIDE"
+                ? "bg-white dark:bg-[#201D1A] text-[#C84B18] dark:text-[#EA580C] shadow-xs"
+                : "text-[#716D67] dark:text-[#A8A29E] hover:text-[#242321]"
+            }`}
+          >
+            <Sliders className="h-3.5 w-3.5 text-[#C84B18]" />
+            <span>Settings & Platform Guide</span>
           </button>
         </div>
 
@@ -599,6 +613,17 @@ export default function TeacherProfileModal({
                       })}
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* TAB 4: SETTINGS, ROUTE INFO & PLATFORM FEATURE GUIDES */}
+              {activeTab === "SETTINGS_GUIDE" && (
+                <div className="space-y-4">
+                  <PlatformSettingsAndGuide
+                    currentRole="teacher"
+                    themeMode={themeMode}
+                    onToggleTheme={onToggleTheme}
+                  />
                 </div>
               )}
             </>

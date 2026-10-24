@@ -26,6 +26,7 @@ import {
 import { apiFetch } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/components/Toast";
+import PlatformSettingsAndGuide from "@/components/PlatformSettingsAndGuide";
 
 interface StudentProfileData {
   id: string;
@@ -269,7 +270,7 @@ export default function StudentProfilePage() {
       <div className="flex items-center justify-between pt-2">
         <Link
           href="/dashboard/student"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-[#1C1A17] border border-[#E5E0D8] dark:border-[#292524] text-xs font-semibold text-[#57534E] dark:text-[#A8A29E] hover:text-[#242321] dark:hover:text-white transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] text-xs font-semibold text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9] transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
           <span>Back to Student Portal</span>
@@ -278,7 +279,7 @@ export default function StudentProfilePage() {
         <button
           onClick={loadData}
           disabled={loading}
-          className="flex items-center gap-1.5 px-2.5 py-1 text-xs text-[#716D67] hover:text-[#242321] dark:hover:text-white transition-colors cursor-pointer"
+          className="flex items-center gap-1.5 px-2.5 py-1 text-xs text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9] transition-colors cursor-pointer"
         >
           <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
           <span>Refresh</span>
@@ -288,7 +289,7 @@ export default function StudentProfilePage() {
       {/* ══════════════════════════════════════════════════════
           BLOCK 1: PERSONAL PROFILE (Essential Info)
          ══════════════════════════════════════════════════════ */}
-      <div className="bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl p-5 shadow-xs">
+      <div className="bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-2xl p-5 shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             {/* Avatar with fallback Person icon */}
@@ -298,20 +299,20 @@ export default function StudentProfilePage() {
                   src={getAvatarUrl(profile?.avatar_url)!}
                   alt={profile?.full_name || "Profile"}
                   onError={() => setImgError(true)}
-                  className="w-16 h-16 rounded-2xl object-cover border-2 border-[#E5E0D8] dark:border-[#292524] shadow-xs bg-[#FAF8F5] dark:bg-[#141312]"
+                  className="w-16 h-16 rounded-2xl object-cover border-2 border-[#E2E8F0] dark:border-[#263449] shadow-xs bg-[#F8FAFC] dark:bg-[#0B1120]"
                 />
               ) : (
                 <div 
-                  className="w-16 h-16 rounded-2xl bg-[#F5F2EB] dark:bg-[#201D1A] border-2 border-[#E5E0D8] dark:border-[#292524] flex items-center justify-center text-[#716D67] dark:text-[#A8A29E] shadow-xs"
+                  className="w-16 h-16 rounded-2xl bg-[#EFF6FF] dark:bg-[#172B4D] border-2 border-[#E2E8F0] dark:border-[#263449] flex items-center justify-center text-[#1E3A8A] dark:text-[#60A5FA] shadow-xs"
                   title="Person Icon"
                 >
-                  <User className="w-8 h-8 text-[#8C827A] dark:text-[#A8A29E]" />
+                  <User className="w-8 h-8 text-[#1E3A8A] dark:text-[#60A5FA]" />
                 </div>
               )}
 
               {/* Upload photo overlay button */}
               <label 
-                className="absolute -bottom-1 -right-1 bg-[#C84B18] hover:bg-[#b04013] text-white p-1 rounded-full shadow-md cursor-pointer transition-transform hover:scale-110 active:scale-95"
+                className="absolute -bottom-1 -right-1 bg-[#2563EB] hover:bg-[#1D4ED8] text-white p-1 rounded-full shadow-md cursor-pointer transition-transform hover:scale-110 active:scale-95"
                 title="Change Photo"
               >
                 {uploadingPhoto ? (
@@ -332,18 +333,18 @@ export default function StudentProfilePage() {
             {/* Profile Identity Details */}
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-lg font-black text-[#242321] dark:text-[#F5F5F4]">
+                <h1 className="text-lg font-black text-[#111827] dark:text-[#F1F5F9]">
                   {profile?.full_name || fullName || "Student Candidate"}
                 </h1>
                 <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
                   {profile?.role || role || "STUDENT"}
                 </span>
               </div>
-              <div className="text-xs text-[#716D67] dark:text-[#A8A29E] mt-0.5 flex items-center gap-1.5">
+              <div className="text-xs text-[#64748B] dark:text-[#A3B1C6] mt-0.5 flex items-center gap-1.5">
                 <Mail className="h-3.5 w-3.5" />
                 <span>{profile?.email}</span>
               </div>
-              <div className="text-[11px] text-[#8C827A] mt-1 flex flex-wrap items-center gap-2">
+              <div className="text-[11px] text-[#64748B] dark:text-[#A3B1C6] mt-1 flex flex-wrap items-center gap-2">
                 <span>{profile?.institution_name || "Testora Quiz Academy"}</span>
                 {profile?.roll_number && (
                   <>
@@ -365,7 +366,7 @@ export default function StudentProfilePage() {
             {!isEditing ? (
               <button
                 onClick={() => setIsEditing(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#F7F4EF] dark:bg-[#201D1A] hover:bg-[#E5E0D8] dark:hover:bg-[#2A2624] text-xs font-bold text-[#242321] dark:text-[#F5F5F4] transition-all cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#F8FAFC] dark:bg-[#17243A] hover:bg-[#F1F5F9] dark:hover:bg-[#1E3A8A]/30 text-xs font-bold text-[#111827] dark:text-[#F1F5F9] transition-all cursor-pointer border border-[#E2E8F0] dark:border-[#263449]"
               >
                 <Edit2 className="h-3.5 w-3.5" />
                 <span>Edit Info</span>
@@ -373,7 +374,7 @@ export default function StudentProfilePage() {
             ) : (
               <button
                 onClick={() => setIsEditing(false)}
-                className="px-3 py-1.5 rounded-xl bg-gray-200 dark:bg-gray-800 text-xs font-semibold text-[#57534E] dark:text-[#A8A29E] cursor-pointer"
+                className="px-3 py-1.5 rounded-xl bg-gray-200 dark:bg-gray-800 text-xs font-semibold text-[#64748B] dark:text-[#A3B1C6] cursor-pointer"
               >
                 Close
               </button>
@@ -383,22 +384,22 @@ export default function StudentProfilePage() {
 
         {/* Inline Edit Form */}
         {isEditing && (
-          <form onSubmit={handleSaveProfile} className="mt-4 pt-4 border-t border-[#E5E0D8] dark:border-[#292524] space-y-3">
+          <form onSubmit={handleSaveProfile} className="mt-4 pt-4 border-t border-[#E2E8F0] dark:border-[#263449] space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-[11px] font-bold text-[#716D67] uppercase mb-1">
+                <label className="block text-[11px] font-bold text-[#64748B] dark:text-[#A3B1C6] uppercase mb-1">
                   Full Name
                 </label>
                 <input
                   type="text"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  className="w-full px-3 py-2 text-xs rounded-xl bg-[#FAF8F5] dark:bg-[#141312] border border-[#E5E0D8] dark:border-[#292524] text-[#242321] dark:text-[#F5F5F4] focus:outline-none focus:ring-1 focus:ring-[#C84B18]"
+                  className="w-full px-3 py-2 text-xs rounded-xl bg-[#F8FAFC] dark:bg-[#0B1120] border border-[#E2E8F0] dark:border-[#263449] text-[#111827] dark:text-[#F1F5F9] focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-[#716D67] uppercase mb-1">
+                <label className="block text-[11px] font-bold text-[#64748B] dark:text-[#A3B1C6] uppercase mb-1">
                   Image URL (Optional)
                 </label>
                 <input
@@ -409,14 +410,14 @@ export default function StudentProfilePage() {
                     setImgError(false);
                   }}
                   placeholder="https://..."
-                  className="w-full px-3 py-2 text-xs rounded-xl bg-[#FAF8F5] dark:bg-[#141312] border border-[#E5E0D8] dark:border-[#292524] text-[#242321] dark:text-[#F5F5F4] focus:outline-none focus:ring-1 focus:ring-[#C84B18]"
+                  className="w-full px-3 py-2 text-xs rounded-xl bg-[#F8FAFC] dark:bg-[#0B1120] border border-[#E2E8F0] dark:border-[#263449] text-[#111827] dark:text-[#F1F5F9] focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
                 />
               </div>
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
               <div className="flex items-center gap-2">
-                <label className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#C84B18] text-white text-xs font-bold hover:bg-[#b04013] transition-all cursor-pointer">
+                <label className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#2563EB] text-white text-xs font-bold hover:bg-[#1D4ED8] transition-all cursor-pointer">
                   <Upload className="h-3 w-3" />
                   <span>{uploadingPhoto ? "Uploading..." : "Upload Photo"}</span>
                   <input
@@ -445,14 +446,14 @@ export default function StudentProfilePage() {
                 <button
                   type="button"
                   onClick={() => setIsEditing(false)}
-                  className="px-3 py-1.5 text-xs text-[#716D67] hover:text-[#242321] cursor-pointer"
+                  className="px-3 py-1.5 text-xs text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex items-center gap-1.5 px-4 py-1.5 bg-[#C84B18] text-white rounded-xl text-xs font-bold shadow-xs hover:opacity-90 disabled:opacity-50 cursor-pointer"
+                  className="flex items-center gap-1.5 px-4 py-1.5 bg-[#2563EB] text-white rounded-xl text-xs font-bold shadow-xs hover:bg-[#1D4ED8] disabled:opacity-50 cursor-pointer"
                 >
                   {saving ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
                   <span>Save Changes</span>
@@ -466,20 +467,20 @@ export default function StudentProfilePage() {
       {/* ══════════════════════════════════════════════════════
           BLOCK 2: PREPAID CREDITS WALLET (Expand / Hide)
          ══════════════════════════════════════════════════════ */}
-      <div className="bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl shadow-xs overflow-hidden">
+      <div className="bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-2xl shadow-xs overflow-hidden">
         <div 
           onClick={() => setExpandWallet(!expandWallet)}
-          className="p-4 flex items-center justify-between cursor-pointer hover:bg-[#FAF8F5]/60 dark:hover:bg-[#1D1B19]/60 transition-colors"
+          className="p-4 flex items-center justify-between cursor-pointer hover:bg-[#F8FAFC]/60 dark:hover:bg-[#17243A]/60 transition-colors"
         >
           <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
               <Coins className="h-4.5 w-4.5" />
             </div>
             <div>
-              <h2 className="text-xs font-bold text-[#242321] dark:text-[#F5F5F4]">
+              <h2 className="text-xs font-bold text-[#111827] dark:text-[#F1F5F9]">
                 Available Credits Balance
               </h2>
-              <p className="text-[11px] text-[#716D67] dark:text-[#A8A29E]">
+              <p className="text-[11px] text-[#64748B] dark:text-[#A3B1C6]">
                 Credits for student assessments and practice exams
               </p>
             </div>
@@ -490,25 +491,25 @@ export default function StudentProfilePage() {
               {(profile?.credits_balance || 0).toLocaleString()} Credits
             </span>
             {expandWallet ? (
-              <ChevronUp className="h-4 w-4 text-[#716D67]" />
+              <ChevronUp className="h-4 w-4 text-[#64748B]" />
             ) : (
-              <ChevronDown className="h-4 w-4 text-[#716D67]" />
+              <ChevronDown className="h-4 w-4 text-[#64748B]" />
             )}
           </div>
         </div>
 
         {expandWallet && (
-          <div className="p-5 pt-0 border-t border-[#E5E0D8]/60 dark:border-[#292524] space-y-4">
-            <div className="p-4 rounded-xl bg-[#FAF8F5] dark:bg-[#1D1B19] border border-[#E5E0D8] dark:border-[#292524] flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-4">
+          <div className="p-5 pt-0 border-t border-[#E2E8F0]/60 dark:border-[#263449] space-y-4">
+            <div className="p-4 rounded-xl bg-[#F8FAFC] dark:bg-[#17243A] border border-[#E2E8F0] dark:border-[#263449] flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-4">
               <div>
-                <div className="text-[11px] font-bold text-[#716D67] uppercase tracking-wider">
+                <div className="text-[11px] font-bold text-[#64748B] dark:text-[#A3B1C6] uppercase tracking-wider">
                   Current Wallet Balance
                 </div>
-                <div className="text-2xl font-black text-[#242321] dark:text-[#F5F5F4] mt-0.5 flex items-center gap-2">
+                <div className="text-2xl font-black text-[#111827] dark:text-[#F1F5F9] mt-0.5 flex items-center gap-2">
                   <span>{(profile?.credits_balance || 0).toLocaleString()}</span>
-                  <span className="text-xs font-bold text-[#716D67]">credits</span>
+                  <span className="text-xs font-bold text-[#64748B]">credits</span>
                 </div>
-                <p className="text-xs text-[#716D67] mt-1">
+                <p className="text-xs text-[#64748B] mt-1">
                   1 credit = 1 candidate attempt unlocked
                 </p>
               </div>
@@ -517,7 +518,7 @@ export default function StudentProfilePage() {
                 <button
                   type="button"
                   onClick={() => setExpandLedger(!expandLedger)}
-                  className="px-3.5 py-2 rounded-xl border border-[#E5E0D8] dark:border-[#292524] text-xs font-semibold text-[#57534E] dark:text-[#A8A29E] hover:text-[#242321] dark:hover:text-white bg-white dark:bg-[#171615] flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
+                  className="px-3.5 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#263449] text-xs font-semibold text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-white bg-white dark:bg-[#111C31] flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
                 >
                   <History className="h-3.5 w-3.5 text-amber-500" />
                   <span>{expandLedger ? "Hide Ledger" : "View Credit Activity"}</span>
@@ -528,19 +529,19 @@ export default function StudentProfilePage() {
             {/* Credit Transaction Ledger */}
             {expandLedger && (
               <div className="mt-3 space-y-2">
-                <div className="text-xs font-bold text-[#242321] dark:text-[#F5F5F4] flex items-center gap-1.5">
+                <div className="text-xs font-bold text-[#111827] dark:text-[#F1F5F9] flex items-center gap-1.5">
                   <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
                   <span>Credit Ledger History</span>
                 </div>
 
                 {creditTx.length === 0 ? (
-                  <div className="p-4 rounded-xl bg-[#FAF8F5] dark:bg-[#1D1B19] text-center text-xs text-[#716D67]">
+                  <div className="p-4 rounded-xl bg-[#F8FAFC] dark:bg-[#17243A] text-center text-xs text-[#64748B]">
                     No transactions recorded yet.
                   </div>
                 ) : (
-                  <div className="overflow-x-auto rounded-xl border border-[#E5E0D8] dark:border-[#292524]">
+                  <div className="overflow-x-auto rounded-xl border border-[#E2E8F0] dark:border-[#263449]">
                     <table className="w-full text-left text-xs">
-                      <thead className="bg-[#FAF8F5] dark:bg-[#1D1B19] text-[#716D67] border-b border-[#E5E0D8] dark:border-[#292524]">
+                      <thead className="bg-[#F8FAFC] dark:bg-[#17243A] text-[#64748B] border-b border-[#E2E8F0] dark:border-[#263449]">
                         <tr>
                           <th className="py-2.5 px-3">Type</th>
                           <th className="py-2.5 px-3">Description</th>
@@ -549,22 +550,22 @@ export default function StudentProfilePage() {
                           <th className="py-2.5 px-3">Date</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-[#E5E0D8]/60 dark:divide-[#292524]">
+                      <tbody className="divide-y divide-[#E2E8F0]/60 dark:divide-[#263449]">
                         {creditTx.map((tx) => (
-                          <tr key={tx.id} className="hover:bg-[#FAF8F5]/50 dark:hover:bg-[#1D1B19]/50">
+                          <tr key={tx.id} className="hover:bg-[#F8FAFC]/50 dark:hover:bg-[#17243A]/50">
                             <td className="py-2 px-3 font-semibold text-emerald-600 dark:text-emerald-400">
                               {tx.transaction_type}
                             </td>
-                            <td className="py-2 px-3 text-[#57534E] dark:text-[#A8A29E] max-w-xs truncate">
+                            <td className="py-2 px-3 text-[#64748B] dark:text-[#A3B1C6] max-w-xs truncate">
                               {tx.description}
                             </td>
-                            <td className="py-2 px-3 font-bold text-[#242321] dark:text-[#F5F5F4]">
+                            <td className="py-2 px-3 font-bold text-[#111827] dark:text-[#F1F5F9]">
                               +{tx.amount_credits.toLocaleString()}
                             </td>
-                            <td className="py-2 px-3 text-[#716D67]">
+                            <td className="py-2 px-3 text-[#64748B]">
                               {tx.balance_after.toLocaleString()}
                             </td>
-                            <td className="py-2 px-3 text-[#8C827A] whitespace-nowrap">
+                            <td className="py-2 px-3 text-[#64748B] whitespace-nowrap">
                               {new Date(tx.created_at).toLocaleDateString()}
                             </td>
                           </tr>
@@ -582,72 +583,72 @@ export default function StudentProfilePage() {
       {/* ══════════════════════════════════════════════════════
           BLOCK 3: ACADEMIC ACTIVITY & EXAM SUMMARY (Expand / Hide)
          ══════════════════════════════════════════════════════ */}
-      <div className="bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl shadow-xs overflow-hidden">
+      <div className="bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-2xl shadow-xs overflow-hidden">
         <div 
           onClick={() => setExpandActivity(!expandActivity)}
-          className="p-4 flex items-center justify-between cursor-pointer hover:bg-[#FAF8F5]/60 dark:hover:bg-[#1D1B19]/60 transition-colors"
+          className="p-4 flex items-center justify-between cursor-pointer hover:bg-[#F8FAFC]/60 dark:hover:bg-[#17243A]/60 transition-colors"
         >
           <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
               <GraduationCap className="h-4.5 w-4.5" />
             </div>
             <div>
-              <h2 className="text-xs font-bold text-[#242321] dark:text-[#F5F5F4]">
+              <h2 className="text-xs font-bold text-[#111827] dark:text-[#F1F5F9]">
                 Academic Summary & Attempts
               </h2>
-              <p className="text-[11px] text-[#716D67] dark:text-[#A8A29E]">
+              <p className="text-[11px] text-[#64748B] dark:text-[#A3B1C6]">
                 Test performance records and submissions history
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="text-xs font-bold text-[#716D67] px-2 py-0.5 rounded bg-[#FAF8F5] dark:bg-[#1D1B19]">
+            <span className="text-xs font-bold text-[#64748B] px-2 py-0.5 rounded bg-[#F8FAFC] dark:bg-[#17243A]">
               {submissionsCount} Attempts
             </span>
             {expandActivity ? (
-              <ChevronUp className="h-4 w-4 text-[#716D67]" />
+              <ChevronUp className="h-4 w-4 text-[#64748B]" />
             ) : (
-              <ChevronDown className="h-4 w-4 text-[#716D67]" />
+              <ChevronDown className="h-4 w-4 text-[#64748B]" />
             )}
           </div>
         </div>
 
         {expandActivity && (
-          <div className="p-5 pt-0 border-t border-[#E5E0D8]/60 dark:border-[#292524] space-y-4">
+          <div className="p-5 pt-0 border-t border-[#E2E8F0]/60 dark:border-[#263449] space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-              <div className="p-4 rounded-xl bg-[#FAF8F5] dark:bg-[#1D1B19] border border-[#E5E0D8] dark:border-[#292524]">
-                <div className="text-[11px] font-bold text-[#716D67] uppercase tracking-wider">
+              <div className="p-4 rounded-xl bg-[#F8FAFC] dark:bg-[#17243A] border border-[#E2E8F0] dark:border-[#263449]">
+                <div className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider">
                   Total Completed Submissions
                 </div>
-                <div className="text-2xl font-black text-[#242321] dark:text-[#F5F5F4] mt-0.5">
+                <div className="text-2xl font-black text-[#111827] dark:text-[#F1F5F9] mt-0.5">
                   {submissionsCount}
                 </div>
-                <p className="text-xs text-[#716D67] mt-1">
+                <p className="text-xs text-[#64748B] mt-1">
                   Exams attended & graded
                 </p>
               </div>
 
-              <div className="p-4 rounded-xl bg-[#FAF8F5] dark:bg-[#1D1B19] border border-[#E5E0D8] dark:border-[#292524]">
-                <div className="text-[11px] font-bold text-[#716D67] uppercase tracking-wider">
+              <div className="p-4 rounded-xl bg-[#F8FAFC] dark:bg-[#17243A] border border-[#E2E8F0] dark:border-[#263449]">
+                <div className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider">
                   Average Assessment Score
                 </div>
                 <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5">
                   {avgScore}%
                 </div>
-                <p className="text-xs text-[#716D67] mt-1">
+                <p className="text-xs text-[#64748B] mt-1">
                   Cumulative percentage average
                 </p>
               </div>
             </div>
 
             <div className="flex items-center justify-between pt-1">
-              <span className="text-xs text-[#716D67]">
+              <span className="text-xs text-[#64748B]">
                 Ready to take a new test?
               </span>
               <Link
                 href="/dashboard/student"
-                className="px-4 py-2 rounded-xl bg-[#C84B18] text-white text-xs font-bold hover:bg-[#b04013] transition-colors shadow-xs"
+                className="px-4 py-2 rounded-xl bg-[#2563EB] text-white text-xs font-bold hover:bg-[#1D4ED8] transition-colors shadow-xs"
               >
                 Go to Active Assessments
               </Link>
@@ -659,77 +660,54 @@ export default function StudentProfilePage() {
       {/* ══════════════════════════════════════════════════════
           BLOCK 4: PREFERENCES & SECURITY (Expand / Hide)
          ══════════════════════════════════════════════════════ */}
-      <div className="bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl shadow-xs overflow-hidden">
+      <div className="bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-2xl shadow-xs overflow-hidden">
         <div 
           onClick={() => setExpandSettings(!expandSettings)}
-          className="p-4 flex items-center justify-between cursor-pointer hover:bg-[#FAF8F5]/60 dark:hover:bg-[#1D1B19]/60 transition-colors"
+          className="p-4 flex items-center justify-between cursor-pointer hover:bg-[#F8FAFC]/60 dark:hover:bg-[#17243A]/60 transition-colors"
         >
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300">
+            <div className="p-2 rounded-xl bg-blue-500/10 text-[#2563EB] dark:text-[#60A5FA]">
               <Moon className="h-4.5 w-4.5" />
             </div>
             <div>
-              <h2 className="text-xs font-bold text-[#242321] dark:text-[#F5F5F4]">
+              <h2 className="text-xs font-bold text-[#111827] dark:text-[#F1F5F9]">
                 Appearance & Account Security
               </h2>
-              <p className="text-[11px] text-[#716D67] dark:text-[#A8A29E]">
+              <p className="text-[11px] text-[#64748B] dark:text-[#A3B1C6]">
                 Theme preferences and logout
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="text-[11px] text-[#716D67] capitalize">
+            <span className="text-[11px] text-[#64748B] capitalize">
               {themeMode} mode
             </span>
             {expandSettings ? (
-              <ChevronUp className="h-4 w-4 text-[#716D67]" />
+              <ChevronUp className="h-4 w-4 text-[#64748B]" />
             ) : (
-              <ChevronDown className="h-4 w-4 text-[#716D67]" />
+              <ChevronDown className="h-4 w-4 text-[#64748B]" />
             )}
           </div>
         </div>
 
         {expandSettings && (
-          <div className="p-5 pt-0 border-t border-[#E5E0D8]/60 dark:border-[#292524] space-y-4">
-            <div className="divide-y divide-[#E5E0D8]/60 dark:divide-[#292524] mt-3">
-              {/* Theme Toggle */}
-              <div className="py-3 flex items-center justify-between">
-                <div>
-                  <div className="text-xs font-bold text-[#242321] dark:text-[#F5F5F4]">
-                    Interface Theme
-                  </div>
-                  <div className="text-[11px] text-[#716D67] dark:text-[#A8A29E]">
-                    Switch between Dark Mode and Warm Ivory Light theme
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={toggleTheme}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-[#E5E0D8] dark:border-[#292524] text-xs font-bold text-[#242321] dark:text-[#F5F5F4] hover:bg-[#FAF8F5] dark:hover:bg-[#1D1B19] transition-all cursor-pointer"
-                >
-                  {themeMode === "dark" ? (
-                    <>
-                      <Sun className="h-4 w-4 text-amber-500" />
-                      <span>Light Mode</span>
-                    </>
-                  ) : (
-                    <>
-                      <Moon className="h-4 w-4 text-indigo-500" />
-                      <span>Dark Mode</span>
-                    </>
-                  )}
-                </button>
-              </div>
+          <div className="p-5 pt-0 border-t border-[#E2E8F0]/60 dark:border-[#263449] space-y-4">
+            <div className="mt-3 space-y-4">
+              {/* Embedded Platform Feature Guides, Route Diagnostics & Preferences */}
+              <PlatformSettingsAndGuide
+                currentRole="student"
+                themeMode={themeMode}
+                onToggleTheme={toggleTheme}
+              />
 
               {/* Logout Option */}
-              <div className="py-3 flex items-center justify-between">
+              <div className="pt-2">
                 <div>
                   <div className="text-xs font-bold text-red-600">
                     Sign Out Account
                   </div>
-                  <div className="text-[11px] text-[#716D67] dark:text-[#A8A29E]">
+                  <div className="text-[11px] text-[#64748B] dark:text-[#A3B1C6]">
                     Safely log out from this device
                   </div>
                 </div>

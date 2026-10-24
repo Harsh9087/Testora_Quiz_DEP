@@ -120,24 +120,24 @@ export default function UploadKBModal({
       }}
     >
       <div 
-        className="bg-white dark:bg-[#171615] rounded-2xl border border-[#E5E0D8] dark:border-[#292524] p-4 sm:p-6 max-w-lg w-full mx-3 sm:mx-auto shadow-2xl space-y-4 sm:space-y-5 relative max-h-[92vh] flex flex-col overflow-y-auto"
+        className="bg-white dark:bg-[#111C31] rounded-2xl border border-[#E2E8F0] dark:border-[#263449] p-4 sm:p-6 max-w-lg w-full mx-3 sm:mx-auto shadow-2xl space-y-4 sm:space-y-5 relative max-h-[92vh] flex flex-col overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-[#E5E0D8] dark:border-[#292524] pb-3 shrink-0">
+        <div className="flex items-center justify-between border-b border-[#E2E8F0] dark:border-[#263449] pb-3 shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-[#C84B18]/10 text-[#C84B18] dark:bg-[#EA580C]/15 dark:text-[#EA580C] rounded-xl">
+            <div className="p-2 bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 rounded-xl">
               <UploadCloud className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-[#242321] dark:text-[#F5F5F4]">Upload New Knowledge Base Document</h3>
-              <p className="text-[11px] text-[#716D67] dark:text-[#A8A29E]">Embed course notes or textbooks into Vector Store</p>
+              <h3 className="text-sm font-bold text-[#111827] dark:text-[#F1F5F9]">Upload New Knowledge Base Document</h3>
+              <p className="text-[11px] text-[#64748B] dark:text-[#A3B1C6]">Embed course notes or textbooks into Vector Store</p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="text-[#716D67] hover:text-[#242321] dark:hover:text-white p-1 rounded-lg hover:bg-[#F0ECE4]/50 dark:hover:bg-[#292524] cursor-pointer"
+            className="text-[#64748B] hover:text-[#111827] dark:hover:text-white p-1 rounded-lg hover:bg-[#F1F5F9] dark:hover:bg-[#17243A] cursor-pointer"
           >
             <X className="h-4 w-4" />
           </button>
@@ -146,8 +146,8 @@ export default function UploadKBModal({
         <form onSubmit={handleUpload} className="space-y-4">
           {/* Subject / Domain Name */}
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-[#57534E] dark:text-[#A8A29E] uppercase tracking-wider">
-              Subject / Knowledge Domain <span className="text-[#C84B18]">*</span>
+            <label className="text-xs font-bold text-[#64748B] dark:text-[#A3B1C6] uppercase tracking-wider">
+              Subject / Knowledge Domain <span className="text-blue-600 dark:text-blue-400">*</span>
             </label>
             <input
               type="text"
@@ -156,7 +156,7 @@ export default function UploadKBModal({
               onChange={(e) => setSubjectId(e.target.value)}
               placeholder="e.g. Physics_Unit_2 or Machine_Learning"
               list="existing-subjects-datalist"
-              className="w-full bg-[#FBF9F5] dark:bg-[#1D1B19] border border-[#E5E0D8] dark:border-[#292524] rounded-xl px-3.5 py-2.5 text-xs text-[#242321] dark:text-[#F5F5F4] placeholder-[#A8A29E] focus:outline-none focus:ring-2 focus:ring-[#C84B18]/30 focus:border-[#C84B18]"
+              className="w-full bg-[#F8FAFC] dark:bg-[#17243A] border border-[#E2E8F0] dark:border-[#263449] rounded-xl px-3.5 py-2.5 text-xs text-[#111827] dark:text-[#F1F5F9] placeholder-[#A3B1C6] focus:outline-none focus:ring-2 focus:ring-blue-600/30 focus:border-blue-600"
             />
             {availableSubjects.length > 0 && (
               <datalist id="existing-subjects-datalist">
@@ -165,15 +165,15 @@ export default function UploadKBModal({
                 ))}
               </datalist>
             )}
-            <p className="text-[11px] text-[#716D67] dark:text-[#A8A29E]">
+            <p className="text-[11px] text-[#64748B] dark:text-[#A3B1C6]">
               Type a new subject name or pick an existing subject domain to group documents.
             </p>
           </div>
 
           {/* Drag & Drop File Zone */}
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-[#57534E] dark:text-[#A8A29E] uppercase tracking-wider">
-              Source Document File <span className="text-[#C84B18]">*</span>
+            <label className="text-xs font-bold text-[#64748B] dark:text-[#A3B1C6] uppercase tracking-wider">
+              Source Document File <span className="text-blue-600 dark:text-blue-400">*</span>
             </label>
             <div
               onDragOver={(e) => {
@@ -185,10 +185,10 @@ export default function UploadKBModal({
               onClick={() => fileInputRef.current?.click()}
               className={`border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition-all ${
                 isDragging
-                  ? "border-[#C84B18] bg-[#C84B18]/5"
+                  ? "border-blue-600 bg-blue-50/50 dark:bg-blue-900/20"
                   : file
                   ? "border-emerald-500/50 bg-emerald-50/20 dark:bg-emerald-950/10"
-                  : "border-[#E5E0D8] dark:border-[#292524] hover:border-[#C84B18]/60 bg-[#FBF9F5]/60 dark:bg-[#1D1B19]/60"
+                  : "border-[#E2E8F0] dark:border-[#263449] hover:border-blue-600/60 bg-[#F8FAFC] dark:bg-[#17243A]"
               }`}
             >
               <input
@@ -204,12 +204,12 @@ export default function UploadKBModal({
               />
 
               {file ? (
-                <div className="flex items-center justify-between p-2 rounded-lg bg-white dark:bg-[#171615] border border-emerald-500/30">
+                <div className="flex items-center justify-between p-2 rounded-lg bg-white dark:bg-[#111C31] border border-emerald-500/30">
                   <div className="flex items-center gap-2.5 text-left truncate">
                     <FileText className="h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                     <div className="truncate">
-                      <div className="text-xs font-bold text-[#242321] dark:text-[#F5F5F4] truncate">{file.name}</div>
-                      <div className="text-[10px] text-[#716D67]">{formatFileSize(file.size)}</div>
+                      <div className="text-xs font-bold text-[#111827] dark:text-[#F1F5F9] truncate">{file.name}</div>
+                      <div className="text-[10px] text-[#64748B] dark:text-[#A3B1C6]">{formatFileSize(file.size)}</div>
                     </div>
                   </div>
                   <button
@@ -219,18 +219,18 @@ export default function UploadKBModal({
                       setFile(null);
                       if (fileInputRef.current) fileInputRef.current.value = "";
                     }}
-                    className="p-1 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded"
+                    className="p-1 text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded cursor-pointer"
                   >
                     <X className="h-4 w-4" />
                   </button>
                 </div>
               ) : (
                 <div className="space-y-1.5 py-2">
-                  <UploadCloud className="h-8 w-8 text-[#C84B18] mx-auto" />
-                  <div className="text-xs font-bold text-[#242321] dark:text-[#F5F5F4]">
+                  <UploadCloud className="h-8 w-8 text-blue-600 dark:text-blue-400 mx-auto" />
+                  <div className="text-xs font-bold text-[#111827] dark:text-[#F1F5F9]">
                     Click to browse or drop file here
                   </div>
-                  <div className="text-[10px] text-[#716D67] dark:text-[#A8A29E]">
+                  <div className="text-[10px] text-[#64748B] dark:text-[#A3B1C6]">
                     Supports PDF, DOCX, TXT, PPTX, MD (Max: 25MB)
                   </div>
                 </div>
@@ -244,14 +244,14 @@ export default function UploadKBModal({
               type="button"
               onClick={onClose}
               disabled={isUploading}
-              className="flex-1 py-2.5 rounded-xl border border-[#E5E0D8] dark:border-[#292524] text-xs font-bold text-[#716D67] hover:bg-[#F0ECE4]/50 cursor-pointer"
+              className="flex-1 py-2.5 rounded-xl border border-[#E2E8F0] dark:border-[#263449] text-xs font-bold text-[#64748B] dark:text-[#A3B1C6] hover:bg-[#F1F5F9] dark:hover:bg-[#17243A] cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isUploading || !file}
-              className="flex-1 py-2.5 bg-[#C84B18] hover:bg-[#B33E0F] dark:bg-[#EA580C] text-white rounded-xl text-xs font-bold shadow-xs flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
               {isUploading ? (
                 <>

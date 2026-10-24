@@ -14,6 +14,8 @@ import {
   FileText
 } from "lucide-react";
 import { API_V1 } from "../../../lib/api";
+import ThemeToggle from "../../../components/ThemeToggle";
+import AppLogo from "../../../components/AppLogo";
 
 interface FormField {
   id: string;
@@ -100,21 +102,15 @@ export default function PublicCustomFormPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitError(null);
-
     if (!formMeta) return;
+    setSubmitError(null);
 
     // Validate required fields
     for (const f of formMeta.fields) {
       if (f.required) {
         const val = responses[f.id];
-        if (
-          val === undefined || 
-          val === null || 
-          (typeof val === "string" && !val.trim()) || 
-          (Array.isArray(val) && val.length === 0)
-        ) {
-          setSubmitError(`Please answer mandatory field: "${f.label}"`);
+        if (val === undefined || val === null || val === "" || (Array.isArray(val) && val.length === 0)) {
+          setSubmitError(`Please fill in required field: "${f.label}"`);
           return;
         }
       }
@@ -125,7 +121,10 @@ export default function PublicCustomFormPage() {
       const res = await fetch(`${API_V1}/custom-forms/public/${slug}/submit`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ responses })
+        body: JSON.stringify({
+          responses,
+          device_info: typeof navigator !== "undefined" ? navigator.userAgent : null,
+        }),
       });
 
       if (res.ok) {
@@ -143,60 +142,57 @@ export default function PublicCustomFormPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#FAF8F5] flex flex-col items-center justify-center p-4">
-        <div className="w-10 h-10 border-3 border-blue-600 border-t-transparent rounded-full animate-spin mb-3" />
-        <p className="text-sm font-semibold text-[#716D67]">Loading form...</p>
+      <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0B1120] flex flex-col items-center justify-center p-4 transition-colors">
+        <div className="w-10 h-10 border-3 border-[#2563EB] dark:border-[#3B82F6] border-t-transparent rounded-full animate-spin mb-3" />
+        <p className="text-sm font-semibold text-[#64748B] dark:text-[#A3B1C6]">Loading form...</p>
       </div>
     );
   }
 
   if (error || !formMeta) {
     return (
-      <div className="min-h-screen bg-[#FAF8F5] flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-2xl p-6 sm:p-8 border border-[#E5E0D8] shadow-sm text-center space-y-4">
-          <div className="w-14 h-14 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center mx-auto">
+      <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0B1120] flex items-center justify-center p-4 transition-colors">
+        <div className="max-w-md w-full bg-white dark:bg-[#111C31] rounded-2xl p-6 sm:p-8 border border-[#E2E8F0] dark:border-[#263449] shadow-xl text-center space-y-4">
+          <div className="w-14 h-14 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 rounded-2xl flex items-center justify-center mx-auto border border-rose-200 dark:border-rose-800">
             <AlertCircle className="w-7 h-7" />
           </div>
-          <h2 className="text-xl font-bold text-[#242321]">Form Unavailable</h2>
-          <p className="text-sm text-[#716D67]">{error || "Form not found."}</p>
+          <h2 className="text-xl font-bold text-[#111827] dark:text-[#F1F5F9]">Form Unavailable</h2>
+          <p className="text-sm text-[#64748B] dark:text-[#A3B1C6]">{error || "Form not found."}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5] flex flex-col justify-between p-4 sm:p-6 lg:p-8 text-[#242321]">
+    <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0B1120] flex flex-col justify-between p-4 sm:p-6 lg:p-8 text-[#111827] dark:text-[#F1F5F9] transition-colors">
       <div className="max-w-2xl w-full mx-auto space-y-5 my-auto">
         
         {/* Brand Banner */}
-        <div className="flex items-center justify-between pb-2 border-b border-[#E5E0D8]">
+        <div className="flex items-center justify-between pb-3 border-b border-[#E2E8F0] dark:border-[#263449]">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-700 via-indigo-600 to-sky-500 flex items-center justify-center text-white shadow-xs">
-              <Sparkles className="h-5 w-5" />
-            </div>
-            <div>
-              <span className="font-extrabold text-sm tracking-tight text-[#242321]">Testora Quiz</span>
-              <span className="block text-[10px] text-[#716D67] font-medium">Online Custom Form</span>
-            </div>
+            <AppLogo variant="row" height={30} />
           </div>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
-            {formMeta.is_active ? "Accepting Responses" : "Form Closed"}
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#EFF6FF] dark:bg-[#172B4D] text-[#2563EB] dark:text-[#60A5FA] border border-[#2563EB]/30">
+              {formMeta.is_active ? "Accepting Responses" : "Form Closed"}
+            </span>
+            <ThemeToggle />
+          </div>
         </div>
 
         {submittedSuccess ? (
           /* Success Screen */
-          <div className="bg-white rounded-2xl border border-emerald-200 p-8 sm:p-10 shadow-sm text-center space-y-5 animate-in fade-in duration-300">
-            <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-xs">
+          <div className="bg-white dark:bg-[#111C31] rounded-2xl border border-emerald-200 dark:border-emerald-800 p-8 sm:p-10 shadow-xl text-center space-y-5 animate-in fade-in duration-300">
+            <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto shadow-md">
               <CheckCircle2 className="w-9 h-9" />
             </div>
             <div className="space-y-1.5">
-              <h1 className="text-2xl font-extrabold text-[#242321]">Response Submitted!</h1>
-              <p className="text-sm text-[#716D67]">
-                Your response for <strong className="text-[#242321]">{formMeta.title}</strong> has been safely recorded.
+              <h1 className="text-2xl font-extrabold text-[#111827] dark:text-[#F1F5F9]">Response Submitted!</h1>
+              <p className="text-sm text-[#64748B] dark:text-[#A3B1C6]">
+                Your response for <strong className="text-[#111827] dark:text-[#F1F5F9]">{formMeta.title}</strong> has been safely recorded.
               </p>
             </div>
-            <p className="text-xs text-[#8C827A]">
+            <p className="text-xs text-[#64748B] dark:text-[#A3B1C6]">
               Thank you for taking the time to complete this form.
             </p>
             <button
@@ -204,46 +200,46 @@ export default function PublicCustomFormPage() {
                 setSubmittedSuccess(false);
                 setResponses({});
               }}
-              className="text-xs font-semibold text-blue-600 hover:underline cursor-pointer"
+              className="text-xs font-semibold text-[#2563EB] dark:text-[#60A5FA] hover:underline cursor-pointer"
             >
               Submit another response
             </button>
           </div>
         ) : (
           /* Form Fill Card */
-          <div className="bg-white rounded-2xl border border-[#E5E0D8] p-5 sm:p-8 shadow-xs space-y-6">
+          <div className="bg-white dark:bg-[#111C31] rounded-2xl border border-[#E2E8F0] dark:border-[#263449] p-5 sm:p-8 shadow-xl space-y-6">
             
             {/* Form Title & Description */}
-            <div className="space-y-2 border-b border-[#E5E0D8] pb-5">
-              <h1 className="text-xl sm:text-2xl font-extrabold text-[#242321] tracking-tight">
+            <div className="space-y-2 border-b border-[#E2E8F0] dark:border-[#263449] pb-5">
+              <h1 className="text-xl sm:text-2xl font-extrabold text-[#111827] dark:text-[#F1F5F9] tracking-tight">
                 {formMeta.title}
               </h1>
               {formMeta.description && (
-                <p className="text-xs sm:text-sm text-[#716D67] leading-relaxed">
+                <p className="text-xs sm:text-sm text-[#64748B] dark:text-[#A3B1C6] leading-relaxed">
                   {formMeta.description}
                 </p>
               )}
             </div>
 
             {submitError && (
-              <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-start gap-2.5">
+              <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-start gap-2.5">
                 <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
                 <span className="font-medium">{submitError}</span>
               </div>
             )}
 
             {!formMeta.is_active ? (
-              <div className="p-6 bg-[#FAF8F5] border border-[#E5E0D8] rounded-xl text-center space-y-2">
-                <AlertCircle className="h-6 w-6 text-amber-600 mx-auto" />
-                <p className="text-sm font-bold text-[#242321]">This form is currently closed</p>
-                <p className="text-xs text-[#716D67]">The author is no longer accepting new submissions.</p>
+              <div className="p-6 bg-[#F8FAFC] dark:bg-[#17243A] border border-[#E2E8F0] dark:border-[#263449] rounded-xl text-center space-y-2">
+                <AlertCircle className="h-6 w-6 text-amber-500 mx-auto" />
+                <p className="text-sm font-bold text-[#111827] dark:text-[#F1F5F9]">This form is currently closed</p>
+                <p className="text-xs text-[#64748B] dark:text-[#A3B1C6]">The author is no longer accepting new submissions.</p>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-6">
                 
                 {formMeta.fields.map((field, idx) => (
-                  <div key={field.id} className="space-y-2 p-3.5 rounded-xl bg-[#FAF8F5]/60 border border-[#E5E0D8]/60">
-                    <label className="text-xs font-bold text-[#242321] flex items-center justify-between">
+                  <div key={field.id} className="space-y-2 p-3.5 rounded-xl bg-[#F8FAFC] dark:bg-[#17243A] border border-[#E2E8F0] dark:border-[#263449]">
+                    <label className="text-xs font-bold text-[#111827] dark:text-[#F1F5F9] flex items-center justify-between">
                       <span>
                         {idx + 1}. {field.label}
                       </span>
@@ -251,7 +247,7 @@ export default function PublicCustomFormPage() {
                     </label>
 
                     {field.description && (
-                      <p className="text-[11px] text-[#716D67]">{field.description}</p>
+                      <p className="text-[11px] text-[#64748B] dark:text-[#A3B1C6]">{field.description}</p>
                     )}
 
                     {/* TEXT / EMAIL / PHONE / NUMBER INPUT */}
@@ -262,7 +258,7 @@ export default function PublicCustomFormPage() {
                         placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}...`}
                         value={responses[field.id] || ""}
                         onChange={(e) => handleInputChange(field.id, e.target.value)}
-                        className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[#E5E0D8] bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-all placeholder:text-[#A8A29E]"
+                        className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-[#111C31] text-[#111827] dark:text-[#F1F5F9] focus:border-[#2563EB] dark:focus:border-[#3B82F6] focus:ring-1 focus:ring-[#2563EB] outline-none transition-all placeholder:text-[#94A3B8]"
                       />
                     )}
 
@@ -274,7 +270,7 @@ export default function PublicCustomFormPage() {
                         placeholder={field.placeholder || "Type your detailed response..."}
                         value={responses[field.id] || ""}
                         onChange={(e) => handleInputChange(field.id, e.target.value)}
-                        className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[#E5E0D8] bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-all placeholder:text-[#A8A29E]"
+                        className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-[#111C31] text-[#111827] dark:text-[#F1F5F9] focus:border-[#2563EB] dark:focus:border-[#3B82F6] focus:ring-1 focus:ring-[#2563EB] outline-none transition-all placeholder:text-[#94A3B8]"
                       />
                     )}
 
@@ -284,7 +280,7 @@ export default function PublicCustomFormPage() {
                         required={field.required}
                         value={responses[field.id] || ""}
                         onChange={(e) => handleInputChange(field.id, e.target.value)}
-                        className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[#E5E0D8] bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-all cursor-pointer"
+                        className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-[#111C31] text-[#111827] dark:text-[#F1F5F9] focus:border-[#2563EB] dark:focus:border-[#3B82F6] focus:ring-1 focus:ring-[#2563EB] outline-none transition-all cursor-pointer"
                       >
                         <option value="">{field.placeholder || "Select an option..."}</option>
                         {field.options?.map((opt, optIdx) => (
@@ -303,8 +299,8 @@ export default function PublicCustomFormPage() {
                             key={optIdx}
                             className={`flex items-center gap-2.5 p-2.5 rounded-xl border cursor-pointer text-xs transition-all ${
                               responses[field.id] === opt
-                                ? "border-blue-600 bg-blue-50/50 font-semibold text-blue-900"
-                                : "border-[#E5E0D8] bg-white hover:bg-[#FAF8F5] text-[#242321]"
+                                ? "border-[#2563EB] dark:border-[#3B82F6] bg-[#EFF6FF] dark:bg-[#172B4D] font-semibold text-[#1E3A8A] dark:text-[#60A5FA]"
+                                : "border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-[#111C31] hover:bg-[#F8FAFC] dark:hover:bg-[#17243A] text-[#111827] dark:text-[#F1F5F9]"
                             }`}
                           >
                             <input
@@ -312,7 +308,7 @@ export default function PublicCustomFormPage() {
                               name={field.id}
                               checked={responses[field.id] === opt}
                               onChange={() => handleInputChange(field.id, opt)}
-                              className="text-blue-600 focus:ring-blue-600 cursor-pointer"
+                              className="text-[#2563EB] focus:ring-[#2563EB] cursor-pointer"
                             />
                             <span>{opt}</span>
                           </label>
@@ -330,15 +326,15 @@ export default function PublicCustomFormPage() {
                               key={optIdx}
                               className={`flex items-center gap-2.5 p-2.5 rounded-xl border cursor-pointer text-xs transition-all ${
                                 isChecked
-                                  ? "border-blue-600 bg-blue-50/50 font-semibold text-blue-900"
-                                  : "border-[#E5E0D8] bg-white hover:bg-[#FAF8F5] text-[#242321]"
+                                  ? "border-[#2563EB] dark:border-[#3B82F6] bg-[#EFF6FF] dark:bg-[#172B4D] font-semibold text-[#1E3A8A] dark:text-[#60A5FA]"
+                                  : "border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-[#111C31] hover:bg-[#F8FAFC] dark:hover:bg-[#17243A] text-[#111827] dark:text-[#F1F5F9]"
                               }`}
                             >
                               <input
                                 type="checkbox"
                                 checked={isChecked}
                                 onChange={() => handleCheckboxToggle(field.id, opt)}
-                                className="rounded text-blue-600 focus:ring-blue-600 cursor-pointer"
+                                className="rounded text-[#2563EB] focus:ring-[#2563EB] cursor-pointer"
                               />
                               <span>{opt}</span>
                             </label>
@@ -359,8 +355,8 @@ export default function PublicCustomFormPage() {
                               onClick={() => handleInputChange(field.id, starVal)}
                               className={`p-2 rounded-xl border flex items-center gap-1.5 text-xs font-bold transition-all cursor-pointer ${
                                 selected
-                                  ? "bg-amber-400 border-amber-500 text-amber-950 shadow-xs"
-                                  : "bg-white border-[#E5E0D8] text-[#716D67] hover:bg-[#FAF8F5]"
+                                  ? "bg-amber-400 border-amber-500 text-amber-950 shadow-sm"
+                                  : "bg-white dark:bg-[#111C31] border-[#E2E8F0] dark:border-[#263449] text-[#64748B] dark:text-[#A3B1C6] hover:bg-[#F8FAFC] dark:hover:bg-[#17243A]"
                               }`}
                             >
                               <Star className={`h-4 w-4 ${selected ? "fill-amber-950" : ""}`} />
@@ -377,7 +373,7 @@ export default function PublicCustomFormPage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-xs cursor-pointer transition-all disabled:opacity-60"
+                  className="w-full py-3 px-4 bg-[#2563EB] hover:bg-[#1D4ED8] text-white rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-md cursor-pointer transition-all disabled:opacity-60"
                 >
                   {submitting ? (
                     <>
@@ -398,8 +394,8 @@ export default function PublicCustomFormPage() {
           </div>
         )}
 
-        <div className="text-center text-[11px] text-[#8C827A]">
-          Powered by <span className="font-semibold text-[#242321]">TestoraQuiz Custom Forms</span>
+        <div className="text-center text-[11px] text-[#64748B] dark:text-[#A3B1C6]">
+          Powered by <span className="font-semibold text-[#111827] dark:text-[#F1F5F9]">TestoraQuiz Custom Forms</span>
         </div>
 
       </div>

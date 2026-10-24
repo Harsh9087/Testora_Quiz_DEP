@@ -212,6 +212,28 @@ async def lifespan(app: FastAPI):
 
     try:
         Base.metadata.create_all(bind=engine)
+        # Automatic column synchronization for SQLite
+        with engine.connect() as conn:
+            for table_name, table in Base.metadata.tables.items():
+                try:
+                    res = conn.execute(text(f"PRAGMA table_info({table_name})"))
+                    db_cols = {row[1] for row in res.fetchall()}
+                    if not db_cols:
+                        continue
+                    for col in table.columns:
+                        if col.name not in db_cols:
+                            col_type = col.type.compile(engine.dialect)
+                            default_clause = ""
+                            if col.default is not None and hasattr(col.default, "arg"):
+                                if isinstance(col.default.arg, (int, float)):
+                                    default_clause = f" DEFAULT {col.default.arg}"
+                                elif isinstance(col.default.arg, str):
+                                    default_clause = f" DEFAULT '{col.default.arg}'"
+                            conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN {col.name} {col_type}{default_clause}"))
+                            conn.commit()
+                            print(f"✅ [Schema Sync] Added column '{col.name}' to table '{table_name}'")
+                except Exception:
+                    pass
     except Exception as e:
         print(f"Schema sync notice: {e}")
 

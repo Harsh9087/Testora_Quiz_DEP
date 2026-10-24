@@ -135,15 +135,15 @@ export default function KnowledgeBaseManager({ documents, token, onRefresh }: Kn
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
       
       {/* ─── LEFT: UPLOAD & INDEXING FORM ─── */}
-      <div className="lg:col-span-5 bg-[#FFFFFF] dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl p-4 sm:p-6 space-y-4 shadow-sm">
-        <div className="border-b border-[#E5E0D8] dark:border-[#292524] pb-3 flex items-center justify-between">
+      <div className="lg:col-span-5 bg-[#FFFFFF] dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-2xl p-4 sm:p-6 space-y-4 shadow-sm">
+        <div className="border-b border-[#E2E8F0] dark:border-[#263449] pb-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="p-2 bg-[#C84B18]/10 text-[#C84B18] dark:bg-[#EA580C]/15 dark:text-[#EA580C] rounded-lg">
+            <div className="p-2 bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 rounded-lg">
               <BookOpen className="h-4 w-4" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-[#242321] dark:text-[#F5F5F4]">Upload Knowledge Source</h2>
-              <p className="text-[11px] text-[#716D67] dark:text-[#A8A29E]">Embed course materials into Vector DB</p>
+              <h2 className="text-sm font-bold text-[#111827] dark:text-[#F1F5F9]">Upload Knowledge Source</h2>
+              <p className="text-[11px] text-[#64748B] dark:text-[#A3B1C6]">Embed course materials into Vector DB</p>
             </div>
           </div>
         </div>
@@ -152,7 +152,7 @@ export default function KnowledgeBaseManager({ documents, token, onRefresh }: Kn
           
           {/* Subject Field & Preset Dropdown */}
           <div className="space-y-1.5">
-            <label className="block font-bold text-[#57534E] dark:text-[#A8A29E] uppercase tracking-wider text-[11px]">
+            <label className="block font-bold text-[#64748B] dark:text-[#A3B1C6] uppercase tracking-wider text-[11px]">
               Subject Domain / Course Code
             </label>
             <div className="space-y-2">
@@ -162,12 +162,12 @@ export default function KnowledgeBaseManager({ documents, token, onRefresh }: Kn
                 value={kbSubjectId} 
                 onChange={(e) => setKbSubjectId(e.target.value)} 
                 placeholder="e.g. CS-101 or Computer Science" 
-                className="w-full bg-[#F7F4EF] dark:bg-[#141312] border border-[#E5E0D8] dark:border-[#292524] rounded-xl px-3 py-2 text-xs text-[#242321] dark:text-[#F5F5F4] focus:outline-none focus:ring-1 focus:ring-[#C84B18]" 
+                className="w-full bg-[#F8FAFC] dark:bg-[#17243A] border border-[#E2E8F0] dark:border-[#263449] rounded-xl px-3 py-2 text-xs text-[#111827] dark:text-[#F1F5F9] focus:outline-none focus:ring-1 focus:ring-blue-600" 
               />
 
               {availableSubjects.length > 0 && (
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="text-[10px] text-[#716D67]">Existing:</span>
+                  <span className="text-[10px] text-[#64748B] dark:text-[#A3B1C6]">Existing:</span>
                   {availableSubjects.map((sub) => (
                     <button
                       key={sub}
@@ -175,8 +175,8 @@ export default function KnowledgeBaseManager({ documents, token, onRefresh }: Kn
                       onClick={() => setKbSubjectId(sub)}
                       className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-all cursor-pointer ${
                         kbSubjectId.toLowerCase() === sub.toLowerCase()
-                          ? "bg-[#C84B18] text-white"
-                          : "bg-[#F0ECE4] dark:bg-[#292524] text-[#716D67] dark:text-[#A8A29E] hover:text-[#242321]"
+                          ? "bg-blue-600 text-white"
+                          : "bg-[#F1F5F9] dark:bg-[#17243A] text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9]"
                       }`}
                     >
                       {sub}
@@ -189,7 +189,7 @@ export default function KnowledgeBaseManager({ documents, token, onRefresh }: Kn
 
           {/* Drag and Drop Zone */}
           <div className="space-y-1.5">
-            <label className="block font-bold text-[#57534E] dark:text-[#A8A29E] uppercase tracking-wider text-[11px]">
+            <label className="block font-bold text-[#64748B] dark:text-[#A3B1C6] uppercase tracking-wider text-[11px]">
               Course Material (PDF, DOCX, TXT, PPTX)
             </label>
             
@@ -200,10 +200,10 @@ export default function KnowledgeBaseManager({ documents, token, onRefresh }: Kn
               onClick={() => fileInputRef.current?.click()}
               className={`border-2 border-dashed rounded-2xl p-6 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-2 ${
                 isDragging
-                  ? "border-[#C84B18] bg-[#C84B18]/5 scale-[0.99]"
+                  ? "border-blue-600 bg-blue-50/50 dark:bg-blue-900/20 scale-[0.99]"
                   : kbFile
                   ? "border-emerald-500/60 bg-emerald-50/20 dark:bg-emerald-950/10"
-                  : "border-[#E5E0D8] dark:border-[#292524] hover:bg-[#F7F4EF]/50 dark:hover:bg-[#1C1A17]"
+                  : "border-[#E2E8F0] dark:border-[#263449] hover:bg-[#F8FAFC] dark:hover:bg-[#17243A]"
               }`}
             >
               <input
@@ -223,17 +223,17 @@ export default function KnowledgeBaseManager({ documents, token, onRefresh }: Kn
                   <div className="w-10 h-10 mx-auto rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 flex items-center justify-center">
                     <CheckCircle2 className="h-5 w-5" />
                   </div>
-                  <div className="font-bold text-[#242321] dark:text-[#F5F5F4] text-xs truncate max-w-xs">{kbFile.name}</div>
-                  <div className="text-[10px] text-[#716D67]">{formatFileSize(kbFile.size)}</div>
-                  <span className="text-[10px] text-[#C84B18] hover:underline block pt-1">Click to replace file</span>
+                  <div className="font-bold text-[#111827] dark:text-[#F1F5F9] text-xs truncate max-w-xs">{kbFile.name}</div>
+                  <div className="text-[10px] text-[#64748B] dark:text-[#A3B1C6]">{formatFileSize(kbFile.size)}</div>
+                  <span className="text-[10px] text-blue-600 dark:text-blue-400 hover:underline block pt-1">Click to replace file</span>
                 </div>
               ) : (
                 <div className="space-y-1.5">
-                  <div className="w-10 h-10 mx-auto rounded-full bg-[#C84B18]/10 text-[#C84B18] dark:bg-[#EA580C]/15 dark:text-[#EA580C] flex items-center justify-center">
+                  <div className="w-10 h-10 mx-auto rounded-full bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 flex items-center justify-center">
                     <FileUp className="h-5 w-5" />
                   </div>
-                  <div className="font-bold text-[#242321] dark:text-[#F5F5F4] text-xs">Drop files here or click to browse</div>
-                  <p className="text-[10px] text-[#716D67] dark:text-[#A8A29E]">
+                  <div className="font-bold text-[#111827] dark:text-[#F1F5F9] text-xs">Drop files here or click to browse</div>
+                  <p className="text-[10px] text-[#64748B] dark:text-[#A3B1C6]">
                     Supports PDF, DOCX, TXT, PPTX (Max 25MB per file)
                   </p>
                 </div>
@@ -262,25 +262,25 @@ export default function KnowledgeBaseManager({ documents, token, onRefresh }: Kn
       </div>
 
       {/* ─── RIGHT: INDEXED DOCUMENTS LIST ─── */}
-      <div className="lg:col-span-7 bg-[#FFFFFF] dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl p-4 sm:p-6 space-y-4 shadow-sm">
-        <div className="flex items-center justify-between border-b border-[#E5E0D8] dark:border-[#292524] pb-3">
+      <div className="lg:col-span-7 bg-[#FFFFFF] dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-2xl p-4 sm:p-6 space-y-4 shadow-sm">
+        <div className="flex items-center justify-between border-b border-[#E2E8F0] dark:border-[#263449] pb-3">
           <div className="flex items-center gap-2">
-            <Layers className="h-4 w-4 text-[#C84B18]" />
-            <h2 className="text-sm font-bold text-[#242321] dark:text-[#F5F5F4]">Indexed Knowledge Sources</h2>
+            <Layers className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            <h2 className="text-sm font-bold text-[#111827] dark:text-[#F1F5F9]">Indexed Knowledge Sources</h2>
           </div>
-          <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-[#C84B18]/10 text-[#C84B18]">
+          <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
             {documents.length} sources active
           </span>
         </div>
 
-        <div className="divide-y divide-[#E5E0D8] dark:divide-[#292524] border border-[#E5E0D8] dark:border-[#292524] rounded-xl overflow-hidden max-h-[460px] overflow-y-auto">
+        <div className="divide-y divide-[#E2E8F0] dark:divide-[#263449] border border-[#E2E8F0] dark:border-[#263449] rounded-xl overflow-hidden max-h-[460px] overflow-y-auto">
           {documents.length === 0 ? (
             <div className="p-10 text-center space-y-2">
-              <BookOpen className="h-8 w-8 mx-auto text-[#716D67]/40" />
-              <div className="text-xs font-semibold text-[#716D67] dark:text-[#A8A29E]">
+              <BookOpen className="h-8 w-8 mx-auto text-[#64748B]/40" />
+              <div className="text-xs font-semibold text-[#64748B] dark:text-[#A3B1C6]">
                 No documents indexed in this workspace yet.
               </div>
-              <p className="text-[11px] text-[#716D67]/80 max-w-sm mx-auto">
+              <p className="text-[11px] text-[#64748B]/80 max-w-sm mx-auto">
                 Upload lecture slides, course textbooks, or revision sheets on the left to start generating AI assessments with Gemini RAG.
               </p>
             </div>
@@ -288,15 +288,15 @@ export default function KnowledgeBaseManager({ documents, token, onRefresh }: Kn
             documents.map((doc) => (
               <div 
                 key={doc.id} 
-                className="p-3 sm:p-3.5 flex items-center justify-between text-xs hover:bg-[#F7F4EF]/50 dark:hover:bg-[#1C1A17] transition-colors gap-2.5 sm:gap-3"
+                className="p-3 sm:p-3.5 flex items-center justify-between text-xs hover:bg-[#F8FAFC] dark:hover:bg-[#17243A] transition-colors gap-2.5 sm:gap-3"
               >
                 <div className="flex items-center gap-2.5 sm:gap-3 flex-1 min-w-0">
-                  <div className="p-2 rounded-lg bg-[#C84B18]/10 text-[#C84B18] shrink-0">
+                  <div className="p-2 rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 shrink-0">
                     <FileText className="h-4 w-4" />
                   </div>
                   <div className="truncate flex-1 min-w-0">
-                    <div className="font-bold text-[#242321] dark:text-[#F5F5F4] truncate">{doc.title}</div>
-                    <div className="text-[10px] text-[#716D67] flex items-center gap-1.5 mt-0.5 truncate">
+                    <div className="font-bold text-[#111827] dark:text-[#F1F5F9] truncate">{doc.title}</div>
+                    <div className="text-[10px] text-[#64748B] dark:text-[#A3B1C6] flex items-center gap-1.5 mt-0.5 truncate">
                       <span className="font-mono truncate">{doc.filename}</span>
                       <span>•</span>
                       <span className="px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-700 dark:text-amber-400 font-bold uppercase text-[9px] shrink-0">

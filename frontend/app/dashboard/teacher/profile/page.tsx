@@ -33,6 +33,7 @@ import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/components/Toast";
 import CreditRechargeModal from "../_components/CreditRechargeModal";
 import SubscriptionModal from "../_components/SubscriptionModal";
+import PlatformSettingsAndGuide from "@/components/PlatformSettingsAndGuide";
 
 interface UserProfileData {
   id: string;
@@ -95,7 +96,7 @@ export default function TeacherProfilePage() {
   const [expandWallet, setExpandWallet] = useState<boolean>(true);
   const [expandInvoices, setExpandInvoices] = useState<boolean>(false);
   const [expandLedger, setExpandLedger] = useState<boolean>(false);
-  const [expandSettings, setExpandSettings] = useState<boolean>(false);
+  const [expandSettings, setExpandSettings] = useState<boolean>(true);
 
   // Modals
   const [rechargeModalOpen, setRechargeModalOpen] = useState<boolean>(false);
@@ -798,32 +799,24 @@ export default function TeacherProfilePage() {
 
         {/* Expandable Body */}
         {expandSettings && (
-          <div className="p-4 pt-0 border-t border-[#E5E0D8] dark:border-[#292524] space-y-3 mt-2">
-            {/* Theme Toggle Row */}
-            <div className="flex items-center justify-between p-3 rounded-xl bg-[#FAF8F5] dark:bg-[#141312] border border-[#E5E0D8] dark:border-[#292524]">
-              <div>
-                <div className="text-xs font-bold text-[#242321] dark:text-[#F5F5F4]">Color Theme</div>
-                <div className="text-[10px] text-[#716D67]">
-                  {themeMode === "dark" ? "Dark Mode" : "Light Mode"}
-                </div>
-              </div>
-              <button
-                onClick={toggleTheme}
-                className="p-2 rounded-xl bg-white dark:bg-[#1C1A17] border border-[#E5E0D8] dark:border-[#292524] text-[#C84B18] cursor-pointer"
-              >
-                {themeMode === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-              </button>
-            </div>
+          <div className="p-4 pt-0 border-t border-[#E5E0D8] dark:border-[#292524] space-y-4 mt-2">
+            {/* Embedded Platform Feature Guides, Route Diagnostics & Preferences */}
+            <PlatformSettingsAndGuide
+              currentRole="teacher"
+              themeMode={themeMode}
+              onToggleTheme={toggleTheme}
+            />
 
-            {/* Subscription Recurring Plans */}
-            <div className="flex items-center justify-between p-3 rounded-xl bg-[#FAF8F5] dark:bg-[#141312] border border-[#E5E0D8] dark:border-[#292524]">
+            {/* Enterprise Subscription Recurring Plans */}
+            <div className="flex items-center justify-between p-3.5 rounded-xl bg-[#FAF8F5] dark:bg-[#141312] border border-[#E5E0D8] dark:border-[#292524]">
               <div>
                 <div className="text-xs font-bold text-[#242321] dark:text-[#F5F5F4]">Enterprise Subscription</div>
-                <div className="text-[10px] text-[#716D67]">Recurring billing plans</div>
+                <div className="text-[10px] text-[#716D67]">Recurring faculty and institution plans</div>
               </div>
               <button
+                type="button"
                 onClick={() => setSubscriptionModalOpen(true)}
-                className="px-3 py-1.5 rounded-lg bg-[#C84B18]/10 text-[#C84B18] text-xs font-bold hover:bg-[#C84B18]/20 transition-all cursor-pointer"
+                className="px-3.5 py-1.5 rounded-lg bg-[#C84B18]/10 text-[#C84B18] text-xs font-bold hover:bg-[#C84B18]/20 transition-all cursor-pointer"
               >
                 View Plans
               </button>
@@ -832,14 +825,15 @@ export default function TeacherProfilePage() {
             {/* Sign Out Action */}
             <div className="pt-1">
               <button
+                type="button"
                 onClick={() => {
                   logout();
                   router.push("/login");
                 }}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-red-300 dark:border-red-900/60 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 text-xs font-bold transition-all cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-red-300 dark:border-red-900/60 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 text-xs font-bold transition-all cursor-pointer"
               >
                 <LogOut className="h-3.5 w-3.5" />
-                <span>Sign Out</span>
+                <span>Sign Out Account</span>
               </button>
             </div>
           </div>
