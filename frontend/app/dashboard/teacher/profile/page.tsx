@@ -26,13 +26,13 @@ import {
   Clock,
   Zap,
   Sliders,
-  CheckCircle2
+  CheckCircle2,
+  LayoutDashboard
 } from "lucide-react";
 import { apiFetch, API_V1 } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/components/Toast";
 import CreditRechargeModal from "../_components/CreditRechargeModal";
-import SubscriptionModal from "../_components/SubscriptionModal";
 import PlatformSettingsAndGuide from "@/components/PlatformSettingsAndGuide";
 
 interface UserProfileData {
@@ -44,6 +44,9 @@ interface UserProfileData {
   institution_name?: string | null;
   department_name?: string | null;
   credits_balance: number;
+  bonus_credits?: number;
+  bonus_days_remaining?: number;
+  bonus_credits_expires_at?: string;
 }
 
 interface PaymentHistoryRecord {
@@ -100,7 +103,6 @@ export default function TeacherProfilePage() {
 
   // Modals
   const [rechargeModalOpen, setRechargeModalOpen] = useState<boolean>(false);
-  const [subscriptionModalOpen, setSubscriptionModalOpen] = useState<boolean>(false);
   const [themeMode, setThemeMode] = useState<"light" | "dark">("light");
 
   const getAvatarUrl = (url?: string | null) => {
@@ -292,15 +294,16 @@ export default function TeacherProfilePage() {
   return (
     <div className="max-w-4xl mx-auto space-y-4 pb-12">
       {/* ══════════════════════════════════════════════════════
-          TOP SIMPLE HEADER
+          TOP SIMPLE HEADER (MAIN DASHBOARD SHORTCUT)
          ══════════════════════════════════════════════════════ */}
-      <div className="flex items-center justify-between pb-2 border-b border-[#E5E0D8] dark:border-[#292524]">
+      <div className="flex items-center justify-between pb-3 border-b border-[#E5E0D8] dark:border-[#292524]">
         <Link 
           href="/dashboard/teacher" 
-          className="inline-flex items-center gap-1.5 text-xs font-bold text-[#716D67] hover:text-[#C84B18] transition-colors"
+          className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold transition-all shadow-sm hover:shadow-md cursor-pointer"
         >
           <ArrowLeft className="h-4 w-4" />
-          <span>Back to Studio</span>
+          <LayoutDashboard className="h-4 w-4" />
+          <span>Go to Main Dashboard</span>
         </Link>
 
         <button
@@ -525,9 +528,17 @@ export default function TeacherProfilePage() {
                   Current Available Balance
                 </div>
                 <div className="text-2xl font-black text-amber-700 dark:text-amber-400 mt-0.5">
-                  {profile?.credits_balance !== undefined ? profile.credits_balance.toLocaleString() : "0"}
+                  {profile?.credits_balance !== undefined ? profile.credits_balance.toLocaleString() : "0"} Credits
                 </div>
-                <div className="text-[10px] text-[#8C827A]">
+                {profile?.bonus_credits !== undefined && profile.bonus_credits > 0 && (
+                  <div className="mt-1 flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                    <span className="px-1.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/70 border border-emerald-300 dark:border-emerald-700/60 text-[10px] font-bold">
+                      🎁 {profile.bonus_credits.toLocaleString()} Welcome Bonus
+                    </span>
+                    <span>• {profile.bonus_days_remaining} {profile.bonus_days_remaining === 1 ? "day" : "days"} validity remaining</span>
+                  </div>
+                )}
+                <div className="text-[10px] text-[#8C827A] mt-1">
                   Prepaid credits can be used for 1-click test publishing without entering card details.
                 </div>
               </div>
@@ -783,7 +794,7 @@ export default function TeacherProfilePage() {
                 Account Settings
               </div>
               <div className="text-[11px] text-[#716D67] dark:text-[#A8A29E]">
-                Theme appearance, subscriptions, and sign out
+                Theme appearance, platform settings, and sign out
               </div>
             </div>
           </div>
@@ -806,21 +817,6 @@ export default function TeacherProfilePage() {
               themeMode={themeMode}
               onToggleTheme={toggleTheme}
             />
-
-            {/* Enterprise Subscription Recurring Plans */}
-            <div className="flex items-center justify-between p-3.5 rounded-xl bg-[#FAF8F5] dark:bg-[#141312] border border-[#E5E0D8] dark:border-[#292524]">
-              <div>
-                <div className="text-xs font-bold text-[#242321] dark:text-[#F5F5F4]">Enterprise Subscription</div>
-                <div className="text-[10px] text-[#716D67]">Recurring faculty and institution plans</div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSubscriptionModalOpen(true)}
-                className="px-3.5 py-1.5 rounded-lg bg-[#C84B18]/10 text-[#C84B18] text-xs font-bold hover:bg-[#C84B18]/20 transition-all cursor-pointer"
-              >
-                View Plans
-              </button>
-            </div>
 
             {/* Sign Out Action */}
             <div className="pt-1">
@@ -848,12 +844,6 @@ export default function TeacherProfilePage() {
           setProfile((prev) => (prev ? { ...prev, credits_balance: newBalance } : null));
           loadData();
         }}
-      />
-
-      {/* Subscription Modal */}
-      <SubscriptionModal
-        isOpen={subscriptionModalOpen}
-        onClose={() => setSubscriptionModalOpen(false)}
       />
     </div>
   );

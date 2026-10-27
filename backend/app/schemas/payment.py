@@ -91,6 +91,10 @@ class CreditRechargePackage(BaseModel):
 
 class CreditWalletBalanceResponse(BaseModel):
     credits_balance: int
+    purchased_credits: int = 0
+    bonus_credits: int = 0
+    bonus_credits_expires_at: Optional[datetime] = None
+    bonus_days_remaining: int = 0
     rate_per_unit_paise: int
     credit_per_unit: int
     packages: List[CreditRechargePackage]

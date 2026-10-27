@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { 
   Sparkles, 
@@ -11,11 +11,13 @@ import {
   Check, 
   HelpCircle,
   ShieldCheck,
-  FileText
+  FileText,
+  ImageIcon
 } from "lucide-react";
 import { API_V1 } from "../../../lib/api";
 import ThemeToggle from "../../../components/ThemeToggle";
 import AppLogo from "../../../components/AppLogo";
+import { getFormTheme } from "../../../lib/customFormThemes";
 
 interface FormField {
   id: string;
@@ -25,6 +27,9 @@ interface FormField {
   required: boolean;
   options?: string[];
   description?: string;
+  image_url?: string;
+  image_caption?: string;
+  option_images?: Record<string, string>;
 }
 
 interface CustomFormMeta {
@@ -34,6 +39,9 @@ interface CustomFormMeta {
   share_slug: string;
   is_active: boolean;
   is_published: boolean;
+  theme?: string;
+  header_image?: string | null;
+  theme_settings?: Record<string, any> | null;
   created_at: string;
 }
 
@@ -84,6 +92,12 @@ export default function PublicCustomFormPage() {
     };
     fetchForm();
   }, [slug]);
+
+  const theme = useMemo(() => {
+    return getFormTheme(formMeta?.theme);
+  }, [formMeta?.theme]);
+
+  const customColors = formMeta?.theme_settings;
 
   const handleInputChange = (fieldId: string, value: any) => {
     setResponses((prev) => ({ ...prev, [fieldId]: value }));
@@ -142,38 +156,42 @@ export default function PublicCustomFormPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0B1120] flex flex-col items-center justify-center p-4 transition-colors">
-        <div className="w-10 h-10 border-3 border-[#2563EB] dark:border-[#3B82F6] border-t-transparent rounded-full animate-spin mb-3" />
-        <p className="text-sm font-semibold text-[#64748B] dark:text-[#A3B1C6]">Loading form...</p>
+      <div className={`min-h-screen ${theme.pageBackground} flex flex-col items-center justify-center p-4 transition-colors`}>
+        <div className="w-10 h-10 border-3 border-blue-600 border-t-transparent rounded-full animate-spin mb-3" />
+        <p className="text-sm font-semibold text-slate-500">Loading form...</p>
       </div>
     );
   }
 
   if (error || !formMeta) {
     return (
-      <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0B1120] flex items-center justify-center p-4 transition-colors">
-        <div className="max-w-md w-full bg-white dark:bg-[#111C31] rounded-2xl p-6 sm:p-8 border border-[#E2E8F0] dark:border-[#263449] shadow-xl text-center space-y-4">
+      <div className={`min-h-screen ${theme.pageBackground} flex items-center justify-center p-4 transition-colors`}>
+        <div className="max-w-md w-full bg-white dark:bg-[#111C31] rounded-2xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-xl text-center space-y-4">
           <div className="w-14 h-14 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 rounded-2xl flex items-center justify-center mx-auto border border-rose-200 dark:border-rose-800">
             <AlertCircle className="w-7 h-7" />
           </div>
-          <h2 className="text-xl font-bold text-[#111827] dark:text-[#F1F5F9]">Form Unavailable</h2>
-          <p className="text-sm text-[#64748B] dark:text-[#A3B1C6]">{error || "Form not found."}</p>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">Form Unavailable</h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400">{error || "Form not found."}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0B1120] flex flex-col justify-between p-4 sm:p-6 lg:p-8 text-[#111827] dark:text-[#F1F5F9] transition-colors">
-      <div className="max-w-2xl w-full mx-auto space-y-5 my-auto">
+    <div 
+      className={`min-h-screen ${theme.pageBackground} flex flex-col justify-between p-3 sm:p-6 lg:p-8 transition-colors`}
+      style={customColors?.pageBackground ? { background: customColors.pageBackground } : undefined}
+    >
+      <div className="max-w-3xl w-full mx-auto space-y-5 my-auto">
         
-        {/* Brand Banner */}
-        <div className="flex items-center justify-between pb-3 border-b border-[#E2E8F0] dark:border-[#263449]">
+        {/* Brand Bar */}
+        <div className="flex items-center justify-between pb-2">
           <div className="flex items-center gap-2.5">
-            <AppLogo variant="row" height={30} />
+            <AppLogo variant="row" height={28} />
           </div>
           <div className="flex items-center gap-3">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#EFF6FF] dark:bg-[#172B4D] text-[#2563EB] dark:text-[#60A5FA] border border-[#2563EB]/30">
+            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold ${theme.badgeBg} ${theme.badgeText}`}>
+              <span className={`w-2 h-2 rounded-full ${formMeta.is_active ? "bg-emerald-500 animate-pulse" : "bg-amber-500"}`} />
               {formMeta.is_active ? "Accepting Responses" : "Form Closed"}
             </span>
             <ThemeToggle />
@@ -182,17 +200,17 @@ export default function PublicCustomFormPage() {
 
         {submittedSuccess ? (
           /* Success Screen */
-          <div className="bg-white dark:bg-[#111C31] rounded-2xl border border-emerald-200 dark:border-emerald-800 p-8 sm:p-10 shadow-xl text-center space-y-5 animate-in fade-in duration-300">
-            <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto shadow-md">
+          <div className={`${theme.cardBackground} ${theme.cardBorder} rounded-3xl p-8 sm:p-12 shadow-2xl text-center space-y-5 animate-in fade-in duration-300`}>
+            <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center mx-auto shadow-md">
               <CheckCircle2 className="w-9 h-9" />
             </div>
             <div className="space-y-1.5">
-              <h1 className="text-2xl font-extrabold text-[#111827] dark:text-[#F1F5F9]">Response Submitted!</h1>
-              <p className="text-sm text-[#64748B] dark:text-[#A3B1C6]">
-                Your response for <strong className="text-[#111827] dark:text-[#F1F5F9]">{formMeta.title}</strong> has been safely recorded.
+              <h1 className={`text-2xl font-extrabold ${theme.textColor}`}>Response Submitted!</h1>
+              <p className={`text-sm ${theme.mutedTextColor}`}>
+                Your response for <strong className={theme.textColor}>{formMeta.title}</strong> has been safely recorded.
               </p>
             </div>
-            <p className="text-xs text-[#64748B] dark:text-[#A3B1C6]">
+            <p className={`text-xs ${theme.mutedTextColor}`}>
               Thank you for taking the time to complete this form.
             </p>
             <button
@@ -200,202 +218,286 @@ export default function PublicCustomFormPage() {
                 setSubmittedSuccess(false);
                 setResponses({});
               }}
-              className="text-xs font-semibold text-[#2563EB] dark:text-[#60A5FA] hover:underline cursor-pointer"
+              className={`text-xs font-semibold ${theme.accentText} hover:underline cursor-pointer`}
             >
               Submit another response
             </button>
           </div>
         ) : (
-          /* Form Fill Card */
-          <div className="bg-white dark:bg-[#111C31] rounded-2xl border border-[#E2E8F0] dark:border-[#263449] p-5 sm:p-8 shadow-xl space-y-6">
+          /* Form Fill Container */
+          <div className={`${theme.cardBackground} ${theme.cardBorder} rounded-3xl overflow-hidden shadow-2xl space-y-0`}>
             
-            {/* Form Title & Description */}
-            <div className="space-y-2 border-b border-[#E2E8F0] dark:border-[#263449] pb-5">
-              <h1 className="text-xl sm:text-2xl font-extrabold text-[#111827] dark:text-[#F1F5F9] tracking-tight">
-                {formMeta.title}
-              </h1>
-              {formMeta.description && (
-                <p className="text-xs sm:text-sm text-[#64748B] dark:text-[#A3B1C6] leading-relaxed">
-                  {formMeta.description}
-                </p>
-              )}
-            </div>
-
-            {submitError && (
-              <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-start gap-2.5">
-                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                <span className="font-medium">{submitError}</span>
-              </div>
-            )}
-
-            {!formMeta.is_active ? (
-              <div className="p-6 bg-[#F8FAFC] dark:bg-[#17243A] border border-[#E2E8F0] dark:border-[#263449] rounded-xl text-center space-y-2">
-                <AlertCircle className="h-6 w-6 text-amber-500 mx-auto" />
-                <p className="text-sm font-bold text-[#111827] dark:text-[#F1F5F9]">This form is currently closed</p>
-                <p className="text-xs text-[#64748B] dark:text-[#A3B1C6]">The author is no longer accepting new submissions.</p>
+            {/* HERO SECTION / COVER IMAGE */}
+            {formMeta.header_image ? (
+              <div className="relative w-full h-44 sm:h-56 md:h-64 overflow-hidden border-b border-slate-200/60 dark:border-slate-800/60">
+                <img
+                  src={formMeta.header_image}
+                  alt={formMeta.title}
+                  className="w-full h-full object-cover object-center"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                <div className="absolute bottom-4 left-5 right-5 text-white">
+                  <span className="px-2.5 py-1 rounded-md text-[10px] font-bold bg-white/20 backdrop-blur-md border border-white/30 uppercase tracking-wider">
+                    {theme.name}
+                  </span>
+                </div>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-6">
-                
-                {formMeta.fields.map((field, idx) => (
-                  <div key={field.id} className="space-y-2 p-3.5 rounded-xl bg-[#F8FAFC] dark:bg-[#17243A] border border-[#E2E8F0] dark:border-[#263449]">
-                    <label className="text-xs font-bold text-[#111827] dark:text-[#F1F5F9] flex items-center justify-between">
-                      <span>
-                        {idx + 1}. {field.label}
-                      </span>
-                      {field.required && <span className="text-rose-500 text-[11px] font-bold">*</span>}
-                    </label>
-
-                    {field.description && (
-                      <p className="text-[11px] text-[#64748B] dark:text-[#A3B1C6]">{field.description}</p>
-                    )}
-
-                    {/* TEXT / EMAIL / PHONE / NUMBER INPUT */}
-                    {["text", "email", "phone", "number"].includes(field.field_type) && (
-                      <input
-                        type={field.field_type === "phone" ? "tel" : field.field_type}
-                        required={field.required}
-                        placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}...`}
-                        value={responses[field.id] || ""}
-                        onChange={(e) => handleInputChange(field.id, e.target.value)}
-                        className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-[#111C31] text-[#111827] dark:text-[#F1F5F9] focus:border-[#2563EB] dark:focus:border-[#3B82F6] focus:ring-1 focus:ring-[#2563EB] outline-none transition-all placeholder:text-[#94A3B8]"
-                      />
-                    )}
-
-                    {/* TEXTAREA INPUT */}
-                    {field.field_type === "textarea" && (
-                      <textarea
-                        rows={3}
-                        required={field.required}
-                        placeholder={field.placeholder || "Type your detailed response..."}
-                        value={responses[field.id] || ""}
-                        onChange={(e) => handleInputChange(field.id, e.target.value)}
-                        className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-[#111C31] text-[#111827] dark:text-[#F1F5F9] focus:border-[#2563EB] dark:focus:border-[#3B82F6] focus:ring-1 focus:ring-[#2563EB] outline-none transition-all placeholder:text-[#94A3B8]"
-                      />
-                    )}
-
-                    {/* SELECT DROPDOWN */}
-                    {field.field_type === "select" && (
-                      <select
-                        required={field.required}
-                        value={responses[field.id] || ""}
-                        onChange={(e) => handleInputChange(field.id, e.target.value)}
-                        className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-[#111C31] text-[#111827] dark:text-[#F1F5F9] focus:border-[#2563EB] dark:focus:border-[#3B82F6] focus:ring-1 focus:ring-[#2563EB] outline-none transition-all cursor-pointer"
-                      >
-                        <option value="">{field.placeholder || "Select an option..."}</option>
-                        {field.options?.map((opt, optIdx) => (
-                          <option key={optIdx} value={opt}>
-                            {opt}
-                          </option>
-                        ))}
-                      </select>
-                    )}
-
-                    {/* RADIO BUTTONS */}
-                    {field.field_type === "radio" && (
-                      <div className="space-y-1.5 pt-1">
-                        {field.options?.map((opt, optIdx) => (
-                          <label
-                            key={optIdx}
-                            className={`flex items-center gap-2.5 p-2.5 rounded-xl border cursor-pointer text-xs transition-all ${
-                              responses[field.id] === opt
-                                ? "border-[#2563EB] dark:border-[#3B82F6] bg-[#EFF6FF] dark:bg-[#172B4D] font-semibold text-[#1E3A8A] dark:text-[#60A5FA]"
-                                : "border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-[#111C31] hover:bg-[#F8FAFC] dark:hover:bg-[#17243A] text-[#111827] dark:text-[#F1F5F9]"
-                            }`}
-                          >
-                            <input
-                              type="radio"
-                              name={field.id}
-                              checked={responses[field.id] === opt}
-                              onChange={() => handleInputChange(field.id, opt)}
-                              className="text-[#2563EB] focus:ring-[#2563EB] cursor-pointer"
-                            />
-                            <span>{opt}</span>
-                          </label>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* CHECKBOXES (MULTI-SELECT) */}
-                    {field.field_type === "checkbox" && (
-                      <div className="space-y-1.5 pt-1">
-                        {field.options?.map((opt, optIdx) => {
-                          const isChecked = Array.isArray(responses[field.id]) && responses[field.id].includes(opt);
-                          return (
-                            <label
-                              key={optIdx}
-                              className={`flex items-center gap-2.5 p-2.5 rounded-xl border cursor-pointer text-xs transition-all ${
-                                isChecked
-                                  ? "border-[#2563EB] dark:border-[#3B82F6] bg-[#EFF6FF] dark:bg-[#172B4D] font-semibold text-[#1E3A8A] dark:text-[#60A5FA]"
-                                  : "border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-[#111C31] hover:bg-[#F8FAFC] dark:hover:bg-[#17243A] text-[#111827] dark:text-[#F1F5F9]"
-                              }`}
-                            >
-                              <input
-                                type="checkbox"
-                                checked={isChecked}
-                                onChange={() => handleCheckboxToggle(field.id, opt)}
-                                className="rounded text-[#2563EB] focus:ring-[#2563EB] cursor-pointer"
-                              />
-                              <span>{opt}</span>
-                            </label>
-                          );
-                        })}
-                      </div>
-                    )}
-
-                    {/* RATING SCALE (1 TO 5 STARS / NUMBERS) */}
-                    {field.field_type === "rating" && (
-                      <div className="flex items-center gap-2 pt-1 flex-wrap">
-                        {[1, 2, 3, 4, 5].map((starVal) => {
-                          const selected = Number(responses[field.id]) >= starVal;
-                          return (
-                            <button
-                              key={starVal}
-                              type="button"
-                              onClick={() => handleInputChange(field.id, starVal)}
-                              className={`p-2 rounded-xl border flex items-center gap-1.5 text-xs font-bold transition-all cursor-pointer ${
-                                selected
-                                  ? "bg-amber-400 border-amber-500 text-amber-950 shadow-sm"
-                                  : "bg-white dark:bg-[#111C31] border-[#E2E8F0] dark:border-[#263449] text-[#64748B] dark:text-[#A3B1C6] hover:bg-[#F8FAFC] dark:hover:bg-[#17243A]"
-                              }`}
-                            >
-                              <Star className={`h-4 w-4 ${selected ? "fill-amber-950" : ""}`} />
-                              <span>{starVal}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
-
-                  </div>
-                ))}
-
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="w-full py-3 px-4 bg-[#2563EB] hover:bg-[#1D4ED8] text-white rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-md cursor-pointer transition-all disabled:opacity-60"
-                >
-                  {submitting ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      <span>Submitting Response...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Send className="h-4 w-4" />
-                      <span>Submit Form Response</span>
-                    </>
-                  )}
-                </button>
-
-              </form>
+              <div 
+                className="w-full h-24 sm:h-28 relative border-b border-slate-200/40 dark:border-slate-800/40 flex items-end p-4"
+                style={{ background: theme.bannerGradient }}
+              >
+                <div className="text-white/80 text-[10px] uppercase font-bold tracking-widest">
+                  {theme.category} • {theme.name}
+                </div>
+              </div>
             )}
 
+            {/* Form Title & Subtitle Card Header */}
+            <div className="p-5 sm:p-8 space-y-6">
+              
+              <div className="space-y-2 border-b border-slate-200/70 dark:border-slate-800/70 pb-5">
+                <h1 className={`text-xl sm:text-2xl md:text-3xl font-extrabold ${theme.textColor} tracking-tight`}>
+                  {formMeta.title}
+                </h1>
+                {formMeta.description && (
+                  <p className={`text-xs sm:text-sm ${theme.mutedTextColor} leading-relaxed`}>
+                    {formMeta.description}
+                  </p>
+                )}
+              </div>
+
+              {submitError && (
+                <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-start gap-2.5">
+                  <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                  <span className="font-medium">{submitError}</span>
+                </div>
+              )}
+
+              {!formMeta.is_active ? (
+                <div className="p-6 bg-slate-100/60 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-2xl text-center space-y-2">
+                  <AlertCircle className="h-6 w-6 text-amber-500 mx-auto" />
+                  <p className={`text-sm font-bold ${theme.textColor}`}>This form is currently closed</p>
+                  <p className={`text-xs ${theme.mutedTextColor}`}>The author is no longer accepting new submissions.</p>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  
+                  {formMeta.fields.map((field, idx) => (
+                    <div 
+                      key={field.id} 
+                      className={`space-y-3 p-4 sm:p-5 rounded-2xl border transition-all ${
+                        field.required ? "border-slate-200 dark:border-slate-800/80" : "border-slate-200/60 dark:border-slate-800/50"
+                      } bg-white/60 dark:bg-slate-900/30 backdrop-blur-xs`}
+                    >
+                      {/* Question Label */}
+                      <label className={`text-xs sm:text-sm font-bold ${theme.textColor} flex items-center justify-between gap-2`}>
+                        <span>
+                          {idx + 1}. {field.label}
+                        </span>
+                        {field.required && (
+                          <span className="text-rose-500 text-[11px] font-bold shrink-0">* Required</span>
+                        )}
+                      </label>
+
+                      {/* Optional Question Hint Description */}
+                      {field.description && (
+                        <p className={`text-[11px] ${theme.mutedTextColor}`}>{field.description}</p>
+                      )}
+
+                      {/* QUESTION IMAGE (Google Forms style) */}
+                      {field.image_url && (
+                        <div className="my-2 space-y-1.5">
+                          <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700 max-h-72 w-full bg-slate-50 dark:bg-slate-900/50">
+                            <img
+                              src={field.image_url}
+                              alt={field.image_caption || field.label}
+                              className="w-full h-auto max-h-72 object-contain mx-auto"
+                            />
+                          </div>
+                          {field.image_caption && (
+                            <p className="text-[10px] text-center italic text-slate-500 dark:text-slate-400">
+                              {field.image_caption}
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      {/* TEXT / EMAIL / PHONE / NUMBER INPUT */}
+                      {["text", "email", "phone", "number"].includes(field.field_type) && (
+                        <input
+                          type={field.field_type === "phone" ? "tel" : field.field_type}
+                          required={field.required}
+                          placeholder={field.placeholder || `Enter your ${field.label.toLowerCase()}...`}
+                          value={responses[field.id] || ""}
+                          onChange={(e) => handleInputChange(field.id, e.target.value)}
+                          className={`w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border ${theme.inputBorder} ${theme.inputBg} ${theme.textColor} ${theme.inputFocusRing} outline-none transition-all placeholder:text-slate-400`}
+                        />
+                      )}
+
+                      {/* TEXTAREA INPUT */}
+                      {field.field_type === "textarea" && (
+                        <textarea
+                          rows={3}
+                          required={field.required}
+                          placeholder={field.placeholder || "Type your detailed response..."}
+                          value={responses[field.id] || ""}
+                          onChange={(e) => handleInputChange(field.id, e.target.value)}
+                          className={`w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border ${theme.inputBorder} ${theme.inputBg} ${theme.textColor} ${theme.inputFocusRing} outline-none transition-all placeholder:text-slate-400`}
+                        />
+                      )}
+
+                      {/* SELECT DROPDOWN */}
+                      {field.field_type === "select" && (
+                        <select
+                          required={field.required}
+                          value={responses[field.id] || ""}
+                          onChange={(e) => handleInputChange(field.id, e.target.value)}
+                          className={`w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border ${theme.inputBorder} ${theme.inputBg} ${theme.textColor} ${theme.inputFocusRing} outline-none transition-all cursor-pointer`}
+                        >
+                          <option value="">{field.placeholder || "Select an option..."}</option>
+                          {field.options?.map((opt, optIdx) => (
+                            <option key={optIdx} value={opt}>
+                              {opt}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+
+                      {/* RADIO BUTTONS (With Google Forms Option Images) */}
+                      {field.field_type === "radio" && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                          {field.options?.map((opt, optIdx) => {
+                            const isSelected = responses[field.id] === opt;
+                            const optImg = field.option_images?.[opt];
+                            return (
+                              <label
+                                key={optIdx}
+                                className={`flex flex-col p-3 rounded-xl border cursor-pointer text-xs transition-all ${
+                                  isSelected
+                                    ? `border-blue-500 ring-2 ring-blue-500/30 ${theme.badgeBg} font-semibold ${theme.textColor}`
+                                    : `border-slate-200 dark:border-slate-800 ${theme.inputBg} hover:border-slate-300 dark:hover:border-slate-700 ${theme.textColor}`
+                                }`}
+                              >
+                                {optImg && (
+                                  <div className="w-full h-24 mb-2 overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800">
+                                    <img
+                                      src={optImg}
+                                      alt={opt}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                )}
+                                <div className="flex items-center gap-2.5">
+                                  <input
+                                    type="radio"
+                                    name={field.id}
+                                    checked={isSelected}
+                                    onChange={() => handleInputChange(field.id, opt)}
+                                    className="text-blue-600 focus:ring-blue-600 cursor-pointer"
+                                  />
+                                  <span className="flex-1">{opt}</span>
+                                </div>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {/* CHECKBOXES (MULTI-SELECT with Google Forms Option Images) */}
+                      {field.field_type === "checkbox" && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                          {field.options?.map((opt, optIdx) => {
+                            const isChecked = Array.isArray(responses[field.id]) && responses[field.id].includes(opt);
+                            const optImg = field.option_images?.[opt];
+                            return (
+                              <label
+                                key={optIdx}
+                                className={`flex flex-col p-3 rounded-xl border cursor-pointer text-xs transition-all ${
+                                  isChecked
+                                    ? `border-blue-500 ring-2 ring-blue-500/30 ${theme.badgeBg} font-semibold ${theme.textColor}`
+                                    : `border-slate-200 dark:border-slate-800 ${theme.inputBg} hover:border-slate-300 dark:hover:border-slate-700 ${theme.textColor}`
+                                }`}
+                              >
+                                {optImg && (
+                                  <div className="w-full h-24 mb-2 overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800">
+                                    <img
+                                      src={optImg}
+                                      alt={opt}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                )}
+                                <div className="flex items-center gap-2.5">
+                                  <input
+                                    type="checkbox"
+                                    checked={isChecked}
+                                    onChange={() => handleCheckboxToggle(field.id, opt)}
+                                    className="rounded text-blue-600 focus:ring-blue-600 cursor-pointer"
+                                  />
+                                  <span className="flex-1">{opt}</span>
+                                </div>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {/* RATING SCALE (1 TO 5 STARS / NUMBERS) */}
+                      {field.field_type === "rating" && (
+                        <div className="flex items-center gap-2 pt-1 flex-wrap">
+                          {[1, 2, 3, 4, 5].map((starVal) => {
+                            const selected = Number(responses[field.id]) >= starVal;
+                            return (
+                              <button
+                                key={starVal}
+                                type="button"
+                                onClick={() => handleInputChange(field.id, starVal)}
+                                className={`p-2.5 rounded-xl border flex items-center gap-1.5 text-xs font-bold transition-all cursor-pointer ${
+                                  selected
+                                    ? "bg-amber-400 border-amber-500 text-amber-950 shadow-md ring-2 ring-amber-400/30 scale-105"
+                                    : `${theme.inputBg} ${theme.inputBorder} ${theme.mutedTextColor} hover:border-slate-400`
+                                }`}
+                              >
+                                <Star className={`h-4 w-4 ${selected ? "fill-amber-950" : ""}`} />
+                                <span>{starVal}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                    </div>
+                  ))}
+
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className={`w-full py-3.5 px-6 ${theme.buttonGradient} ${theme.buttonText} rounded-2xl text-sm font-bold flex items-center justify-center gap-2 shadow-xl cursor-pointer transition-all disabled:opacity-60 hover:scale-[1.01] active:scale-[0.99]`}
+                    style={customColors?.buttonBg ? { background: customColors.buttonBg, color: customColors.buttonText || '#fff' } : undefined}
+                  >
+                    {submitting ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span>Submitting Response...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send className="h-4 w-4" />
+                        <span>Submit Form Response</span>
+                      </>
+                    )}
+                  </button>
+
+                </form>
+              )}
+
+            </div>
           </div>
         )}
 
-        <div className="text-center text-[11px] text-[#64748B] dark:text-[#A3B1C6]">
-          Powered by <span className="font-semibold text-[#111827] dark:text-[#F1F5F9]">TestoraQuiz Custom Forms</span>
+        <div className={`text-center text-[11px] ${theme.mutedTextColor} pt-2`}>
+          Powered by <span className={`font-semibold ${theme.textColor}`}>TestoraQuiz Custom Forms</span>
         </div>
 
       </div>

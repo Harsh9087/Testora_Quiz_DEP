@@ -155,13 +155,13 @@ export default function StudentRegistrationPublicPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0B1120] flex flex-col justify-between p-4 sm:p-6 lg:p-8 text-[#111827] dark:text-[#F1F5F9] transition-colors">
-      <div className="max-w-2xl w-full mx-auto space-y-5 my-auto">
+    <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0B1120] flex flex-col justify-center p-3 sm:p-5 text-[#111827] dark:text-[#F1F5F9] transition-colors">
+      <div className="max-w-2xl w-full mx-auto space-y-3.5 my-auto">
         
         {/* Brand Banner */}
-        <div className="flex items-center justify-between pb-3 border-b border-[#E2E8F0] dark:border-[#263449]">
+        <div className="flex items-center justify-between pb-2.5 border-b border-[#E2E8F0] dark:border-[#263449]">
           <div className="flex items-center gap-2.5">
-            <AppLogo variant="row" height={30} />
+            <AppLogo variant="row" height={28} />
           </div>
           <div className="flex items-center gap-3">
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
@@ -228,19 +228,19 @@ export default function StudentRegistrationPublicPage() {
           </div>
         ) : (
           /* Form Content Card */
-          <div className="bg-white dark:bg-[#111C31] rounded-2xl border border-[#E2E8F0] dark:border-[#263449] p-5 sm:p-8 shadow-xl space-y-6">
+          <div className="bg-white dark:bg-[#111C31] rounded-2xl border border-[#E2E8F0] dark:border-[#263449] p-4 sm:p-6 shadow-xl space-y-3.5">
             
             {/* Form Title & Description Header */}
-            <div className="space-y-2 border-b border-[#E2E8F0] dark:border-[#263449] pb-5">
+            <div className="space-y-1 border-b border-[#E2E8F0] dark:border-[#263449] pb-3">
               <h1 className="text-xl sm:text-2xl font-extrabold text-[#111827] dark:text-[#F1F5F9] tracking-tight">
                 {formMeta.title}
               </h1>
               {formMeta.description && (
-                <p className="text-xs sm:text-sm text-[#64748B] dark:text-[#A3B1C6] leading-relaxed">
+                <p className="text-xs text-[#64748B] dark:text-[#A3B1C6] leading-relaxed">
                   {formMeta.description}
                 </p>
               )}
-              <div className="flex items-center gap-2 pt-1 text-[11px] text-[#64748B] dark:text-[#A3B1C6]">
+              <div className="flex items-center gap-1.5 pt-0.5 text-[11px] text-[#64748B] dark:text-[#A3B1C6]">
                 <ShieldCheck className="h-3.5 w-3.5 text-[#2563EB] dark:text-[#60A5FA]" />
                 <span>Predefined 6-field student record format</span>
               </div>
@@ -248,7 +248,7 @@ export default function StudentRegistrationPublicPage() {
 
             {/* Error Notification */}
             {submitError && (
-              <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-start gap-2.5 animate-in fade-in duration-200">
+              <div className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-start gap-2 animate-in fade-in duration-200">
                 <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
                 <span className="font-medium">{submitError}</span>
               </div>
@@ -263,50 +263,53 @@ export default function StudentRegistrationPublicPage() {
                 </p>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
+              <form onSubmit={handleSubmit} className="space-y-3">
                 
-                {/* 1. Full Name */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-[#111827] dark:text-[#F1F5F9] flex items-center justify-between">
-                    <span className="flex items-center gap-1.5">
-                      <User className="h-3.5 w-3.5 text-[#2563EB] dark:text-[#60A5FA]" />
-                      Full Name
-                    </span>
-                    <span className="text-[10px] text-[#2563EB] dark:text-[#60A5FA] font-bold">Mandatory *</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Rahul Sharma"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-[#17243A] text-[#111827] dark:text-[#F1F5F9] focus:border-[#2563EB] dark:focus:border-[#3B82F6] focus:ring-1 focus:ring-[#2563EB] outline-none transition-all placeholder:text-[#94A3B8]"
-                  />
+                {/* Row 1: Full Name & Email Address */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  {/* 1. Full Name */}
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-[#111827] dark:text-[#F1F5F9] flex items-center justify-between">
+                      <span className="flex items-center gap-1.5">
+                        <User className="h-3.5 w-3.5 text-[#2563EB] dark:text-[#60A5FA]" />
+                        Full Name
+                      </span>
+                      <span className="text-[10px] text-[#2563EB] dark:text-[#60A5FA] font-bold">Mandatory *</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Rahul Sharma"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      className="w-full px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-[#17243A] text-[#111827] dark:text-[#F1F5F9] focus:border-[#2563EB] dark:focus:border-[#3B82F6] focus:ring-1 focus:ring-[#2563EB] outline-none transition-all placeholder:text-[#94A3B8]"
+                    />
+                  </div>
+
+                  {/* 2. Email Address */}
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-[#111827] dark:text-[#F1F5F9] flex items-center justify-between">
+                      <span className="flex items-center gap-1.5">
+                        <Mail className="h-3.5 w-3.5 text-[#2563EB] dark:text-[#60A5FA]" />
+                        Email Address
+                      </span>
+                      <span className="text-[10px] text-[#2563EB] dark:text-[#60A5FA] font-bold">Mandatory *</span>
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      placeholder="e.g. rahul.sharma@college.edu"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-[#17243A] text-[#111827] dark:text-[#F1F5F9] focus:border-[#2563EB] dark:focus:border-[#3B82F6] focus:ring-1 focus:ring-[#2563EB] outline-none transition-all placeholder:text-[#94A3B8]"
+                    />
+                  </div>
                 </div>
 
-                {/* 2. Email Address */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-[#111827] dark:text-[#F1F5F9] flex items-center justify-between">
-                    <span className="flex items-center gap-1.5">
-                      <Mail className="h-3.5 w-3.5 text-[#2563EB] dark:text-[#60A5FA]" />
-                      Email Address
-                    </span>
-                    <span className="text-[10px] text-[#2563EB] dark:text-[#60A5FA] font-bold">Mandatory *</span>
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    placeholder="e.g. rahul.sharma@college.edu"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-[#17243A] text-[#111827] dark:text-[#F1F5F9] focus:border-[#2563EB] dark:focus:border-[#3B82F6] focus:ring-1 focus:ring-[#2563EB] outline-none transition-all placeholder:text-[#94A3B8]"
-                  />
-                </div>
-
-                {/* Grid: Roll Number & Contact Number */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Row 2: Roll Number & Contact Number */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   {/* 3. Roll Number */}
-                  <div className="space-y-1.5">
+                  <div className="space-y-1">
                     <label className="text-xs font-bold text-[#111827] dark:text-[#F1F5F9] flex items-center justify-between">
                       <span className="flex items-center gap-1.5">
                         <Hash className="h-3.5 w-3.5 text-[#2563EB] dark:text-[#60A5FA]" />
@@ -320,12 +323,12 @@ export default function StudentRegistrationPublicPage() {
                       placeholder="e.g. CS-2026-042"
                       value={rollNumber}
                       onChange={(e) => setRollNumber(e.target.value.toUpperCase())}
-                      className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-[#17243A] text-[#111827] dark:text-[#F1F5F9] focus:border-[#2563EB] dark:focus:border-[#3B82F6] focus:ring-1 focus:ring-[#2563EB] outline-none transition-all uppercase placeholder:normal-case placeholder:text-[#94A3B8]"
+                      className="w-full px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-[#17243A] text-[#111827] dark:text-[#F1F5F9] focus:border-[#2563EB] dark:focus:border-[#3B82F6] focus:ring-1 focus:ring-[#2563EB] outline-none transition-all uppercase placeholder:normal-case placeholder:text-[#94A3B8]"
                     />
                   </div>
 
                   {/* 4. Contact Number */}
-                  <div className="space-y-1.5">
+                  <div className="space-y-1">
                     <label className="text-xs font-bold text-[#111827] dark:text-[#F1F5F9] flex items-center justify-between">
                       <span className="flex items-center gap-1.5">
                         <Phone className="h-3.5 w-3.5 text-[#2563EB] dark:text-[#60A5FA]" />
@@ -339,15 +342,15 @@ export default function StudentRegistrationPublicPage() {
                       placeholder="e.g. +91 98765 43210"
                       value={contactNumber}
                       onChange={(e) => setContactNumber(e.target.value)}
-                      className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-[#17243A] text-[#111827] dark:text-[#F1F5F9] focus:border-[#2563EB] dark:focus:border-[#3B82F6] focus:ring-1 focus:ring-[#2563EB] outline-none transition-all placeholder:text-[#94A3B8]"
+                      className="w-full px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-[#17243A] text-[#111827] dark:text-[#F1F5F9] focus:border-[#2563EB] dark:focus:border-[#3B82F6] focus:ring-1 focus:ring-[#2563EB] outline-none transition-all placeholder:text-[#94A3B8]"
                     />
                   </div>
                 </div>
 
-                {/* Grid: Section & Branch */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Row 3: Section & Branch */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   {/* 5. Section */}
-                  <div className="space-y-1.5">
+                  <div className="space-y-1">
                     <label className="text-xs font-bold text-[#111827] dark:text-[#F1F5F9] flex items-center justify-between">
                       <span className="flex items-center gap-1.5">
                         <Bookmark className="h-3.5 w-3.5 text-[#2563EB] dark:text-[#60A5FA]" />
@@ -361,12 +364,12 @@ export default function StudentRegistrationPublicPage() {
                       placeholder="e.g. Section C"
                       value={section}
                       onChange={(e) => setSection(e.target.value)}
-                      className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-[#17243A] text-[#111827] dark:text-[#F1F5F9] focus:border-[#2563EB] dark:focus:border-[#3B82F6] focus:ring-1 focus:ring-[#2563EB] outline-none transition-all placeholder:text-[#94A3B8]"
+                      className="w-full px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-[#17243A] text-[#111827] dark:text-[#F1F5F9] focus:border-[#2563EB] dark:focus:border-[#3B82F6] focus:ring-1 focus:ring-[#2563EB] outline-none transition-all placeholder:text-[#94A3B8]"
                     />
                   </div>
 
                   {/* 6. Branch */}
-                  <div className="space-y-1.5">
+                  <div className="space-y-1">
                     <label className="text-xs font-bold text-[#111827] dark:text-[#F1F5F9] flex items-center justify-between">
                       <span className="flex items-center gap-1.5">
                         <Building2 className="h-3.5 w-3.5 text-[#2563EB] dark:text-[#60A5FA]" />
@@ -380,13 +383,13 @@ export default function StudentRegistrationPublicPage() {
                       placeholder="e.g. AIML / Computer Science"
                       value={branch}
                       onChange={(e) => setBranch(e.target.value)}
-                      className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-[#17243A] text-[#111827] dark:text-[#F1F5F9] focus:border-[#2563EB] dark:focus:border-[#3B82F6] focus:ring-1 focus:ring-[#2563EB] outline-none transition-all placeholder:text-[#94A3B8]"
+                      className="w-full px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-[#17243A] text-[#111827] dark:text-[#F1F5F9] focus:border-[#2563EB] dark:focus:border-[#3B82F6] focus:ring-1 focus:ring-[#2563EB] outline-none transition-all placeholder:text-[#94A3B8]"
                     />
                   </div>
                 </div>
 
                 {/* Submit Action */}
-                <div className="pt-3">
+                <div className="pt-2">
                   <button
                     type="submit"
                     disabled={submitting}

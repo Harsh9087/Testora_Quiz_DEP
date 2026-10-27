@@ -63,11 +63,19 @@ def seed_initial_data():
                 full_name="Dr. Sarah Jenkins",
                 role="teacher",
                 institution_id=inst.id,
-                is_active=True
+                is_active=True,
+                credits_balance=0,
+                bonus_credits=500,
+                bonus_credits_expires_at=now_utc() + timedelta(days=15)
             )
             db.add(teacher)
             db.commit()
             db.refresh(teacher)
+        else:
+            if getattr(teacher, "bonus_credits_expires_at", None) is None:
+                teacher.bonus_credits = 500
+                teacher.bonus_credits_expires_at = now_utc() + timedelta(days=15)
+                db.commit()
         # Bootstrap Personal Workspace for Teacher
         teacher_ws = bootstrap_personal_workspace(teacher, db)
 

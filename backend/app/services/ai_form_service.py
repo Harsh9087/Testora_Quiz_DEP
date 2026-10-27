@@ -2,7 +2,7 @@ import json
 import logging
 import re
 import secrets
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from app.services.ai_service import AIService
 
 logger = logging.getLogger(__name__)
@@ -10,6 +10,87 @@ logger = logging.getLogger(__name__)
 class AIFormService:
     def __init__(self):
         self.ai = AIService()
+
+    def improve_prompt(self, user_prompt: str, focus: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Enhances and expands a short or basic user prompt into a rich, detailed, professional prompt
+        describing sections, field types (MCQs, rating scales, open text), validation rules, and themes.
+        """
+        raw = user_prompt.strip()
+        if self.ai.enabled:
+            try:
+                system_instruction = (
+                    "You are an expert prompt engineer and form architect. "
+                    "The user has provided a prompt or brief idea for a form. "
+                    "Enhance and rewrite this prompt into a rich, highly specific, professional specification "
+                    "that will guide an AI form generator to produce the best possible form. "
+                    "Return ONLY a JSON object with:\n"
+                    "- improved_prompt: The expanded, highly detailed description of questions, types, and options\n"
+                    "- suggested_title: A catchy, professional title for the form\n"
+                    "- suggested_themes: An array of 2-3 theme IDs that would look great (e.g. ['navy_indigo', 'cyber_dark', 'emerald_growth', 'cherry_blossom'])"
+                )
+                focus_hint = f" Ensure special emphasis on {focus}." if focus else ""
+                prompt = f"Original user prompt: \"{raw}\"{focus_hint}\nRewrite and improve this prompt."
+
+                raw_output = self.ai._call_gemini(prompt, system_instruction=system_instruction, json_mode=True)
+                cleaned = self.ai._clean_json_str(raw_output)
+                parsed = json.loads(cleaned)
+                if "improved_prompt" in parsed:
+                    return {
+                        "improved_prompt": parsed["improved_prompt"],
+                        "suggested_title": parsed.get("suggested_title", raw.title()),
+                        "suggested_themes": parsed.get("suggested_themes", ["navy_indigo", "aurora_borealis"])
+                    }
+            except Exception as e:
+                logger.warning(f"Error improving prompt via Gemini: {e}")
+
+        # Intelligent heuristic fallback prompt expansion
+        p_lower = raw.lower()
+        if "workshop" in p_lower or "feedback" in p_lower:
+            improved = (
+                f"Create a comprehensive feedback form for: {raw}. "
+                "Include participant identification (Full Name, Institutional Email), "
+                "overall session satisfaction on a 1-5 rating scale, instructor clarity and pacing (Radio choice), "
+                "hands-on exercise relevance (Checkbox selection of topics mastered), "
+                "and two in-depth open-ended questions: key learnings and suggestions for future masterclasses."
+            )
+            title = "Comprehensive Workshop & Session Feedback Form"
+            themes = ["navy_indigo", "electric_amber", "neo_mint"]
+        elif "event" in p_lower or "registration" in p_lower or "hackathon" in p_lower:
+            improved = (
+                f"Design an official registration portal for: {raw}. "
+                "Capture participant full name, contact number, verified email address, college or organization name, "
+                "technical domain / track preference (Dropdown: AI/ML, Cloud, Web3, Cybersecurity), "
+                "experience level (Beginner, Intermediate, Advanced), GitHub or portfolio link, "
+                "and dietary/accommodation preferences."
+            )
+            title = "Official Event & Competition Registration"
+            themes = ["cyber_dark", "cosmic_starlight", "aurora_borealis"]
+        elif "survey" in p_lower or "course" in p_lower or "eval" in p_lower:
+            improved = (
+                f"Generate a rigorous academic evaluation survey for: {raw}. "
+                "Include anonymous or named student options, course difficulty scale (1-5), "
+                "quality of study resources, lecture presentation effectiveness, "
+                "areas where additional tutorial sessions are needed (Multi-select checkbox), "
+                "and constructive recommendations for the academic curriculum committee."
+            )
+            title = "Academic Curriculum & Course Evaluation Survey"
+            themes = ["royal_purple", "nordic_frost", "minimal_slate"]
+        else:
+            improved = (
+                f"Create a modern, user-friendly form for: {raw}. "
+                "Include respondent profile details (Full Name, Email Address, Contact Phone), "
+                "category selection with detailed options, a 5-star rating assessment, "
+                "multiple-choice preferences with clear option choices, and a feedback paragraph section."
+            )
+            title = f"{raw.title()} Form"
+            themes = ["sunset_warmth", "deep_ocean", "cherry_blossom"]
+
+        return {
+            "improved_prompt": improved,
+            "suggested_title": title,
+            "suggested_themes": themes
+        }
 
     def generate_form(self, user_prompt: str) -> Dict[str, Any]:
         """

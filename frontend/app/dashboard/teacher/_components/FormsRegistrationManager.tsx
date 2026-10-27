@@ -112,9 +112,14 @@ export default function FormsRegistrationManager({ token }: FormsRegistrationMan
 
   // Fetch all forms
   const fetchForms = async () => {
+    const activeToken = token || (typeof window !== "undefined" ? localStorage.getItem("token") : null);
+    if (!activeToken) {
+      setLoading(false);
+      return;
+    }
     try {
       setRefreshing(true);
-      const res = await apiFetch("/registration-forms", { token });
+      const res = await apiFetch("/registration-forms", { token: activeToken });
       if (res.ok) {
         const data = await res.json();
         setForms(Array.isArray(data) ? data : []);
@@ -129,8 +134,10 @@ export default function FormsRegistrationManager({ token }: FormsRegistrationMan
 
   // Fetch directories for import options
   const fetchDirectories = async () => {
+    const activeToken = token || (typeof window !== "undefined" ? localStorage.getItem("token") : null);
+    if (!activeToken) return;
     try {
-      const res = await apiFetch("/student-directories", { token });
+      const res = await apiFetch("/student-directories", { token: activeToken });
       if (res.ok) {
         const data = await res.json();
         setDirectories(Array.isArray(data) ? data : []);
@@ -141,8 +148,10 @@ export default function FormsRegistrationManager({ token }: FormsRegistrationMan
   };
 
   useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 3000);
     fetchForms();
     fetchDirectories();
+    return () => clearTimeout(timer);
   }, [token]);
 
   // Fetch submissions for a specific form

@@ -16,6 +16,9 @@ class CustomForm(TimeStampedModel):
     share_slug: str = Column(String(64), unique=True, index=True, nullable=False) # type: ignore
     is_published: bool = Column(Boolean, default=False, nullable=False) # type: ignore
     is_active: bool = Column(Boolean, default=True, nullable=False) # type: ignore
+    theme: Optional[str] = Column(String(50), default="navy_indigo", nullable=True) # type: ignore
+    header_image: Optional[str] = Column(Text, nullable=True) # type: ignore
+    theme_settings: Optional[str] = Column(Text, nullable=True) # type: ignore
 
     # Relationships
     workspace = relationship("Workspace")

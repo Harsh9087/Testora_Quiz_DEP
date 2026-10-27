@@ -46,6 +46,8 @@ export default function CreditRechargeModal({
 
   const [loading, setLoading] = useState<boolean>(true);
   const [currentBalance, setCurrentBalance] = useState<number>(0);
+  const [bonusCredits, setBonusCredits] = useState<number>(0);
+  const [bonusDaysRemaining, setBonusDaysRemaining] = useState<number>(0);
   const [packages, setPackages] = useState<RechargePackage[]>([]);
   const [selectedPackageId, setSelectedPackageId] = useState<string>("pkg_2200");
   const [processing, setProcessing] = useState<boolean>(false);
@@ -82,6 +84,8 @@ export default function CreditRechargeModal({
       if (res.ok) {
         const data = await res.json();
         setCurrentBalance(data.credits_balance || 0);
+        setBonusCredits(data.bonus_credits || 0);
+        setBonusDaysRemaining(data.bonus_days_remaining || 0);
         if (data.packages && data.packages.length > 0) {
           setPackages(data.packages);
           const popularPkg = data.packages.find((p: RechargePackage) => p.popular);
@@ -303,6 +307,14 @@ export default function CreditRechargeModal({
                 <span>{currentBalance.toLocaleString()}</span>
                 <span className="text-xs font-semibold text-[#64748B] dark:text-[#A3B1C6]">credits</span>
               </div>
+              {bonusCredits > 0 && (
+                <div className="mt-1 flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                  <span className="px-1.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/70 border border-emerald-300 dark:border-emerald-700/60 text-[10px] font-bold">
+                    🎁 {bonusCredits.toLocaleString()} Welcome Bonus
+                  </span>
+                  <span>• Expires in {bonusDaysRemaining} {bonusDaysRemaining === 1 ? "day" : "days"}</span>
+                </div>
+              )}
             </div>
             <div className="p-2.5 rounded-full bg-white dark:bg-[#111C31] shadow-sm text-[#2563EB] dark:text-[#60A5FA] border border-[#2563EB]/20">
               <Sparkles className="h-5 w-5" />

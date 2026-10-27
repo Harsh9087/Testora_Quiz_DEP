@@ -14,6 +14,8 @@ from app.models.custom_form import CustomForm, CustomFormSubmission
 from app.schemas.custom_form import (
     GenerateCustomFormRequest,
     GeneratedFormPreviewResponse,
+    ImprovePromptRequest,
+    ImprovePromptResponse,
     CustomFormCreate,
     CustomFormUpdate,
     CustomFormResponse,
@@ -82,6 +84,13 @@ def get_public_custom_form(share_slug: str, db: Session = Depends(get_db)):
     except Exception:
         fields = []
 
+    theme_settings_val = None
+    if getattr(form, "theme_settings", None):
+        try:
+            theme_settings_val = json.loads(form.theme_settings)
+        except Exception:
+            theme_settings_val = None
+
     return {
         "title": form.title,
         "description": form.description,
@@ -89,6 +98,9 @@ def get_public_custom_form(share_slug: str, db: Session = Depends(get_db)):
         "share_slug": form.share_slug,
         "is_active": form.is_active,
         "is_published": form.is_published,
+        "theme": getattr(form, "theme", "navy_indigo") or "navy_indigo",
+        "header_image": getattr(form, "header_image", None),
+        "theme_settings": theme_settings_val,
         "created_at": form.created_at
     }
 
@@ -177,6 +189,16 @@ def submit_custom_form(
 # FACULTY AUTHENTICATED ENDPOINTS
 # ══════════════════════════════════════════════════════════════════════════
 
+@router.post("/improve-prompt", response_model=ImprovePromptResponse)
+def improve_custom_form_prompt(
+    payload: ImprovePromptRequest,
+    current_user: User = Depends(get_current_user),
+    current_workspace: Workspace = Depends(get_current_workspace)
+):
+    """Enriches and expands a raw user prompt into a structured, comprehensive prompt."""
+    result = ai_form_service.improve_prompt(payload.prompt, payload.focus)
+    return result
+
 @router.post("/generate", response_model=GeneratedFormPreviewResponse)
 def generate_custom_form_preview(
     payload: GenerateCustomFormRequest,
@@ -199,6 +221,8 @@ def create_custom_form(
     slug = _generate_unique_custom_slug(db)
     fields_data = [f.model_dump() for f in payload.fields]
 
+    theme_settings_json = json.dumps(payload.theme_settings) if payload.theme_settings else None
+
     form = CustomForm(
         workspace_id=current_workspace.id,
         created_by=current_user.id,
@@ -208,7 +232,10 @@ def create_custom_form(
         fields_schema=json.dumps(fields_data),
         share_slug=slug,
         is_published=payload.is_published,
-        is_active=True
+        is_active=True,
+        theme=payload.theme or "navy_indigo",
+        header_image=payload.header_image,
+        theme_settings=theme_settings_json
     )
     db.add(form)
     db.commit()
@@ -225,6 +252,9 @@ def create_custom_form(
         "share_slug": form.share_slug,
         "is_published": form.is_published,
         "is_active": form.is_active,
+        "theme": form.theme or "navy_indigo",
+        "header_image": form.header_image,
+        "theme_settings": payload.theme_settings,
         "submission_count": 0,
         "created_at": form.created_at
     }
@@ -252,6 +282,13 @@ def list_custom_forms(
         except Exception:
             fields = []
 
+        t_settings = None
+        if getattr(f, "theme_settings", None):
+            try:
+                t_settings = json.loads(f.theme_settings)
+            except Exception:
+                t_settings = None
+
         results.append({
             "id": f.id,
             "workspace_id": f.workspace_id,
@@ -263,6 +300,9 @@ def list_custom_forms(
             "share_slug": f.share_slug,
             "is_published": f.is_published,
             "is_active": f.is_active,
+            "theme": getattr(f, "theme", "navy_indigo") or "navy_indigo",
+            "header_image": getattr(f, "header_image", None),
+            "theme_settings": t_settings,
             "submission_count": count,
             "created_at": f.created_at
         })
@@ -301,6 +341,13 @@ def get_custom_form_detail(
             "status": s.status
         })
 
+    t_settings = None
+    if getattr(form, "theme_settings", None):
+        try:
+            t_settings = json.loads(form.theme_settings)
+        except Exception:
+            t_settings = None
+
     return {
         "id": form.id,
         "workspace_id": form.workspace_id,
@@ -312,6 +359,9 @@ def get_custom_form_detail(
         "share_slug": form.share_slug,
         "is_published": form.is_published,
         "is_active": form.is_active,
+        "theme": getattr(form, "theme", "navy_indigo") or "navy_indigo",
+        "header_image": getattr(form, "header_image", None),
+        "theme_settings": t_settings,
         "submission_count": len(submissions),
         "created_at": form.created_at,
         "submissions": parsed_subs
@@ -347,6 +397,7 @@ def get_custom_form_submissions(
         })
     return parsed_subs
 
+@router.put("/{form_id}", response_model=CustomFormResponse)
 @router.patch("/{form_id}", response_model=CustomFormResponse)
 def update_custom_form(
     form_id: str,
@@ -367,6 +418,12 @@ def update_custom_form(
         setattr(form, "is_published", payload.is_published)
     if payload.is_active is not None:
         setattr(form, "is_active", payload.is_active)
+    if payload.theme is not None:
+        setattr(form, "theme", payload.theme)
+    if payload.header_image is not None:
+        setattr(form, "header_image", payload.header_image)
+    if payload.theme_settings is not None:
+        setattr(form, "theme_settings", json.dumps(payload.theme_settings))
 
     db.commit()
     db.refresh(form)
@@ -381,6 +438,13 @@ def update_custom_form(
     except Exception:
         fields = []
 
+    t_settings = None
+    if getattr(form, "theme_settings", None):
+        try:
+            t_settings = json.loads(form.theme_settings)
+        except Exception:
+            t_settings = None
+
     return {
         "id": form.id,
         "workspace_id": form.workspace_id,
@@ -392,6 +456,9 @@ def update_custom_form(
         "share_slug": form.share_slug,
         "is_published": form.is_published,
         "is_active": form.is_active,
+        "theme": getattr(form, "theme", "navy_indigo") or "navy_indigo",
+        "header_image": getattr(form, "header_image", None),
+        "theme_settings": t_settings,
         "submission_count": count,
         "created_at": form.created_at
     }

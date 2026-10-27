@@ -1,5 +1,6 @@
 from pydantic import BaseModel, EmailStr, ConfigDict, field_validator
 from typing import Optional
+from datetime import datetime
 
 class UserLogin(BaseModel):
     email: str
@@ -47,6 +48,9 @@ class UserProfile(BaseModel):
     institution_id: Optional[str] = None
     avatar_url: Optional[str] = None
     credits_balance: int = 0
+    bonus_credits: int = 0
+    bonus_days_remaining: int = 0
+    bonus_credits_expires_at: Optional[datetime] = None
     institution_name: Optional[str] = None
     department_name: Optional[str] = None
     roll_number: Optional[str] = None

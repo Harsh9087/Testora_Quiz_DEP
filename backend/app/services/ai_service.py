@@ -16,14 +16,14 @@ class AIService:
         if self.enabled:
             genai.configure(api_key=self.api_key)
             self.model_candidates = [
-                "models/gemini-2.5-flash",
-                "models/gemini-flash-latest",
-                "models/gemini-2.5-flash-lite",
+                "models/gemini-3.8-flash",
                 "models/gemini-3.5-flash",
-                "models/gemini-2.5-pro",
+                "models/gemini-3.1-flash-lite",
+                "models/gemini-3.1-pro-preview",
+                "models/gemini-flash-latest",
                 "models/gemini-pro-latest"
             ]
-            self.model_name = "models/gemini-2.5-flash"
+            self.model_name = "models/gemini-3.8-flash"
         else:
             logger.warning("GEMINI_API_KEY is not set. AI capabilities will be mocked.")
 

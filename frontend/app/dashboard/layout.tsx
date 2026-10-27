@@ -2,6 +2,7 @@
 
 import { useAuthStore } from "../../store/authStore";
 import { useRouter, usePathname } from "next/navigation";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { apiFetch, API_BASE } from "../../lib/api";
 import { 
@@ -32,12 +33,11 @@ import {
   Sparkles,
   ShieldAlert,
   ChevronRight,
-  CreditCard,
   Coins,
   ClipboardList,
-  Wand2
+  Wand2,
+  LayoutDashboard
 } from "lucide-react";
-import SubscriptionModal from "./teacher/_components/SubscriptionModal";
 import CreditRechargeModal from "./teacher/_components/CreditRechargeModal";
 import ThemeToggle from "../../components/ThemeToggle";
 import AppLogo from "../../components/AppLogo";
@@ -57,8 +57,7 @@ export default function DashboardLayout({
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
   const [creditRechargeModalOpen, setCreditRechargeModalOpen] = useState(false);
   const [userCredits, setUserCredits] = useState<number | null>(null);
-  const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
-  const [currentTab, setCurrentTab] = useState<string>("exams");
+  const [currentTab, setCurrentTab] = useState<string>("overview");
   
   // Notification Center State
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -183,32 +182,58 @@ export default function DashboardLayout({
       } else {
         const params = new URLSearchParams(window.location.search);
         const tab = params.get("tab");
-        if (tab) setCurrentTab(tab);
+        if (tab) {
+          setCurrentTab(tab);
+        } else if (pathname === "/dashboard/teacher") {
+          setCurrentTab("overview");
+        }
       }
     };
     handlePop();
+    const handleSwitch = (e: any) => {
+      if (e.detail) {
+        setCurrentTab(e.detail === "all" ? "overview" : e.detail);
+      }
+    };
     window.addEventListener("hashchange", handlePop);
     window.addEventListener("popstate", handlePop);
+    window.addEventListener("switch-tab", handleSwitch);
     return () => {
       window.removeEventListener("hashchange", handlePop);
       window.removeEventListener("popstate", handlePop);
+      window.removeEventListener("switch-tab", handleSwitch);
     };
   }, [pathname]);
 
   const navToTab = (tab: string) => {
     closeSidebarMobile();
-    setCurrentTab(tab);
+    const normalized = (tab === "all" || tab === "overview" || !tab) ? "overview" : tab;
+    setCurrentTab(normalized);
     if (pathname === "/dashboard/teacher") {
-      window.location.hash = tab;
-      const el = document.getElementById(tab);
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (normalized === "overview") {
+        if (window.location.hash) {
+          window.history.pushState(null, "", window.location.pathname);
+        }
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        window.dispatchEvent(new CustomEvent("switch-tab", { detail: "overview" }));
+      } else {
+        window.location.hash = normalized;
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        window.dispatchEvent(new CustomEvent("switch-tab", { detail: normalized }));
       }
-      window.dispatchEvent(new CustomEvent("switch-tab", { detail: tab }));
     } else {
-      router.push(`/dashboard/teacher#${tab}`);
+      router.push(normalized === "overview" ? "/dashboard/teacher" : `/dashboard/teacher#${normalized}`);
     }
   };
+
+  const isTabActive = (tab: string) => {
+    if (!pathname?.startsWith("/dashboard/teacher")) return false;
+    if (tab === "overview" || tab === "all") {
+      return currentTab === "overview" || currentTab === "all" || !currentTab;
+    }
+    return currentTab === tab;
+  };
+
   const isTeacher = pathname?.startsWith("/dashboard/teacher") || (mounted && (role === "teacher" || role === "inst_admin" || role === "super_admin"));
 
   const closeSidebarMobile = () => {
@@ -257,20 +282,13 @@ export default function DashboardLayout({
           <div className={`flex items-center gap-2 overflow-hidden ${sidebarCollapsed ? "md:justify-center md:w-full" : ""}`}>
             {sidebarCollapsed ? (
               <a href="/" title="Testora Quiz" className="p-1 rounded-xl hover:opacity-90 transition-opacity flex items-center justify-center">
-                <AppLogo variant="stacked" height={32} />
+                <AppLogo variant="stacked" height={36} />
               </a>
             ) : (
-              <div className="flex items-center gap-2 overflow-hidden">
+              <div className="flex items-center gap-2 overflow-hidden py-1">
                 <a href="/" title="Testora Quiz" className="hover:opacity-95 transition-opacity shrink-0">
-                  <AppLogo variant="row" height={28} />
+                  <AppLogo variant="row" height={38} />
                 </a>
-                <button 
-                  onClick={() => setSubscriptionModalOpen(true)}
-                  className="px-1.5 py-0.5 text-[9px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 hover:bg-blue-600 hover:text-white rounded transition-colors cursor-pointer shrink-0"
-                  title="Manage Subscription & Razorpay Billing"
-                >
-                  PRO
-                </button>
               </div>
             )}
           </div>
@@ -311,27 +329,47 @@ export default function DashboardLayout({
           {/* SECTION: CREATOR STUDIO OR STUDENT PORTAL */}
           <div className="space-y-1.5">
             <div className={`text-[10px] font-bold text-[#8C827A] dark:text-[#8C827A] px-3 mb-2 uppercase tracking-widest ${sidebarCollapsed ? "md:hidden" : ""}`}>
-              {pathname === "/dashboard/teacher" ? "Creator Studio" : "Student Portal"}
+              {isTeacher ? "Creator Studio" : "Student Portal"}
             </div>
             {sidebarCollapsed && (
               <div className="hidden md:block w-6 h-0.5 bg-[#E5E0D8] dark:bg-[#292524] mx-auto mb-2 rounded" />
             )}
 
             <div className="space-y-1">
-              {pathname === "/dashboard/teacher" ? (
+              {isTeacher ? (
                 <>
+                  {/* Main Dashboard / Home Tab */}
+                  <button 
+                    onClick={() => navToTab("overview")}
+                    className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                      sidebarCollapsed ? "md:justify-center md:px-0" : ""
+                    } ${
+                      isTabActive("overview")
+                        ? "bg-[#EFF6FF] dark:bg-[#172B4D] text-[#1E3A8A] dark:text-[#60A5FA] font-bold border-l-4 border-[#2563EB] dark:border-[#3B82F6] shadow-2xs"
+                        : "text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9] hover:bg-[#F1F5F9] dark:hover:bg-[#17243A]"
+                    }`}
+                  >
+                    <LayoutDashboard className={`h-4.5 w-4.5 shrink-0 ${isTabActive("overview") ? "text-[#2563EB] dark:text-[#60A5FA]" : "text-[#64748B] dark:text-[#A3B1C6] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA]"}`} />
+                    <span className={sidebarCollapsed ? "md:hidden" : ""}>Main Dashboard</span>
+                    {sidebarCollapsed && (
+                      <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
+                        Main Dashboard
+                      </span>
+                    )}
+                  </button>
+
                   {/* Assessments Tab */}
                   <button 
                     onClick={() => navToTab("exams")}
                     className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                       sidebarCollapsed ? "md:justify-center md:px-0" : ""
                     } ${
-                      currentTab === "exams"
+                      isTabActive("exams")
                         ? "bg-[#EFF6FF] dark:bg-[#172B4D] text-[#1E3A8A] dark:text-[#60A5FA] font-bold border-l-4 border-[#2563EB] dark:border-[#3B82F6] shadow-2xs"
                         : "text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9] hover:bg-[#F1F5F9] dark:hover:bg-[#17243A]"
                     }`}
                   >
-                    <GraduationCap className={`h-4.5 w-4.5 shrink-0 ${currentTab === "exams" ? "text-[#2563EB] dark:text-[#60A5FA]" : "text-[#64748B] dark:text-[#A3B1C6] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA]"}`} />
+                    <GraduationCap className={`h-4.5 w-4.5 shrink-0 ${isTabActive("exams") ? "text-[#2563EB] dark:text-[#60A5FA]" : "text-[#64748B] dark:text-[#A3B1C6] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA]"}`} />
                     <span className={sidebarCollapsed ? "md:hidden" : ""}>Assessments</span>
                     {sidebarCollapsed && (
                       <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
@@ -346,12 +384,12 @@ export default function DashboardLayout({
                     className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                       sidebarCollapsed ? "md:justify-center md:px-0" : ""
                     } ${
-                      currentTab === "create"
+                      isTabActive("create")
                         ? "bg-[#EFF6FF] dark:bg-[#172B4D] text-[#1E3A8A] dark:text-[#60A5FA] font-bold border-l-4 border-[#2563EB] dark:border-[#3B82F6] shadow-2xs"
                         : "text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9] hover:bg-[#F1F5F9] dark:hover:bg-[#17243A]"
                     }`}
                   >
-                    <FileText className={`h-4.5 w-4.5 shrink-0 ${currentTab === "create" ? "text-[#2563EB] dark:text-[#60A5FA]" : "text-[#64748B] dark:text-[#A3B1C6] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA]"}`} />
+                    <FileText className={`h-4.5 w-4.5 shrink-0 ${isTabActive("create") ? "text-[#2563EB] dark:text-[#60A5FA]" : "text-[#64748B] dark:text-[#A3B1C6] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA]"}`} />
                     <span className={sidebarCollapsed ? "md:hidden" : ""}>Create Quiz</span>
                     {sidebarCollapsed && (
                       <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
@@ -366,12 +404,12 @@ export default function DashboardLayout({
                     className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                       sidebarCollapsed ? "md:justify-center md:px-0" : ""
                     } ${
-                      currentTab === "bank"
+                      isTabActive("bank")
                         ? "bg-[#EFF6FF] dark:bg-[#172B4D] text-[#1E3A8A] dark:text-[#60A5FA] font-bold border-l-4 border-[#2563EB] dark:border-[#3B82F6] shadow-2xs"
                         : "text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9] hover:bg-[#F1F5F9] dark:hover:bg-[#17243A]"
                     }`}
                   >
-                    <Layers className={`h-4.5 w-4.5 shrink-0 ${currentTab === "bank" ? "text-[#2563EB] dark:text-[#60A5FA]" : "text-[#64748B] dark:text-[#A3B1C6] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA]"}`} />
+                    <Layers className={`h-4.5 w-4.5 shrink-0 ${isTabActive("bank") ? "text-[#2563EB] dark:text-[#60A5FA]" : "text-[#64748B] dark:text-[#A3B1C6] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA]"}`} />
                     <span className={sidebarCollapsed ? "md:hidden" : ""}>Question Bank</span>
                     {sidebarCollapsed && (
                       <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
@@ -386,12 +424,12 @@ export default function DashboardLayout({
                     className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                       sidebarCollapsed ? "md:justify-center md:px-0" : ""
                     } ${
-                      currentTab === "kb"
+                      isTabActive("kb")
                         ? "bg-[#EFF6FF] dark:bg-[#172B4D] text-[#1E3A8A] dark:text-[#60A5FA] font-bold border-l-4 border-[#2563EB] dark:border-[#3B82F6] shadow-2xs"
                         : "text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9] hover:bg-[#F1F5F9] dark:hover:bg-[#17243A]"
                     }`}
                   >
-                    <BookOpen className={`h-4.5 w-4.5 shrink-0 ${currentTab === "kb" ? "text-[#2563EB] dark:text-[#60A5FA]" : "text-[#64748B] dark:text-[#A3B1C6] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA]"}`} />
+                    <BookOpen className={`h-4.5 w-4.5 shrink-0 ${isTabActive("kb") ? "text-[#2563EB] dark:text-[#60A5FA]" : "text-[#64748B] dark:text-[#A3B1C6] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA]"}`} />
                     <span className={sidebarCollapsed ? "md:hidden" : ""}>Knowledge Base</span>
                     {sidebarCollapsed && (
                       <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
@@ -406,12 +444,12 @@ export default function DashboardLayout({
                     className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                       sidebarCollapsed ? "md:justify-center md:px-0" : ""
                     } ${
-                      currentTab === "students"
+                      isTabActive("students")
                         ? "bg-[#EFF6FF] dark:bg-[#172B4D] text-[#1E3A8A] dark:text-[#60A5FA] font-bold border-l-4 border-[#2563EB] dark:border-[#3B82F6] shadow-2xs"
                         : "text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9] hover:bg-[#F1F5F9] dark:hover:bg-[#17243A]"
                     }`}
                   >
-                    <Users className={`h-4.5 w-4.5 shrink-0 ${currentTab === "students" ? "text-[#2563EB] dark:text-[#60A5FA]" : "text-[#64748B] dark:text-[#A3B1C6] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA]"}`} />
+                    <Users className={`h-4.5 w-4.5 shrink-0 ${isTabActive("students") ? "text-[#2563EB] dark:text-[#60A5FA]" : "text-[#64748B] dark:text-[#A3B1C6] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA]"}`} />
                     <span className={sidebarCollapsed ? "md:hidden" : ""}>Student Directory</span>
                     {sidebarCollapsed && (
                       <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
@@ -426,12 +464,12 @@ export default function DashboardLayout({
                     className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                       sidebarCollapsed ? "md:justify-center md:px-0" : ""
                     } ${
-                      currentTab === "forms"
+                      isTabActive("forms")
                         ? "bg-[#EFF6FF] dark:bg-[#172B4D] text-[#1E3A8A] dark:text-[#60A5FA] font-bold border-l-4 border-[#2563EB] dark:border-[#3B82F6] shadow-2xs"
                         : "text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9] hover:bg-[#F1F5F9] dark:hover:bg-[#17243A]"
                     }`}
                   >
-                    <ClipboardList className={`h-4.5 w-4.5 shrink-0 ${currentTab === "forms" ? "text-[#2563EB] dark:text-[#60A5FA]" : "text-[#64748B] dark:text-[#A3B1C6] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA]"}`} />
+                    <ClipboardList className={`h-4.5 w-4.5 shrink-0 ${isTabActive("forms") ? "text-[#2563EB] dark:text-[#60A5FA]" : "text-[#64748B] dark:text-[#A3B1C6] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA]"}`} />
                     <span className={sidebarCollapsed ? "md:hidden" : ""}>Forms & Registrations</span>
                     {sidebarCollapsed && (
                       <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
@@ -446,12 +484,12 @@ export default function DashboardLayout({
                     className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                       sidebarCollapsed ? "md:justify-center md:px-0" : ""
                     } ${
-                      currentTab === "custom-forms"
+                      isTabActive("custom-forms")
                         ? "bg-[#EFF6FF] dark:bg-[#172B4D] text-[#1E3A8A] dark:text-[#60A5FA] font-bold border-l-4 border-[#2563EB] dark:border-[#3B82F6] shadow-2xs"
                         : "text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9] hover:bg-[#F1F5F9] dark:hover:bg-[#17243A]"
                     }`}
                   >
-                    <Wand2 className={`h-4.5 w-4.5 shrink-0 ${currentTab === "custom-forms" ? "text-[#2563EB] dark:text-[#60A5FA]" : "text-[#64748B] dark:text-[#A3B1C6] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA]"}`} />
+                    <Wand2 className={`h-4.5 w-4.5 shrink-0 ${isTabActive("custom-forms") ? "text-[#2563EB] dark:text-[#60A5FA]" : "text-[#64748B] dark:text-[#A3B1C6] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA]"}`} />
                     <span className={sidebarCollapsed ? "md:hidden" : ""}>AI Form Builder</span>
                     {sidebarCollapsed && (
                       <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
@@ -481,7 +519,7 @@ export default function DashboardLayout({
           </div>
 
           {/* SECTION: ANALYTICS (Creator Mode Only) */}
-          {pathname === "/dashboard/teacher" && (
+          {isTeacher && (
             <div className="space-y-1.5">
               <div className={`text-[10px] font-bold text-[#64748B] dark:text-[#A3B1C6] px-3 mb-2 uppercase tracking-widest ${sidebarCollapsed ? "md:hidden" : ""}`}>
                 Analytics & Reports
@@ -496,12 +534,12 @@ export default function DashboardLayout({
                   className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                     sidebarCollapsed ? "md:justify-center md:px-0" : ""
                   } ${
-                    currentTab === "reports"
+                    isTabActive("reports")
                       ? "bg-[#EFF6FF] dark:bg-[#172B4D] text-[#1E3A8A] dark:text-[#60A5FA] font-bold border-l-4 border-[#2563EB] dark:border-[#3B82F6] shadow-2xs"
                       : "text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9] hover:bg-[#F1F5F9] dark:hover:bg-[#17243A]"
                   }`}
                 >
-                  <BarChart2 className={`h-4.5 w-4.5 shrink-0 ${currentTab === "reports" ? "text-[#2563EB] dark:text-[#60A5FA]" : "text-[#64748B] dark:text-[#A3B1C6] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA]"}`} />
+                  <BarChart2 className={`h-4.5 w-4.5 shrink-0 ${isTabActive("reports") ? "text-[#2563EB] dark:text-[#60A5FA]" : "text-[#64748B] dark:text-[#A3B1C6] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA]"}`} />
                   <span className={sidebarCollapsed ? "md:hidden" : ""}>Results & Gradebook</span>
                   {sidebarCollapsed && (
                     <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
@@ -524,39 +562,22 @@ export default function DashboardLayout({
 
             <div className="space-y-1">
               {isTeacher && (
-                <>
-                  <button 
-                    onClick={() => { closeSidebarMobile(); setCreditRechargeModalOpen(true); }}
-                    className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9] hover:bg-[#F1F5F9] dark:hover:bg-[#17243A] transition-all cursor-pointer ${
-                      sidebarCollapsed ? "md:justify-center md:px-0" : ""
-                    }`}
-                  >
-                    <Coins className="h-4.5 w-4.5 shrink-0 text-amber-500 group-hover:text-amber-600" />
-                    <span className={sidebarCollapsed ? "md:hidden" : ""}>
-                      Prepaid Credits ({mounted && userCredits !== null ? userCredits.toLocaleString() : "0"})
+                <button 
+                  onClick={() => { closeSidebarMobile(); setCreditRechargeModalOpen(true); }}
+                  className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9] hover:bg-[#F1F5F9] dark:hover:bg-[#17243A] transition-all cursor-pointer ${
+                    sidebarCollapsed ? "md:justify-center md:px-0" : ""
+                  }`}
+                >
+                  <Coins className="h-4.5 w-4.5 shrink-0 text-amber-500 group-hover:text-amber-600" />
+                  <span className={sidebarCollapsed ? "md:hidden" : ""}>
+                    Recharge Credits ({mounted && userCredits !== null ? userCredits.toLocaleString() : "0"})
+                  </span>
+                  {sidebarCollapsed && (
+                    <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
+                      Recharge Credits ({mounted && userCredits !== null ? userCredits.toLocaleString() : "0"})
                     </span>
-                    {sidebarCollapsed && (
-                      <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
-                        Prepaid Credits ({mounted && userCredits !== null ? userCredits.toLocaleString() : "0"})
-                      </span>
-                    )}
-                  </button>
-
-                  <button 
-                    onClick={() => { closeSidebarMobile(); setSubscriptionModalOpen(true); }}
-                    className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9] hover:bg-[#F1F5F9] dark:hover:bg-[#17243A] transition-all cursor-pointer ${
-                      sidebarCollapsed ? "md:justify-center md:px-0" : ""
-                    }`}
-                  >
-                    <CreditCard className="h-4.5 w-4.5 shrink-0 text-[#64748B] dark:text-[#A3B1C6] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA]" />
-                    <span className={sidebarCollapsed ? "md:hidden" : ""}>Subscription & Billing</span>
-                    {sidebarCollapsed && (
-                      <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
-                        Subscription & Billing (Razorpay)
-                      </span>
-                    )}
-                  </button>
-                </>
+                  )}
+                </button>
               )}
 
               <button 
@@ -638,7 +659,12 @@ export default function DashboardLayout({
             </button>
 
             <div className="flex items-center gap-1.5 sm:gap-2 text-xs text-[#716D67] dark:text-[#A8A29E] min-w-0">
-              <span className="hidden sm:inline font-medium">Testora Quiz</span>
+              <Link 
+                href={isTeacher ? "/dashboard/teacher" : "/dashboard/student"}
+                className="hidden sm:inline font-bold text-[#111827] dark:text-[#F1F5F9] hover:text-[#2563EB] dark:hover:text-[#60A5FA] transition-colors"
+              >
+                Testora Quiz
+              </Link>
               <span className="hidden sm:inline">/</span>
               <span className="font-bold text-[#242321] dark:text-[#F5F5F4] truncate max-w-[140px] sm:max-w-none">
                 {pathname === "/dashboard/teacher/profile"
@@ -649,14 +675,30 @@ export default function DashboardLayout({
                   ? "Creator Studio"
                   : "Student Portal"}
               </span>
-              <a 
-                href="/" 
-                className="ml-2 hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#EFF6FF] text-[#1E3A8A] dark:bg-[#172B4D] dark:text-[#60A5FA] hover:bg-blue-100 dark:hover:bg-blue-950/60 text-xs font-semibold transition-all border border-[#2563EB]/20"
-                title="Switch Workspace Mode"
-              >
-                <ArrowLeft className="h-3.5 w-3.5" />
-                <span>Switch Mode</span>
-              </a>
+
+              {/* Explicit "Main Dashboard" button when on profile or subpages */}
+              {isTeacher && pathname !== "/dashboard/teacher" && (
+                <Link 
+                  href="/dashboard/teacher" 
+                  className="ml-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+                  title="Go to Main Dashboard"
+                >
+                  <LayoutDashboard className="h-3.5 w-3.5" />
+                  <span>Main Dashboard</span>
+                </Link>
+              )}
+
+              {!isTeacher && pathname !== "/dashboard/student" && (
+                <Link 
+                  href="/dashboard/student" 
+                  className="ml-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+                  title="Go to Student Dashboard"
+                >
+                  <LayoutDashboard className="h-3.5 w-3.5" />
+                  <span>Main Dashboard</span>
+                </Link>
+              )}
+
             </div>
           </div>
 
@@ -813,12 +855,6 @@ export default function DashboardLayout({
         onRechargeSuccess={(newBal) => {
           setUserCredits(newBal);
         }}
-      />
-
-      {/* Razorpay Subscription Modal */}
-      <SubscriptionModal 
-        isOpen={subscriptionModalOpen} 
-        onClose={() => setSubscriptionModalOpen(false)} 
       />
     </div>
   );

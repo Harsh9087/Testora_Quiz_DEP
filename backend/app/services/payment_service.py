@@ -261,7 +261,7 @@ class PaymentService:
         if user is None and exam.created_by:
             user = db.query(User).filter(User.id == exam.created_by).first()
 
-        user_credits = int(user.credits_balance or 0) if user and hasattr(user, "credits_balance") else 0
+        user_credits = user.total_available_credits if user and hasattr(user, "total_available_credits") else (int(user.credits_balance or 0) if user and hasattr(user, "credits_balance") else 0)
         if needs_additional:
             credits_required = (current_units - paid_units) * settings.CREDIT_PER_UNIT
         else:
@@ -816,10 +816,18 @@ class PaymentService:
     def get_credits_balance(self, user: User, db: Session) -> CreditWalletBalanceResponse:
         """Returns the current credit wallet balance and configured recharge packages."""
         fresh_user = db.query(User).filter(User.id == user.id).first()
-        balance = int(fresh_user.credits_balance or 0) if fresh_user else 0
+        total_balance = fresh_user.total_available_credits if fresh_user else 0
+        purchased = int(fresh_user.credits_balance or 0) if fresh_user else 0
+        active_bonus = fresh_user.active_bonus_credits if fresh_user else 0
+        bonus_exp = fresh_user.bonus_credits_expires_at if fresh_user else None
+        bonus_days = fresh_user.bonus_days_remaining if fresh_user else 0
         packages = self.get_recharge_packages()
         return CreditWalletBalanceResponse(
-            credits_balance=balance,
+            credits_balance=total_balance,
+            purchased_credits=purchased,
+            bonus_credits=active_bonus,
+            bonus_credits_expires_at=bonus_exp,
+            bonus_days_remaining=bonus_days,
             rate_per_unit_paise=settings.PRICE_PER_UNIT_PAISE,
             credit_per_unit=settings.CREDIT_PER_UNIT,
             packages=packages
@@ -1055,17 +1063,25 @@ class PaymentService:
 
         # Refresh user from DB
         fresh_user = db.query(User).filter(User.id == user.id).first()
-        current_balance = int(fresh_user.credits_balance or 0)
+        available_balance = fresh_user.total_available_credits if fresh_user else 0
 
-        if current_balance < credits_needed:
+        if available_balance < credits_needed:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Insufficient credits. You need {credits_needed} credits, but your current balance is {current_balance} credits. Please recharge your wallet."
+                detail=f"Insufficient credits. You need {credits_needed} credits, but your total available balance is {available_balance} credits. Please recharge your wallet."
             )
 
-        # Deduct balance
-        fresh_user.credits_balance = current_balance - credits_needed
-        new_balance = fresh_user.credits_balance
+        # Deduct balance: use expiring bonus credits first before purchased credits
+        active_bonus = fresh_user.active_bonus_credits
+        bonus_deducted = min(active_bonus, credits_needed)
+        if bonus_deducted > 0:
+            fresh_user.bonus_credits = max(0, fresh_user.bonus_credits - bonus_deducted)
+
+        remainder_needed = credits_needed - bonus_deducted
+        if remainder_needed > 0:
+            fresh_user.credits_balance = max(0, (fresh_user.credits_balance or 0) - remainder_needed)
+
+        new_balance = fresh_user.total_available_credits
 
         date_prefix = datetime.now(timezone.utc).strftime("%Y%m")
         invoice_number = f"INV-CRD-{date_prefix}-{uuid.uuid4().hex[:6].upper()}"

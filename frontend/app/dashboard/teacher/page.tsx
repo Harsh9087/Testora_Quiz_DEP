@@ -16,7 +16,7 @@ import {
   Sparkles, ArrowRight, ArrowLeft, Radio, FileSpreadsheet,
   UploadCloud, FileUp, FileText, Loader2, CheckCircle2, X,
   Lightbulb, HelpCircle, Sliders, Scale, Layers, Calculator,
-  ClipboardList, Wand2
+  ClipboardList, Wand2, ArrowUpRight, Database
 } from "lucide-react";
 
 import StudentDirectoryManager from "./_components/StudentDirectoryManager";
@@ -101,7 +101,9 @@ export default function TeacherDashboard() {
   const { showToast } = useToast();
   
   const [mounted, setMounted] = useState(false);
-  const [activeSectionTab, setActiveSectionTab] = useState<string>("all");
+  const [activeSectionTab, setActiveSectionTab] = useState<string>("overview");
+
+  const isOverview = activeSectionTab === "all" || activeSectionTab === "overview" || !activeSectionTab;
 
   useEffect(() => {
     const activeRole = role || (typeof window !== "undefined" ? localStorage.getItem("role") : null);
@@ -111,9 +113,18 @@ export default function TeacherDashboard() {
   }, [role, router]);
 
   const switchSectionTab = (tab: string) => {
-    setActiveSectionTab(tab);
+    const normalized = (tab === "all" || tab === "overview" || !tab) ? "overview" : tab;
+    setActiveSectionTab(normalized);
     if (typeof window !== "undefined") {
-      window.location.hash = tab === "all" ? "" : tab;
+      if (normalized === "overview") {
+        if (window.location.hash) {
+          window.history.pushState(null, "", window.location.pathname);
+        }
+      } else {
+        window.location.hash = normalized;
+      }
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.dispatchEvent(new CustomEvent("switch-tab", { detail: normalized }));
     }
     fetchData();
   };
@@ -124,15 +135,16 @@ export default function TeacherDashboard() {
       const hash = window.location.hash.replace("#", "");
       if (hash) {
         setActiveSectionTab(hash);
+      } else {
+        setActiveSectionTab("overview");
       }
     };
     handleHash();
     const handleCustom = (e: any) => {
       if (e.detail) {
-        setActiveSectionTab(e.detail);
-        setTimeout(() => {
-          document.getElementById(e.detail)?.scrollIntoView({ behavior: "smooth", block: "start" });
-        }, 50);
+        const target = e.detail === "all" ? "overview" : e.detail;
+        setActiveSectionTab(target);
+        window.scrollTo({ top: 0, behavior: "smooth" });
       }
     };
     window.addEventListener("hashchange", handleHash);
@@ -281,17 +293,18 @@ export default function TeacherDashboard() {
 
   // Load initial data
   const fetchData = async () => {
-    if (!token) return;
+    const activeToken = token || (typeof window !== "undefined" ? localStorage.getItem("token") : null);
+    if (!activeToken) return;
     try {
       if (typeof window !== "undefined") {
         setWorkspaceName(localStorage.getItem("workspaceName") || "Teacher Workspace");
       }
       const [docsRes, examsRes, subjectsRes, dirsRes, formsRes] = await Promise.all([
-        apiFetch("/kb/documents", { token }).catch(() => null),
-        apiFetch("/exams/", { token }).catch(() => null),
-        apiFetch("/kb/subjects", { token }).catch(() => null),
-        fetchStudentDirectories(token).catch(() => []),
-        apiFetch("/registration-forms", { token }).catch(() => null),
+        apiFetch("/kb/documents", { token: activeToken }).catch(() => null),
+        apiFetch("/exams/", { token: activeToken }).catch(() => null),
+        apiFetch("/kb/subjects", { token: activeToken }).catch(() => null),
+        fetchStudentDirectories(activeToken).catch(() => []),
+        apiFetch("/registration-forms", { token: activeToken }).catch(() => null),
       ]);
 
       if (docsRes && docsRes.ok) setDocuments(await docsRes.json().catch(() => []));
@@ -710,201 +723,330 @@ export default function TeacherDashboard() {
 
   return (
     <div className="space-y-8 animate-fadeIn">
-      {/* Top Header & Metrics Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#E2E8F0] dark:border-[#263449] pb-6">
-        <div>
-          <span className="text-xs font-semibold text-[#1E3A8A] dark:text-[#60A5FA] uppercase tracking-wider">
-            Academic Instructor Workspace
-          </span>
-          <h1 className="text-2xl font-serif font-bold text-[#111827] dark:text-[#F1F5F9] mt-1">
-            Teacher Command Center
-          </h1>
-          <p className="text-xs text-[#64748B] dark:text-[#A3B1C6] mt-0.5">
-            Welcome, <b>{mounted && fullName ? fullName : "Instructor"}</b>. Autonomous AI assessment synthesis & proctoring platform.
-          </p>
-        </div>
+      {/* ═══════ TOP COMMAND CENTER HEADER & STATS (Only on Main Dashboard / Overview) ═══════ */}
+      {isOverview ? (
+        <>
+          {/* Top Header & Metrics Bar */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#E2E8F0] dark:border-[#263449] pb-6">
+            <div>
+              <span className="text-xs font-semibold text-[#1E3A8A] dark:text-[#60A5FA] uppercase tracking-wider">
+                Academic Instructor Workspace
+              </span>
+              <h1 className="text-2xl font-serif font-bold text-[#111827] dark:text-[#F1F5F9] mt-1">
+                Teacher Command Center
+              </h1>
+              <p className="text-xs text-[#64748B] dark:text-[#A3B1C6] mt-0.5">
+                Welcome, <b>{mounted && fullName ? fullName : "Instructor"}</b>. Autonomous AI assessment synthesis & proctoring platform.
+              </p>
+            </div>
 
-        <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <button
+                onClick={() => switchSectionTab("create")}
+                className="btn-primary flex items-center gap-2 text-xs py-2 px-3.5 shadow-sm cursor-pointer"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Create Assessment</span>
+              </button>
+
+              <button
+                onClick={() => switchSectionTab("custom-forms")}
+                className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-amber-800 dark:text-amber-200 bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/40 border border-amber-300 dark:border-amber-800 transition-all cursor-pointer shadow-2xs"
+              >
+                <Wand2 className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                <span>AI Form Studio</span>
+              </button>
+
+              <button
+                onClick={() => setIsStep1KbModalOpen(true)}
+                className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-purple-800 dark:text-purple-200 bg-purple-50 dark:bg-purple-950/60 hover:bg-purple-100 dark:hover:bg-purple-900/40 border border-purple-300 dark:border-purple-800 transition-all cursor-pointer shadow-2xs"
+              >
+                <UploadCloud className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                <span>Upload Knowledge</span>
+              </button>
+
+              <button
+                onClick={() => switchSectionTab("students")}
+                className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-emerald-800 dark:text-emerald-200 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 border border-emerald-300 dark:border-emerald-800 transition-all cursor-pointer shadow-2xs"
+              >
+                <Users className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                <span>Student Rosters</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Systematic KPI Command Center Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+            {/* Card 1: Assessments */}
+            <button
+              type="button"
+              onClick={() => switchSectionTab("exams")}
+              className="text-left bg-white dark:bg-[#111C31] border border-slate-200/90 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs hover:shadow-md hover:-translate-y-0.5 hover:border-blue-400 dark:hover:border-blue-600 transition-all duration-200 group relative overflow-hidden cursor-pointer"
+            >
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-600 opacity-80 group-hover:opacity-100 transition-opacity" />
+              
+              <div className="flex items-center justify-between gap-2 mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/50 group-hover:scale-105 transition-transform">
+                    <Calendar className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+                      Assessments
+                    </span>
+                    <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-200">
+                      Testing Portal
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-900/60">
+                  {exams.filter((e) => e.is_published).length > 0 ? (
+                    <>
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <span>{exams.filter((e) => e.is_published).length} Live</span>
+                    </>
+                  ) : (
+                    <span>Ready</span>
+                  )}
+                  <ArrowUpRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity ml-0.5" />
+                </div>
+              </div>
+
+              <div className="flex items-baseline justify-between mt-1">
+                <div className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                  {exams.length}
+                </div>
+                <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                  {exams.filter((e) => !e.is_published).length} Draft{exams.filter((e) => !e.is_published).length !== 1 ? "s" : ""}
+                </div>
+              </div>
+
+              <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[11px]">
+                <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                  {exams.length === 0 ? "No active tests" : "Autonomous Proctoring"}
+                </span>
+                <span className="text-blue-600 dark:text-blue-400 font-semibold group-hover:translate-x-0.5 transition-transform text-[10px] flex items-center gap-0.5">
+                  View tests →
+                </span>
+              </div>
+            </button>
+
+            {/* Card 2: Knowledge Base (RAG Vectors) */}
+            <button
+              type="button"
+              onClick={() => switchSectionTab("kb")}
+              className="text-left bg-white dark:bg-[#111C31] border border-slate-200/90 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs hover:shadow-md hover:-translate-y-0.5 hover:border-purple-400 dark:hover:border-purple-600 transition-all duration-200 group relative overflow-hidden cursor-pointer"
+            >
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-indigo-600 opacity-80 group-hover:opacity-100 transition-opacity" />
+
+              <div className="flex items-center justify-between gap-2 mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 border border-purple-100 dark:border-purple-900/50 group-hover:scale-105 transition-transform">
+                    <BookOpen className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+                      Vector Docs
+                    </span>
+                    <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-200">
+                      RAG Knowledge
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200/80 dark:border-purple-900/60">
+                  <Database className="h-2.5 w-2.5" />
+                  <span>ChromaDB</span>
+                  <ArrowUpRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity ml-0.5" />
+                </div>
+              </div>
+
+              <div className="flex items-baseline justify-between mt-1">
+                <div className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                  {documents.length}
+                </div>
+                <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                  {kbSubjects.length} Subject{kbSubjects.length !== 1 ? "s" : ""}
+                </div>
+              </div>
+
+              <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[11px]">
+                <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                  <span className={`w-1.5 h-1.5 rounded-full ${documents.length > 0 ? "bg-emerald-500" : "bg-purple-400"}`} />
+                  {documents.length > 0 ? "AI Grounding Synced" : "Upload PDFs/Textbooks"}
+                </span>
+                <span className="text-purple-600 dark:text-purple-400 font-semibold group-hover:translate-x-0.5 transition-transform text-[10px] flex items-center gap-0.5">
+                  Manage RAG →
+                </span>
+              </div>
+            </button>
+
+            {/* Card 3: Cohorts & Student Rosters */}
+            <button
+              type="button"
+              onClick={() => switchSectionTab("students")}
+              className="text-left bg-white dark:bg-[#111C31] border border-slate-200/90 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs hover:shadow-md hover:-translate-y-0.5 hover:border-emerald-400 dark:hover:border-emerald-600 transition-all duration-200 group relative overflow-hidden cursor-pointer"
+            >
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-600 opacity-80 group-hover:opacity-100 transition-opacity" />
+
+              <div className="flex items-center justify-between gap-2 mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/50 group-hover:scale-105 transition-transform">
+                    <Users className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+                      Cohorts & Classes
+                    </span>
+                    <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-200">
+                      Student Directories
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-900/60">
+                  <span>{studentDirectories.length} Active</span>
+                  <ArrowUpRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity ml-0.5" />
+                </div>
+              </div>
+
+              <div className="flex items-baseline justify-between mt-1">
+                <div className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                  {studentDirectories.reduce((acc, d) => acc + (d.student_count || 0), 0)}
+                </div>
+                <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                  Candidate{studentDirectories.reduce((acc, d) => acc + (d.student_count || 0), 0) !== 1 ? "s" : ""}
+                </div>
+              </div>
+
+              <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[11px]">
+                <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  Auto-Credentials Emailed
+                </span>
+                <span className="text-emerald-600 dark:text-emerald-400 font-semibold group-hover:translate-x-0.5 transition-transform text-[10px] flex items-center gap-0.5">
+                  Open Rosters →
+                </span>
+              </div>
+            </button>
+
+            {/* Card 4: Registration & Custom Forms */}
+            <button
+              type="button"
+              onClick={() => switchSectionTab("custom-forms")}
+              className="text-left bg-white dark:bg-[#111C31] border border-slate-200/90 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs hover:shadow-md hover:-translate-y-0.5 hover:border-amber-400 dark:hover:border-amber-600 transition-all duration-200 group relative overflow-hidden cursor-pointer"
+            >
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-orange-500 opacity-80 group-hover:opacity-100 transition-opacity" />
+
+              <div className="flex items-center justify-between gap-2 mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-900/50 group-hover:scale-105 transition-transform">
+                    <ClipboardList className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+                      Registration Forms
+                    </span>
+                    <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-200">
+                      AI Form Studio
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/80 dark:border-amber-900/60">
+                  <Sparkles className="h-2.5 w-2.5" />
+                  <span>20 Themes</span>
+                  <ArrowUpRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity ml-0.5" />
+                </div>
+              </div>
+
+              <div className="flex items-baseline justify-between mt-1">
+                <div className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                  {registrationFormsCount}
+                </div>
+                <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                  Interactive Form{registrationFormsCount !== 1 ? "s" : ""}
+                </div>
+              </div>
+
+              <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[11px]">
+                <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                  Google Forms Style + Images
+                </span>
+                <span className="text-amber-600 dark:text-amber-400 font-semibold group-hover:translate-x-0.5 transition-transform text-[10px] flex items-center gap-0.5">
+                  Open Studio →
+                </span>
+              </div>
+            </button>
+          </div>
+
+          {/* Main Dashboard Live Assessments Monitoring Section */}
+          <section id="exams" className="scroll-mt-16 space-y-4 pt-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-bold text-[#111827] dark:text-[#F1F5F9]">
+                  Live Class Assessments & Proctoring
+                </h2>
+                <p className="text-xs text-[#64748B] dark:text-[#A3B1C6]">
+                  Real-time exam delivery, credentials dispatch, and autonomous fraud proctoring.
+                </p>
+              </div>
+              <button
+                onClick={() => switchSectionTab("create")}
+                className="btn-primary flex items-center gap-2 text-xs py-2 px-3.5 shadow-sm cursor-pointer"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span>+ Create Assessment</span>
+              </button>
+            </div>
+            <LiveAssessmentsTable
+              exams={exams}
+              onOpenCreate={() => switchSectionTab("create")}
+              onPreviewExam={(exam) => setPreviewExam(exam)}
+              onOpenLiveProctor={(exam) => {
+                setLiveProctorExam(exam);
+                setLiveProctorAlerts([]);
+              }}
+              onEndExamEarly={handleEndExamEarly}
+              onPublishExam={handlePublishExam}
+              onDeleteExam={handleDeleteExam}
+              onGenerateCredentials={handleGenerateCredentials}
+              onDownloadCredentialsCSV={handleDownloadCredentialsCSV}
+              onOpenPaymentModal={(exam) => setPaymentModalExam(exam)}
+            />
+          </section>
+        </>
+      ) : (
+        /* Top Navigation Bar when in single module view */
+        <div className="flex items-center justify-between pb-3 border-b border-[#E2E8F0] dark:border-[#263449]">
           <button
-            onClick={() => {
-              window.location.hash = "create";
-              document.getElementById("create")?.scrollIntoView({ behavior: "smooth" });
-            }}
-            className="btn-primary flex items-center gap-2 text-xs py-2 px-4 shadow-sm"
+            onClick={() => switchSectionTab("overview")}
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-[#2563EB] dark:text-[#60A5FA] bg-[#EFF6FF] dark:bg-[#172B4D] hover:bg-blue-100 dark:hover:bg-[#1e3a66] border border-[#2563EB]/20 transition-all cursor-pointer shadow-2xs"
           >
-            <Plus className="h-4 w-4" />
-            <span>Create Assessment</span>
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>← Back to Main Dashboard</span>
           </button>
-        </div>
-      </div>
-
-      {/* KPI Cards Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-        <div className="bg-[#FFFFFF] dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-xl p-3.5 sm:p-4 shadow-xs">
-          <div className="text-[11px] font-medium text-[#64748B] dark:text-[#A3B1C6] uppercase tracking-wider flex items-center gap-1.5">
-            <Calendar className="h-3.5 w-3.5 text-[#2563EB]" />
-            <span>Assessments</span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Viewing Module:</span>
+            <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-900/60 uppercase tracking-wide">
+              {activeSectionTab === "create" && "Create Assessment Wizard"}
+              {activeSectionTab === "exams" && "Assessments Management"}
+              {activeSectionTab === "bank" && "Question Bank Studio"}
+              {activeSectionTab === "kb" && "Knowledge Base (RAG)"}
+              {activeSectionTab === "students" && "Student Directories"}
+              {activeSectionTab === "forms" && "Forms & Registrations"}
+              {activeSectionTab === "custom-forms" && "AI Form Builder"}
+              {activeSectionTab === "reports" && "Results & Gradebook"}
+            </span>
           </div>
-          <div className="text-2xl font-bold text-[#111827] dark:text-[#F1F5F9] mt-1">{exams.length}</div>
-          <div className="text-[10px] text-[#64748B] mt-0.5">{exams.filter((e) => e.is_published).length} Published Live</div>
         </div>
+      )}
 
-        <div className="bg-[#FFFFFF] dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-xl p-3.5 sm:p-4 shadow-xs">
-          <div className="text-[11px] font-medium text-[#64748B] dark:text-[#A3B1C6] uppercase tracking-wider flex items-center gap-1.5">
-            <BookOpen className="h-3.5 w-3.5 text-[#2563EB]" />
-            <span>Vector Docs</span>
-          </div>
-          <div className="text-2xl font-bold text-[#111827] dark:text-[#F1F5F9] mt-1">{documents.length}</div>
-          <div className="text-[10px] text-[#64748B] mt-0.5">RAG Indexed Sources</div>
-        </div>
-
-        <div className="bg-[#FFFFFF] dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-xl p-3.5 sm:p-4 shadow-xs">
-          <div className="text-[11px] font-medium text-[#64748B] dark:text-[#A3B1C6] uppercase tracking-wider flex items-center gap-1.5">
-            <Users className="h-3.5 w-3.5 text-[#2563EB]" />
-            <span>Cohorts & Classes</span>
-          </div>
-          <div className="text-2xl font-bold text-[#111827] dark:text-[#F1F5F9] mt-1">{kbSubjects.length}</div>
-          <div className="text-[10px] text-[#64748B] mt-0.5">Academic Mappings</div>
-        </div>
-
-        <div className="bg-[#FFFFFF] dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-xl p-3.5 sm:p-4 shadow-xs">
-          <div className="text-[11px] font-medium text-[#64748B] dark:text-[#A3B1C6] uppercase tracking-wider flex items-center gap-1.5">
-            <ClipboardList className="h-3.5 w-3.5 text-[#2563EB]" />
-            <span>Registration Forms</span>
-          </div>
-          <div className="text-2xl font-bold text-[#111827] dark:text-[#F1F5F9] mt-1">{registrationFormsCount}</div>
-          <div className="text-[10px] text-[#64748B] mt-0.5">Online Student Forms</div>
-        </div>
-      </div>
-
-      {/* View Switcher Pill Bar */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-[#E2E8F0] dark:border-[#263449] scrollbar-none touch-pan-x">
-        <button
-          onClick={() => switchSectionTab("all")}
-          className={`px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 cursor-pointer ${
-            activeSectionTab === "all"
-              ? "bg-[#2563EB] text-white shadow-xs"
-              : "bg-[#FFFFFF] dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] text-[#64748B] hover:text-[#111827] dark:hover:text-[#F1F5F9]"
-          }`}
-        >
-          <span className="sm:hidden">All</span>
-          <span className="hidden sm:inline">All Overview</span>
-        </button>
-
-        <button
-          onClick={() => switchSectionTab("exams")}
-          className={`px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer ${
-            activeSectionTab === "exams"
-              ? "bg-[#2563EB] text-white shadow-xs"
-              : "bg-[#FFFFFF] dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] text-[#64748B] hover:text-[#111827] dark:hover:text-[#F1F5F9]"
-          }`}
-        >
-          <GraduationCap className="h-3.5 w-3.5" />
-          <span className="sm:hidden">Exams ({exams.length})</span>
-          <span className="hidden sm:inline">Assessments ({exams.length})</span>
-        </button>
-
-        <button
-          onClick={() => switchSectionTab("create")}
-          className={`px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer ${
-            activeSectionTab === "create"
-              ? "bg-[#2563EB] text-white shadow-xs"
-              : "bg-[#FFFFFF] dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] text-[#64748B] hover:text-[#111827] dark:hover:text-[#F1F5F9]"
-          }`}
-        >
-          <Plus className="h-3.5 w-3.5" />
-          <span className="sm:hidden">Create</span>
-          <span className="hidden sm:inline">Create Quiz Wizard</span>
-        </button>
-
-        <button
-          onClick={() => switchSectionTab("bank")}
-          className={`px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer ${
-            activeSectionTab === "bank"
-              ? "bg-[#2563EB] text-white shadow-xs"
-              : "bg-[#FFFFFF] dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] text-[#64748B] hover:text-[#111827] dark:hover:text-[#F1F5F9]"
-          }`}
-        >
-          <Sparkles className="h-3.5 w-3.5" />
-          <span className="sm:hidden">Bank</span>
-          <span className="hidden sm:inline">Question Bank</span>
-        </button>
-
-        <button
-          onClick={() => switchSectionTab("kb")}
-          className={`px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer ${
-            activeSectionTab === "kb"
-              ? "bg-[#2563EB] text-white shadow-xs"
-              : "bg-[#FFFFFF] dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] text-[#64748B] hover:text-[#111827] dark:hover:text-[#F1F5F9]"
-          }`}
-        >
-          <BookOpen className="h-3.5 w-3.5" />
-          <span className="sm:hidden">KB ({documents.length})</span>
-          <span className="hidden sm:inline">Knowledge Base ({documents.length})</span>
-        </button>
-
-        <button
-          onClick={() => switchSectionTab("students")}
-          className={`px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer ${
-            activeSectionTab === "students"
-              ? "bg-[#2563EB] text-white shadow-xs"
-              : "bg-[#FFFFFF] dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] text-[#64748B] hover:text-[#111827] dark:hover:text-[#F1F5F9]"
-          }`}
-        >
-          <Users className="h-3.5 w-3.5" />
-          <span className="sm:hidden">Students ({studentDirectories.length})</span>
-          <span className="hidden sm:inline">Student Directory ({studentDirectories.length})</span>
-        </button>
-
-        <button
-          onClick={() => switchSectionTab("forms")}
-          className={`px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer ${
-            activeSectionTab === "forms"
-              ? "bg-[#2563EB] text-white shadow-xs"
-              : "bg-[#FFFFFF] dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] text-[#64748B] hover:text-[#111827] dark:hover:text-[#F1F5F9]"
-          }`}
-        >
-          <ClipboardList className="h-3.5 w-3.5" />
-          <span className="sm:hidden">Forms ({registrationFormsCount})</span>
-          <span className="hidden sm:inline">Forms & Registrations ({registrationFormsCount})</span>
-        </button>
-
-        <button
-          onClick={() => switchSectionTab("custom-forms")}
-          className={`px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer ${
-            activeSectionTab === "custom-forms"
-              ? "bg-[#2563EB] text-white shadow-xs"
-              : "bg-[#FFFFFF] dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] text-[#64748B] hover:text-[#111827] dark:hover:text-[#F1F5F9]"
-          }`}
-        >
-          <Wand2 className="h-3.5 w-3.5" />
-          <span className="sm:hidden">Custom Forms</span>
-          <span className="hidden sm:inline">AI Form Builder</span>
-        </button>
-
-        <button
-          onClick={() => switchSectionTab("reports")}
-          className={`px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer ${
-            activeSectionTab === "reports"
-              ? "bg-[#2563EB] text-white shadow-xs"
-              : "bg-[#FFFFFF] dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] text-[#64748B] hover:text-[#111827] dark:hover:text-[#F1F5F9]"
-          }`}
-        >
-          <BarChart3 className="h-3.5 w-3.5" />
-          <span className="sm:hidden">Analytics</span>
-          <span className="hidden sm:inline">Gradebook Analytics</span>
-        </button>
-      </div>
-
-      {/* ═══════ SECTION 1: ASSESSMENTS TABLE ═══════ */}
-      {(activeSectionTab === "all" || activeSectionTab === "exams") && (
+      {/* ═══════ SECTION 1: ASSESSMENTS TABLE (Standalone Mode) ═══════ */}
+      {activeSectionTab === "exams" && (
       <section id="exams" className="scroll-mt-16 space-y-4">
         <LiveAssessmentsTable
           exams={exams}
-          onOpenCreate={() => {
-            const el = document.getElementById("create");
-            if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-          }}
+          onOpenCreate={() => switchSectionTab("create")}
           onPreviewExam={(exam) => setPreviewExam(exam)}
           onOpenLiveProctor={(exam) => {
             setLiveProctorExam(exam);
@@ -921,7 +1063,7 @@ export default function TeacherDashboard() {
       )}
 
       {/* ═══════ SECTION 2: CREATE ASSESSMENT WORKFLOW WIZARD ═══════ */}
-      {(activeSectionTab === "all" || activeSectionTab === "create") && (
+      {activeSectionTab === "create" && (
       <section id="create" className="scroll-mt-16 space-y-4">
         <div className="bg-[#FFFFFF] dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl p-4 sm:p-6 shadow-xs space-y-5 sm:space-y-6">
           {/* ═══════ HEADER & PROGRESS SUMMARY ═══════ */}
@@ -2444,14 +2586,14 @@ export default function TeacherDashboard() {
       )}
 
       {/* ═══════ SECTION 3: QUESTION BANK STUDIO ═══════ */}
-      {(activeSectionTab === "all" || activeSectionTab === "bank") && (
+      {activeSectionTab === "bank" && (
       <section id="bank" className="scroll-mt-16 space-y-4">
         <QuestionBankManager />
       </section>
       )}
 
       {/* ═══════ SECTION 4: KNOWLEDGE SOURCES (RAG VECTOR DB) ═══════ */}
-      {(activeSectionTab === "all" || activeSectionTab === "kb") && (
+      {activeSectionTab === "kb" && (
       <section id="kb" className="scroll-mt-16 space-y-4">
         <KnowledgeBaseManager
           documents={documents}
@@ -2462,21 +2604,21 @@ export default function TeacherDashboard() {
       )}
 
       {/* ═══════ SECTION 5: STUDENT DIRECTORY MANAGER ═══════ */}
-      {(activeSectionTab === "all" || activeSectionTab === "students") && (
+      {activeSectionTab === "students" && (
       <section id="students" className="scroll-mt-16 space-y-4">
         <StudentDirectoryManager token={token} />
       </section>
       )}
 
       {/* ═══════ SECTION 5B: STUDENT DATA COLLECTION FORMS ═══════ */}
-      {(activeSectionTab === "all" || activeSectionTab === "forms") && (
+      {activeSectionTab === "forms" && (
       <section id="forms" className="scroll-mt-16 space-y-4">
         <FormsRegistrationManager token={token} />
       </section>
       )}
 
       {/* ═══════ SECTION 5C: AI CUSTOM FORM BUILDER ═══════ */}
-      {(activeSectionTab === "all" || activeSectionTab === "custom-forms") && (
+      {activeSectionTab === "custom-forms" && (
       <section id="custom-forms" className="scroll-mt-16 space-y-4">
         <CustomFormsManager token={token} />
       </section>
@@ -2515,7 +2657,7 @@ export default function TeacherDashboard() {
       />
 
       {/* ═══════ SECTION 6: GENERALIZED CLASSROOM QUIZ ANALYTICS ═══════ */}
-      {(activeSectionTab === "all" || activeSectionTab === "reports") && (
+      {activeSectionTab === "reports" && (
       <section id="reports" className="scroll-mt-16 space-y-4">
         <GradebookAnalytics exams={exams} />
       </section>

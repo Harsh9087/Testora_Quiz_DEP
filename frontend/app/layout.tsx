@@ -19,6 +19,11 @@ export const metadata: Metadata = {
   title: "Testora Quiz - AI Dynamic Examination & Student Management System",
   description: "Testora Quiz Enterprise SaaS Examination platform for schools, colleges, and corporations.",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/icon-192.png",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",

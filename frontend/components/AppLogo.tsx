@@ -21,7 +21,7 @@ export default function AppLogo({
   variant = "row",
   className = "",
   imgClassName = "",
-  height = 36,
+  height = 42,
   showBadge = false,
 }: AppLogoProps) {
   const lightSrc = variant === "row" ? "/images/logo-row-light.png" : "/images/logo-stacked-light.png";

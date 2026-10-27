@@ -89,7 +89,10 @@ def register(user_in: UserCreate, response: Response, db: Session = Depends(get_
         full_name=user_in.full_name,
         role=assigned_role,
         institution_id=user_in.institution_id,
-        is_active=True
+        is_active=True,
+        credits_balance=0,
+        bonus_credits=500,
+        bonus_credits_expires_at=now_utc() + timedelta(days=15)
     )
     db.add(user)
     db.commit()
@@ -285,7 +288,10 @@ def google_auth(
             google_id=google_sub,
             google_subject=google_sub,
             avatar_url=avatar_url,
-            last_login_at=now_utc()
+            last_login_at=now_utc(),
+            credits_balance=0,
+            bonus_credits=500,
+            bonus_credits_expires_at=now_utc() + timedelta(days=15)
         )
         db.add(user)
         db.commit()
@@ -416,7 +422,10 @@ def get_me(current_user: User = Depends(get_current_user), db: Session = Depends
         role=current_user.role,
         institution_id=current_user.institution_id,
         avatar_url=current_user.avatar_url,
-        credits_balance=getattr(current_user, "credits_balance", 0) or 0,
+        credits_balance=current_user.total_available_credits,
+        bonus_credits=current_user.active_bonus_credits,
+        bonus_days_remaining=current_user.bonus_days_remaining,
+        bonus_credits_expires_at=current_user.bonus_credits_expires_at,
         institution_name=inst_name,
         department_name=None,
         roll_number=roll,
@@ -449,7 +458,10 @@ def update_profile(
         role=current_user.role,
         institution_id=current_user.institution_id,
         avatar_url=current_user.avatar_url,
-        credits_balance=getattr(current_user, "credits_balance", 0) or 0,
+        credits_balance=current_user.total_available_credits,
+        bonus_credits=current_user.active_bonus_credits,
+        bonus_days_remaining=current_user.bonus_days_remaining,
+        bonus_credits_expires_at=current_user.bonus_credits_expires_at,
         institution_name=inst_name,
         department_name=None,
         roll_number=roll,
@@ -495,7 +507,10 @@ async def upload_avatar(
         role=current_user.role,
         institution_id=current_user.institution_id,
         avatar_url=current_user.avatar_url,
-        credits_balance=getattr(current_user, "credits_balance", 0) or 0,
+        credits_balance=current_user.total_available_credits,
+        bonus_credits=current_user.active_bonus_credits,
+        bonus_days_remaining=current_user.bonus_days_remaining,
+        bonus_credits_expires_at=current_user.bonus_credits_expires_at,
         institution_name=inst_name,
         department_name=None
     )

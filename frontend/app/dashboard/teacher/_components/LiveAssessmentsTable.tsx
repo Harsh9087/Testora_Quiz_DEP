@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Eye, Radio, StopCircle, Sparkles, Printer, Key, QrCode, Trash2, 
   Download, X, Play, Search, Copy, Check, ExternalLink, ShieldCheck, Mail, CopyPlus,
-  CreditCard, Share2, Receipt
+  CreditCard, Share2, Receipt, MoreHorizontal
 } from "lucide-react";
 import { API_V1, apiFetch, getFrontendBaseUrl } from "../../../../lib/api";
 import { parseUtcDate, formatLocalizedDate, formatExamScheduleRange } from "../../../../lib/dateUtils";
@@ -50,6 +50,13 @@ export default function LiveAssessmentsTable({
   const [isResendingAll, setIsResendingAll] = useState(false);
   const [liveProctorExamId, setLiveProctorExamId] = useState<string | null>(null);
   const [cloningExamId, setCloningExamId] = useState<string | null>(null);
+  const [activeDropdownExamId, setActiveDropdownExamId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleClickOutside = () => setActiveDropdownExamId(null);
+    window.addEventListener("click", handleClickOutside);
+    return () => window.removeEventListener("click", handleClickOutside);
+  }, []);
 
   const handleCloneExam = async (exam: any) => {
     setCloningExamId(exam.id);
@@ -282,119 +289,193 @@ export default function LiveAssessmentsTable({
                   </span>
                 </div>
 
-                {/* Touch Action Buttons */}
-                <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                  {exam.is_published && (
-                    <button
-                      type="button"
-                      onClick={() => setLiveProctorExamId(exam.id)}
-                      className="px-2.5 py-1.5 rounded-lg border border-rose-300 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-[11px] font-semibold flex items-center gap-1 cursor-pointer"
-                    >
-                      <Radio className="h-3 w-3 text-rose-600 animate-pulse" />
-                      <span>Monitor</span>
-                    </button>
-                  )}
-
-                  <a
-                    href={`/exam/${exam.exam_code || exam.code}?mode=teacher_preview`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="px-2.5 py-1.5 rounded-lg border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-[11px] font-semibold flex items-center gap-1"
-                  >
-                    <Play className="h-3 w-3 text-emerald-600" />
-                    <span>Test Run</span>
-                  </a>
-
-                  <button
-                    type="button"
-                    onClick={() => onPreviewExam(exam)}
-                    className="px-2.5 py-1.5 rounded-lg border border-[#E5E0D8] dark:border-[#292524] text-[#716D67] hover:text-[#242321] text-[11px] font-semibold flex items-center gap-1 cursor-pointer"
-                  >
-                    <Eye className="h-3 w-3" />
-                    <span>Preview / Edit</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    disabled={isLoadingCreds}
-                    onClick={() => handleOpenCredentialsPreview(exam)}
-                    className="px-2.5 py-1.5 rounded-lg border border-[#E5E0D8] dark:border-[#292524] text-[#716D67] hover:text-[#C84B18] text-[11px] font-semibold flex items-center gap-1 cursor-pointer"
-                  >
-                    {isLoadingCreds ? (
-                      <div className="w-3 h-3 border-2 border-[#C84B18] border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <Key className="h-3 w-3" />
-                    )}
-                    <span>Credentials</span>
-                  </button>
-
-                  {!exam.is_published && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (!exam.is_paid && onOpenPaymentModal) {
-                          onOpenPaymentModal(exam);
-                        } else {
-                          onPublishExam(exam.id);
-                        }
-                      }}
-                      className="px-2.5 py-1.5 rounded-lg bg-[#C84B18] text-white dark:bg-[#EA580C] text-[11px] font-semibold hover:opacity-90 flex items-center gap-1 cursor-pointer"
-                    >
-                      {exam.is_paid ? <Sparkles className="h-3 w-3" /> : <CreditCard className="h-3 w-3" />}
-                      <span>{exam.is_paid ? "Publish" : "Pay & Publish"}</span>
-                    </button>
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={() => handleShareWhatsApp(exam)}
-                    className="px-2.5 py-1.5 rounded-lg border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-[11px] font-semibold flex items-center gap-1 cursor-pointer"
-                    title={exam.is_paid ? "Share via WhatsApp" : "Locked: Pay to share via WhatsApp"}
-                  >
-                    <Share2 className="h-3 w-3" />
-                    <span>WhatsApp</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    disabled={cloningExamId === exam.id}
-                    onClick={() => handleCloneExam(exam)}
-                    className="p-1.5 rounded-lg border border-[#E5E0D8] dark:border-[#292524] text-[#716D67] hover:text-[#C84B18] cursor-pointer"
-                    title="Clone Exam"
-                  >
-                    <CopyPlus className="h-3.5 w-3.5" />
-                  </button>
-
-                  {deleteConfirmId === exam.id ? (
-                    <div className="flex items-center gap-1">
+                {/* Clean, Modern Action Row */}
+                <div className="flex items-center justify-between gap-2 pt-2 border-t border-[#E2E8F0]/80 dark:border-[#263449]/80">
+                  <div className="flex items-center gap-2">
+                    {/* Primary Context Button */}
+                    {exam.is_published && sched.status === "live" ? (
+                      <button
+                        type="button"
+                        onClick={() => setLiveProctorExamId(exam.id)}
+                        className="px-3 py-1.5 rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer"
+                      >
+                        <Radio className="h-3 w-3 text-rose-600 animate-pulse" />
+                        <span>Live Monitor</span>
+                      </button>
+                    ) : !exam.is_published ? (
                       <button
                         type="button"
                         onClick={() => {
-                          onDeleteExam(exam.id);
-                          setDeleteConfirmId(null);
+                          if (!exam.is_paid && onOpenPaymentModal) onOpenPaymentModal(exam);
+                          else onPublishExam(exam.id);
                         }}
-                        className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-[10px] font-bold cursor-pointer"
+                        className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer"
                       >
-                        Confirm
+                        {exam.is_paid ? <Sparkles className="h-3 w-3" /> : <CreditCard className="h-3 w-3" />}
+                        <span>{exam.is_paid ? "Publish" : "Pay & Publish"}</span>
                       </button>
+                    ) : (
                       <button
                         type="button"
-                        onClick={() => setDeleteConfirmId(null)}
-                        className="px-1.5 py-1 text-[10px] text-[#716D67]"
+                        disabled={isLoadingCreds}
+                        onClick={() => handleOpenCredentialsPreview(exam)}
+                        className="px-3 py-1.5 rounded-xl border border-[#E2E8F0] dark:border-[#263449] hover:bg-[#F8FAFC] text-xs font-bold flex items-center gap-1.5 text-[#111827] dark:text-[#F1F5F9] cursor-pointer"
                       >
-                        Cancel
+                        <Key className="h-3 w-3 text-blue-600" />
+                        <span>Credentials</span>
                       </button>
-                    </div>
-                  ) : (
+                    )}
+
+                    <a
+                      href={`/exam/${exam.exam_code || exam.code}?mode=teacher_preview`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-2.5 py-1.5 rounded-xl border border-[#E2E8F0] dark:border-[#263449] hover:bg-[#F8FAFC] text-xs font-semibold text-[#64748B] dark:text-[#A3B1C6] flex items-center gap-1"
+                    >
+                      <Play className="h-3 w-3 text-emerald-600" />
+                      <span>Test Run</span>
+                    </a>
+                  </div>
+
+                  {/* Dropdown Menu */}
+                  <div className="relative">
                     <button
                       type="button"
-                      onClick={() => setDeleteConfirmId(exam.id)}
-                      className="p-1.5 rounded-lg text-[#716D67] hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 cursor-pointer"
-                      title="Delete Assessment"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveDropdownExamId(activeDropdownExamId === exam.id ? null : exam.id);
+                      }}
+                      className="p-2 rounded-xl border border-[#E2E8F0] dark:border-[#263449] text-[#64748B] hover:text-[#111827] dark:hover:text-[#F1F5F9] hover:bg-[#F8FAFC] cursor-pointer"
                     >
-                      <Trash2 className="h-3.5 w-3.5" />
+                      <MoreHorizontal className="h-4 w-4" />
                     </button>
-                  )}
+
+                    {activeDropdownExamId === exam.id && (
+                      <div 
+                        onClick={(e) => e.stopPropagation()}
+                        className="absolute right-0 bottom-full mb-2 w-60 rounded-2xl bg-white dark:bg-[#1A1816] border border-[#E2E8F0] dark:border-[#263449] shadow-2xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150"
+                      >
+                        <div className="px-3 py-1 border-b border-[#E2E8F0] dark:border-[#263449]">
+                          <span className="text-[10px] font-bold text-[#64748B] dark:text-[#A3B1C6] uppercase tracking-wider">Actions</span>
+                        </div>
+                        <div className="p-1 space-y-0.5">
+                          <button
+                            type="button"
+                            onClick={() => { setActiveDropdownExamId(null); onPreviewExam(exam); }}
+                            className="w-full px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl flex items-center gap-2 cursor-pointer"
+                          >
+                            <Eye className="h-3.5 w-3.5 text-blue-600" />
+                            <span>Question Studio</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => { setActiveDropdownExamId(null); handleOpenCredentialsPreview(exam); }}
+                            className="w-full px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl flex items-center gap-2 cursor-pointer"
+                          >
+                            <Key className="h-3.5 w-3.5 text-amber-600" />
+                            <span>Candidate Credentials</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => { setActiveDropdownExamId(null); handleCloneExam(exam); }}
+                            className="w-full px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl flex items-center gap-2 cursor-pointer"
+                          >
+                            <CopyPlus className="h-3.5 w-3.5 text-purple-600" />
+                            <span>Clone Assessment</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => { setActiveDropdownExamId(null); handleShareWhatsApp(exam); }}
+                            className="w-full px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl flex items-center gap-2 cursor-pointer"
+                          >
+                            <Share2 className="h-3.5 w-3.5 text-emerald-600" />
+                            <span>WhatsApp Invitation</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => { setActiveDropdownExamId(null); setQrModalExam(exam); }}
+                            className="w-full px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl flex items-center gap-2 cursor-pointer"
+                          >
+                            <QrCode className="h-3.5 w-3.5 text-indigo-600" />
+                            <span>QR Code Flyer</span>
+                          </button>
+                          <a
+                            href={`${API_V1}/exams/${exam.id}/pdf/question-paper`}
+                            target="_blank"
+                            rel="noreferrer"
+                            onClick={() => setActiveDropdownExamId(null)}
+                            className="w-full px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl flex items-center gap-2"
+                          >
+                            <Printer className="h-3.5 w-3.5 text-slate-500" />
+                            <span>Print Paper PDF</span>
+                          </a>
+                          {exam.is_paid && (
+                            <a
+                              href={`${API_V1}/payments/receipt/${exam.id}/html`}
+                              target="_blank"
+                              rel="noreferrer"
+                              onClick={() => setActiveDropdownExamId(null)}
+                              className="w-full px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl flex items-center gap-2"
+                            >
+                              <Receipt className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" />
+                              <span>Official Tax Invoice</span>
+                            </a>
+                          )}
+                        </div>
+                        <div className="border-t border-[#E2E8F0] dark:border-[#263449] pt-1 mt-1 p-1 space-y-0.5">
+                          {exam.is_published && (!sched || sched.status === "live" || sched.status === "scheduled") && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setActiveDropdownExamId(null);
+                                onEndExamEarly(exam.id, exam.name);
+                              }}
+                              className="w-full px-3 py-2 text-xs font-semibold text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 rounded-xl flex items-center gap-2 cursor-pointer"
+                            >
+                              <StopCircle className="h-3.5 w-3.5 text-amber-600" />
+                              <span>End Assessment Early</span>
+                            </button>
+                          )}
+                          {deleteConfirmId === exam.id ? (
+                            <div className="p-2 bg-rose-50 dark:bg-rose-950/50 rounded-lg border border-rose-200 dark:border-rose-900/60">
+                              <p className="text-[11px] font-semibold text-rose-700 dark:text-rose-300 mb-1.5">
+                                Delete permanently?
+                              </p>
+                              <div className="flex items-center gap-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    onDeleteExam(exam.id);
+                                    setDeleteConfirmId(null);
+                                    setActiveDropdownExamId(null);
+                                  }}
+                                  className="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded text-[10px] font-bold shadow-xs cursor-pointer"
+                                >
+                                  Confirm
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setDeleteConfirmId(null)}
+                                  className="px-2 py-1 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded text-[10px] font-semibold cursor-pointer"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setDeleteConfirmId(exam.id)}
+                              className="w-full px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl flex items-center gap-2 cursor-pointer"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                              <span>Delete Assessment</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             );
@@ -403,7 +484,7 @@ export default function LiveAssessmentsTable({
       </div>
 
       {/* Desktop Table View (>= 768px) */}
-      <div className="hidden md:block overflow-x-auto">
+      <div className="hidden md:block overflow-x-auto min-h-[380px]">
         <table className="w-full text-left text-xs border-collapse">
           <thead>
             <tr className="border-b border-[#E2E8F0] dark:border-[#263449] bg-[#F8FAFC] dark:bg-[#17243A] text-[#64748B] dark:text-[#A3B1C6]">
@@ -418,123 +499,117 @@ export default function LiveAssessmentsTable({
           <tbody className="divide-y divide-[#E2E8F0] dark:divide-[#263449]">
             {exams.length === 0 ? (
               <tr>
-                <td colSpan={6} className="py-8 text-center text-xs text-[#64748B] dark:text-[#A3B1C6]">
+                <td colSpan={6} className="py-12 text-center text-xs text-[#64748B] dark:text-[#A3B1C6]">
                   No assessments created yet. Click "Create Assessment" to synthesize a new examination.
                 </td>
               </tr>
             ) : (
-              exams.map((exam) => {
+              exams.map((exam, idx) => {
                 const sched = getExamScheduleInfo(exam);
                 const isLoadingCreds = loadingCredsExamId === exam.id;
+                const isNearBottom = exams.length > 2 && idx >= exams.length - 2;
 
                 return (
                   <tr
                     key={exam.id}
                     className="hover:bg-[#F8FAFC] dark:hover:bg-[#17243A] transition-colors"
                   >
+                    {/* Status & Payment Tag */}
+                    <td className="py-3.5 px-4 whitespace-nowrap">
+                      <div className="flex flex-col gap-1.5 items-start">
+                        <div
+                          className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold border shadow-2xs ${
+                            sched.status === "live"
+                              ? "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
+                              : sched.status === "scheduled"
+                              ? "bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800"
+                              : sched.status === "draft"
+                              ? "bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800"
+                              : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700"
+                          }`}
+                        >
+                          <span className={`w-1.5 h-1.5 rounded-full ${sched.dot}`} />
+                          <span>{sched.label}</span>
+                        </div>
+                        <div>
+                          {exam.is_paid ? (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80">
+                              <Check className="h-2.5 w-2.5 text-emerald-600" />
+                              <span>Paid</span>
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => onOpenPaymentModal && onOpenPaymentModal(exam)}
+                              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 hover:bg-amber-100 cursor-pointer transition-all"
+                              title="Mandatory Per-Test Activation Required"
+                            >
+                              <CreditCard className="h-2.5 w-2.5 text-amber-600" />
+                              <span>Unpaid</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* Title & Exam Code */}
                     <td className="py-3.5 px-4">
-                      <div className="flex items-center gap-1.5">
-                        <span className={`w-2 h-2 rounded-full ${sched.dot}`} />
-                        <span className="capitalize font-medium text-[11px]">{sched.label}</span>
+                      <div className="font-semibold text-sm text-[#111827] dark:text-[#F1F5F9] leading-snug">
+                        {exam.name}
                       </div>
-                      <div className="mt-1">
-                        {exam.is_paid ? (
-                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                            <Check className="h-2.5 w-2.5 text-emerald-600" />
-                            <span>Paid</span>
-                          </span>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => onOpenPaymentModal && onOpenPaymentModal(exam)}
-                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 hover:bg-amber-100 cursor-pointer"
-                            title="Mandatory Razorpay Payment Required"
-                          >
-                            <CreditCard className="h-2.5 w-2.5 text-amber-600" />
-                            <span>Unpaid</span>
-                          </button>
-                        )}
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-[10px] font-mono font-medium text-slate-600 dark:text-slate-300">
+                          {exam.exam_code || exam.code}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(exam.exam_code || exam.code);
+                            showToast("Exam code copied to clipboard", "success");
+                          }}
+                          className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-0.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                          title="Copy Exam Code"
+                        >
+                          <Copy className="h-2.5 w-2.5" />
+                        </button>
                       </div>
                     </td>
-                    <td className="py-3.5 px-4">
-                      <div className="font-semibold text-[#111827] dark:text-[#F1F5F9]">{exam.name}</div>
-                      <div className="text-[11px] text-[#64748B] dark:text-[#A3B1C6] font-mono mt-0.5">
-                        {exam.exam_code}
+
+                    {/* Questions & Points */}
+                    <td className="py-3.5 px-4 whitespace-nowrap text-[#64748B] dark:text-[#A3B1C6]">
+                      <div className="font-medium text-[#111827] dark:text-[#F1F5F9]">
+                        {exam.questions_count || (exam.questions_json ? JSON.parse(exam.questions_json).length : 0)} Qs
                       </div>
+                      <div className="text-[10px] text-slate-500">{exam.total_marks} pts total</div>
                     </td>
-                    <td className="py-3.5 px-4 text-[#64748B] dark:text-[#A3B1C6]">
-                      {exam.questions_count || (exam.questions_json ? JSON.parse(exam.questions_json).length : 0)} Qs ({exam.total_marks} pts)
+
+                    {/* Duration */}
+                    <td className="py-3.5 px-4 whitespace-nowrap text-[#64748B] dark:text-[#A3B1C6]">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-[11px]">
+                        ⏱ {exam.duration_minutes}m
+                      </span>
                     </td>
-                    <td className="py-3.5 px-4 text-[#64748B] dark:text-[#A3B1C6]">
-                      {exam.duration_minutes}m
-                    </td>
-                    <td className="py-3.5 px-4 text-[11px] text-[#64748B] dark:text-[#A3B1C6]">
+
+                    {/* Schedule Window */}
+                    <td className="py-3.5 px-4 text-[11px] text-[#64748B] dark:text-[#A3B1C6] max-w-[220px]">
                       {formatExamScheduleRange(exam.start_time, exam.end_time)}
                     </td>
+
+                    {/* Actions Column: Clean Contextual Buttons + More Actions Dropdown */}
                     <td className="py-3.5 px-4 text-right relative">
-                      <div className="flex items-center justify-end gap-1.5">
-                        {/* Live Anti-Cheat & Progress Proctor Room */}
-                        {exam.is_published && (
+                      <div className="flex items-center justify-end gap-2">
+                        {/* 1. Primary Contextual Action Button */}
+                        {exam.is_published && sched.status === "live" ? (
                           <button
                             type="button"
                             onClick={() => setLiveProctorExamId(exam.id)}
-                            className="p-1.5 rounded border border-rose-300 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition-all flex items-center gap-1 text-[10px] font-semibold cursor-pointer"
+                            className="px-3 py-1.5 rounded-lg border border-rose-300 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/60 transition-all flex items-center gap-1.5 text-xs font-bold cursor-pointer shadow-2xs"
                             title="Open Real-time Live Proctoring Room"
                           >
                             <Radio className="h-3.5 w-3.5 text-rose-600 dark:text-rose-400 animate-pulse" />
-                            <span className="hidden sm:inline">Live Monitor</span>
+                            <span>Live Monitor</span>
                           </button>
-                        )}
-
-                        {/* Test Run Exam as Student (Sandbox Simulation) */}
-                        <a
-                          href={`/exam/${exam.exam_code || exam.code}?mode=teacher_preview`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="p-1.5 rounded border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-all flex items-center gap-1 text-[10px] font-semibold"
-                          title="Test Run & Simulate Assessment as Student"
-                        >
-                          <Play className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                          <span className="hidden sm:inline">Test Run</span>
-                        </a>
-
-                        {/* 1-Click Clone Exam Button */}
-                        <button
-                          type="button"
-                          disabled={cloningExamId === exam.id}
-                          onClick={() => handleCloneExam(exam)}
-                          className="p-1.5 rounded border border-[#E2E8F0] dark:border-[#263449] text-[#64748B] hover:text-[#2563EB] hover:bg-[#E2E8F0]/40 dark:hover:bg-[#263449] transition-all flex items-center gap-1 text-[10px] font-semibold cursor-pointer"
-                          title="Clone Assessment as New Draft"
-                        >
-                          <CopyPlus className="h-3.5 w-3.5 text-[#2563EB]" />
-                          <span className="hidden sm:inline">Clone</span>
-                        </button>
-
-                        {/* Preview Question Paper Modal Button */}
-                        <button
-                          type="button"
-                          onClick={() => onPreviewExam(exam)}
-                          className="p-1.5 rounded border border-[#E2E8F0] dark:border-[#263449] text-[#64748B] hover:text-[#2563EB] hover:bg-[#E2E8F0]/40 dark:hover:bg-[#263449] transition-all cursor-pointer"
-                          title="Interactive Question Studio & Preview"
-                        >
-                          <Eye className="h-3.5 w-3.5" />
-                        </button>
-
-                        {/* End Early Button (if active & published) */}
-                        {exam.is_published && (!sched || sched.status === "live" || sched.status === "scheduled") && (
-                          <button
-                            type="button"
-                            onClick={() => onEndExamEarly(exam.id, exam.name)}
-                            className="px-2 py-1 rounded border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/60 transition-all flex items-center gap-1 text-[10px] font-semibold cursor-pointer"
-                            title="End Live Assessment Early"
-                          >
-                            <StopCircle className="h-3 w-3 text-amber-600 dark:text-amber-400" />
-                            <span>End Early</span>
-                          </button>
-                        )}
-
-                        {/* Publish Live Button (if draft) */}
-                        {!exam.is_published && (
+                        ) : !exam.is_published ? (
                           <button
                             type="button"
                             onClick={() => {
@@ -544,110 +619,212 @@ export default function LiveAssessmentsTable({
                                 onPublishExam(exam.id);
                               }
                             }}
-                            className="px-2 py-1 rounded bg-[#2563EB] text-white hover:bg-[#1D4ED8] text-[10px] font-semibold transition-all flex items-center gap-1 cursor-pointer shadow-xs"
+                            className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
                             title={exam.is_paid ? "Publish Assessment Live to Students" : "Pay & Publish Assessment Live"}
                           >
-                            {exam.is_paid ? <Sparkles className="h-3 w-3" /> : <CreditCard className="h-3 w-3" />}
+                            {exam.is_paid ? <Sparkles className="h-3.5 w-3.5" /> : <CreditCard className="h-3.5 w-3.5" />}
                             <span>{exam.is_paid ? "Publish" : "Pay & Publish"}</span>
                           </button>
-                        )}
-
-                        {/* WhatsApp Invite Share Button */}
-                        <button
-                          type="button"
-                          onClick={() => handleShareWhatsApp(exam)}
-                          className="p-1.5 rounded border border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-all flex items-center gap-1 text-[10px] font-semibold cursor-pointer"
-                          title={exam.is_paid ? "Share Assessment Invitation via WhatsApp" : "Payment required to share on WhatsApp"}
-                        >
-                          <Share2 className="h-3.5 w-3.5" />
-                          <span className="hidden lg:inline">WhatsApp</span>
-                        </button>
-
-                        {/* Tax Invoice Download (if paid) */}
-                        {exam.is_paid && (
-                          <a
-                            href={`${API_V1}/payments/receipt/${exam.id}/html`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="p-1.5 rounded border border-[#E5E0D8] dark:border-[#292524] text-[#716D67] hover:text-[#C84B18] hover:bg-[#E5E0D8]/40 dark:hover:bg-[#292524] transition-all flex items-center"
-                            title="Download / Print Official Tax Invoice"
-                          >
-                            <Receipt className="h-3.5 w-3.5" />
-                          </a>
-                        )}
-
-                        {/* Printable Question Paper PDF */}
-                        <a
-                          href={`${API_V1}/exams/${exam.id}/pdf/question-paper`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="p-1.5 rounded border border-[#E5E0D8] dark:border-[#292524] text-[#716D67] hover:text-[#242321] hover:bg-[#E5E0D8]/40 dark:hover:bg-[#292524]"
-                          title="Print Question Paper PDF"
-                        >
-                          <Printer className="h-3.5 w-3.5" />
-                        </a>
-
-                        {/* Preview & Generate Candidate Credentials Button */}
-                        <button
-                          type="button"
-                          disabled={isLoadingCreds}
-                          onClick={() => handleOpenCredentialsPreview(exam)}
-                          className={`p-1.5 rounded border border-[#E5E0D8] dark:border-[#292524] transition-all flex items-center gap-1 text-[10px] font-semibold ${
-                            isLoadingCreds
-                              ? "bg-[#C84B18]/10 text-[#C84B18]"
-                              : "text-[#716D67] hover:text-[#C84B18] hover:bg-[#E5E0D8]/40 dark:hover:bg-[#292524]"
-                          }`}
-                          title="Preview & Generate Candidate Passcodes & Credentials"
-                        >
-                          {isLoadingCreds ? (
-                            <div className="w-3.5 h-3.5 border-2 border-[#C84B18] border-t-transparent rounded-full animate-spin" />
-                          ) : (
-                            <Key className="h-3.5 w-3.5" />
-                          )}
-                          <span className="hidden md:inline">Credentials</span>
-                        </button>
-
-                        {/* QR Code Flyer Modal Button */}
-                        <button
-                          type="button"
-                          onClick={() => setQrModalExam(exam)}
-                          className="p-1.5 rounded border border-[#E5E0D8] dark:border-[#292524] text-[#716D67] hover:text-[#242321] hover:bg-[#E5E0D8]/40 dark:hover:bg-[#292524]"
-                          title="Display & Print QR Code Flyer"
-                        >
-                          <QrCode className="h-3.5 w-3.5" />
-                        </button>
-
-                        {/* Delete Exam */}
-                        {deleteConfirmId === exam.id ? (
-                          <div className="flex items-center gap-1">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                onDeleteExam(exam.id);
-                                setDeleteConfirmId(null);
-                              }}
-                              className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-[10px] font-bold shadow-xs cursor-pointer"
-                            >
-                              Confirm
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setDeleteConfirmId(null)}
-                              className="px-1.5 py-1 text-[10px] text-[#716D67]"
-                            >
-                              Cancel
-                            </button>
-                          </div>
                         ) : (
                           <button
                             type="button"
-                            onClick={() => setDeleteConfirmId(exam.id)}
-                            className="p-1.5 rounded text-[#716D67] hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"
-                            title="Delete Assessment"
+                            disabled={isLoadingCreds}
+                            onClick={() => handleOpenCredentialsPreview(exam)}
+                            className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                            title="Preview & Generate Candidate Passcodes & Credentials"
                           >
-                            <Trash2 className="h-3.5 w-3.5" />
+                            {isLoadingCreds ? (
+                              <div className="w-3.5 h-3.5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <Key className="h-3.5 w-3.5 text-blue-600" />
+                            )}
+                            <span>Credentials</span>
                           </button>
                         )}
+
+                        {/* 2. Secondary Quick Action: Test Run */}
+                        <a
+                          href={`/exam/${exam.exam_code || exam.code}?mode=teacher_preview`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-2.5 py-1.5 rounded-lg border border-emerald-200 dark:border-emerald-800/80 bg-emerald-50/60 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-all flex items-center gap-1.5 text-xs font-semibold shadow-2xs"
+                          title="Simulate Assessment as Student (Sandbox)"
+                        >
+                          <Play className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+                          <span>Test Run</span>
+                        </a>
+
+                        {/* 3. Dropdown Menu Trigger */}
+                        <div className="relative">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveDropdownExamId(activeDropdownExamId === exam.id ? null : exam.id);
+                              setDeleteConfirmId(null);
+                            }}
+                            className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
+                            title="More Actions"
+                            aria-label="More Actions"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </button>
+
+                          {activeDropdownExamId === exam.id && (
+                            <div
+                              onClick={(e) => e.stopPropagation()}
+                              className={`absolute right-0 ${
+                                isNearBottom ? "bottom-full mb-1.5" : "top-full mt-1.5"
+                              } w-64 rounded-xl bg-white dark:bg-[#111C31] border border-slate-200 dark:border-slate-700/80 shadow-2xl py-1.5 z-50 text-left animate-in fade-in zoom-in-95 duration-150 divide-y divide-slate-100 dark:divide-slate-800`}
+                            >
+                              {/* Section 1: Core Assessment Tools */}
+                              <div className="p-1 space-y-0.5">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setActiveDropdownExamId(null);
+                                    onPreviewExam(exam);
+                                  }}
+                                  className="w-full px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-lg flex items-center gap-2.5 transition-colors cursor-pointer"
+                                >
+                                  <Eye className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                                  <span>Question Studio & Preview</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  disabled={isLoadingCreds}
+                                  onClick={() => {
+                                    setActiveDropdownExamId(null);
+                                    handleOpenCredentialsPreview(exam);
+                                  }}
+                                  className="w-full px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-lg flex items-center gap-2.5 transition-colors cursor-pointer"
+                                >
+                                  <Key className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                                  <span>Candidate Passcodes</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  disabled={cloningExamId === exam.id}
+                                  onClick={() => {
+                                    setActiveDropdownExamId(null);
+                                    handleCloneExam(exam);
+                                  }}
+                                  className="w-full px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-lg flex items-center gap-2.5 transition-colors cursor-pointer"
+                                >
+                                  <CopyPlus className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
+                                  <span>Duplicate Assessment</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setActiveDropdownExamId(null);
+                                    handleShareWhatsApp(exam);
+                                  }}
+                                  className="w-full px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-lg flex items-center gap-2.5 transition-colors cursor-pointer"
+                                >
+                                  <Share2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                                  <span>Share via WhatsApp</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setActiveDropdownExamId(null);
+                                    setQrModalExam(exam);
+                                  }}
+                                  className="w-full px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-lg flex items-center gap-2.5 transition-colors cursor-pointer"
+                                >
+                                  <QrCode className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
+                                  <span>QR Code Flyer</span>
+                                </button>
+                              </div>
+
+                              {/* Section 2: Print & Receipts */}
+                              <div className="p-1 space-y-0.5">
+                                <a
+                                  href={`${API_V1}/exams/${exam.id}/pdf/question-paper`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  onClick={() => setActiveDropdownExamId(null)}
+                                  className="w-full px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-lg flex items-center gap-2.5 transition-colors"
+                                >
+                                  <Printer className="h-3.5 w-3.5 text-slate-500" />
+                                  <span>Print Paper PDF</span>
+                                </a>
+
+                                {exam.is_paid && (
+                                  <a
+                                    href={`${API_V1}/payments/receipt/${exam.id}/html`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    onClick={() => setActiveDropdownExamId(null)}
+                                    className="w-full px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-lg flex items-center gap-2.5 transition-colors"
+                                  >
+                                    <Receipt className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" />
+                                    <span>Official Tax Invoice</span>
+                                  </a>
+                                )}
+                              </div>
+
+                              {/* Section 3: Dangerous/Lifecycle Actions */}
+                              <div className="p-1 space-y-0.5">
+                                {exam.is_published && (!sched || sched.status === "live" || sched.status === "scheduled") && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setActiveDropdownExamId(null);
+                                      onEndExamEarly(exam.id, exam.name);
+                                    }}
+                                    className="w-full px-3 py-2 text-xs font-semibold text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 rounded-lg flex items-center gap-2.5 transition-colors cursor-pointer"
+                                  >
+                                    <StopCircle className="h-3.5 w-3.5 text-amber-600" />
+                                    <span>End Assessment Early</span>
+                                  </button>
+                                )}
+
+                                {deleteConfirmId === exam.id ? (
+                                  <div className="p-2 bg-rose-50 dark:bg-rose-950/50 rounded-lg border border-rose-200 dark:border-rose-900/60">
+                                    <p className="text-[11px] font-semibold text-rose-700 dark:text-rose-300 mb-1.5">
+                                      Delete permanently?
+                                    </p>
+                                    <div className="flex items-center gap-1.5">
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          onDeleteExam(exam.id);
+                                          setDeleteConfirmId(null);
+                                          setActiveDropdownExamId(null);
+                                        }}
+                                        className="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded text-[10px] font-bold shadow-xs cursor-pointer"
+                                      >
+                                        Confirm
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => setDeleteConfirmId(null)}
+                                        className="px-2 py-1 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded text-[10px] font-semibold cursor-pointer"
+                                      >
+                                        Cancel
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => setDeleteConfirmId(exam.id)}
+                                    className="w-full px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg flex items-center gap-2.5 transition-colors cursor-pointer"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                    <span>Delete Assessment</span>
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </td>
                   </tr>
