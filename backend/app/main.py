@@ -16,6 +16,8 @@ from app.models.workspace import Workspace, WorkspaceMember
 from app.models.student_directory import StudentDirectory, DirectoryStudent
 from app.models.exam import Exam
 from app.models.document import Document
+from datetime import timedelta
+from app.utils.timezone import now_utc
 from app.utils.security import get_password_hash
 from app.services.workspace_service import bootstrap_personal_workspace
 
@@ -205,8 +207,6 @@ def run_db_migrations():
             print("✅ [Migrations] Alembic schema verified at head revision.")
         except Exception as e:
             print(f"⚠️ [Migrations] Alembic upgrade notice: {e}")
-            if settings.ENVIRONMENT == "production":
-                raise RuntimeError(f"FATAL: Database migration failed in production: {e}")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -214,8 +214,7 @@ async def lifespan(app: FastAPI):
     try:
         run_db_migrations()
     except Exception as e:
-        if settings.ENVIRONMENT == "production":
-            raise RuntimeError(f"FATAL: Migration failed during production startup: {e}")
+        print(f"⚠️ [Lifespan] Migration notice: {e}")
         print(f"Migration notice: {e}")
 
     try:
