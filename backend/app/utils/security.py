@@ -64,7 +64,7 @@ def create_refresh_token(subject: Union[str, Any], expires_delta: Optional[timed
 
 def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)) -> User:
     try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"], options={"verify_exp": False})
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"], options={"verify_exp": True})
         user_id: str = payload.get("sub")
         token_type: str = payload.get("type")
         if user_id is None or token_type != "access":
@@ -72,6 +72,11 @@ def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Could not validate credentials",
             )
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Session token has expired. Please log in again.",
+        )
     except Exception:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

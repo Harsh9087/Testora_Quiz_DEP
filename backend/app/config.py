@@ -15,8 +15,8 @@ class Settings(BaseSettings):
     COOKIE_SECURE: bool = False
     COOKIE_SAMESITE: str = "lax"
     
-    # Database (workspace root quiz.db)
-    DATABASE_URL: str = f"sqlite:///{os.path.join(ROOT_DIR, 'quiz.db')}"
+    # Database (defaults to backend/quiz.db via database.py resolver)
+    DATABASE_URL: str = "sqlite:///quiz.db"
     
     # Redis Pub/Sub (Required for Multi-Worker WebSocket Sync in Production)
     REDIS_URL: Optional[str] = None

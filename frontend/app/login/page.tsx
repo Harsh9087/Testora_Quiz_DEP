@@ -88,8 +88,16 @@ function LoginContent() {
       return "/dashboard/student";
     }
 
-    // Teacher or administrator accounts
-    if (userRole === "teacher" || userRole === "inst_admin" || userRole === "super_admin") {
+    // Super admin account
+    if (userRole === "super_admin") {
+      if (targetDestination && targetDestination.startsWith("/") && !targetDestination.startsWith("/dashboard/student")) {
+        return targetDestination;
+      }
+      return "/admin";
+    }
+
+    // Teacher or institution administrator accounts
+    if (userRole === "teacher" || userRole === "inst_admin") {
       if (targetDestination && targetDestination.startsWith("/") && !targetDestination.startsWith("/dashboard/student")) {
         return targetDestination;
       }

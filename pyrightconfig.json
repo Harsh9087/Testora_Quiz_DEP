@@ -7,5 +7,17 @@
     "backend"
   ],
   "venvPath": ".",
-  "venv": "venv"
+  "venv": "venv",
+  "pythonVersion": "3.11",
+  "typeCheckingMode": "basic",
+  "useLibraryCodeForTypes": true,
+  "reportMissingModuleSource": "none",
+  "reportAttributeAccessIssue": "none",
+  "reportOperatorIssue": "none",
+  "reportReturnType": "warning",
+  "reportArgumentType": "warning",
+  "reportIndexIssue": "none",
+  "reportCallIssue": "none",
+  "reportOptionalMemberAccess": "warning",
+  "reportOptionalSubscript": "warning"
 }

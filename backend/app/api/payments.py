@@ -31,6 +31,9 @@ from app.schemas.payment import (
     PayExamWithCreditsResponse,
     CreditTransactionResponse
 )
+from app.schemas.coupon import RedeemCouponRequest, RedeemCouponResponse
+from app.services.coupon_service import coupon_service
+from app.utils.rate_limiter import rate_limit_dependency
 
 router = APIRouter(prefix="/payments", tags=["payments"])
 teacher_required = RoleChecker(["teacher", "inst_admin", "super_admin"])
@@ -203,6 +206,19 @@ def get_credit_transaction_history(
     Returns the chronological credit ledger transactions for the user (recharges, exam deductions, refunds, grants).
     """
     return payment_service.get_credit_transactions(user=current_user, db=db)
+
+
+@router.post("/credits/redeem-coupon", response_model=RedeemCouponResponse, dependencies=[Depends(rate_limit_dependency(max_requests=10, window_seconds=600))])
+def redeem_credit_coupon(
+    req: RedeemCouponRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Redeems a unique voucher code, crediting the user's wallet atomically and logging an immutable CreditTransaction.
+    Protected with rate limiting against brute-force code enumeration.
+    """
+    return coupon_service.redeem_coupon(code=req.code, user=current_user, db=db)
 
 
 @router.post("/webhook")

@@ -26,7 +26,10 @@ class ExamCreate(BaseModel):
     @field_validator("start_time", "end_time", mode="after")
     @classmethod
     def normalize_to_utc(cls, v: datetime) -> datetime:
-        return to_utc_instant(v)
+        result = to_utc_instant(v)
+        if result is None:
+            raise ValueError("Invalid datetime value provided")
+        return result
 
 class ExamResponse(BaseModel):
     id: str

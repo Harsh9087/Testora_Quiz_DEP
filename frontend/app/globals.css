@@ -384,6 +384,59 @@ html.dark .dark\:bg-\[\#EA580C\]\/20,
   animation: step-card-float-alt 5s ease-in-out 2.4s infinite;
 }
 
+/* Smooth 3D Floating Laptop & Ambient Backlight Glow */
+@keyframes laptop-float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes laptop-glow-pulse {
+  0%, 100% {
+    opacity: 0.65;
+    transform: scale(0.95);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1.05);
+  }
+}
+
+.animate-laptop-float {
+  animation: laptop-float 5.5s ease-in-out infinite;
+  will-change: transform;
+}
+
+.animate-glow-pulse {
+  animation: laptop-glow-pulse 4.5s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+/* Infinite Marquee Ticker (Right to Left) */
+@keyframes marquee-scroll {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee-left {
+  display: inline-flex;
+  width: max-content;
+  white-space: nowrap;
+  animation: marquee-scroll 32s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee-left:hover {
+  animation-play-state: paused;
+}
+
 /* Mobile Safe Area & Touch Optimization */
 .pt-safe { padding-top: env(safe-area-inset-top, 0px); }
 .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }

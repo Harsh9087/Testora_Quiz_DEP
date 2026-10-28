@@ -24,7 +24,9 @@ import {
   ChevronRight,
   CreditCard,
   Zap,
-  Sliders
+  Sliders,
+  Ticket,
+  Gift
 } from "lucide-react";
 import { apiFetch, API_V1 } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
@@ -40,6 +42,9 @@ interface UserProfileData {
   institution_name?: string | null;
   department_name?: string | null;
   credits_balance: number;
+  bonus_credits?: number;
+  total_available_credits?: number;
+  bonus_days_remaining?: number | null;
 }
 
 interface PaymentHistoryRecord {
@@ -108,6 +113,40 @@ export default function TeacherProfileModal({
   const [editName, setEditName] = useState<string>("");
   const [editAvatar, setEditAvatar] = useState<string>("");
   const [isSaving, setIsSaving] = useState<boolean>(false);
+
+  // Voucher / Coupon state
+  const [couponCode, setCouponCode] = useState<string>("");
+  const [redeemingCoupon, setRedeemingCoupon] = useState<boolean>(false);
+  const [showCouponInput, setShowCouponInput] = useState<boolean>(false);
+  const [couponFeedback, setCouponFeedback] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  const handleRedeemCoupon = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!couponCode.trim() || !token) return;
+    try {
+      setRedeemingCoupon(true);
+      setCouponFeedback(null);
+      const res = await apiFetch("/payments/credits/redeem-coupon", {
+        method: "POST",
+        token,
+        body: JSON.stringify({ code: couponCode.trim().toUpperCase() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.detail || "Failed to redeem voucher");
+      }
+      setCouponFeedback({ type: "success", text: data.message || "Voucher redeemed successfully!" });
+      showToast(data.message || "Voucher redeemed successfully!", "success");
+      setCouponCode("");
+      await fetchProfileAndData();
+    } catch (err: any) {
+      const msg = err.message || "Failed to redeem voucher";
+      setCouponFeedback({ type: "error", text: msg });
+      showToast(msg, "error");
+    } finally {
+      setRedeemingCoupon(false);
+    }
+  };
 
   const fetchProfileAndData = async () => {
     if (!token) return;
@@ -384,30 +423,102 @@ export default function TeacherProfileModal({
                   ) : null}
 
                   {/* Wallet Balance Card */}
-                  <div className="p-4 rounded-xl border border-amber-200 dark:border-amber-900/40 bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-transparent dark:from-amber-950/30 dark:via-orange-950/15 flex items-center justify-between">
-                    <div>
-                      <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
-                        <Coins className="h-3.5 w-3.5" />
-                        <span>Prepaid Credit Balance</span>
+                  <div className="p-4 rounded-xl border border-amber-200 dark:border-amber-900/40 bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-transparent dark:from-amber-950/30 dark:via-orange-950/15 space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div>
+                        <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+                          <Coins className="h-3.5 w-3.5" />
+                          <span>Prepaid Credit Balance</span>
+                        </div>
+                        <div className="text-3xl font-black text-[#242321] dark:text-[#F5F5F4] mt-1 flex items-baseline gap-2">
+                          <span>{((profile?.total_available_credits ?? profile?.credits_balance) || 0).toLocaleString()}</span>
+                          <span className="text-xs font-semibold text-[#716D67] dark:text-[#A8A29E]">Total Credits</span>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2 mt-1 text-[11px] text-[#716D67] dark:text-[#A8A29E]">
+                          <span>Regular: <strong className="text-stone-800 dark:text-stone-200">{(profile?.credits_balance || 0).toLocaleString()}</strong></span>
+                          {(profile?.bonus_credits ?? 0) > 0 && (
+                            <>
+                              <span>•</span>
+                              <span className="text-purple-600 dark:text-purple-400 font-semibold flex items-center gap-1">
+                                <Gift className="w-3 h-3" />
+                                Bonus: {profile?.bonus_credits?.toLocaleString()}
+                                {profile?.bonus_days_remaining !== null && profile?.bonus_days_remaining !== undefined && (
+                                  <span className="text-[10px] px-1 py-0.2 rounded bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300">
+                                    ({profile.bonus_days_remaining}d left)
+                                  </span>
+                                )}
+                              </span>
+                            </>
+                          )}
+                        </div>
                       </div>
-                      <div className="text-3xl font-black text-[#242321] dark:text-[#F5F5F4] mt-1 flex items-baseline gap-2">
-                        <span>{(profile?.credits_balance || 0).toLocaleString()}</span>
-                        <span className="text-xs font-semibold text-[#716D67] dark:text-[#A8A29E]">Credits Available</span>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowCouponInput(!showCouponInput);
+                            setCouponFeedback(null);
+                          }}
+                          className={`px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 border transition-all cursor-pointer ${
+                            showCouponInput
+                              ? "bg-purple-600 text-white border-purple-600"
+                              : "bg-white dark:bg-[#1E1C1A] text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800/50 hover:bg-purple-50 dark:hover:bg-purple-950/30"
+                          }`}
+                        >
+                          <Ticket className="h-3.5 w-3.5" />
+                          <span>{showCouponInput ? "Close Voucher" : "Redeem Voucher"}</span>
+                        </button>
+
+                        {onOpenRecharge && (
+                          <button
+                            type="button"
+                            onClick={onOpenRecharge}
+                            className="px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
+                          >
+                            <Zap className="h-3.5 w-3.5" />
+                            <span>Recharge</span>
+                          </button>
+                        )}
                       </div>
-                      <p className="text-[11px] text-[#716D67] dark:text-[#A8A29E] mt-0.5">
-                        1 Credit = 1 Candidate Question Attempt
-                      </p>
                     </div>
 
-                    {onOpenRecharge && (
-                      <button
-                        type="button"
-                        onClick={onOpenRecharge}
-                        className="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
+                    {/* Voucher Redemption Box */}
+                    {showCouponInput && (
+                      <form
+                        onSubmit={handleRedeemCoupon}
+                        className="pt-3 border-t border-amber-200/60 dark:border-amber-900/40 space-y-2"
                       >
-                        <Zap className="h-3.5 w-3.5" />
-                        <span>Recharge Wallet</span>
-                      </button>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={couponCode}
+                            onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                            placeholder="Enter 12-char voucher code (e.g. FDP-2026-...)"
+                            className="flex-1 bg-white dark:bg-[#141312] border border-purple-300 dark:border-purple-800/60 rounded-lg px-3 py-1.5 text-xs font-mono uppercase tracking-wider text-stone-900 dark:text-stone-100 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            disabled={redeemingCoupon}
+                          />
+                          <button
+                            type="submit"
+                            disabled={redeemingCoupon || !couponCode.trim()}
+                            className="px-4 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                          >
+                            {redeemingCoupon ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                            <span>Apply</span>
+                          </button>
+                        </div>
+                        {couponFeedback && (
+                          <div
+                            className={`text-[11px] px-2.5 py-1.5 rounded-md font-medium ${
+                              couponFeedback.type === "success"
+                                ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
+                                : "bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800"
+                            }`}
+                          >
+                            {couponFeedback.text}
+                          </div>
+                        )}
+                      </form>
                     )}
                   </div>
 

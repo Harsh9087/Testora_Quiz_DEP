@@ -39,3 +39,5 @@ frontend/.env
 .idea/
 client_secret*.json
 *.tsbuildinfo
+
+scratch/

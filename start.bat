@@ -1,7 +1,7 @@
 @echo off
 title Testora Quiz - 1-Click Launcher
 echo ============================================================
-echo        Testora Quiz - Starting Backend & Frontend...
+echo        Testora Quiz - Starting Backend ^& Frontend...
 echo ============================================================
 echo.
 

@@ -961,6 +961,9 @@ class PaymentService:
                 invoice_number=order.invoice_number
             )
 
+        if not fresh_user:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="User account not found during recharge verification.")
+
         # Signature verification
         if self._client and settings.RAZORPAY_KEY_SECRET:
             try:
@@ -1063,7 +1066,9 @@ class PaymentService:
 
         # Refresh user from DB
         fresh_user = db.query(User).filter(User.id == user.id).first()
-        available_balance = fresh_user.total_available_credits if fresh_user else 0
+        if not fresh_user:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="User account not found. Please try again.")
+        available_balance = fresh_user.total_available_credits
 
         if available_balance < credits_needed:
             raise HTTPException(

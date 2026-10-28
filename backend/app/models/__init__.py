@@ -11,9 +11,10 @@ from app.models.assessment_group import AssessmentGroup, AssessmentGroupStudent,
 from app.models.workspace import Workspace, WorkspaceMember
 from app.models.student_directory import StudentDirectory, DirectoryStudent
 from app.models.candidate import ExamCandidate
-from app.models.payment import PaymentOrder
+from app.models.payment import PaymentOrder, CreditTransaction
 from app.models.registration_form import StudentRegistrationForm, StudentFormSubmission
 from app.models.custom_form import CustomForm, CustomFormSubmission
+from app.models.coupon import CouponCampaign, Coupon, SystemSetting
 
 __all__ = [
     "Base",
@@ -53,5 +54,10 @@ __all__ = [
     "StudentRegistrationForm",
     "StudentFormSubmission",
     "CustomForm",
-    "CustomFormSubmission"
+    "CustomFormSubmission",
+    "PaymentOrder",
+    "CreditTransaction",
+    "CouponCampaign",
+    "Coupon",
+    "SystemSetting"
 ]

@@ -82,7 +82,12 @@ def register(user_in: UserCreate, response: Response, db: Session = Depends(get_
 
     # Prevent privilege escalation: self-registration only permits teacher or student
     assigned_role = user_in.role if user_in.role in ["teacher", "student"] else "teacher"
+    # Dynamic signup bonus from system settings (default: 200 credits, 15 days)
+    from app.services.coupon_service import CouponService
+    signup_bonus, bonus_days = CouponService.get_signup_bonus_config(db)
+
     hashed_password = get_password_hash(user_in.password)
+
     user = User(
         email=user_in.email.strip().lower(),
         hashed_password=hashed_password,
@@ -91,8 +96,8 @@ def register(user_in: UserCreate, response: Response, db: Session = Depends(get_
         institution_id=user_in.institution_id,
         is_active=True,
         credits_balance=0,
-        bonus_credits=500,
-        bonus_credits_expires_at=now_utc() + timedelta(days=15)
+        bonus_credits=signup_bonus if assigned_role in ["teacher", "inst_admin", "super_admin"] else 0,
+        bonus_credits_expires_at=(now_utc() + timedelta(days=bonus_days)) if assigned_role in ["teacher", "inst_admin", "super_admin"] else None
     )
     db.add(user)
     db.commit()
@@ -277,6 +282,9 @@ def google_auth(
         # Determine role for new Google user (default: teacher; never allow self-assignment of admin)
         assigned_role = payload.role if (payload.role and payload.role in ["teacher", "student"]) else "teacher"
         generated_pwd = f"GoogleAuth{secrets.token_hex(4)}!"
+        from app.services.coupon_service import CouponService
+        signup_bonus, bonus_days = CouponService.get_signup_bonus_config(db)
+
         user = User(
             email=email,
             full_name=full_name,
@@ -290,8 +298,8 @@ def google_auth(
             avatar_url=avatar_url,
             last_login_at=now_utc(),
             credits_balance=0,
-            bonus_credits=500,
-            bonus_credits_expires_at=now_utc() + timedelta(days=15)
+            bonus_credits=signup_bonus if assigned_role in ["teacher", "inst_admin", "super_admin"] else 0,
+            bonus_credits_expires_at=(now_utc() + timedelta(days=bonus_days)) if assigned_role in ["teacher", "inst_admin", "super_admin"] else None
         )
         db.add(user)
         db.commit()

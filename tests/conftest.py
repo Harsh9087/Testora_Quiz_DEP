@@ -18,6 +18,7 @@ from app.models.exam import Exam, ExamCredential
 from app.models.candidate import ExamCandidate
 from app.models.workspace import Workspace, WorkspaceMember
 from app.models.student_directory import StudentDirectory, DirectoryStudent
+from app.models.coupon import SystemSetting
 from app.utils.security import get_password_hash
 from app.services.workspace_service import bootstrap_personal_workspace
 
@@ -60,6 +61,8 @@ def setup_test_database():
         subj2 = Subject(name="Thermodynamics & Physics", id="PHYS-101", course_id=course.id)
         subj3 = Subject(name="General Knowledge", id="general_101", course_id=course.id)
         db.add_all([subj1, subj2, subj3])
+        db.add(SystemSetting(key="signup_bonus_credits", value="200", description="Default bonus credits", value_type="int"))
+        db.add(SystemSetting(key="signup_bonus_validity_days", value="15", description="Validity in days", value_type="int"))
         db.commit()
 
         # Seed default teacher

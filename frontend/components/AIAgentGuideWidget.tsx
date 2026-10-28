@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { 
   Bot, 
   Sparkles, 
@@ -16,101 +17,174 @@ import {
   HelpCircle,
   ArrowRight,
   BookOpen,
-  Send
+  Send,
+  ExternalLink,
+  KeyRound,
+  ShieldCheck,
+  RefreshCw,
+  Cpu
 } from "lucide-react";
 
-interface GuideTopic {
+export interface GuideTopic {
   id: string;
   title: string;
+  shortTitle: string;
   badge: string;
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
   color: string;
   summary: string;
   steps: string[];
+  actionText: string;
+  actionUrl: string;
+  actionType?: "link" | "scroll" | "code_modal";
+  keywords: string[];
 }
 
-const GUIDE_TOPICS: GuideTopic[] = [
+export const GUIDE_TOPICS: GuideTopic[] = [
+  {
+    id: "create-quiz",
+    title: "Create Smart Tests with AI",
+    shortTitle: "Create Tests",
+    badge: "Instructor Studio",
+    icon: FileEdit,
+    color: "text-blue-500 bg-blue-500/10 border-blue-500/20",
+    summary: "Synthesize calibrated assessments from syllabus blueprints, textbook chapters, or custom question banks with Gemini Pro AI.",
+    steps: [
+      "Open 'Teacher Assessment Studio' from the home card or faculty dashboard.",
+      "Click 'Create Test' and select your domain (e.g. Computer Science, Engineering, Mathematics).",
+      "Upload course PDFs or DOCX files into the ChromaDB vector knowledge base for exact syllabus alignment.",
+      "Choose question distribution: MCQs, Subjective, True/False, and calibrate Bloom taxonomy difficulty.",
+      "Review synthesized items with auto-formatted LaTeX formulas, edit questions, set time limits, and publish."
+    ],
+    actionText: "Open Instructor Studio →",
+    actionUrl: "/dashboard/teacher",
+    actionType: "link",
+    keywords: ["create", "exam", "test", "quiz", "make", "generate", "ai questions", "teacher", "syllabus", "pdf", "latex", "math"]
+  },
+  {
+    id: "student-portal",
+    title: "Take Your Test (Exam Code Access)",
+    shortTitle: "Take Test",
+    badge: "Candidate HUD",
+    icon: KeyRound,
+    color: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20",
+    summary: "Students can access scheduled exams using a unique 6-digit access code without complicated account setups.",
+    steps: [
+      "Click 'Enter Exam Code' or visit the Candidate Portal.",
+      "Enter the 6-digit assessment access code provided by your instructor.",
+      "Verify your full name, roll number, and student credentials on the verification screen.",
+      "Complete the system proctoring check (camera, fullscreen mode, and browser permissions).",
+      "Answer questions with real-time autosave. Every answer is preserved locally and synced to the cloud."
+    ],
+    actionText: "Enter Exam Code Now →",
+    actionUrl: "modal:exam-code",
+    actionType: "code_modal",
+    keywords: ["take", "student", "code", "enter", "access", "exam code", "portal", "candidate", "start", "attempt"]
+  },
   {
     id: "forms-registrations",
     title: "Student Data Collection Forms",
-    badge: "New Feature",
+    shortTitle: "Student Forms",
+    badge: "No Login Needed",
     icon: ClipboardList,
-    color: "text-[#C84B18] bg-[#C84B18]/10",
-    summary: "Collect student information via shareable online forms without requiring students to create accounts, and import directly into Student Directories.",
+    color: "text-amber-500 bg-amber-500/10 border-amber-500/20",
+    summary: "Collect verified student information via shareable mobile-friendly online forms and import directly to student rosters.",
     steps: [
       "Navigate to 'Forms & Registrations' from the faculty dashboard sidebar.",
-      "Click 'Create Registration Form' and enter only the Form Name (e.g. 'Section C AIML').",
-      "TestoraQuiz automatically includes the 6 predefined mandatory fields (Full Name, Email, Roll Number, Phone, Section, Branch).",
-      "Copy the unique shareable link or display the QR code for students to scan on mobile.",
-      "Students open the link and submit their details without needing to sign up or log in.",
-      "Review submissions in your dashboard, detect duplicate roll numbers, and click 'Import to Directory' or 'Export Excel'."
-    ]
+      "Click 'Create Registration Form' and enter the Form Name (e.g. 'CS Branch Batch 2026').",
+      "Copy the unique shareable link or present the QR code for students to scan on mobile.",
+      "Students fill in their Name, Email, Roll Number, and Phone without creating accounts or signing in.",
+      "Review live submissions with duplicate roll number detection, and click 'Import to Directory' or 'Export Excel'."
+    ],
+    actionText: "Create Student Form →",
+    actionUrl: "/dashboard/teacher",
+    actionType: "link",
+    keywords: ["form", "registration", "student form", "collect", "qr", "link", "no login", "data", "excel", "roster"]
   },
   {
     id: "custom-forms",
     title: "AI-Powered Custom Form Builder",
-    badge: "AI Builder",
+    shortTitle: "AI Form Builder",
+    badge: "Natural Language",
     icon: Wand2,
-    color: "text-blue-600 bg-blue-50 dark:bg-blue-950/40",
-    summary: "Generate custom surveys, workshop evaluations, and event registrations simply by describing them in natural language.",
+    color: "text-purple-500 bg-purple-500/10 border-purple-500/20",
+    summary: "Describe any workshop evaluation, feedback survey, or event registration in plain English, and AI synthesizes the form instantly.",
     steps: [
-      "Go to 'AI Form Builder' from the sidebar.",
-      "Type a natural language prompt (e.g. 'Create a workshop feedback form with ratings, content clarity, and suggestions').",
-      "Click 'Generate Form with AI' — Gemini will synthesize structured questions, input types, and choices.",
-      "Preview and edit question labels, reorder fields, add new questions, or toggle required settings.",
-      "Click 'Publish & Generate Link' to share with respondents across WhatsApp or Email.",
-      "View live submissions with dynamic columns matching your questions and export to Excel with 1-click."
-    ]
+      "Open 'AI Form Builder' from the faculty dashboard.",
+      "Type a natural language prompt (e.g. 'Create a Faculty Development Program feedback form with ratings and suggestions').",
+      "Click 'Generate Form with AI' — Gemini synthesizes structured fields, rating scales, and choices in seconds.",
+      "Customize field labels, toggle required validation, and click 'Publish & Copy Link'.",
+      "Analyze response charts and export submissions directly to CSV/Excel."
+    ],
+    actionText: "Open AI Form Studio →",
+    actionUrl: "/dashboard/teacher",
+    actionType: "link",
+    keywords: ["ai form", "custom form", "builder", "survey", "feedback", "workshop", "poll", "prompt", "synthesize"]
   },
   {
-    id: "quiz-creation",
-    title: "Create Quiz & RAG Knowledge Base",
-    badge: "Core Workflow",
-    icon: FileEdit,
-    color: "text-amber-600 bg-amber-50 dark:bg-amber-950/40",
-    summary: "Synthesize calibrated assessments from course documents, textbook chapters, or custom syllabus blueprints.",
+    id: "anti-cheat",
+    title: "Anti-Cheat Proctor Radar",
+    shortTitle: "Anti-Cheat",
+    badge: "Server-Enforced",
+    icon: ShieldCheck,
+    color: "text-cyan-500 bg-cyan-500/10 border-cyan-500/20",
+    summary: "Server-side focus monitoring and strict tab-switch telemetry prevent cheating and unauthorized browsing during active exams.",
     steps: [
-      "Open 'Create Quiz Wizard' from the Creator Studio sidebar.",
-      "Step 1: Upload course files (PDF, DOCX, TXT) to the Knowledge Base for ChromaDB vector indexing.",
-      "Step 2: Choose difficulty, question distribution (MCQs, Subjective, True/False), and passing criteria.",
-      "Step 3: Review AI-generated question items with LaTeX math formulas and edit as needed.",
-      "Step 4: Set scheduled time windows, anti-cheat rules, and publish to students."
-    ]
-  },
-  {
-    id: "student-portal",
-    title: "Student Exam Portal & Anti-Cheat",
-    badge: "Candidate HUD",
-    icon: ShieldAlert,
-    color: "text-rose-600 bg-rose-50 dark:bg-rose-950/40",
-    summary: "Secure testing interface with real-time response syncing and tab-switch telemetry proctoring.",
-    steps: [
-      "Candidates open their Student Portal and click 'Start Assessment' or enter a 6-digit access code.",
-      "Dual autosave engine backs up every answer locally and synchronizes to the cloud on keystroke.",
-      "Built-in scientific tools: scientific calculator, LaTeX rendering, and flag-for-review navigation.",
-      "Strict anti-cheat proctoring: exactly 1 tab switch allowed with warning; next violation triggers automatic submission and logs telemetry."
-    ]
+      "Tab-Switch Detection: Exactly 1 tab violation is permitted with a prominent warning modal.",
+      "Next Violation Enforcement: Second tab-switch triggers automatic exam submission with an audit incident flag.",
+      "Telemetry Sync: All blur events, window switches, and copy/paste attempts are logged to the teacher audit trail.",
+      "Full Screen Lock: Exams enforce full-screen focus throughout the assessment session."
+    ],
+    actionText: "Explore Proctoring Features →",
+    actionUrl: "#capabilities",
+    actionType: "scroll",
+    keywords: ["cheat", "anti-cheat", "proctor", "radar", "tab", "switch", "security", "telemetry", "lock", "monitor"]
   },
   {
     id: "directories",
     title: "Student Directories & Roster Management",
-    badge: "Directory",
+    shortTitle: "Directories",
+    badge: "Roster Management",
     icon: Users,
-    color: "text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40",
+    color: "text-rose-500 bg-rose-500/10 border-rose-500/20",
     summary: "Maintain cohorts, divisions, and batches for targeting assessments to specific groups of students.",
     steps: [
-      "Access 'Student Directory' in the sidebar.",
-      "Create directories manually, upload via the standard Excel/CSV template, or import from Online Forms.",
-      "Assign exams directly to an entire directory so candidates see their assessments automatically in their portal.",
-      "Download candidate credentials and passcodes in CSV format with 1 click."
-    ]
+      "Access 'Student Directory' in the faculty dashboard sidebar.",
+      "Create directories manually, upload via standard Excel/CSV templates, or import from Online Forms.",
+      "Assign exams directly to an entire directory so candidates see their assessments automatically.",
+      "Download candidate credentials, roll number mappings, and exam passcodes in CSV format with 1 click."
+    ],
+    actionText: "Manage Student Roster →",
+    actionUrl: "/dashboard/teacher",
+    actionType: "link",
+    keywords: ["directory", "roster", "students", "cohort", "batch", "class", "csv", "excel", "import", "group"]
   }
 ];
 
-export default function AIAgentGuideWidget() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [selectedTopicId, setSelectedTopicId] = useState<string>("forms-registrations");
+interface AIAgentGuideWidgetProps {
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  onOpenExamModal?: () => void;
+}
+
+export default function AIAgentGuideWidget({ 
+  isOpen: controlledOpen, 
+  onOpenChange,
+  onOpenExamModal
+}: AIAgentGuideWidgetProps = {}) {
+  const router = useRouter();
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
+
+  const setIsOpen = (val: boolean) => {
+    setInternalOpen(val);
+    onOpenChange?.(val);
+  };
+
+  const [selectedTopicId, setSelectedTopicId] = useState<string>("create-quiz");
   const [searchQuery, setSearchQuery] = useState("");
+  const [userQuestion, setUserQuestion] = useState("");
+  const [answeredQuery, setAnsweredQuery] = useState<string | null>(null);
 
   // Movable / Draggable icon state
   const [position, setPosition] = useState<{ x: number; y: number } | null>(null);
@@ -128,6 +202,9 @@ export default function AIAgentGuideWidget() {
     elemY: 0,
     hasMoved: false,
   });
+
+  const widgetRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   const BTN_SIZE = 52;
   const PADDING = 12;
@@ -177,6 +254,33 @@ export default function AIAgentGuideWidget() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  // Click outside listener to close widget gently
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (
+        widgetRef.current &&
+        !widgetRef.current.contains(target) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(target)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    // Attach after slight timeout to avoid immediate close on toggle click
+    const timer = setTimeout(() => {
+      document.addEventListener("mousedown", handleClickOutside);
+    }, 100);
+
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
 
   const handlePointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
     if (e.button !== 0) return; // Only primary mouse button
@@ -245,8 +349,8 @@ export default function AIAgentGuideWidget() {
         // ignore
       }
     } else {
-      // It was a click without movement: open modal
-      setIsOpen(true);
+      // It was a click without movement: toggle assistant
+      setIsOpen(!isOpen);
     }
   };
 
@@ -263,18 +367,105 @@ export default function AIAgentGuideWidget() {
     }
   };
 
-  const selectedTopic = GUIDE_TOPICS.find((t) => t.id === selectedTopicId) || GUIDE_TOPICS[0];
+  // Smart Search & Question Matcher
+  const handleAskQuestion = (q: string) => {
+    const query = q.trim().toLowerCase();
+    if (!query) return;
 
-  const filteredTopics = GUIDE_TOPICS.filter(
-    (t) =>
-      t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      t.summary.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      t.steps.some((s) => s.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+    setAnsweredQuery(q);
+
+    // Score each topic based on keywords, title, summary, and steps
+    let bestTopic = GUIDE_TOPICS[0];
+    let highestScore = -1;
+
+    for (const topic of GUIDE_TOPICS) {
+      let score = 0;
+      for (const kw of topic.keywords) {
+        if (query.includes(kw)) score += 5;
+      }
+      if (topic.title.toLowerCase().includes(query)) score += 10;
+      if (topic.summary.toLowerCase().includes(query)) score += 3;
+      for (const step of topic.steps) {
+        if (step.toLowerCase().includes(query)) score += 2;
+      }
+
+      if (score > highestScore) {
+        highestScore = score;
+        bestTopic = topic;
+      }
+    }
+
+    setSelectedTopicId(bestTopic.id);
+    setUserQuestion("");
+  };
+
+  const handleActionClick = (topic: GuideTopic) => {
+    setIsOpen(false);
+    if (topic.actionType === "code_modal") {
+      if (onOpenExamModal) {
+        onOpenExamModal();
+      } else {
+        router.push("/portal");
+      }
+    } else if (topic.actionType === "scroll" || topic.actionUrl.startsWith("#")) {
+      const elementId = topic.actionUrl.replace("#", "");
+      const elem = document.getElementById(elementId);
+      if (elem) {
+        elem.scrollIntoView({ behavior: "smooth" });
+      }
+    } else {
+      router.push(topic.actionUrl);
+    }
+  };
+
+  const selectedTopic = GUIDE_TOPICS.find((t) => t.id === selectedTopicId) || GUIDE_TOPICS[0];
+  const TopicIcon = selectedTopic.icon;
+
+  // Dynamic positioning for the assistant card near the floating agent button
+  const getWidgetPositionStyles = (): React.CSSProperties => {
+    if (typeof window === "undefined") {
+      return { bottom: "80px", right: "20px" };
+    }
+
+    const isMobile = window.innerWidth < 640;
+    if (isMobile) {
+      return {
+        bottom: "80px",
+        left: "12px",
+        right: "12px",
+        maxHeight: "calc(100vh - 100px)",
+      };
+    }
+
+    if (!position) {
+      return { bottom: "80px", right: "24px" };
+    }
+
+    // On desktop, anchor card to the side of the button so it sits neatly adjacent
+    const style: React.CSSProperties = {};
+    const winW = window.innerWidth;
+    const winH = window.innerHeight;
+
+    // Horizontal placement: anchor near button X
+    if (position.x > winW / 2) {
+      style.right = `${Math.max(16, winW - position.x - BTN_SIZE)}px`;
+    } else {
+      style.left = `${Math.max(16, position.x)}px`;
+    }
+
+    // Vertical placement: open above the button if in bottom half, below if in top half
+    if (position.y > winH / 2) {
+      style.bottom = `${Math.max(16, winH - position.y + 12)}px`;
+    } else {
+      style.top = `${Math.max(16, position.y + BTN_SIZE + 12)}px`;
+    }
+
+    return style;
+  };
 
   return (
     <>
-      {/* ═══════ MOVABLE FLOATING SMALL ICON (NO TEXT) ═══════ */}
+      {/* ═══════ MOVABLE FLOATING AGENT ICON BUTTON ═══════ */}
       <div
         className="fixed z-40 select-none touch-none"
         style={
@@ -284,6 +475,7 @@ export default function AIAgentGuideWidget() {
         }
       >
         <button
+          ref={buttonRef}
           type="button"
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
@@ -293,172 +485,208 @@ export default function AIAgentGuideWidget() {
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {
               e.preventDefault();
-              setIsOpen(true);
+              setIsOpen(!isOpen);
             }
           }}
-          className={`group relative w-[52px] h-[52px] rounded-full bg-gradient-to-tr from-[#9C3810] via-[#C84B18] to-[#EA580C] text-white shadow-xl hover:shadow-2xl hover:shadow-[#C84B18]/30 border-2 border-white/25 flex items-center justify-center transition-shadow duration-200 ${
+          className={`group relative w-[52px] h-[52px] rounded-full bg-gradient-to-tr from-[#9C3810] via-[#C84B18] to-[#EA580C] text-white shadow-xl hover:shadow-2xl hover:shadow-[#C84B18]/40 border-2 border-white/30 flex items-center justify-center transition-all duration-200 cursor-pointer ${
             isDragging
               ? "cursor-grabbing scale-105"
-              : "cursor-grab hover:scale-105 active:scale-95 transition-transform duration-200"
+              : "cursor-grab hover:scale-105 active:scale-95"
           }`}
-          title="Platform Guide (Click to open, Drag to move anywhere)"
-          aria-label="Platform Guide"
+          title="Ask AI Guide (Click to open, Drag anywhere)"
+          aria-label="Ask AI Platform Assistant"
         >
-          {/* Circular inner icon container */}
+          {/* Inner Bot Icon */}
           <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-xs flex items-center justify-center pointer-events-none">
             <Bot className="w-5 h-5 text-white drop-shadow-xs" />
           </div>
 
-          {/* Online status indicator dot */}
+          {/* Active Status Pulse */}
           <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#C84B18] shadow-xs animate-pulse pointer-events-none" />
         </button>
       </div>
 
-      {/* ═══════ INTERACTIVE AI GUIDE MODAL / DRAWER ═══════ */}
+      {/* ═══════ FLOATING AI AGENT POPUP WINDOW (OPEN NEAR AGENT ICON) ═══════ */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl max-w-3xl w-full h-[620px] max-h-[90vh] shadow-2xl flex flex-col overflow-hidden">
-            
-            {/* Modal Header */}
-            <div className="px-5 py-4 border-b border-[#E5E0D8] dark:border-[#292524] flex items-center justify-between bg-[#FAF8F5] dark:bg-[#1E1C1A]">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#9C3810] via-[#C84B18] to-[#EA580C] flex items-center justify-center text-white shadow-xs">
-                  <Bot className="w-5 h-5" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-bold text-[#242321] dark:text-[#F5F5F4]">
-                      TestoraQuiz AI Platform Assistant
-                    </h3>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#C84B18]/10 text-[#C84B18] dark:text-[#EA580C]">
-                      Interactive Guide
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-[#716D67] dark:text-[#A8A29E]">
-                    Step-by-step instructions for all features across the platform
-                  </p>
-                </div>
+        <div
+          ref={widgetRef}
+          style={getWidgetPositionStyles()}
+          className="fixed z-50 w-[calc(100vw-24px)] sm:w-[410px] md:w-[430px] h-[560px] max-h-[calc(100vh-100px)] rounded-3xl bg-white dark:bg-[#0D1527] border border-slate-200/90 dark:border-slate-800 shadow-2xl shadow-slate-900/25 dark:shadow-black/70 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-3 duration-200 ring-1 ring-slate-900/5 dark:ring-white/10 select-none"
+        >
+          {/* Header */}
+          <div className="px-4 py-3 bg-gradient-to-r from-slate-900 via-[#131D35] to-slate-900 text-white flex items-center justify-between border-b border-slate-800 shrink-0">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#9C3810] via-[#C84B18] to-[#EA580C] flex items-center justify-center text-white shadow-sm ring-1 ring-white/20">
+                <Bot className="w-4 h-4" />
               </div>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <h3 className="text-xs font-bold text-white tracking-tight">
+                    Testora AI Assistant
+                  </h3>
+                  <span className="px-1.5 py-0.2 rounded-full text-[9px] font-extrabold uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                    Live
+                  </span>
+                </div>
+                <p className="text-[10px] text-slate-400">
+                  Instant step-by-step guidance &amp; quick actions
+                </p>
+              </div>
+            </div>
 
+            <div className="flex items-center gap-1">
+              {answeredQuery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAnsweredQuery(null);
+                    setSelectedTopicId("create-quiz");
+                  }}
+                  className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                  title="Reset to all guides"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                </button>
+              )}
               <button
+                type="button"
                 onClick={() => setIsOpen(false)}
-                className="p-1.5 rounded-xl text-[#716D67] hover:bg-white dark:hover:bg-[#171615] transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                title="Close assistant"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
+          </div>
 
-            {/* Search / Filter Bar */}
-            <div className="p-3 border-b border-[#E5E0D8] dark:border-[#292524] bg-white dark:bg-[#171615]">
-              <div className="relative">
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-[#A8A29E]" />
-                <input
-                  type="text"
-                  placeholder="Ask or search: How to create online forms, import students, build custom tests..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-3.5 py-2 text-xs rounded-xl border border-[#E5E0D8] dark:border-[#292524] bg-[#FAF8F5] dark:bg-[#201D1A] text-[#242321] dark:text-[#F5F5F4] focus:border-[#C84B18] outline-none placeholder:text-[#A8A29E]"
-                />
+          {/* Quick Questions Chips / Shortcuts */}
+          <div className="px-3 py-2 bg-slate-50 dark:bg-[#0B1120] border-b border-slate-200/80 dark:border-slate-800/80 flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
+            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider shrink-0 pl-1">
+              Topics:
+            </span>
+            {GUIDE_TOPICS.map((topic) => {
+              const active = selectedTopicId === topic.id;
+              return (
+                <button
+                  key={topic.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedTopicId(topic.id);
+                    setAnsweredQuery(null);
+                  }}
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all shrink-0 cursor-pointer flex items-center gap-1 border ${
+                    active
+                      ? "bg-[#C84B18] text-white border-[#C84B18] shadow-xs"
+                      : "bg-white dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700/80 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  }`}
+                >
+                  <span>{topic.shortTitle}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Content Area: Step-by-Step Instructions & Action Button */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white dark:bg-[#0D1527]">
+            
+            {/* If user asked a question, show user prompt pill */}
+            {answeredQuery && (
+              <div className="p-2.5 rounded-xl bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800/40 text-xs text-orange-900 dark:text-orange-200 flex items-center gap-2">
+                <Sparkles className="w-3.5 h-3.5 text-[#C84B18] shrink-0" />
+                <span className="font-semibold truncate">Q: &ldquo;{answeredQuery}&rdquo;</span>
+              </div>
+            )}
+
+            {/* Topic Overview Card */}
+            <div className="space-y-1.5 pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2.5">
+                <div className={`p-2 rounded-xl border ${selectedTopic.color}`}>
+                  <TopicIcon className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-white leading-tight">
+                      {selectedTopic.title}
+                    </h4>
+                    <span className="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                      {selectedTopic.badge}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                    {selectedTopic.summary}
+                  </p>
+                </div>
               </div>
             </div>
 
-            {/* Body: Split Layout (Topics Sidebar + Step-by-Step Details) */}
-            <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-              
-              {/* Left Topics List */}
-              <div className="w-full md:w-64 border-r border-[#E5E0D8] dark:border-[#292524] overflow-y-auto p-2.5 space-y-1.5 bg-[#FAF8F5]/60 dark:bg-[#171615]">
-                <div className="text-[10px] font-bold text-[#8C827A] px-2.5 py-1 uppercase tracking-wider">
-                  Platform Features ({filteredTopics.length})
-                </div>
-                {filteredTopics.map((topic) => {
-                  const isSelected = selectedTopic.id === topic.id;
-                  const Icon = topic.icon;
-                  return (
-                    <button
-                      key={topic.id}
-                      onClick={() => setSelectedTopicId(topic.id)}
-                      className={`w-full text-left p-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center justify-between group ${
-                        isSelected
-                          ? "bg-[#C84B18] text-white shadow-xs"
-                          : "text-[#57534E] dark:text-[#A8A29E] hover:bg-white dark:hover:bg-[#201D1A] hover:text-[#242321] dark:hover:text-[#F5F5F4]"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2 truncate">
-                        <Icon className={`w-4 h-4 shrink-0 ${isSelected ? "text-white" : ""}`} />
-                        <span className="truncate">{topic.title}</span>
-                      </div>
-                      <ChevronRight className={`w-3.5 h-3.5 shrink-0 transition-transform ${isSelected ? "text-white translate-x-0.5" : "text-[#A8A29E]"}`} />
-                    </button>
-                  );
-                })}
+            {/* Step-by-Step List */}
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                <span>Step-by-Step Instructions</span>
+                <span className="text-[10px] text-slate-400 font-mono">
+                  {selectedTopic.steps.length} Steps
+                </span>
               </div>
 
-              {/* Right Topic Details & Steps */}
-              <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-5 bg-white dark:bg-[#171615]">
-                
-                {/* Topic Header Card */}
-                <div className="space-y-2 pb-4 border-b border-[#E5E0D8] dark:border-[#292524]">
-                  <div className="flex items-center gap-2">
-                    <span className={`p-2 rounded-xl ${selectedTopic.color}`}>
-                      <selectedTopic.icon className="w-5 h-5" />
-                    </span>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h4 className="text-base font-extrabold text-[#242321] dark:text-[#F5F5F4]">
-                          {selectedTopic.title}
-                        </h4>
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FAF8F5] dark:bg-[#201D1A] border border-[#E5E0D8] dark:border-[#292524] text-[#716D67] dark:text-[#A8A29E]">
-                          {selectedTopic.badge}
-                        </span>
-                      </div>
-                      <p className="text-xs text-[#716D67] dark:text-[#A8A29E] mt-0.5">
-                        {selectedTopic.summary}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Step-by-Step Instructions */}
-                <div className="space-y-3">
-                  <div className="text-xs font-bold uppercase tracking-wider text-[#716D67]">
-                    Step-by-Step Instructions
-                  </div>
-
-                  <div className="space-y-2.5">
-                    {selectedTopic.steps.map((step, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-start gap-3 p-3 rounded-xl bg-[#FAF8F5] dark:bg-[#201D1A] border border-[#E5E0D8]/70 dark:border-[#292524] text-xs"
-                      >
-                        <span className="w-5 h-5 rounded-full bg-[#C84B18] text-white font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
-                          {idx + 1}
-                        </span>
-                        <p className="text-[#242321] dark:text-[#F5F5F4] leading-relaxed">
-                          {step}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Direct Action Link */}
-                <div className="pt-2 flex items-center justify-between text-xs">
-                  <span className="text-[#8C827A]">Ready to try this feature?</span>
-                  <a
-                    href="/dashboard/teacher"
-                    onClick={() => setIsOpen(false)}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#C84B18] hover:bg-[#B33F10] text-white font-bold transition-all shadow-xs"
+              <div className="space-y-2">
+                {selectedTopic.steps.map((step, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-50 dark:bg-[#111A30] border border-slate-200/80 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-200 leading-relaxed hover:border-blue-400/50 dark:hover:border-blue-500/40 transition-colors"
                   >
-                    <span>Launch Faculty Studio</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </a>
-                </div>
-
+                    <span className="w-5 h-5 rounded-full bg-gradient-to-tr from-[#9C3810] via-[#C84B18] to-[#EA580C] text-white font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
+                      {idx + 1}
+                    </span>
+                    <span className="flex-1">{step}</span>
+                  </div>
+                ))}
               </div>
+            </div>
 
+            {/* CLICKABLE ACTION BUTTON */}
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => handleActionClick(selectedTopic)}
+                className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:via-indigo-500 hover:to-blue-600 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-blue-600/30 hover:shadow-lg hover:shadow-blue-600/40 hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer"
+              >
+                <span>{selectedTopic.actionText}</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </button>
             </div>
 
           </div>
+
+          {/* Bottom Question Input Bar ("Kaha user kuch pooch sakta") */}
+          <div className="p-3 bg-slate-50 dark:bg-[#0B1120] border-t border-slate-200/90 dark:border-slate-800 shrink-0">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleAskQuestion(userQuestion);
+              }}
+              className="flex items-center gap-2"
+            >
+              <div className="relative flex-1">
+                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+                <input
+                  type="text"
+                  value={userQuestion}
+                  onChange={(e) => setUserQuestion(e.target.value)}
+                  placeholder="Ask a question (e.g. how to create quiz, proctoring)..."
+                  className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-blue-400"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={!userQuestion.trim()}
+                className="p-2 rounded-xl bg-[#C84B18] hover:bg-[#B33F10] disabled:opacity-40 text-white text-xs font-bold flex items-center justify-center shadow-xs transition-all cursor-pointer disabled:cursor-not-allowed shrink-0"
+                title="Send Question"
+              >
+                <Send className="w-3.5 h-3.5" />
+              </button>
+            </form>
+          </div>
+
         </div>
       )}
     </>

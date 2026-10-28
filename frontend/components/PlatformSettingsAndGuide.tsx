@@ -424,7 +424,7 @@ export default function PlatformSettingsAndGuide({
                 Interface Color Theme
               </div>
               <div className="text-[11px] text-[#64748B] dark:text-[#A3B1C6]">
-                Toggle between Light, Dark, or System Default with automatic OS sync
+                Directly toggle between Light and Dark mode with a single click
               </div>
             </div>
             <ThemeToggle />

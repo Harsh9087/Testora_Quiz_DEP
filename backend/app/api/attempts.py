@@ -315,7 +315,7 @@ def login_student(login_in: ExamLogin, exam_code: str, db: Session = Depends(get
     cand_name = "Candidate"
     if cand:
         cand_name = cand.name_snapshot
-    elif cred.student and cred.student.user:
+    elif cred and cred.student and cred.student.user:
         cand_name = cred.student.user.full_name
     elif cred:
         cand_name = cred.username
