@@ -984,8 +984,8 @@ export default function TeacherDashboard() {
           </div>
           </div>
 
-          {/* Systematic 4 Summary KPI Cards (2 Cards in a Row on Mobile & Desktop) */}
-          <div className="grid grid-cols-2 gap-2 xs:gap-2.5 sm:gap-4 md:gap-5">
+          {/* Systematic 4 Summary KPI Cards (2 in a Row on Mobile, All 4 in a Single Row on Desktop) */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 xs:gap-2.5 sm:gap-3.5 lg:gap-4">
             {/* ══════════════════════════════════════════════════════
                 CARD 1 — ASSESSMENTS (Blue Gradient Header)
                ══════════════════════════════════════════════════════ */}
@@ -999,10 +999,10 @@ export default function TeacherDashboard() {
                   switchSectionTab("exams");
                 }
               }}
-              className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-white dark:bg-[#111C31] border border-slate-200/80 dark:border-[#263449] shadow-xs hover:shadow-md hover:border-blue-300 dark:hover:border-blue-700/60 transition-all duration-200 p-2.5 xs:p-3 sm:p-4 group cursor-pointer flex flex-col justify-between"
+              className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-white dark:bg-[#111C31] border border-slate-200/80 dark:border-[#263449] shadow-xs hover:shadow-md hover:border-blue-300 dark:hover:border-blue-700/60 transition-all duration-200 p-2.5 xs:p-3 sm:p-3.5 lg:p-4 group cursor-pointer flex flex-col justify-between"
             >
               {/* Curved Top-Left Header Background Decoration */}
-              <div className="absolute top-0 left-0 w-[68px] xs:w-[78px] sm:w-[120px] md:w-[130px] h-[38px] xs:h-[44px] sm:h-[62px] pointer-events-none select-none">
+              <div className="absolute top-0 left-0 w-[70px] xs:w-[80px] sm:w-[95px] lg:w-[90px] xl:w-[96px] h-[40px] xs:h-[46px] sm:h-[54px] lg:h-[52px] pointer-events-none select-none">
                 <svg 
                   viewBox="0 0 190 100" 
                   fill="none" 
@@ -1025,17 +1025,17 @@ export default function TeacherDashboard() {
               </div>
 
               {/* Header White Outline Icon */}
-              <div className="absolute top-1.5 left-2 sm:top-2.5 sm:left-3 text-white z-10 pointer-events-none drop-shadow-xs">
+              <div className="absolute top-1.5 left-2 sm:top-2 sm:left-2.5 text-white z-10 pointer-events-none drop-shadow-xs">
                 <Calendar className="w-3.5 h-3.5 xs:w-4 xs:h-4 sm:w-4.5 sm:h-4.5 stroke-[2.2]" />
               </div>
 
               {/* Upper Block: Title & Subtitle + Big Metric */}
               <div>
                 {/* Top Row: Spacer clearing the curve + Title block */}
-                <div className="flex items-start justify-between min-h-[30px] xs:min-h-[34px] sm:min-h-[40px] mb-1 sm:mb-1.5">
-                  <div className="w-[50px] xs:w-[58px] sm:w-[88px] shrink-0" />
-                  <div className="flex-1 text-left pl-1 sm:pl-2 min-w-0">
-                    <h3 className="text-[11px] xs:text-xs sm:text-base font-bold text-slate-900 dark:text-white leading-tight tracking-tight truncate">
+                <div className="flex items-start justify-between min-h-[30px] xs:min-h-[34px] sm:min-h-[38px] mb-1 sm:mb-1.5">
+                  <div className="w-[52px] xs:w-[60px] sm:w-[72px] lg:w-[68px] xl:w-[74px] shrink-0" />
+                  <div className="flex-1 text-left pl-1 sm:pl-1.5 min-w-0">
+                    <h3 className="text-[11px] xs:text-xs sm:text-sm lg:text-[13px] xl:text-sm font-bold text-slate-900 dark:text-white leading-tight tracking-tight truncate">
                       Assessments
                     </h3>
                     <p className="text-[9px] xs:text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">
@@ -1046,7 +1046,7 @@ export default function TeacherDashboard() {
 
                 {/* Metric Number & Label (Underneath curve on left side) */}
                 <div className="mt-0.5 sm:mt-1 mb-1.5 sm:mb-2">
-                  <div className="text-lg xs:text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-none">
+                  <div className="text-lg xs:text-xl sm:text-2xl lg:text-2xl xl:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-none">
                     {exams.length}
                   </div>
                   <div className="text-[9px] xs:text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5 truncate">
@@ -1060,19 +1060,19 @@ export default function TeacherDashboard() {
                 {/* Status Sub-Metrics: 2 Columns */}
                 <div className="grid grid-cols-2 gap-1 xs:gap-1.5 text-xs">
                   <div className="min-w-0">
-                    <div className="text-[8px] xs:text-[9px] sm:text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5 truncate">
+                    <div className="text-[8px] xs:text-[9px] sm:text-[9.5px] lg:text-[9px] xl:text-[9.5px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5 truncate">
                       LIVE
                     </div>
-                    <div className="font-bold text-emerald-600 dark:text-emerald-400 text-[10px] xs:text-[11px] sm:text-[13px] flex items-center gap-1 truncate">
+                    <div className="font-bold text-emerald-600 dark:text-emerald-400 text-[10px] xs:text-[11px] sm:text-xs flex items-center gap-1 truncate">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0 animate-pulse" />
                       <span className="truncate">{liveExams.length} Active</span>
                     </div>
                   </div>
-                  <div className="min-w-0 border-l border-slate-100 dark:border-slate-800/80 pl-1.5 xs:pl-2 sm:pl-3">
-                    <div className="text-[8px] xs:text-[9px] sm:text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5 truncate">
+                  <div className="min-w-0 border-l border-slate-100 dark:border-slate-800/80 pl-1.5 xs:pl-2">
+                    <div className="text-[8px] xs:text-[9px] sm:text-[9.5px] lg:text-[9px] xl:text-[9.5px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5 truncate">
                       DRAFTS
                     </div>
-                    <div className="font-bold text-slate-700 dark:text-slate-300 text-[10px] xs:text-[11px] sm:text-[13px] truncate">
+                    <div className="font-bold text-slate-700 dark:text-slate-300 text-[10px] xs:text-[11px] sm:text-xs truncate">
                       {draftExams.length} Ready
                     </div>
                   </div>
@@ -1083,7 +1083,7 @@ export default function TeacherDashboard() {
               <div className="mt-2 sm:mt-2.5 pt-0.5">
                 <div className="w-full flex items-center justify-between px-2 xs:px-2.5 sm:px-3 py-1 xs:py-1.5 sm:py-2 rounded-lg sm:rounded-xl bg-[#F0F6FF] dark:bg-blue-950/40 text-[#2563EB] dark:text-[#60A5FA] group-hover:bg-[#E0EDFF] dark:group-hover:bg-blue-950/60 transition-all">
                   <span className="font-bold text-[10px] xs:text-[11px] sm:text-xs truncate">View Assessments</span>
-                  <div className="w-5 h-5 xs:w-5.5 xs:h-5.5 sm:w-6.5 sm:h-6.5 rounded-full bg-[#DBEAFE] dark:bg-blue-900/60 text-[#2563EB] dark:text-[#93C5FD] flex items-center justify-center shrink-0 shadow-2xs ml-1">
+                  <div className="w-5 h-5 xs:w-5.5 xs:h-5.5 sm:w-6 sm:h-6 rounded-full bg-[#DBEAFE] dark:bg-blue-900/60 text-[#2563EB] dark:text-[#93C5FD] flex items-center justify-center shrink-0 shadow-2xs ml-1">
                     <ArrowRight className="w-2.5 h-2.5 xs:w-3 xs:h-3 stroke-[2.5]" />
                   </div>
                 </div>
@@ -1103,10 +1103,10 @@ export default function TeacherDashboard() {
                   switchSectionTab("kb");
                 }
               }}
-              className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-white dark:bg-[#111C31] border border-slate-200/80 dark:border-[#263449] shadow-xs hover:shadow-md hover:border-orange-300 dark:hover:border-orange-700/60 transition-all duration-200 p-2.5 xs:p-3 sm:p-4 group cursor-pointer flex flex-col justify-between"
+              className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-white dark:bg-[#111C31] border border-slate-200/80 dark:border-[#263449] shadow-xs hover:shadow-md hover:border-orange-300 dark:hover:border-orange-700/60 transition-all duration-200 p-2.5 xs:p-3 sm:p-3.5 lg:p-4 group cursor-pointer flex flex-col justify-between"
             >
               {/* Curved Top-Left Header Background Decoration */}
-              <div className="absolute top-0 left-0 w-[68px] xs:w-[78px] sm:w-[120px] md:w-[130px] h-[38px] xs:h-[44px] sm:h-[62px] pointer-events-none select-none">
+              <div className="absolute top-0 left-0 w-[70px] xs:w-[80px] sm:w-[95px] lg:w-[90px] xl:w-[96px] h-[40px] xs:h-[46px] sm:h-[54px] lg:h-[52px] pointer-events-none select-none">
                 <svg 
                   viewBox="0 0 190 100" 
                   fill="none" 
@@ -1129,17 +1129,17 @@ export default function TeacherDashboard() {
               </div>
 
               {/* Header White Outline Icon */}
-              <div className="absolute top-1.5 left-2 sm:top-2.5 sm:left-3 text-white z-10 pointer-events-none drop-shadow-xs">
+              <div className="absolute top-1.5 left-2 sm:top-2 sm:left-2.5 text-white z-10 pointer-events-none drop-shadow-xs">
                 <BookOpen className="w-3.5 h-3.5 xs:w-4 xs:h-4 sm:w-4.5 sm:h-4.5 stroke-[2.2]" />
               </div>
 
               {/* Upper Block: Title & Subtitle + Big Metric */}
               <div>
                 {/* Top Row: Spacer clearing the curve + Title block */}
-                <div className="flex items-start justify-between min-h-[30px] xs:min-h-[34px] sm:min-h-[40px] mb-1 sm:mb-1.5">
-                  <div className="w-[50px] xs:w-[58px] sm:w-[88px] shrink-0" />
-                  <div className="flex-1 text-left pl-1 sm:pl-2 min-w-0">
-                    <h3 className="text-[11px] xs:text-xs sm:text-base font-bold text-slate-900 dark:text-white leading-tight tracking-tight truncate">
+                <div className="flex items-start justify-between min-h-[30px] xs:min-h-[34px] sm:min-h-[38px] mb-1 sm:mb-1.5">
+                  <div className="w-[52px] xs:w-[60px] sm:w-[72px] lg:w-[68px] xl:w-[74px] shrink-0" />
+                  <div className="flex-1 text-left pl-1 sm:pl-1.5 min-w-0">
+                    <h3 className="text-[11px] xs:text-xs sm:text-sm lg:text-[13px] xl:text-sm font-bold text-slate-900 dark:text-white leading-tight tracking-tight truncate">
                       Knowledge Base
                     </h3>
                     <p className="text-[9px] xs:text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">
@@ -1150,7 +1150,7 @@ export default function TeacherDashboard() {
 
                 {/* Metric Number & Label */}
                 <div className="mt-0.5 sm:mt-1 mb-1.5 sm:mb-2">
-                  <div className="text-lg xs:text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-none">
+                  <div className="text-lg xs:text-xl sm:text-2xl lg:text-2xl xl:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-none">
                     {documents.length}
                   </div>
                   <div className="text-[9px] xs:text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5 truncate">
@@ -1164,15 +1164,15 @@ export default function TeacherDashboard() {
                 {/* Status Sub-Metrics: 2 Columns */}
                 <div className="grid grid-cols-2 gap-1 xs:gap-1.5 text-xs">
                   <div className="min-w-0">
-                    <div className="text-[8px] xs:text-[9px] sm:text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5 truncate">
+                    <div className="text-[8px] xs:text-[9px] sm:text-[9.5px] lg:text-[9px] xl:text-[9.5px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5 truncate">
                       COLLECTIONS
                     </div>
-                    <div className="font-bold text-slate-700 dark:text-slate-300 text-[10px] xs:text-[11px] sm:text-[13px] truncate">
+                    <div className="font-bold text-slate-700 dark:text-slate-300 text-[10px] xs:text-[11px] sm:text-xs truncate">
                       {kbSubjects.length} Subject{kbSubjects.length !== 1 ? "s" : ""}
                     </div>
                   </div>
-                  <div className="min-w-0 border-l border-slate-100 dark:border-slate-800/80 pl-1.5 xs:pl-2 sm:pl-3">
-                    <div className="text-[8px] xs:text-[9px] sm:text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5 truncate">
+                  <div className="min-w-0 border-l border-slate-100 dark:border-slate-800/80 pl-1.5 xs:pl-2">
+                    <div className="text-[8px] xs:text-[9px] sm:text-[9.5px] lg:text-[9px] xl:text-[9.5px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5 truncate">
                       GROUNDING
                     </div>
                     <div 
@@ -1180,7 +1180,7 @@ export default function TeacherDashboard() {
                         e.stopPropagation();
                         setIsStep1KbModalOpen(true);
                       }}
-                      className="font-bold text-orange-500 dark:text-orange-400 text-[10px] xs:text-[11px] sm:text-[13px] truncate hover:underline cursor-pointer"
+                      className="font-bold text-orange-500 dark:text-orange-400 text-[10px] xs:text-[11px] sm:text-xs truncate hover:underline cursor-pointer"
                       title="Click to upload PDF study materials"
                     >
                       Upload PDFs
@@ -1193,7 +1193,7 @@ export default function TeacherDashboard() {
               <div className="mt-2 sm:mt-2.5 pt-0.5">
                 <div className="w-full flex items-center justify-between px-2 xs:px-2.5 sm:px-3 py-1 xs:py-1.5 sm:py-2 rounded-lg sm:rounded-xl bg-[#FFF7ED] dark:bg-orange-950/40 text-[#EA580C] dark:text-[#FB923C] group-hover:bg-[#FFEDD5] dark:group-hover:bg-orange-950/60 transition-all">
                   <span className="font-bold text-[10px] xs:text-[11px] sm:text-xs truncate">Manage Knowledge</span>
-                  <div className="w-5 h-5 xs:w-5.5 xs:h-5.5 sm:w-6.5 sm:h-6.5 rounded-full bg-[#FFEDD5] dark:bg-orange-900/60 text-[#EA580C] dark:text-[#FDBA74] flex items-center justify-center shrink-0 shadow-2xs ml-1">
+                  <div className="w-5 h-5 xs:w-5.5 xs:h-5.5 sm:w-6 sm:h-6 rounded-full bg-[#FFEDD5] dark:bg-orange-900/60 text-[#EA580C] dark:text-[#FDBA74] flex items-center justify-center shrink-0 shadow-2xs ml-1">
                     <ArrowRight className="w-2.5 h-2.5 xs:w-3 xs:h-3 stroke-[2.5]" />
                   </div>
                 </div>
@@ -1213,10 +1213,10 @@ export default function TeacherDashboard() {
                   switchSectionTab("students");
                 }
               }}
-              className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-white dark:bg-[#111C31] border border-slate-200/80 dark:border-[#263449] shadow-xs hover:shadow-md hover:border-teal-300 dark:hover:border-teal-700/60 transition-all duration-200 p-2.5 xs:p-3 sm:p-4 group cursor-pointer flex flex-col justify-between"
+              className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-white dark:bg-[#111C31] border border-slate-200/80 dark:border-[#263449] shadow-xs hover:shadow-md hover:border-teal-300 dark:hover:border-teal-700/60 transition-all duration-200 p-2.5 xs:p-3 sm:p-3.5 lg:p-4 group cursor-pointer flex flex-col justify-between"
             >
               {/* Curved Top-Left Header Background Decoration */}
-              <div className="absolute top-0 left-0 w-[68px] xs:w-[78px] sm:w-[120px] md:w-[130px] h-[38px] xs:h-[44px] sm:h-[62px] pointer-events-none select-none">
+              <div className="absolute top-0 left-0 w-[70px] xs:w-[80px] sm:w-[95px] lg:w-[90px] xl:w-[96px] h-[40px] xs:h-[46px] sm:h-[54px] lg:h-[52px] pointer-events-none select-none">
                 <svg 
                   viewBox="0 0 190 100" 
                   fill="none" 
@@ -1239,17 +1239,17 @@ export default function TeacherDashboard() {
               </div>
 
               {/* Header White Outline Icon */}
-              <div className="absolute top-1.5 left-2 sm:top-2.5 sm:left-3 text-white z-10 pointer-events-none drop-shadow-xs">
+              <div className="absolute top-1.5 left-2 sm:top-2 sm:left-2.5 text-white z-10 pointer-events-none drop-shadow-xs">
                 <Users className="w-3.5 h-3.5 xs:w-4 xs:h-4 sm:w-4.5 sm:h-4.5 stroke-[2.2]" />
               </div>
 
               {/* Upper Block: Title & Subtitle + Big Metric */}
               <div>
                 {/* Top Row: Spacer clearing the curve + Title block */}
-                <div className="flex items-start justify-between min-h-[30px] xs:min-h-[34px] sm:min-h-[40px] mb-1 sm:mb-1.5">
-                  <div className="w-[50px] xs:w-[58px] sm:w-[88px] shrink-0" />
-                  <div className="flex-1 text-left pl-1 sm:pl-2 min-w-0">
-                    <h3 className="text-[11px] xs:text-xs sm:text-base font-bold text-slate-900 dark:text-white leading-tight tracking-tight truncate">
+                <div className="flex items-start justify-between min-h-[30px] xs:min-h-[34px] sm:min-h-[38px] mb-1 sm:mb-1.5">
+                  <div className="w-[52px] xs:w-[60px] sm:w-[72px] lg:w-[68px] xl:w-[74px] shrink-0" />
+                  <div className="flex-1 text-left pl-1 sm:pl-1.5 min-w-0">
+                    <h3 className="text-[11px] xs:text-xs sm:text-sm lg:text-[13px] xl:text-sm font-bold text-slate-900 dark:text-white leading-tight tracking-tight truncate">
                       Cohorts & Students
                     </h3>
                     <p className="text-[9px] xs:text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">
@@ -1260,7 +1260,7 @@ export default function TeacherDashboard() {
 
                 {/* Metric Number & Label */}
                 <div className="mt-0.5 sm:mt-1 mb-1.5 sm:mb-2">
-                  <div className="text-lg xs:text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-none">
+                  <div className="text-lg xs:text-xl sm:text-2xl lg:text-2xl xl:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-none">
                     {studentDirectories.reduce((acc, d) => acc + (d.student_count || 0), 0)}
                   </div>
                   <div className="text-[9px] xs:text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5 truncate">
@@ -1274,18 +1274,18 @@ export default function TeacherDashboard() {
                 {/* Status Sub-Metrics: 2 Columns */}
                 <div className="grid grid-cols-2 gap-1 xs:gap-1.5 text-xs">
                   <div className="min-w-0">
-                    <div className="text-[8px] xs:text-[9px] sm:text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5 truncate">
+                    <div className="text-[8px] xs:text-[9px] sm:text-[9.5px] lg:text-[9px] xl:text-[9.5px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5 truncate">
                       COHORTS
                     </div>
-                    <div className="font-bold text-slate-700 dark:text-slate-300 text-[10px] xs:text-[11px] sm:text-[13px] truncate">
+                    <div className="font-bold text-slate-700 dark:text-slate-300 text-[10px] xs:text-[11px] sm:text-xs truncate">
                       {studentDirectories.length} Active
                     </div>
                   </div>
-                  <div className="min-w-0 border-l border-slate-100 dark:border-slate-800/80 pl-1.5 xs:pl-2 sm:pl-3">
-                    <div className="text-[8px] xs:text-[9px] sm:text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5 truncate">
+                  <div className="min-w-0 border-l border-slate-100 dark:border-slate-800/80 pl-1.5 xs:pl-2">
+                    <div className="text-[8px] xs:text-[9px] sm:text-[9.5px] lg:text-[9px] xl:text-[9.5px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5 truncate">
                       PASSCODES
                     </div>
-                    <div className="font-bold text-teal-600 dark:text-teal-400 text-[10px] xs:text-[11px] sm:text-[13px] truncate">
+                    <div className="font-bold text-teal-600 dark:text-teal-400 text-[10px] xs:text-[11px] sm:text-xs truncate">
                       Auto-Emailed
                     </div>
                   </div>
@@ -1296,7 +1296,7 @@ export default function TeacherDashboard() {
               <div className="mt-2 sm:mt-2.5 pt-0.5">
                 <div className="w-full flex items-center justify-between px-2 xs:px-2.5 sm:px-3 py-1 xs:py-1.5 sm:py-2 rounded-lg sm:rounded-xl bg-[#F0FDF4] dark:bg-emerald-950/40 text-[#0D9488] dark:text-[#2DD4BF] group-hover:bg-[#DCFCE7] dark:group-hover:bg-emerald-950/60 transition-all">
                   <span className="font-bold text-[10px] xs:text-[11px] sm:text-xs truncate">Student Rosters</span>
-                  <div className="w-5 h-5 xs:w-5.5 xs:h-5.5 sm:w-6.5 sm:h-6.5 rounded-full bg-[#CCFBF1] dark:bg-teal-900/60 text-[#0D9488] dark:text-[#5EEAD4] flex items-center justify-center shrink-0 shadow-2xs ml-1">
+                  <div className="w-5 h-5 xs:w-5.5 xs:h-5.5 sm:w-6 sm:h-6 rounded-full bg-[#CCFBF1] dark:bg-teal-900/60 text-[#0D9488] dark:text-[#5EEAD4] flex items-center justify-center shrink-0 shadow-2xs ml-1">
                     <ArrowRight className="w-2.5 h-2.5 xs:w-3 xs:h-3 stroke-[2.5]" />
                   </div>
                 </div>
@@ -1316,10 +1316,10 @@ export default function TeacherDashboard() {
                   switchSectionTab("custom-forms");
                 }
               }}
-              className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-white dark:bg-[#111C31] border border-slate-200/80 dark:border-[#263449] shadow-xs hover:shadow-md hover:border-purple-300 dark:hover:border-purple-700/60 transition-all duration-200 p-2.5 xs:p-3 sm:p-4 group cursor-pointer flex flex-col justify-between"
+              className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-white dark:bg-[#111C31] border border-slate-200/80 dark:border-[#263449] shadow-xs hover:shadow-md hover:border-purple-300 dark:hover:border-purple-700/60 transition-all duration-200 p-2.5 xs:p-3 sm:p-3.5 lg:p-4 group cursor-pointer flex flex-col justify-between"
             >
               {/* Curved Top-Left Header Background Decoration */}
-              <div className="absolute top-0 left-0 w-[68px] xs:w-[78px] sm:w-[120px] md:w-[130px] h-[38px] xs:h-[44px] sm:h-[62px] pointer-events-none select-none">
+              <div className="absolute top-0 left-0 w-[70px] xs:w-[80px] sm:w-[95px] lg:w-[90px] xl:w-[96px] h-[40px] xs:h-[46px] sm:h-[54px] lg:h-[52px] pointer-events-none select-none">
                 <svg 
                   viewBox="0 0 190 100" 
                   fill="none" 
@@ -1342,17 +1342,17 @@ export default function TeacherDashboard() {
               </div>
 
               {/* Header White Outline Icon */}
-              <div className="absolute top-1.5 left-2 sm:top-2.5 sm:left-3 text-white z-10 pointer-events-none drop-shadow-xs">
+              <div className="absolute top-1.5 left-2 sm:top-2 sm:left-2.5 text-white z-10 pointer-events-none drop-shadow-xs">
                 <ClipboardList className="w-3.5 h-3.5 xs:w-4 xs:h-4 sm:w-4.5 sm:h-4.5 stroke-[2.2]" />
               </div>
 
               {/* Upper Block: Title & Subtitle + Big Metric */}
               <div>
                 {/* Top Row: Spacer clearing the curve + Title block */}
-                <div className="flex items-start justify-between min-h-[30px] xs:min-h-[34px] sm:min-h-[40px] mb-1 sm:mb-1.5">
-                  <div className="w-[50px] xs:w-[58px] sm:w-[88px] shrink-0" />
-                  <div className="flex-1 text-left pl-1 sm:pl-2 min-w-0">
-                    <h3 className="text-[11px] xs:text-xs sm:text-base font-bold text-slate-900 dark:text-white leading-tight tracking-tight truncate">
+                <div className="flex items-start justify-between min-h-[30px] xs:min-h-[34px] sm:min-h-[38px] mb-1 sm:mb-1.5">
+                  <div className="w-[52px] xs:w-[60px] sm:w-[72px] lg:w-[68px] xl:w-[74px] shrink-0" />
+                  <div className="flex-1 text-left pl-1 sm:pl-1.5 min-w-0">
+                    <h3 className="text-[11px] xs:text-xs sm:text-sm lg:text-[13px] xl:text-sm font-bold text-slate-900 dark:text-white leading-tight tracking-tight truncate">
                       Registration Forms
                     </h3>
                     <p className="text-[9px] xs:text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">
@@ -1363,7 +1363,7 @@ export default function TeacherDashboard() {
 
                 {/* Metric Number & Label */}
                 <div className="mt-0.5 sm:mt-1 mb-1.5 sm:mb-2">
-                  <div className="text-lg xs:text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-none">
+                  <div className="text-lg xs:text-xl sm:text-2xl lg:text-2xl xl:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-none">
                     {registrationFormsCount}
                   </div>
                   <div className="text-[9px] xs:text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5 truncate">
@@ -1377,18 +1377,18 @@ export default function TeacherDashboard() {
                 {/* Status Sub-Metrics: 2 Columns */}
                 <div className="grid grid-cols-2 gap-1 xs:gap-1.5 text-xs">
                   <div className="min-w-0">
-                    <div className="text-[8px] xs:text-[9px] sm:text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5 truncate">
+                    <div className="text-[8px] xs:text-[9px] sm:text-[9.5px] lg:text-[9px] xl:text-[9.5px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5 truncate">
                       TEMPLATES
                     </div>
-                    <div className="font-bold text-slate-700 dark:text-slate-300 text-[10px] xs:text-[11px] sm:text-[13px] truncate">
+                    <div className="font-bold text-slate-700 dark:text-slate-300 text-[10px] xs:text-[11px] sm:text-xs truncate">
                       20 Themes
                     </div>
                   </div>
-                  <div className="min-w-0 border-l border-slate-100 dark:border-slate-800/80 pl-1.5 xs:pl-2 sm:pl-3">
-                    <div className="text-[8px] xs:text-[9px] sm:text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5 truncate">
+                  <div className="min-w-0 border-l border-slate-100 dark:border-slate-800/80 pl-1.5 xs:pl-2">
+                    <div className="text-[8px] xs:text-[9px] sm:text-[9.5px] lg:text-[9px] xl:text-[9.5px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5 truncate">
                       FORMAT
                     </div>
-                    <div className="font-bold text-orange-500 dark:text-orange-400 text-[10px] xs:text-[11px] sm:text-[13px] truncate">
+                    <div className="font-bold text-orange-500 dark:text-orange-400 text-[10px] xs:text-[11px] sm:text-xs truncate">
                       Google Forms
                     </div>
                   </div>
@@ -1399,7 +1399,7 @@ export default function TeacherDashboard() {
               <div className="mt-2 sm:mt-2.5 pt-0.5">
                 <div className="w-full flex items-center justify-between px-2 xs:px-2.5 sm:px-3 py-1 xs:py-1.5 sm:py-2 rounded-lg sm:rounded-xl bg-[#FAF5FF] dark:bg-purple-950/40 text-[#9333EA] dark:text-[#C084FC] group-hover:bg-[#F3E8FF] dark:group-hover:bg-purple-950/60 transition-all">
                   <span className="font-bold text-[10px] xs:text-[11px] sm:text-xs truncate">AI Form Studio</span>
-                  <div className="w-5 h-5 xs:w-5.5 xs:h-5.5 sm:w-6.5 sm:h-6.5 rounded-full bg-[#F3E8FF] dark:bg-purple-900/60 text-[#9333EA] dark:text-[#D8B4FE] flex items-center justify-center shrink-0 shadow-2xs ml-1">
+                  <div className="w-5 h-5 xs:w-5.5 xs:h-5.5 sm:w-6 sm:h-6 rounded-full bg-[#F3E8FF] dark:bg-purple-900/60 text-[#9333EA] dark:text-[#D8B4FE] flex items-center justify-center shrink-0 shadow-2xs ml-1">
                     <ArrowRight className="w-2.5 h-2.5 xs:w-3 xs:h-3 stroke-[2.5]" />
                   </div>
                 </div>
