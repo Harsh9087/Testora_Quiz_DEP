@@ -821,7 +821,7 @@ class PaymentService:
         active_bonus = fresh_user.active_bonus_credits if fresh_user else 0
         bonus_exp = fresh_user.bonus_credits_expires_at if fresh_user else None
         bonus_days = fresh_user.bonus_days_remaining if fresh_user else 0
-        packages = self.get_recharge_packages()
+        packages = self.get_recharge_packages(db=db)
         return CreditWalletBalanceResponse(
             credits_balance=total_balance,
             purchased_credits=purchased,
@@ -833,8 +833,34 @@ class PaymentService:
             packages=packages
         )
 
-    def get_recharge_packages(self) -> List[CreditRechargePackage]:
-        """Returns all configured credit recharge packages from backend settings."""
+    def get_recharge_packages(self, db: Optional[Session] = None) -> List[CreditRechargePackage]:
+        """Returns all configured credit recharge packages from database pricing plans, falling back to config."""
+        if db:
+            try:
+                from app.models.pricing_plan import PricingPlan
+                plans = db.query(PricingPlan).filter(
+                    PricingPlan.plan_type == "RECHARGE",
+                    PricingPlan.is_active == True,
+                    PricingPlan.is_deleted == False
+                ).order_by(PricingPlan.display_order.asc(), PricingPlan.price_inr.asc()).all()
+                if plans:
+                    results = []
+                    for p in plans:
+                        rate = f"₹{round(p.price_inr / max(p.total_credits, 1), 2)}" if p.price_inr else "₹0.10"
+                        results.append(CreditRechargePackage(
+                            id=p.plan_code,
+                            name=p.name,
+                            credits=p.total_credits,
+                            amount_paise=p.price_paise or (p.price_inr * 100),
+                            formatted_amount=p.formatted_price or f"₹{p.price_inr}",
+                            rate_per_credit=rate,
+                            popular=p.is_recommended or p.is_featured,
+                            badge=p.badge,
+                            description=p.description or f"{p.total_credits:,} Credits"
+                        ))
+                    return results
+            except Exception as e:
+                logger.warning(f"Failed to query PricingPlan from DB: {e}")
         return [CreditRechargePackage(**pkg) for pkg in settings.RECHARGE_PACKAGES]
 
     def create_recharge_order(
@@ -846,20 +872,47 @@ class PaymentService:
         """
         Creates a server-side Razorpay order to recharge the teacher's credit wallet.
         """
-        pkg_dict = next((p for p in settings.RECHARGE_PACKAGES if p["id"] == package_id), None)
-        if not pkg_dict:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid recharge package '{package_id}'. Please select a valid package."
-            )
+        # Check DB pricing plans first (Database is single authoritative source of truth)
+        from app.models.pricing_plan import PricingPlan
+        # Aliases mapping (e.g. pkg_100 -> starter_recharge, pkg_2200 -> standard_recharge, pkg_6000 -> professional_recharge)
+        plan_code_query = package_id
+        if package_id == "pkg_1000" or package_id == "pkg_100":
+            plan_code_query = "starter_recharge"
+        elif package_id == "pkg_2200" or package_id == "pkg_199":
+            plan_code_query = "standard_recharge"
+        elif package_id == "pkg_6000" or package_id == "pkg_499":
+            plan_code_query = "professional_recharge"
 
-        amount_paise = pkg_dict["amount_paise"]
-        credits_to_add = pkg_dict["credits"]
-        receipt = f"rcpt_rec_{package_id}_{uuid.uuid4().hex[:6]}"
+        db_plan = db.query(PricingPlan).filter(
+            (PricingPlan.plan_code == plan_code_query) | (PricingPlan.id == package_id) | (PricingPlan.plan_code == package_id),
+            PricingPlan.is_active == True,
+            PricingPlan.is_deleted == False
+        ).first()
+
+        if db_plan:
+            amount_paise = db_plan.price_paise or (db_plan.price_inr * 100)
+            credits_to_add = db_plan.total_credits
+            pkg_name = db_plan.name
+            formatted_amount = db_plan.formatted_price or f"₹{db_plan.price_inr}"
+            actual_plan_code = db_plan.plan_code
+        else:
+            pkg_dict = next((p for p in settings.RECHARGE_PACKAGES if p["id"] == package_id), None)
+            if not pkg_dict:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Invalid recharge package '{package_id}'. Please select a valid package."
+                )
+            amount_paise = pkg_dict["amount_paise"]
+            credits_to_add = pkg_dict["credits"]
+            pkg_name = pkg_dict["name"]
+            formatted_amount = pkg_dict["formatted_amount"]
+            actual_plan_code = package_id
+
+        receipt = f"rcpt_rec_{actual_plan_code}_{uuid.uuid4().hex[:6]}"
         order_notes = {
             "order_type": "CREDIT_RECHARGE",
-            "package_id": package_id,
-            "package_name": pkg_dict["name"],
+            "package_id": actual_plan_code,
+            "package_name": pkg_name,
             "credits_added": str(credits_to_add),
             "teacher_id": user.id,
             "teacher_email": user.email
@@ -910,10 +963,10 @@ class PaymentService:
             amount=amount_paise,
             currency="INR",
             key_id=settings.RAZORPAY_KEY_ID or "rzp_test_placeholder",
-            package_id=package_id,
-            package_name=pkg_dict["name"],
+            package_id=actual_plan_code,
+            package_name=pkg_name,
             credits_added=credits_to_add,
-            formatted_amount=pkg_dict["formatted_amount"],
+            formatted_amount=formatted_amount,
             user_name=user.full_name,
             user_email=user.email
         )

@@ -253,6 +253,7 @@ export default function AdminUsersPage() {
                     <td className="py-3 px-4">
                       <div className="font-semibold text-slate-900 dark:text-white">{u.full_name}</div>
                       <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">{u.email}</div>
+                      <div className="text-[10px] text-slate-400 font-mono">ID: {u.id.slice(0, 8)}...</div>
                     </td>
                     <td className="py-3 px-4">
                       <span
@@ -371,8 +372,14 @@ export default function AdminUsersPage() {
             </div>
 
             <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-xs space-y-1">
-              <div className="font-semibold text-slate-900 dark:text-white">{adjustModalUser.full_name}</div>
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-slate-900 dark:text-white">{adjustModalUser.full_name}</span>
+                <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300">
+                  {adjustModalUser.role}
+                </span>
+              </div>
               <div className="text-slate-500 font-mono text-[11px]">{adjustModalUser.email}</div>
+              <div className="text-[10px] text-slate-400 font-mono">Account ID: {adjustModalUser.id}</div>
               <div className="text-amber-600 dark:text-amber-400 font-bold mt-1">
                 Current Total Available: {adjustModalUser.total_credits.toLocaleString()} credits
               </div>

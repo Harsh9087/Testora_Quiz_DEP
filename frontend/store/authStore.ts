@@ -6,8 +6,10 @@ interface AuthState {
   role: string | null;
   fullName: string | null;
   institutionId: string | null;
-  setAuth: (token: string, role: string, fullName: string, institutionId?: string) => void;
+  avatarUrl: string | null;
+  setAuth: (token: string, role: string, fullName: string, institutionId?: string, avatarUrl?: string | null) => void;
   updateFullName: (name: string) => void;
+  setAvatarUrl: (url: string | null) => void;
   logout: () => void;
   syncFromStorage: () => void;
 }
@@ -19,8 +21,9 @@ export const useAuthStore = create<AuthState>()(
       role: typeof window !== 'undefined' ? localStorage.getItem('role') : null,
       fullName: typeof window !== 'undefined' ? localStorage.getItem('fullName') : null,
       institutionId: typeof window !== 'undefined' ? localStorage.getItem('institutionId') : null,
+      avatarUrl: typeof window !== 'undefined' ? localStorage.getItem('avatarUrl') : null,
       
-      setAuth: (token, role, fullName, institutionId) => {
+      setAuth: (token, role, fullName, institutionId, avatarUrl) => {
         if (typeof window !== 'undefined') {
           localStorage.setItem('token', token);
           localStorage.setItem('role', role);
@@ -28,8 +31,17 @@ export const useAuthStore = create<AuthState>()(
           if (institutionId) {
             localStorage.setItem('institutionId', institutionId);
           }
+          if (avatarUrl) {
+            localStorage.setItem('avatarUrl', avatarUrl);
+          }
         }
-        set({ token, role, fullName, institutionId: institutionId || null });
+        set({ 
+          token, 
+          role, 
+          fullName, 
+          institutionId: institutionId || null, 
+          avatarUrl: avatarUrl || (typeof window !== 'undefined' ? localStorage.getItem('avatarUrl') : null) 
+        });
       },
 
       updateFullName: (name: string) => {
@@ -37,6 +49,17 @@ export const useAuthStore = create<AuthState>()(
           localStorage.setItem('fullName', name);
         }
         set({ fullName: name });
+      },
+
+      setAvatarUrl: (url: string | null) => {
+        if (typeof window !== 'undefined') {
+          if (url) {
+            localStorage.setItem('avatarUrl', url);
+          } else {
+            localStorage.removeItem('avatarUrl');
+          }
+        }
+        set({ avatarUrl: url });
       },
       
       logout: () => {
@@ -47,8 +70,9 @@ export const useAuthStore = create<AuthState>()(
           localStorage.removeItem('institutionId');
           localStorage.removeItem('workspaceId');
           localStorage.removeItem('workspaceName');
+          localStorage.removeItem('avatarUrl');
         }
-        set({ token: null, role: null, fullName: null, institutionId: null });
+        set({ token: null, role: null, fullName: null, institutionId: null, avatarUrl: null });
       },
 
       syncFromStorage: () => {
@@ -57,8 +81,9 @@ export const useAuthStore = create<AuthState>()(
           const r = localStorage.getItem('role');
           const n = localStorage.getItem('fullName');
           const inst = localStorage.getItem('institutionId');
-          if (t && (get().token !== t || get().role !== r || get().fullName !== n)) {
-            set({ token: t, role: r, fullName: n, institutionId: inst });
+          const av = localStorage.getItem('avatarUrl');
+          if (t && (get().token !== t || get().role !== r || get().fullName !== n || get().avatarUrl !== av)) {
+            set({ token: t, role: r, fullName: n, institutionId: inst, avatarUrl: av });
           }
         }
       }
@@ -73,6 +98,7 @@ export const useAuthStore = create<AuthState>()(
             state.role = localStorage.getItem('role');
             state.fullName = localStorage.getItem('fullName');
             state.institutionId = localStorage.getItem('institutionId');
+            state.avatarUrl = localStorage.getItem('avatarUrl');
           }
         }
       }

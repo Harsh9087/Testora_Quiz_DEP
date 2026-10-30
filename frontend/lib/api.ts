@@ -1,6 +1,10 @@
-const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 // Clean trailing slashes and redundant /api/v1 suffixes
-const baseHost = rawApiUrl.replace(/\/api\/v1\/?$/, "").replace(/\/+$/, "");
+let baseHost = rawApiUrl.replace(/\/api\/v1\/?$/, "").replace(/\/+$/, "");
+// Normalize localhost to 127.0.0.1 on local environments to prevent 2-second Windows IPv6 ::1 timeout
+if (baseHost.includes("localhost:8000")) {
+  baseHost = baseHost.replace("localhost:8000", "127.0.0.1:8000");
+}
 
 export const API_BASE = baseHost;
 export const API_V1 = `${baseHost}/api/v1`;
@@ -19,10 +23,6 @@ export function getWebSocketUrl(path: string): string {
   return `${wsProtocol}://${host}${normalizedPath}`;
 }
 
-/**
- * Authenticated fetch wrapper. Automatically injects Bearer token from argument or localStorage.
- * Automatically handles 401 Unauthorized / expired token by clearing session.
- */
 export async function apiFetch(
   path: string,
   options: RequestInit & { token?: string | null } = {}
@@ -44,36 +44,25 @@ export async function apiFetch(
     }
   }
 
-  if (!h["Content-Type"] && !(rest.body instanceof FormData)) {
+  if (!h["Content-Type"] && !(options.body instanceof FormData)) {
     h["Content-Type"] = "application/json";
   }
-  // Don't set Content-Type for FormData — let the browser set the multipart boundary
-  if (rest.body instanceof FormData) {
-    delete h["Content-Type"];
-  }
-  
-  // Normalize path so /api/v1 is never duplicated
-  const normalizedPath = path.replace(/^\/api\/v1/, "");
-  const formattedPath = normalizedPath.startsWith("/") ? normalizedPath : `/${normalizedPath}`;
-  
-  const res = await fetch(`${API_V1}${formattedPath}`, { ...rest, headers: h });
 
-  // Automatic stale session cleanup on 401 for authenticated endpoints
-  if (
-    res.status === 401 && 
-    typeof window !== "undefined" && 
-    effectiveToken && 
-    !path.includes("/auth/login") &&
-    !path.includes("/auth/register") &&
-    !path.includes("/attempts/login") &&
-    !path.includes("/attempts/exam-status")
-  ) {
-    localStorage.removeItem("token");
-    localStorage.removeItem("role");
-    localStorage.removeItem("fullName");
-    localStorage.removeItem("institutionId");
-    window.location.href = "/login?expired=1";
+  // Normalize path
+  let normalizedPath = path;
+  if (!normalizedPath.startsWith("/")) {
+    normalizedPath = `/${normalizedPath}`;
   }
 
-  return res;
+  // If path already has /api/v1 prefix, strip it because API_V1 includes it
+  if (normalizedPath.startsWith("/api/v1")) {
+    normalizedPath = normalizedPath.substring(7);
+  }
+
+  const url = `${API_V1}${normalizedPath}`;
+
+  return fetch(url, {
+    ...rest,
+    headers: h,
+  });
 }

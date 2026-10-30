@@ -69,10 +69,17 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 @router.post("/register", response_model=Token, dependencies=[Depends(rate_limit_dependency(max_requests=10, window_seconds=60))])
 def register(user_in: UserCreate, response: Response, db: Session = Depends(get_db)):
-    # Check if user exists
-    db_user = db.query(User).filter(User.email == user_in.email.strip().lower(), User.is_deleted == False).first()
+    # Prevent privilege escalation: self-registration only permits teacher or student
+    assigned_role = user_in.role if user_in.role in ["teacher", "student"] else "teacher"
+
+    # Check if user exists with THIS specific role (role-scoped identity)
+    db_user = db.query(User).filter(
+        User.email == user_in.email.strip().lower(),
+        User.role == assigned_role,
+        User.is_deleted == False
+    ).first()
     if db_user:
-        raise HTTPException(status_code=400, detail="An account with this email address already exists. Please sign in.")
+        raise HTTPException(status_code=400, detail=f"An account with this email address already exists for the {assigned_role.capitalize()} role. Please sign in.")
         
     # If institution id is provided, check if valid
     if user_in.institution_id:
@@ -80,8 +87,6 @@ def register(user_in: UserCreate, response: Response, db: Session = Depends(get_
         if not inst:
             raise HTTPException(status_code=400, detail="Invalid institution ID provided")
 
-    # Prevent privilege escalation: self-registration only permits teacher or student
-    assigned_role = user_in.role if user_in.role in ["teacher", "student"] else "teacher"
     # Dynamic signup bonus from system settings (default: 200 credits, 15 days)
     from app.services.coupon_service import CouponService
     signup_bonus, bonus_days = CouponService.get_signup_bonus_config(db)
@@ -124,15 +129,41 @@ def register(user_in: UserCreate, response: Response, db: Session = Depends(get_
         "role": user.role,
         "full_name": user.full_name,
         "workspace_id": ws_id,
-        "workspace_name": ws_name
+        "workspace_name": ws_name,
+        "avatar_url": user.avatar_url
     }
 
 @router.post("/login", response_model=Token, dependencies=[Depends(rate_limit_dependency(max_requests=15, window_seconds=60))])
 def login(login_in: UserLogin, response: Response, db: Session = Depends(get_db)):
-    user = db.query(User).filter(
-        (User.email == login_in.email) | (User.full_name.ilike(login_in.email.strip())),
-        User.is_deleted == False
-    ).first()
+    clean_identifier = login_in.email.strip()
+    clean_email = clean_identifier.lower()
+
+    user = None
+    if login_in.role:
+        # Explicit role selection: disambiguate separate Teacher and Student accounts with matching emails
+        user = db.query(User).filter(
+            User.email == clean_email,
+            User.role == login_in.role,
+            User.is_deleted == False
+        ).first()
+        if not user:
+            user = db.query(User).filter(
+                (User.email.ilike(clean_email)) | (User.full_name.ilike(clean_identifier)),
+                User.role == login_in.role,
+                User.is_deleted == False
+            ).first()
+    else:
+        # No explicit role provided: find matching candidates and pick the one matching the password
+        candidates = db.query(User).filter(
+            (User.email.ilike(clean_email)) | (User.full_name.ilike(clean_identifier)),
+            User.is_deleted == False
+        ).all()
+        for cand in candidates:
+            if verify_password(login_in.password, cand.hashed_password):
+                user = cand
+                break
+        if not user and candidates:
+            user = candidates[0]
     if not user or not verify_password(login_in.password, user.hashed_password):
         raise HTTPException(status_code=400, detail="Incorrect email, username, or password")
     if not user.is_active:
@@ -166,7 +197,8 @@ def login(login_in: UserLogin, response: Response, db: Session = Depends(get_db)
         "role": user.role,
         "full_name": user.full_name,
         "workspace_id": ws_id,
-        "workspace_name": ws_name
+        "workspace_name": ws_name,
+        "avatar_url": user.avatar_url
     }
 
 @router.get("/verify-student")
@@ -272,15 +304,24 @@ def google_auth(
     if not email:
         raise HTTPException(status_code=400, detail="Google authentication did not provide a valid email address")
 
+    assigned_role = payload.role if (payload.role and payload.role in ["teacher", "student"]) else "teacher"
+
     user = None
     if google_sub:
-        user = db.query(User).filter(User.google_subject == google_sub, User.is_deleted == False).first()
-    if not user:
-        user = db.query(User).filter(User.email == email, User.is_deleted == False).first()
+        user = db.query(User).filter(
+            User.google_subject == google_sub,
+            User.role == assigned_role,
+            User.is_deleted == False
+        ).first()
+    if not user and email:
+        user = db.query(User).filter(
+            User.email == email,
+            User.role == assigned_role,
+            User.is_deleted == False
+        ).first()
     
     if not user:
-        # Determine role for new Google user (default: teacher; never allow self-assignment of admin)
-        assigned_role = payload.role if (payload.role and payload.role in ["teacher", "student"]) else "teacher"
+        # New Google user: provision separate account for assigned_role
         generated_pwd = f"GoogleAuth{secrets.token_hex(4)}!"
         from app.services.coupon_service import CouponService
         signup_bonus, bonus_days = CouponService.get_signup_bonus_config(db)
@@ -309,12 +350,11 @@ def google_auth(
         if google_sub:
             user.google_subject = google_sub
             user.google_id = google_sub
-        if avatar_url:
+        if avatar_url and not user.avatar_url:
             user.avatar_url = avatar_url
         user.auth_provider = "google"
         user.last_login_at = now_utc()
-        if payload.role and payload.role in ["teacher", "student"]:
-            user.role = payload.role
+        # Keep accounts strictly separate: never overwrite existing account's role
         db.commit()
         db.refresh(user)
 
@@ -339,7 +379,8 @@ def google_auth(
         "role": user.role,
         "full_name": user.full_name,
         "workspace_id": ws_id,
-        "workspace_name": ws_name
+        "workspace_name": ws_name,
+        "avatar_url": user.avatar_url
     }
 
 class RefreshTokenRequest(BaseModel):
@@ -417,29 +458,40 @@ def logout(request: Request, response: Response):
     response.delete_cookie(key="refresh_token", path="/")
     return {"message": "Logged out successfully"}
 
-@router.get("/me", response_model=UserProfile)
-def get_me(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    inst_name = current_user.institution.name if current_user.institution else None
-    roll = current_user.student_profile.roll_number if current_user.student_profile else None
-    div = current_user.student_profile.division if current_user.student_profile else None
-    batch = current_user.student_profile.batch if current_user.student_profile else None
+def _format_user_profile(user: User) -> UserProfile:
+    inst_name = user.institution_name or (user.institution.name if user.institution else None)
+    roll = user.student_profile.roll_number if user.student_profile else None
+    div = user.student_profile.division if user.student_profile else (user.section or None)
+    batch = user.student_profile.batch if user.student_profile else (user.batch or None)
+    dept = user.department
+    status = getattr(user.student_profile, "status", "active") if user.role == "student" else ("active" if user.is_active else "inactive")
     return UserProfile(
-        id=current_user.id,
-        email=current_user.email,
-        full_name=current_user.full_name,
-        role=current_user.role,
-        institution_id=current_user.institution_id,
-        avatar_url=current_user.avatar_url,
-        credits_balance=current_user.total_available_credits,
-        bonus_credits=current_user.active_bonus_credits,
-        bonus_days_remaining=current_user.bonus_days_remaining,
-        bonus_credits_expires_at=current_user.bonus_credits_expires_at,
+        id=user.id,
+        email=user.email,
+        full_name=user.full_name,
+        role=user.role,
+        institution_id=user.institution_id,
+        avatar_url=user.avatar_url,
+        credits_balance=user.total_available_credits,
+        bonus_credits=user.active_bonus_credits,
+        bonus_days_remaining=user.bonus_days_remaining,
+        bonus_credits_expires_at=user.bonus_credits_expires_at,
         institution_name=inst_name,
-        department_name=None,
+        department_name=dept,
+        department=dept,
         roll_number=roll,
         division=div,
-        batch=batch
+        class_name=user.class_name,
+        section=user.section or div,
+        batch=batch,
+        phone=user.phone,
+        status=status,
+        created_at=user.created_at
     )
+
+@router.get("/me", response_model=UserProfile)
+def get_me(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    return _format_user_profile(current_user)
 
 @router.put("/profile", response_model=UserProfile)
 def update_profile(
@@ -452,30 +504,29 @@ def update_profile(
     if req.avatar_url is not None:
         clean_url = req.avatar_url.strip()
         current_user.avatar_url = clean_url if clean_url and clean_url.lower() != "none" else None
+    if req.institution_name is not None:
+        current_user.institution_name = req.institution_name.strip()
+    if req.department is not None:
+        current_user.department = req.department.strip()
+    if req.class_name is not None:
+        current_user.class_name = req.class_name.strip()
+    if req.section is not None:
+        current_user.section = req.section.strip()
+    if req.batch is not None:
+        current_user.batch = req.batch.strip()
+    if req.phone is not None:
+        current_user.phone = req.phone.strip()
+        
+    if current_user.student_profile:
+        if req.batch is not None:
+            current_user.student_profile.batch = req.batch.strip()
+        if req.section is not None:
+            current_user.student_profile.division = req.section.strip()
+            
     db.add(current_user)
     db.commit()
     db.refresh(current_user)
-    inst_name = current_user.institution.name if current_user.institution else None
-    roll = current_user.student_profile.roll_number if current_user.student_profile else None
-    div = current_user.student_profile.division if current_user.student_profile else None
-    batch = current_user.student_profile.batch if current_user.student_profile else None
-    return UserProfile(
-        id=current_user.id,
-        email=current_user.email,
-        full_name=current_user.full_name,
-        role=current_user.role,
-        institution_id=current_user.institution_id,
-        avatar_url=current_user.avatar_url,
-        credits_balance=current_user.total_available_credits,
-        bonus_credits=current_user.active_bonus_credits,
-        bonus_days_remaining=current_user.bonus_days_remaining,
-        bonus_credits_expires_at=current_user.bonus_credits_expires_at,
-        institution_name=inst_name,
-        department_name=None,
-        roll_number=roll,
-        division=div,
-        batch=batch
-    )
+    return _format_user_profile(current_user)
 
 @router.post("/avatar/upload", response_model=UserProfile)
 async def upload_avatar(
@@ -485,6 +536,7 @@ async def upload_avatar(
 ):
     """
     Uploads a photo for the current user and saves it to static storage.
+    Isolated per account ID to guarantee independent teacher and student avatars.
     """
     if not file.content_type or not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="Only image files (JPG, PNG, WEBP) are allowed.")
@@ -507,21 +559,7 @@ async def upload_avatar(
     db.commit()
     db.refresh(current_user)
     
-    inst_name = current_user.institution.name if current_user.institution else None
-    return UserProfile(
-        id=current_user.id,
-        email=current_user.email,
-        full_name=current_user.full_name,
-        role=current_user.role,
-        institution_id=current_user.institution_id,
-        avatar_url=current_user.avatar_url,
-        credits_balance=current_user.total_available_credits,
-        bonus_credits=current_user.active_bonus_credits,
-        bonus_days_remaining=current_user.bonus_days_remaining,
-        bonus_credits_expires_at=current_user.bonus_credits_expires_at,
-        institution_name=inst_name,
-        department_name=None
-    )
+    return _format_user_profile(current_user)
 
 
 @router.post("/change-password")

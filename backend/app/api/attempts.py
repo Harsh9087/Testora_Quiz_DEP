@@ -353,10 +353,14 @@ def login_student(login_in: ExamLogin, exam_code: str, db: Session = Depends(get
 
     if not sub:
         # FIRST LOGIN: Create attempt in not_started state without starting timer
+        resolved_stu_id = cred.student_id if cred else None
+        resolved_stu_user_id = cred.student.user_id if (cred and cred.student) else None
         sub = ExamSubmission(
             exam_id=exam.id,
             candidate_id=cand.id if cand else None,
             credential_id=cred.id if cred else None,
+            student_id=resolved_stu_id,
+            student_user_id=resolved_stu_user_id,
             attempt_number=1,
             is_counted_for_result=True,
             status="not_started",
@@ -373,6 +377,10 @@ def login_student(login_in: ExamLogin, exam_code: str, db: Session = Depends(get
     else:
         if cand and not sub.candidate_id:
             sub.candidate_id = cand.id
+        if not sub.student_id and cred and cred.student_id:
+            sub.student_id = cred.student_id
+        if not sub.student_user_id and cred and cred.student and cred.student.user_id:
+            sub.student_user_id = cred.student.user_id
         if not sub.questions_snapshot_json and exam.questions_json:
             sub.questions_snapshot_json = exam.questions_json
         # Only update heartbeat and deadline if attempt has legitimately started
@@ -1055,6 +1063,8 @@ def direct_start_for_student(
             exam_id=exam.id,
             candidate_id=cand.id if cand else (cred.candidate_id if cred else None),
             credential_id=cred.id,
+            student_id=student.id if student else None,
+            student_user_id=current_user.id,
             status="not_started",
             started_at=None,
             deadline_at=None,
@@ -1069,6 +1079,10 @@ def direct_start_for_student(
     else:
         if cand and not sub.candidate_id:
             sub.candidate_id = cand.id
+        if not sub.student_id and student:
+            sub.student_id = student.id
+        if not sub.student_user_id:
+            sub.student_user_id = current_user.id
         if not sub.questions_snapshot_json and exam.questions_json:
             sub.questions_snapshot_json = exam.questions_json
         if sub.status in ["started", "in_progress", "submitting"] and sub.started_at:

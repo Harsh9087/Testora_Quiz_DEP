@@ -2,17 +2,20 @@ import { useState, useEffect } from "react";
 import { 
   Eye, Radio, StopCircle, Sparkles, Printer, Key, QrCode, Trash2, 
   Download, X, Play, Search, Copy, Check, ExternalLink, ShieldCheck, Mail, CopyPlus,
-  CreditCard, Share2, Receipt, MoreHorizontal
+  CreditCard, Share2, Receipt, MoreHorizontal, Plus, ArrowRight, ClipboardList, Calendar, Clock, Layers
 } from "lucide-react";
 import { API_V1, apiFetch, getFrontendBaseUrl } from "../../../../lib/api";
-import { parseUtcDate, formatLocalizedDate, formatExamScheduleRange } from "../../../../lib/dateUtils";
+import { parseUtcDate, formatLocalizedDate, formatISTDate, formatExamScheduleRange } from "../../../../lib/dateUtils";
 import { useAuthStore } from "../../../../store/authStore";
 import { useToast } from "../../../../components/Toast";
 import LiveProctoringModal from "./LiveProctoringModal";
 
 interface LiveAssessmentsTableProps {
   exams: any[];
-  onOpenCreate: () => void;
+  onOpenCreate?: () => void;
+  showCreateButton?: boolean;
+  title?: string;
+  description?: string;
   onPreviewExam: (exam: any) => void;
   onOpenLiveProctor: (exam: any) => void;
   onEndExamEarly: (examId: string, examName: string) => void;
@@ -22,11 +25,15 @@ interface LiveAssessmentsTableProps {
   onDownloadCredentialsCSV: (examId: string, examName: string) => void;
   onRefreshExams?: () => void;
   onOpenPaymentModal?: (exam: any) => void;
+  onViewAll?: () => void;
 }
 
 export default function LiveAssessmentsTable({
   exams,
   onOpenCreate,
+  showCreateButton = false,
+  title = "Live Class Assessments & Proctoring",
+  description = "Manage active examination sessions, live anti-cheat monitoring, and candidate credentials.",
   onPreviewExam,
   onOpenLiveProctor,
   onEndExamEarly,
@@ -36,6 +43,7 @@ export default function LiveAssessmentsTable({
   onDownloadCredentialsCSV,
   onRefreshExams,
   onOpenPaymentModal,
+  onViewAll,
 }: LiveAssessmentsTableProps) {
   const { token } = useAuthStore();
   const { showToast } = useToast();
@@ -218,17 +226,49 @@ export default function LiveAssessmentsTable({
   }) || [];
 
   return (
-    <div className="bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-xl overflow-hidden space-y-0 shadow-sm transition-colors">
-      <div className="p-4 border-b border-[#E2E8F0] dark:border-[#263449] flex items-center justify-between bg-[#F8FAFC] dark:bg-[#17243A]">
-        <div>
-          <h2 className="text-sm font-bold text-[#111827] dark:text-[#F1F5F9]">Recent Assessments</h2>
-          <p className="text-xs text-[#64748B] dark:text-[#A3B1C6] mt-0.5">
-            Manage your AI synthesized examinations, live proctoring rooms, and candidate credentials.
-          </p>
+    <div className="bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-2xl overflow-hidden space-y-0 shadow-xs transition-colors">
+      {/* Sleek, Cohesive Header (Mobile & Desktop Aligned) */}
+      <div className="p-3.5 sm:p-5 border-b border-[#E2E8F0] dark:border-[#263449] flex items-center justify-between gap-2.5 bg-white dark:bg-[#111C31]">
+        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+          <div className="p-2 sm:p-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/40 shrink-0">
+            <ClipboardList className="h-4 w-4 sm:h-5 sm:w-5" />
+          </div>
+          <div className="min-w-0">
+            <h2 className="text-sm sm:text-base font-bold text-[#111827] dark:text-[#F1F5F9] truncate leading-tight">{title}</h2>
+            <p className="text-[11px] sm:text-xs text-[#64748B] dark:text-[#A3B1C6] truncate sm:whitespace-normal mt-0.5">
+              {description}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          {showCreateButton && onOpenCreate && (
+            <button
+              type="button"
+              onClick={onOpenCreate}
+              className="bg-blue-600 hover:bg-blue-700 text-white text-[11px] sm:text-xs font-semibold px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl flex items-center gap-1.5 shadow-xs transition-all cursor-pointer shrink-0"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              <span className="hidden xs:inline">Create Assessment</span>
+              <span className="xs:hidden">Create</span>
+            </button>
+          )}
+
+          {onViewAll && (
+            <button
+              type="button"
+              onClick={onViewAll}
+              className="border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 text-[11px] sm:text-xs font-semibold px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl flex items-center gap-1 transition-all cursor-pointer shadow-2xs shrink-0 whitespace-nowrap"
+            >
+              <span className="hidden xs:inline">View all assessments</span>
+              <span className="xs:hidden">View all</span>
+              <ArrowRight className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-slate-400" />
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Mobile Card List View (< 768px) */}
+      {/* Mobile Card List View (< 768px): Perfectly Proportioned & Symmetrical */}
       <div className="block md:hidden divide-y divide-[#E2E8F0] dark:divide-[#263449]">
         {exams.length === 0 ? (
           <div className="py-8 px-4 text-center text-xs text-[#64748B] dark:text-[#A3B1C6]">
@@ -238,114 +278,153 @@ export default function LiveAssessmentsTable({
           exams.map((exam) => {
             const sched = getExamScheduleInfo(exam);
             const isLoadingCreds = loadingCredsExamId === exam.id;
+            const qCount = exam.questions_count || (exam.questions_json ? JSON.parse(exam.questions_json).length : 0);
 
             return (
-              <div key={exam.id} className="p-4 space-y-3 hover:bg-[#F8FAFC] dark:hover:bg-[#17243A] transition-colors">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-                      <span className={`w-2 h-2 rounded-full ${sched.dot}`} />
-                      <span className="capitalize font-semibold text-[10px] text-[#64748B] dark:text-[#A3B1C6]">{sched.label}</span>
-                      {exam.is_paid ? (
-                        <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 text-[9px] font-bold flex items-center gap-0.5">
-                          <Check className="h-2.5 w-2.5" /> Paid
-                        </span>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => onOpenPaymentModal && onOpenPaymentModal(exam)}
-                          className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 text-[9px] font-bold flex items-center gap-0.5 hover:opacity-80 cursor-pointer"
-                        >
-                          <CreditCard className="h-2.5 w-2.5 text-amber-600" /> Unpaid
-                        </button>
-                      )}
-                    </div>
-                    <h3 className="font-bold text-xs sm:text-sm text-[#111827] dark:text-[#F1F5F9]">{exam.name}</h3>
-                    <div className="text-[11px] text-[#64748B] dark:text-[#A3B1C6] font-mono mt-0.5">
-                      Code: <span className="font-bold text-[#2563EB] dark:text-[#60A5FA]">{exam.exam_code}</span>
-                    </div>
+              <div key={exam.id} className="p-3.5 xs:p-4 space-y-3 hover:bg-[#F8FAFC] dark:hover:bg-[#17243A]/50 transition-colors">
+                {/* Top Row: Status Badges & QR Code Trigger */}
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                      sched.status === "live"
+                        ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80"
+                        : sched.status === "scheduled"
+                        ? "bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800/80"
+                        : sched.status === "completed"
+                        ? "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
+                        : "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/80"
+                    }`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${sched.dot}`} />
+                      <span>{sched.label}</span>
+                    </span>
+
+                    {exam.is_paid ? (
+                      <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md bg-emerald-100/80 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 text-[10px] font-bold border border-emerald-200/70 dark:border-emerald-800/60">
+                        <Check className="h-3 w-3 stroke-[2.5]" /> Paid
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => onOpenPaymentModal && onOpenPaymentModal(exam)}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 text-[10px] font-bold border border-amber-200 dark:border-amber-800/60 hover:opacity-85 cursor-pointer"
+                      >
+                        <CreditCard className="h-3 w-3 text-amber-600" /> Unpaid
+                      </button>
+                    )}
                   </div>
-                  
+
                   <button
                     type="button"
                     onClick={() => setQrModalExam(exam)}
-                    className="p-2 rounded-lg border border-[#E2E8F0] dark:border-[#263449] text-[#64748B] hover:text-[#111827] dark:hover:text-[#F1F5F9] shrink-0"
-                    title="QR Code"
+                    className="w-8 h-8 rounded-xl border border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center justify-center shrink-0 shadow-2xs transition-colors cursor-pointer"
+                    title="View QR Code Flyer"
+                    aria-label="View QR Code Flyer"
                   >
                     <QrCode className="h-4 w-4" />
                   </button>
                 </div>
 
-                {/* Metrics chips */}
-                <div className="flex flex-wrap items-center gap-2 text-[11px] text-[#716D67] dark:text-[#A8A29E]">
-                  <span className="px-2 py-0.5 rounded bg-[#F0ECE4]/60 dark:bg-[#1D1B19]">
-                    {exam.questions_count || (exam.questions_json ? JSON.parse(exam.questions_json).length : 0)} Qs ({exam.total_marks} pts)
+                {/* Title & Exam Code */}
+                <div className="space-y-1">
+                  <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100 leading-snug break-words">
+                    {exam.name}
+                  </h3>
+                  <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                    <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500">Code:</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const code = exam.exam_code || exam.code;
+                        if (code) {
+                          navigator.clipboard.writeText(code);
+                          showToast("Exam code copied!", "success");
+                        }
+                      }}
+                      className="inline-flex items-center gap-1 font-mono font-bold text-[#2563EB] dark:text-[#60A5FA] bg-blue-50 dark:bg-blue-950/50 hover:bg-blue-100 dark:hover:bg-blue-900/50 px-2 py-0.5 rounded border border-blue-200/60 dark:border-blue-900/60 text-[11px] transition-colors cursor-pointer"
+                      title="Click to copy code"
+                    >
+                      <span>{exam.exam_code || exam.code}</span>
+                      <Copy className="h-2.5 w-2.5 opacity-60" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Metrics Badges: Questions/Marks, Duration, Schedule Date */}
+                <div className="flex flex-wrap items-center gap-1.5 xs:gap-2 text-[11px]">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 border border-slate-200/70 dark:border-slate-700/70 font-medium">
+                    <ClipboardList className="h-3 w-3 text-slate-400" />
+                    <span>{qCount} Qs ({exam.total_marks || 0} pts)</span>
                   </span>
-                  <span className="px-2 py-0.5 rounded bg-[#F0ECE4]/60 dark:bg-[#1D1B19]">
-                    ⏱ {exam.duration_minutes} mins
+
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 border border-slate-200/70 dark:border-slate-700/70 font-medium">
+                    <Clock className="h-3 w-3 text-slate-400" />
+                    <span>{exam.duration_minutes} mins</span>
                   </span>
-                  <span className="px-2 py-0.5 rounded bg-[#F0ECE4]/60 dark:bg-[#1D1B19]">
-                    {exam.start_time ? formatLocalizedDate(exam.start_time, { month: "short", day: "numeric" }) : "Open"}
+
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 border border-slate-200/70 dark:border-slate-700/70 font-medium">
+                    <Calendar className="h-3 w-3 text-slate-400" />
+                    <span>{exam.start_time ? formatISTDate(exam.start_time) : "Flexible Schedule"}</span>
                   </span>
                 </div>
 
-                {/* Clean, Modern Action Row */}
-                <div className="flex items-center justify-between gap-2 pt-2 border-t border-[#E2E8F0]/80 dark:border-[#263449]/80">
-                  <div className="flex items-center gap-2">
-                    {/* Primary Context Button */}
-                    {exam.is_published && sched.status === "live" ? (
-                      <button
-                        type="button"
-                        onClick={() => setLiveProctorExamId(exam.id)}
-                        className="px-3 py-1.5 rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer"
-                      >
-                        <Radio className="h-3 w-3 text-rose-600 animate-pulse" />
-                        <span>Live Monitor</span>
-                      </button>
-                    ) : !exam.is_published ? (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (!exam.is_paid && onOpenPaymentModal) onOpenPaymentModal(exam);
-                          else onPublishExam(exam.id);
-                        }}
-                        className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer"
-                      >
-                        {exam.is_paid ? <Sparkles className="h-3 w-3" /> : <CreditCard className="h-3 w-3" />}
-                        <span>{exam.is_paid ? "Publish" : "Pay & Publish"}</span>
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        disabled={isLoadingCreds}
-                        onClick={() => handleOpenCredentialsPreview(exam)}
-                        className="px-3 py-1.5 rounded-xl border border-[#E2E8F0] dark:border-[#263449] hover:bg-[#F8FAFC] text-xs font-bold flex items-center gap-1.5 text-[#111827] dark:text-[#F1F5F9] cursor-pointer"
-                      >
-                        <Key className="h-3 w-3 text-blue-600" />
-                        <span>Credentials</span>
-                      </button>
-                    )}
-
-                    <a
-                      href={`/exam/${exam.exam_code || exam.code}?mode=teacher_preview`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="px-2.5 py-1.5 rounded-xl border border-[#E2E8F0] dark:border-[#263449] hover:bg-[#F8FAFC] text-xs font-semibold text-[#64748B] dark:text-[#A3B1C6] flex items-center gap-1"
+                {/* Action Buttons Row: Symmetrical, Full-Width & Balanced */}
+                <div className="flex items-center gap-2 pt-2.5 border-t border-slate-100 dark:border-[#263449]">
+                  {/* Primary Context Button */}
+                  {exam.is_published && sched.status === "live" ? (
+                    <button
+                      type="button"
+                      onClick={() => setLiveProctorExamId(exam.id)}
+                      className="flex-1 h-9 px-3 rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-950/60 text-rose-700 dark:text-rose-300 text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
                     >
-                      <Play className="h-3 w-3 text-emerald-600" />
-                      <span>Test Run</span>
-                    </a>
-                  </div>
+                      <Radio className="h-3.5 w-3.5 text-rose-600 animate-pulse shrink-0" />
+                      <span className="truncate">Live Monitor</span>
+                    </button>
+                  ) : !exam.is_published ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!exam.is_paid && onOpenPaymentModal) onOpenPaymentModal(exam);
+                        else onPublishExam(exam.id);
+                      }}
+                      className="flex-1 h-9 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                    >
+                      {exam.is_paid ? <Sparkles className="h-3.5 w-3.5 shrink-0" /> : <CreditCard className="h-3.5 w-3.5 shrink-0" />}
+                      <span className="truncate">{exam.is_paid ? "Publish" : "Pay & Publish"}</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={isLoadingCreds}
+                      onClick={() => handleOpenCredentialsPreview(exam)}
+                      className="flex-1 h-9 px-3 rounded-xl border border-amber-200/80 dark:border-amber-800/70 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-950/60 text-amber-800 dark:text-amber-300 text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                    >
+                      <Key className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+                      <span className="truncate">Credentials</span>
+                    </button>
+                  )}
 
-                  {/* Dropdown Menu */}
-                  <div className="relative">
+                  {/* Secondary Test Run Button */}
+                  <a
+                    href={`/exam/${exam.exam_code || exam.code}?mode=teacher_preview`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex-1 h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/80 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center justify-center gap-1.5 shadow-2xs transition-colors"
+                  >
+                    <Play className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <span className="truncate">Test Run</span>
+                  </a>
+
+                  {/* More Dropdown Button */}
+                  <div className="relative shrink-0">
                     <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         setActiveDropdownExamId(activeDropdownExamId === exam.id ? null : exam.id);
                       }}
-                      className="p-2 rounded-xl border border-[#E2E8F0] dark:border-[#263449] text-[#64748B] hover:text-[#111827] dark:hover:text-[#F1F5F9] hover:bg-[#F8FAFC] cursor-pointer"
+                      className="w-9 h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center justify-center transition-colors shadow-2xs cursor-pointer"
+                      title="More Options"
+                      aria-label="More Options"
                     >
                       <MoreHorizontal className="h-4 w-4" />
                     </button>
@@ -516,9 +595,9 @@ export default function LiveAssessmentsTable({
                   >
                     {/* Status & Payment Tag */}
                     <td className="py-3.5 px-4 whitespace-nowrap">
-                      <div className="flex flex-col gap-1.5 items-start">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         <div
-                          className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold border shadow-2xs ${
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border shadow-2xs ${
                             sched.status === "live"
                               ? "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
                               : sched.status === "scheduled"
@@ -531,24 +610,21 @@ export default function LiveAssessmentsTable({
                           <span className={`w-1.5 h-1.5 rounded-full ${sched.dot}`} />
                           <span>{sched.label}</span>
                         </div>
-                        <div>
-                          {exam.is_paid ? (
-                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80">
-                              <Check className="h-2.5 w-2.5 text-emerald-600" />
-                              <span>Paid</span>
-                            </span>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => onOpenPaymentModal && onOpenPaymentModal(exam)}
-                              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 hover:bg-amber-100 cursor-pointer transition-all"
-                              title="Mandatory Per-Test Activation Required"
-                            >
-                              <CreditCard className="h-2.5 w-2.5 text-amber-600" />
-                              <span>Unpaid</span>
-                            </button>
-                          )}
-                        </div>
+                        {exam.is_paid ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80">
+                            <span>Paid</span>
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => onOpenPaymentModal && onOpenPaymentModal(exam)}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 hover:bg-amber-100 cursor-pointer transition-all"
+                            title="Mandatory Per-Test Activation Required"
+                          >
+                            <CreditCard className="h-2.5 w-2.5 text-amber-600" />
+                            <span>Unpaid</span>
+                          </button>
+                        )}
                       </div>
                     </td>
 

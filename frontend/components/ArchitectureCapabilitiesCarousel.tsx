@@ -1,592 +1,1033 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
-  Sparkles,
-  Printer,
   BookOpen,
-  ShieldCheck,
-  CheckCircle2,
-  Image as ImageIcon,
+  GraduationCap,
+  ShieldAlert,
+  BarChart3,
   FileText,
-  Columns,
-  ArrowRight,
-  ChevronLeft,
-  ChevronRight,
-  Layers,
+  Sparkles,
+  Calendar,
+  CheckCircle2,
+  Lock,
   Zap,
+  Clock,
+  Radio,
+  FileUp,
+  Sliders,
+  ChevronRight,
+  FileEdit,
+  ShieldCheck,
   Database,
+  Layers,
 } from "lucide-react";
+import MovableBadge from "./MovableBadge";
+import { useAuthStore } from "../store/authStore";
+import InfographicFeatureSection from "./InfographicFeatureSection";
 
 export default function ArchitectureCapabilitiesCarousel() {
-  // Default focused card is Paper Studio (index 1)
-  const [activeIndex, setActiveIndex] = useState(1);
-  const [touchStartX, setTouchStartX] = useState<number | null>(null);
-
-  const prevCard = () => {
-    setActiveIndex((prev) => (prev - 1 + 4) % 4);
-  };
-
-  const nextCard = () => {
-    setActiveIndex((prev) => (prev + 1) % 4);
-  };
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStartX(e.touches[0].clientX);
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (touchStartX === null) return;
-    const touchEndX = e.changedTouches[0].clientX;
-    const diff = touchStartX - touchEndX;
-    if (Math.abs(diff) > 40) {
-      if (diff > 0) {
-        nextCard();
-      } else {
-        prevCard();
-      }
-    }
-    setTouchStartX(null);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "ArrowLeft") prevCard();
-    if (e.key === "ArrowRight") nextCard();
-  };
-
-  // Compute 3D perspective transform per card based on shortest cyclic offset
-  const getCardTransformClasses = (index: number) => {
-    let offset = index - activeIndex;
-    if (offset > 2) offset -= 4;
-    if (offset < -1) offset += 4;
-
-    if (offset === 0) {
-      // Focused Center Card
-      return {
-        className:
-          "z-30 opacity-100 scale-100 translate-x-0 rotate-y-0 pointer-events-auto cursor-default shadow-2xl shadow-purple-500/20",
-        style: {
-          transform: "translate(-50%, -50%) translateZ(0px) scale(1) rotateY(0deg)",
-        },
-      };
-    } else if (offset === -1) {
-      // Left Adjacent Card (tilted inward towards center)
-      return {
-        className:
-          "z-20 opacity-90 scale-[0.88] pointer-events-auto cursor-pointer hover:opacity-100 transition-all shadow-xl shadow-slate-900/10",
-        style: {
-          transform:
-            "translate(calc(-50% - min(54vw, 225px)), -50%) translateZ(-35px) scale(0.88) rotateY(24deg)",
-        },
-      };
-    } else if (offset === 1) {
-      // Right Adjacent Card (tilted inward towards center)
-      return {
-        className:
-          "z-20 opacity-90 scale-[0.88] pointer-events-auto cursor-pointer hover:opacity-100 transition-all shadow-xl shadow-slate-900/10",
-        style: {
-          transform:
-            "translate(calc(-50% + min(54vw, 225px)), -50%) translateZ(-35px) scale(0.88) rotateY(-24deg)",
-        },
-      };
-    } else if (offset === 2) {
-      // Far Right Card (behind adjacent right)
-      return {
-        className:
-          "z-10 opacity-75 scale-[0.78] pointer-events-auto cursor-pointer hover:opacity-90 transition-all shadow-md shadow-slate-900/5",
-        style: {
-          transform:
-            "translate(calc(-50% + min(88vw, 385px)), -50%) translateZ(-85px) scale(0.78) rotateY(-32deg)",
-        },
-      };
-    } else {
-      // Far Left Card (behind adjacent left)
-      return {
-        className:
-          "z-10 opacity-75 scale-[0.78] pointer-events-auto cursor-pointer hover:opacity-90 transition-all shadow-md shadow-slate-900/5",
-        style: {
-          transform:
-            "translate(calc(-50% - min(88vw, 385px)), -50%) translateZ(-85px) scale(0.78) rotateY(32deg)",
-        },
-      };
-    }
-  };
-
-  const cards = [
-    {
-      id: "ai-question",
-      number: "01",
-      name: "AI Question Generation",
-      accent: "blue",
-      pillActiveColor: "bg-blue-600",
-      badgeText: "Gemini API",
-    },
-    {
-      id: "paper-studio",
-      number: "02",
-      name: "Paper Studio (PDFs)",
-      accent: "purple",
-      pillActiveColor: "bg-purple-600",
-      badgeText: "Print Ready",
-    },
-    {
-      id: "question-bank",
-      number: "03",
-      name: "Question Bank Studio",
-      accent: "emerald",
-      pillActiveColor: "bg-emerald-600",
-      badgeText: "Reusable",
-    },
-    {
-      id: "proctoring-radar",
-      number: "04",
-      name: "Proctoring Radar",
-      accent: "rose",
-      pillActiveColor: "bg-rose-500",
-      badgeText: "Exam Security",
-    },
-  ];
+  const router = useRouter();
+  const { token } = useAuthStore();
+  const [activeGuideTab, setActiveGuideTab] = useState<
+    "creator" | "student" | "proctor" | "analytics"
+  >("creator");
 
   return (
     <section
-      id="features"
-      className="relative py-14 sm:py-20 lg:py-24 overflow-hidden bg-gradient-to-b from-[#F3F8FF] via-white to-[#F0F6FF] dark:from-[#070D1B] dark:via-[#0A1022] dark:to-[#070D1B] border-y border-slate-200/60 dark:border-slate-800/60 scroll-mt-20 select-none"
+      id="capabilities"
+      className="relative py-10 sm:py-14 md:py-18 overflow-hidden bg-gradient-to-b from-[#F3F8FF] via-white to-[#F0F6FF] dark:from-[#070D1B] dark:via-[#0A1022] dark:to-[#070D1B] border-y border-slate-200/60 dark:border-slate-800/60 scroll-mt-20 select-none"
     >
+      <div id="platform-guide" className="scroll-mt-24" />
+
       {/* Background Ambience & Dotted Matrix Patterns */}
-      <div className="absolute inset-0 bg-[radial-gradient(#93C5FD_1.2px,transparent_1.2px)] dark:bg-[radial-gradient(#1E3A8A_1px,transparent_1px)] [background-size:24px_24px] opacity-40 dark:opacity-20 pointer-events-none" />
-      <div className="absolute -left-20 top-1/4 w-80 sm:w-96 h-80 sm:h-96 rounded-full bg-blue-200/35 dark:bg-blue-900/15 blur-3xl pointer-events-none" />
-      <div className="absolute -right-20 top-1/3 w-80 sm:w-96 h-80 sm:h-96 rounded-full bg-purple-200/30 dark:bg-purple-900/15 blur-3xl pointer-events-none" />
+      <div
+        className="absolute inset-0 bg-[radial-gradient(#93C5FD_1.2px,transparent_1.2px)] dark:bg-[radial-gradient(#1E3A8A_1px,transparent_1px)] [background-size:24px_24px] opacity-40 dark:opacity-20 pointer-events-none"
+        aria-hidden="true"
+      />
+      <div
+        className="absolute -left-20 top-1/4 w-80 sm:w-96 h-80 sm:h-96 rounded-full bg-blue-200/35 dark:bg-blue-900/15 blur-3xl pointer-events-none"
+        aria-hidden="true"
+      />
+      <div
+        className="absolute -right-20 top-1/3 w-80 sm:w-96 h-80 sm:h-96 rounded-full bg-purple-200/30 dark:bg-purple-900/15 blur-3xl pointer-events-none"
+        aria-hidden="true"
+      />
 
-      {/* Dotted Matrix Grids in Corners */}
-      <div className="absolute top-12 left-4 sm:left-10 w-24 h-24 bg-[radial-gradient(#93C5FD_1.5px,transparent_1.5px)] [background-size:14px_14px] opacity-50 pointer-events-none hidden sm:block" />
-      <div className="absolute top-12 right-4 sm:right-10 w-24 h-24 bg-[radial-gradient(#93C5FD_1.5px,transparent_1.5px)] [background-size:14px_14px] opacity-50 pointer-events-none hidden sm:block" />
+      {/* Main Container */}
+      <div className="relative w-full max-w-[1380px] mx-auto px-3 sm:px-6 lg:px-8 space-y-10 sm:space-y-12">
+<div className="text-center space-y-3">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 dark:bg-blue-500/20 border border-blue-500/20 text-[#2563EB] dark:text-[#60A5FA] text-xs font-bold shadow-2xs">
+              <GraduationCap className="w-3.5 h-3.5" />
+              <span>Testora Quiz</span>
+            </div>
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 sm:space-y-12">
-        {/* Header Block */}
-        <div className="relative text-center max-w-3xl mx-auto space-y-3">
-          {/* Pill Badge */}
-          <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-[11px] font-bold tracking-widest uppercase bg-blue-50 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 border border-blue-200/80 dark:border-blue-800 shadow-xs">
-            <Layers className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-            <span>CORE ARCHITECTURE SUMMARY</span>
+            <h2 className="text-2xl sm:text-4xl font-extrabold text-[#111827] dark:text-[#F1F5F9] tracking-tight">
+              Platform Capabilities & <span className="text-[#2563EB] dark:text-[#60A5FA]">System Architecture</span>
+            </h2>
+
+            <p className="text-xs sm:text-sm text-[#64748B] dark:text-[#A3B1C6] max-w-2xl mx-auto leading-relaxed">
+              Explore how Testora Quiz orchestrates AI question synthesis, multi-format knowledge indexing, and live telemetry proctoring.
+            </p>
           </div>
 
-          {/* Main Heading */}
-          <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
-            Comprehensive Assessment <br />
-            <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              Capabilities
-            </span>
-          </h2>
-
-          {/* Subtitle */}
-          <p className="text-xs sm:text-sm lg:text-base text-slate-500 dark:text-slate-400 font-normal max-w-xl mx-auto pt-1 leading-relaxed">
-            From textbook-based AI generation to printable PDFs and multi-campus governance.
-          </p>
-        </div>
-
-        {/* 3D Side-Angle Perspective Carousel Stage */}
-        <div
-          className="relative w-full max-w-5xl mx-auto h-[530px] sm:h-[570px] md:h-[600px] flex items-center justify-center overflow-hidden [perspective:1100px]"
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
-          onKeyDown={handleKeyDown}
-          tabIndex={0}
-          role="region"
-          aria-label="Comprehensive Assessment Capabilities Carousel"
-        >
-          {/* Left Navigation Arrow */}
-          <button
-            type="button"
-            onClick={prevCard}
-            aria-label="Previous capability card"
-            className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-40 w-10 sm:w-11 h-10 sm:h-11 rounded-full bg-white/95 dark:bg-slate-800/95 border border-slate-200/90 dark:border-slate-700 shadow-lg text-slate-700 dark:text-slate-200 flex items-center justify-center hover:scale-110 active:scale-95 transition-all cursor-pointer backdrop-blur-xs"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-
-          {/* Right Navigation Arrow */}
-          <button
-            type="button"
-            onClick={nextCard}
-            aria-label="Next capability card"
-            className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-40 w-10 sm:w-11 h-10 sm:h-11 rounded-full bg-white/95 dark:bg-slate-800/95 border border-slate-200/90 dark:border-slate-700 shadow-lg text-slate-700 dark:text-slate-200 flex items-center justify-center hover:scale-110 active:scale-95 transition-all cursor-pointer backdrop-blur-xs"
-          >
-            <ChevronRight className="w-5 h-5" />
-          </button>
-
-          {/* ───────────────────────────────────────────────────────────
-              CARD 01: AI Question Generation (Blue Accent)
-          ─────────────────────────────────────────────────────────── */}
-          <div
-            onClick={() => activeIndex !== 0 && setActiveIndex(0)}
-            style={getCardTransformClasses(0).style}
-            className={`absolute top-1/2 left-1/2 w-[285px] sm:w-[325px] md:w-[350px] lg:w-[370px] flex flex-col justify-between p-6 sm:p-7 rounded-[26px] bg-white dark:bg-slate-900 border border-blue-200/90 dark:border-blue-900/60 transition-all duration-500 ease-out will-change-transform ${
-              getCardTransformClasses(0).className
-            }`}
-          >
-            {/* Layered physical backing sheet */}
-            <div className="absolute -bottom-2 -right-2 w-full h-full rounded-[26px] bg-blue-100/80 dark:bg-blue-950/50 border border-blue-200/60 dark:border-blue-800/40 -z-10" />
-
-            <div className="space-y-4">
-              {/* Top Row */}
-              <div className="flex items-center justify-between">
-                <span className="w-8 h-8 rounded-lg text-xs font-bold bg-blue-50 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/60 flex items-center justify-center">
-                  01
-                </span>
-                <div className="w-11 h-11 rounded-2xl bg-blue-50/90 dark:bg-blue-950/70 border border-blue-100 dark:border-blue-900/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-xs">
-                  <Sparkles className="w-5 h-5" />
-                </div>
-              </div>
-
-              {/* Title & Description */}
-              <div>
-                <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight leading-snug">
-                  AI Question <br />Generation
-                </h3>
-                <p className="text-xs sm:text-[13px] text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
-                  Generate MCQs, numericals, and subjective questions mapped to Bloom&apos;s Taxonomy.
-                </p>
-              </div>
-
-              {/* Checklist */}
-              <ul className="space-y-2.5 pt-2">
-                <li className="flex items-center gap-2 text-xs sm:text-[13px] font-medium text-slate-700 dark:text-slate-300">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 fill-emerald-50 dark:fill-emerald-950" />
-                  <span>Bloom&apos;s levels</span>
-                </li>
-                <li className="flex items-center gap-2 text-xs sm:text-[13px] font-medium text-slate-700 dark:text-slate-300">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 fill-emerald-50 dark:fill-emerald-950" />
-                  <span>Math formulas</span>
-                </li>
-                <li className="flex items-center gap-2 text-xs sm:text-[13px] font-medium text-slate-700 dark:text-slate-300">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 fill-emerald-50 dark:fill-emerald-950" />
-                  <span>PDF &amp; DOCX upload</span>
-                </li>
-              </ul>
-            </div>
-
-            {/* Bottom Action Link */}
-            <div className="pt-6">
-              <Link
-                href="/login?mode=signup"
-                className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 group/link"
-              >
-                <span>Try Generator</span>
-                <ArrowRight className="w-3.5 h-3.5 group-hover/link:translate-x-1 transition-transform" />
-              </Link>
-            </div>
-          </div>
-
-          {/* ───────────────────────────────────────────────────────────
-              CARD 02: Paper Studio (PDFs) (Purple Focal Card)
-              Features top-right fold, purple gradient button, icon rows
-          ─────────────────────────────────────────────────────────── */}
-          <div
-            onClick={() => activeIndex !== 1 && setActiveIndex(1)}
-            style={getCardTransformClasses(1).style}
-            className={`absolute top-1/2 left-1/2 w-[285px] sm:w-[325px] md:w-[350px] lg:w-[370px] flex flex-col justify-between p-6 sm:p-7 rounded-[26px] bg-white dark:bg-slate-900 border-2 border-purple-400/90 dark:border-purple-500/80 transition-all duration-500 ease-out will-change-transform ${
-              getCardTransformClasses(1).className
-            }`}
-          >
-            {/* Top-Right Paper Peel / Folded Corner */}
-            <div className="absolute -top-px -right-px w-9 h-9 pointer-events-none overflow-hidden rounded-tr-[26px]">
-              <div
-                className="absolute top-0 right-0 w-9 h-9 bg-gradient-to-bl from-purple-500 via-indigo-600 to-purple-700 shadow-sm"
-                style={{ clipPath: "polygon(100% 0, 0 0, 100% 100%)" }}
-              />
-            </div>
-
-            {/* Translucent Violet Flap Layer */}
-            <div className="absolute -bottom-2 -right-2 w-full h-full rounded-[26px] bg-purple-200/70 dark:bg-purple-950/60 border border-purple-300/60 dark:border-purple-800/50 -z-10" />
-
-            <div className="space-y-4">
-              {/* Top Row */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="w-8 h-8 rounded-lg text-xs font-bold bg-purple-50 dark:bg-purple-950/80 text-purple-600 dark:text-purple-400 border border-purple-100 dark:border-purple-900/60 flex items-center justify-center">
-                    02
-                  </span>
-                  <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-purple-50 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 border border-purple-200/80 dark:border-purple-800">
-                    Print Ready
-                  </span>
-                </div>
-                <div className="w-11 h-11 rounded-2xl bg-purple-50/90 dark:bg-purple-950/70 border border-purple-100 dark:border-purple-900/60 text-purple-600 dark:text-purple-400 flex items-center justify-center shadow-xs">
-                  <Printer className="w-5 h-5" />
-                </div>
-              </div>
-
-              {/* Title & Description */}
-              <div>
-                <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight leading-snug">
-                  Paper Studio (PDFs)
-                </h3>
-                <p className="text-xs sm:text-[13px] text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
-                  Export printable offline question papers with custom institution headers, section divisions, and separate answer keys.
-                </p>
-              </div>
-
-              {/* 3 Compact Feature Rows with Icons */}
-              <div className="space-y-2 pt-1">
-                <div className="p-2.5 rounded-xl bg-purple-50/70 dark:bg-purple-950/30 border border-purple-100/80 dark:border-purple-900/40 flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-white dark:bg-slate-900 border border-purple-200/60 dark:border-purple-800/60 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 shadow-xs">
-                    <ImageIcon className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="text-xs sm:text-[13px] font-bold text-slate-900 dark:text-white">
-                      Custom headers
-                    </div>
-                    <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                      Add college logo, name and branding
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-2.5 rounded-xl bg-purple-50/70 dark:bg-purple-950/30 border border-purple-100/80 dark:border-purple-900/40 flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-white dark:bg-slate-900 border border-purple-200/60 dark:border-purple-800/60 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 shadow-xs">
-                    <FileText className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="text-xs sm:text-[13px] font-bold text-slate-900 dark:text-white">
-                      Separate answer keys
-                    </div>
-                    <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                      Auto-generate keys and rubrics
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-2.5 rounded-xl bg-purple-50/70 dark:bg-purple-950/30 border border-purple-100/80 dark:border-purple-900/40 flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-white dark:bg-slate-900 border border-purple-200/60 dark:border-purple-800/60 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 shadow-xs">
-                    <Columns className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="text-xs sm:text-[13px] font-bold text-slate-900 dark:text-white">
-                      Multi-column layouts
-                    </div>
-                    <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                      Print-friendly PDF formats
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Focal Full-Width Purple CTA Button */}
-            <div className="pt-6">
-              <Link
-                href="/login?mode=signup"
-                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 text-white font-bold text-xs sm:text-sm shadow-md shadow-purple-500/25 hover:shadow-purple-500/40 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2 group/btn"
-              >
-                <span>Generate PDF</span>
-                <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-              </Link>
-            </div>
-          </div>
-
-          {/* ───────────────────────────────────────────────────────────
-              CARD 03: Question Bank Studio (Emerald Accent)
-          ─────────────────────────────────────────────────────────── */}
-          <div
-            onClick={() => activeIndex !== 2 && setActiveIndex(2)}
-            style={getCardTransformClasses(2).style}
-            className={`absolute top-1/2 left-1/2 w-[285px] sm:w-[325px] md:w-[350px] lg:w-[370px] flex flex-col justify-between p-6 sm:p-7 rounded-[26px] bg-white dark:bg-slate-900 border border-emerald-200/90 dark:border-emerald-900/60 transition-all duration-500 ease-out will-change-transform ${
-              getCardTransformClasses(2).className
-            }`}
-          >
-            {/* Layered physical backing sheet */}
-            <div className="absolute -bottom-2 -right-2 w-full h-full rounded-[26px] bg-emerald-100/80 dark:bg-emerald-950/50 border border-emerald-200/60 dark:border-emerald-800/40 -z-10" />
-
-            <div className="space-y-4">
-              {/* Top Row */}
-              <div className="flex items-center justify-between">
-                <span className="w-8 h-8 rounded-lg text-xs font-bold bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/60 flex items-center justify-center">
-                  03
-                </span>
-                <div className="w-11 h-11 rounded-2xl bg-emerald-50/90 dark:bg-emerald-950/70 border border-emerald-100 dark:border-emerald-900/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shadow-xs">
-                  <BookOpen className="w-5 h-5" />
-                </div>
-              </div>
-
-              {/* Title & Description */}
-              <div>
-                <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight leading-snug">
-                  Question Bank <br />Studio
-                </h3>
-                <p className="text-xs sm:text-[13px] text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
-                  Organize questions by subject, topic, and difficulty.
-                </p>
-              </div>
-
-              {/* Checklist */}
-              <ul className="space-y-2.5 pt-2">
-                <li className="flex items-center gap-2 text-xs sm:text-[13px] font-medium text-slate-700 dark:text-slate-300">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 fill-emerald-50 dark:fill-emerald-950" />
-                  <span>Topic tagging</span>
-                </li>
-                <li className="flex items-center gap-2 text-xs sm:text-[13px] font-medium text-slate-700 dark:text-slate-300">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 fill-emerald-50 dark:fill-emerald-950" />
-                  <span>Difficulty levels</span>
-                </li>
-                <li className="flex items-center gap-2 text-xs sm:text-[13px] font-medium text-slate-700 dark:text-slate-300">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 fill-emerald-50 dark:fill-emerald-950" />
-                  <span>Reuse questions</span>
-                </li>
-              </ul>
-            </div>
-
-            {/* Bottom Action Link */}
-            <div className="pt-6">
-              <Link
-                href="/login?mode=signup"
-                className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 group/link"
-              >
-                <span>Browse Bank</span>
-                <ArrowRight className="w-3.5 h-3.5 group-hover/link:translate-x-1 transition-transform" />
-              </Link>
-            </div>
-          </div>
-
-          {/* ───────────────────────────────────────────────────────────
-              CARD 04: Proctoring Radar (Coral/Rose Accent)
-          ─────────────────────────────────────────────────────────── */}
-          <div
-            onClick={() => activeIndex !== 3 && setActiveIndex(3)}
-            style={getCardTransformClasses(3).style}
-            className={`absolute top-1/2 left-1/2 w-[285px] sm:w-[325px] md:w-[350px] lg:w-[370px] flex flex-col justify-between p-6 sm:p-7 rounded-[26px] bg-white dark:bg-slate-900 border border-rose-200/90 dark:border-rose-900/60 transition-all duration-500 ease-out will-change-transform ${
-              getCardTransformClasses(3).className
-            }`}
-          >
-            {/* Layered physical backing sheet */}
-            <div className="absolute -bottom-2 -right-2 w-full h-full rounded-[26px] bg-rose-100/80 dark:bg-rose-950/50 border border-rose-200/60 dark:border-rose-800/40 -z-10" />
-
-            <div className="space-y-4">
-              {/* Top Row */}
-              <div className="flex items-center justify-between">
-                <span className="w-8 h-8 rounded-lg text-xs font-bold bg-rose-50 dark:bg-rose-950/80 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/60 flex items-center justify-center">
-                  04
-                </span>
-                <div className="w-11 h-11 rounded-2xl bg-rose-50/90 dark:bg-rose-950/70 border border-rose-100 dark:border-rose-900/60 text-rose-600 dark:text-rose-400 flex items-center justify-center shadow-xs">
-                  <ShieldCheck className="w-5 h-5" />
-                </div>
-              </div>
-
-              {/* Title & Description */}
-              <div>
-                <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight leading-snug">
-                  Proctoring Radar
-                </h3>
-                <p className="text-xs sm:text-[13px] text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
-                  Secure and fair online exams with smart monitoring.
-                </p>
-              </div>
-
-              {/* Checklist */}
-              <ul className="space-y-2.5 pt-2">
-                <li className="flex items-center gap-2 text-xs sm:text-[13px] font-medium text-slate-700 dark:text-slate-300">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 fill-emerald-50 dark:fill-emerald-950" />
-                  <span>Full-screen mode</span>
-                </li>
-                <li className="flex items-center gap-2 text-xs sm:text-[13px] font-medium text-slate-700 dark:text-slate-300">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 fill-emerald-50 dark:fill-emerald-950" />
-                  <span>Tab-switch alerts</span>
-                </li>
-                <li className="flex items-center gap-2 text-xs sm:text-[13px] font-medium text-slate-700 dark:text-slate-300">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 fill-emerald-50 dark:fill-emerald-950" />
-                  <span>Auto-submission</span>
-                </li>
-              </ul>
-            </div>
-
-            {/* Bottom Action Link */}
-            <div className="pt-6">
-              <Link
-                href="/login?mode=signup"
-                className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 group/link"
-              >
-                <span>View Details</span>
-                <ArrowRight className="w-3.5 h-3.5 group-hover/link:translate-x-1 transition-transform" />
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        {/* Carousel Pagination Indicator Pills */}
-        <div className="flex items-center justify-center gap-2 pt-2">
-          {cards.map((card, idx) => (
+          {/* 4 Horizontally Aligned Navigation Tabs */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3.5 max-w-5xl mx-auto">
             <button
-              key={card.id}
-              type="button"
-              onClick={() => setActiveIndex(idx)}
-              aria-label={`Go to slide ${idx + 1}: ${card.name}`}
-              className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
-                activeIndex === idx
-                  ? `w-8 ${card.pillActiveColor}`
-                  : "w-6 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400"
+              onClick={() => setActiveGuideTab("creator")}
+              className={`relative py-3 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer ${
+                activeGuideTab === "creator"
+                  ? "bg-[#2563EB] dark:bg-[#3B82F6] text-white shadow-md shadow-blue-500/25"
+                  : "bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] text-[#111827] dark:text-[#F1F5F9] hover:border-[#2563EB] hover:text-[#2563EB] dark:hover:text-[#60A5FA]"
               }`}
-            />
-          ))}
-        </div>
+            >
+              <BookOpen className={`w-4 h-4 shrink-0 ${activeGuideTab === "creator" ? "text-white" : "text-[#2563EB] dark:text-[#60A5FA]"}`} />
+              <span className="truncate">1. Teacher Creator Studio</span>
+              {activeGuideTab === "creator" && (
+                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0 h-0 border-x-[7px] border-x-transparent border-t-[8px] border-t-[#2563EB] dark:border-t-[#3B82F6] z-20" />
+              )}
+            </button>
+
+            <button
+              onClick={() => setActiveGuideTab("student")}
+              className={`relative py-3 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer ${
+                activeGuideTab === "student"
+                  ? "bg-[#2563EB] dark:bg-[#3B82F6] text-white shadow-md shadow-blue-500/25"
+                  : "bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] text-[#111827] dark:text-[#F1F5F9] hover:border-[#2563EB] hover:text-[#2563EB] dark:hover:text-[#60A5FA]"
+              }`}
+            >
+              <GraduationCap className={`w-4 h-4 shrink-0 ${activeGuideTab === "student" ? "text-white" : "text-[#2563EB] dark:text-[#60A5FA]"}`} />
+              <span className="truncate">2. Student Test Runner</span>
+              {activeGuideTab === "student" && (
+                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0 h-0 border-x-[7px] border-x-transparent border-t-[8px] border-t-[#2563EB] dark:border-t-[#3B82F6] z-20" />
+              )}
+            </button>
+
+            <button
+              onClick={() => setActiveGuideTab("proctor")}
+              className={`relative py-3 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer ${
+                activeGuideTab === "proctor"
+                  ? "bg-[#2563EB] dark:bg-[#3B82F6] text-white shadow-md shadow-blue-500/25"
+                  : "bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] text-[#111827] dark:text-[#F1F5F9] hover:border-[#2563EB] hover:text-[#2563EB] dark:hover:text-[#60A5FA]"
+              }`}
+            >
+              <ShieldAlert className={`w-4 h-4 shrink-0 ${activeGuideTab === "proctor" ? "text-white" : "text-[#2563EB] dark:text-[#60A5FA]"}`} />
+              <span className="truncate">3. Anti-Cheat Telemetry</span>
+              {activeGuideTab === "proctor" && (
+                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0 h-0 border-x-[7px] border-x-transparent border-t-[8px] border-t-[#2563EB] dark:border-t-[#3B82F6] z-20" />
+              )}
+            </button>
+
+            <button
+              onClick={() => setActiveGuideTab("analytics")}
+              className={`relative py-3 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer ${
+                activeGuideTab === "analytics"
+                  ? "bg-[#2563EB] dark:bg-[#3B82F6] text-white shadow-md shadow-blue-500/25"
+                  : "bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] text-[#111827] dark:text-[#F1F5F9] hover:border-[#2563EB] hover:text-[#2563EB] dark:hover:text-[#60A5FA]"
+              }`}
+            >
+              <BarChart3 className={`w-4 h-4 shrink-0 ${activeGuideTab === "analytics" ? "text-white" : "text-[#2563EB] dark:text-[#60A5FA]"}`} />
+              <span className="truncate">4. Evaluation & Gradebook</span>
+              {activeGuideTab === "analytics" && (
+                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0 h-0 border-x-[7px] border-x-transparent border-t-[8px] border-t-[#2563EB] dark:border-t-[#3B82F6] z-20" />
+              )}
+            </button>
+          </div>
+
+          {/* Main Large White Rounded Container */}
+          <div className="bg-white dark:bg-[#111C31] rounded-3xl border border-[#E2E8F0] dark:border-[#263449] p-6 sm:p-8 lg:p-10 shadow-sm">
+            
+            {/* ══════ TAB 1: TEACHER CREATOR STUDIO ══════ */}
+            {activeGuideTab === "creator" && (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-stretch">
+                
+                {/* LEFT SECTION (50% width) - SEAMLESS, NO INNER BORDER BOX */}
+                <div className="lg:col-span-6 xl:col-span-6 flex flex-col justify-between h-full space-y-6 p-1 sm:p-2">
+                  
+                  {/* Top Header & Labels */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-2xl bg-[#EFF6FF] dark:bg-blue-900/25 border border-blue-200/50 dark:border-blue-800/40 shadow-xs flex items-center justify-center text-[#2563EB] dark:text-[#60A5FA] shrink-0">
+                        <FileEdit className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-extrabold tracking-wider text-[#2563EB] dark:text-[#60A5FA] uppercase bg-blue-500/10 px-2.5 py-0.5 rounded-full inline-block">
+                          CREATE • CONFIGURE • SCHEDULE
+                        </span>
+                        <h3 className="text-xl sm:text-2xl font-black text-[#111827] dark:text-[#F1F5F9] tracking-tight leading-snug mt-1">
+                          Instructor 4-Step <br />
+                          <span className="text-[#2563EB] dark:text-[#60A5FA]">Assessment Creator</span>
+                        </h3>
+                      </div>
+                    </div>
+
+                    <p className="text-xs sm:text-sm text-[#64748B] dark:text-[#A3B1C6] leading-relaxed">
+                      From your content to a secure, ready-to-run assessment in just a few guided steps.
+                    </p>
+                  </div>
+
+                  {/* REALISTIC 3D LAPTOP INTERFACE PREVIEW WITH MOVABLE BADGES, RADIANT AMBIENT GLOW FLARE & FLOAT ANIMATION */}
+                  <div className="relative my-auto py-5 sm:py-7 flex items-center justify-center">
+                    {/* Glowing Radiant Flare Backdrop */}
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none -z-0">
+                      <div className="w-[360px] sm:w-[520px] h-[240px] sm:h-[340px] bg-gradient-to-tr from-blue-500/25 via-sky-400/30 to-indigo-500/25 dark:from-blue-600/40 dark:via-cyan-400/30 dark:to-indigo-500/35 rounded-full blur-3xl transform scale-110 opacity-85 animate-pulse" />
+                      <div className="absolute w-[240px] sm:w-[360px] h-[160px] sm:h-[230px] bg-sky-400/30 dark:bg-blue-400/35 rounded-full blur-2xl" />
+                      <div className="absolute w-[140px] sm:w-[190px] h-[90px] sm:h-[130px] bg-white/50 dark:bg-sky-300/20 rounded-full blur-xl" />
+                    </div>
+
+                    <div className="relative mx-auto w-full max-w-[400px] sm:max-w-[490px] flex items-center justify-center animate-float-slow">
+                      <img
+                        src="/images/laptop_mockup.png"
+                        alt="Testora Assessment Creator Studio"
+                        className="w-full h-auto object-contain drop-shadow-[0_22px_40px_rgba(37,99,235,0.28)] dark:drop-shadow-[0_25px_45px_rgba(0,0,0,0.75)] select-none pointer-events-none transition-transform duration-300"
+                        draggable={false}
+                      />
+
+                      {/* Interactive Movable Badges */}
+                      <MovableBadge
+                        icon={FileText}
+                        text="PDF / PPT / TXT"
+                        iconColorClass="text-rose-500"
+                        initialPos={{ top: "0%", right: "-8px" }}
+                        animationClass="animate-float-slow"
+                      />
+
+                      <MovableBadge
+                        icon={Sparkles}
+                        text="AI Questions"
+                        iconColorClass="text-[#2563EB] dark:text-[#60A5FA]"
+                        initialPos={{ top: "42%", right: "-20px" }}
+                        animationClass="animate-float-delayed"
+                      />
+
+                      <MovableBadge
+                        icon={Calendar}
+                        text="Schedule Test"
+                        iconColorClass="text-emerald-500"
+                        initialPos={{ bottom: "0%", right: "-6px" }}
+                        animationClass="animate-float-reverse"
+                      />
+
+                      <MovableBadge
+                        icon={CheckCircle2}
+                        text="KaTeX Math"
+                        iconColorClass="text-blue-500"
+                        initialPos={{ bottom: "14%", left: "-12px" }}
+                        animationClass="animate-float-slow"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 3 Compact Feature Rows */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-4 border-t border-[#E2E8F0] dark:border-[#263449] text-xs">
+                    <div className="flex items-start gap-2">
+                      <div className="w-6 h-6 rounded-lg bg-blue-500/10 flex items-center justify-center text-[#2563EB] dark:text-[#60A5FA] shrink-0 mt-0.5">
+                        <FileText className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <div className="font-bold text-[#111827] dark:text-[#F1F5F9] text-[11px]">Multiple File Formats</div>
+                        <div className="text-[10px] text-[#64748B] dark:text-[#A3B1C6]">PDF, PPTX, TXT and more</div>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <div className="w-6 h-6 rounded-lg bg-blue-500/10 flex items-center justify-center text-[#2563EB] dark:text-[#60A5FA] shrink-0 mt-0.5">
+                        <Sparkles className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <div className="font-bold text-[#111827] dark:text-[#F1F5F9] text-[11px]">AI Question Generation</div>
+                        <div className="text-[10px] text-[#64748B] dark:text-[#A3B1C6]">MCQ, Short Answer, Subjective</div>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <div className="w-6 h-6 rounded-lg bg-blue-500/10 flex items-center justify-center text-[#2563EB] dark:text-[#60A5FA] shrink-0 mt-0.5">
+                        <Calendar className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <div className="font-bold text-[#111827] dark:text-[#F1F5F9] text-[11px]">Flexible Scheduling</div>
+                        <div className="text-[10px] text-[#64748B] dark:text-[#A3B1C6]">Test windows, rules & passcodes</div>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* RIGHT SECTION: 4-STEP WORKFLOW (EQUAL TOP & BOTTOM ALIGNMENT) */}
+                <div className="lg:col-span-6 xl:col-span-6 flex flex-col justify-between h-full relative pl-0 sm:pl-3 p-1 sm:p-2">
+                  
+                  {/* Vertical Connecting Line (Desktop Only) */}
+                  <div className="absolute left-[24px] sm:left-[36px] top-6 bottom-6 w-0.5 border-l-2 border-dashed border-blue-500/25 z-0 hidden lg:block" />
+
+                  {/* Mobile Swipe Hint */}
+                  <div className="flex lg:hidden items-center justify-between px-1 mb-2 text-[11px] font-semibold text-[#64748B] dark:text-[#94A3B8]">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#2563EB] animate-pulse" />
+                      <span>Interactive Workflow (Swipe 1 → 4)</span>
+                    </span>
+                    <span className="text-[10px] text-[#2563EB] dark:text-[#60A5FA] font-bold flex items-center gap-0.5">
+                      Swipe &rarr;
+                    </span>
+                  </div>
+
+                  {/* 4 Workflow Rows: Stretched Evenly on Desktop, Horizontal Scrolling Row on Mobile */}
+                  <div className="flex-1 flex flex-row lg:flex-col overflow-x-auto lg:overflow-visible snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden justify-between gap-3 sm:gap-3.5 pb-2 lg:pb-0 px-1 sm:px-0 -mx-1 sm:mx-0">
+                    
+                    {/* Row 1: Knowledge Base */}
+                    <div 
+                      onClick={() => router.push(token ? "/dashboard/teacher" : "/login")}
+                      className="relative z-10 w-[84vw] max-w-[340px] sm:max-w-[380px] lg:w-auto shrink-0 snap-center lg:flex-1 flex items-center gap-3 sm:gap-4 group cursor-pointer animate-step-float-1 transition-all duration-300 hover:-translate-y-1"
+                    >
+                      <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] text-white font-black text-xs sm:text-sm flex items-center justify-center shrink-0 shadow-xs ring-4 ring-white dark:ring-[#111C31]">
+                        1
+                      </div>
+                      <div className="flex-1 h-full min-h-[96px] bg-[#F8FAFC]/80 dark:bg-[#17243A]/80 border border-[#E2E8F0] dark:border-[#263449] group-hover:border-[#2563EB] dark:group-hover:border-[#3B82F6] rounded-2xl p-4 sm:p-4.5 flex items-center justify-between gap-3 shadow-2xs group-hover:shadow-md transition-all duration-200">
+                        <div className="flex items-center gap-3.5">
+                          <div className="w-11 h-11 rounded-xl bg-[#EFF6FF] dark:bg-blue-900/20 text-[#2563EB] dark:text-[#60A5FA] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                            <FileUp className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h4 className="font-extrabold text-sm sm:text-base text-[#111827] dark:text-[#F1F5F9] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA] transition-colors">
+                              Knowledge Base
+                            </h4>
+                            <p className="text-xs text-[#64748B] dark:text-[#A3B1C6] leading-relaxed mt-0.5 line-clamp-2">
+                              Select existing document or upload new PDF/PPTX/TXT files directly for instant ChromaDB vector embedding.
+                            </p>
+                          </div>
+                        </div>
+                        <div className="w-8 h-8 rounded-full border border-[#E2E8F0] dark:border-[#334155] flex items-center justify-center text-[#94A3B8] group-hover:border-[#2563EB] group-hover:text-[#2563EB] group-hover:bg-[#EFF6FF] transition-all shrink-0">
+                          <ChevronRight className="w-4 h-4" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Row 2: AI Blueprint */}
+                    <div 
+                      onClick={() => router.push(token ? "/dashboard/teacher" : "/login")}
+                      className="relative z-10 w-[84vw] max-w-[340px] sm:max-w-[380px] lg:w-auto shrink-0 snap-center lg:flex-1 flex items-center gap-3 sm:gap-4 group cursor-pointer animate-step-float-2 transition-all duration-300 hover:-translate-y-1"
+                    >
+                      <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] text-white font-black text-xs sm:text-sm flex items-center justify-center shrink-0 shadow-xs ring-4 ring-white dark:ring-[#111C31]">
+                        2
+                      </div>
+                      <div className="flex-1 h-full min-h-[96px] bg-[#F8FAFC]/80 dark:bg-[#17243A]/80 border border-[#E2E8F0] dark:border-[#263449] group-hover:border-[#2563EB] dark:group-hover:border-[#3B82F6] rounded-2xl p-4 sm:p-4.5 flex items-center justify-between gap-3 shadow-2xs group-hover:shadow-md transition-all duration-200">
+                        <div className="flex items-center gap-3.5">
+                          <div className="w-11 h-11 rounded-xl bg-[#EFF6FF] dark:bg-blue-900/20 text-[#2563EB] dark:text-[#60A5FA] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                            <Sliders className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h4 className="font-extrabold text-sm sm:text-base text-[#111827] dark:text-[#F1F5F9] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA] transition-colors">
+                              AI Blueprint
+                            </h4>
+                            <p className="text-xs text-[#64748B] dark:text-[#A3B1C6] leading-relaxed mt-0.5 line-clamp-2">
+                              Configure MCQ / short answer distributions, difficulty levels, and syllabus coverage targets.
+                            </p>
+                          </div>
+                        </div>
+                        <div className="w-8 h-8 rounded-full border border-[#E2E8F0] dark:border-[#334155] flex items-center justify-center text-[#94A3B8] group-hover:border-[#2563EB] group-hover:text-[#2563EB] group-hover:bg-[#EFF6FF] transition-all shrink-0">
+                          <ChevronRight className="w-4 h-4" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Row 3: Question Editor */}
+                    <div 
+                      onClick={() => router.push(token ? "/dashboard/teacher" : "/login")}
+                      className="relative z-10 w-[84vw] max-w-[340px] sm:max-w-[380px] lg:w-auto shrink-0 snap-center lg:flex-1 flex items-center gap-3 sm:gap-4 group cursor-pointer animate-step-float-3 transition-all duration-300 hover:-translate-y-1"
+                    >
+                      <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] text-white font-black text-xs sm:text-sm flex items-center justify-center shrink-0 shadow-xs ring-4 ring-white dark:ring-[#111C31]">
+                        3
+                      </div>
+                      <div className="flex-1 h-full min-h-[96px] bg-[#F8FAFC]/80 dark:bg-[#17243A]/80 border border-[#E2E8F0] dark:border-[#263449] group-hover:border-[#2563EB] dark:group-hover:border-[#3B82F6] rounded-2xl p-4 sm:p-4.5 flex items-center justify-between gap-3 shadow-2xs group-hover:shadow-md transition-all duration-200">
+                        <div className="flex items-center gap-3.5">
+                          <div className="w-11 h-11 rounded-xl bg-[#EFF6FF] dark:bg-blue-900/20 text-[#2563EB] dark:text-[#60A5FA] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                            <FileEdit className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h4 className="font-extrabold text-sm sm:text-base text-[#111827] dark:text-[#F1F5F9] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA] transition-colors">
+                              Question Editor
+                            </h4>
+                            <p className="text-xs text-[#64748B] dark:text-[#A3B1C6] leading-relaxed mt-0.5 line-clamp-2">
+                              Review AI generated questions with LaTeX math rendering, live editing, and custom question additions.
+                            </p>
+                          </div>
+                        </div>
+                        <div className="w-8 h-8 rounded-full border border-[#E2E8F0] dark:border-[#334155] flex items-center justify-center text-[#94A3B8] group-hover:border-[#2563EB] group-hover:text-[#2563EB] group-hover:bg-[#EFF6FF] transition-all shrink-0">
+                          <ChevronRight className="w-4 h-4" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Row 4: Scheduling */}
+                    <div 
+                      onClick={() => router.push(token ? "/dashboard/teacher" : "/login")}
+                      className="relative z-10 w-[84vw] max-w-[340px] sm:max-w-[380px] lg:w-auto shrink-0 snap-center lg:flex-1 flex items-center gap-3 sm:gap-4 group cursor-pointer animate-step-float-4 transition-all duration-300 hover:-translate-y-1"
+                    >
+                      <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] text-white font-black text-xs sm:text-sm flex items-center justify-center shrink-0 shadow-xs ring-4 ring-white dark:ring-[#111C31]">
+                        4
+                      </div>
+                      <div className="flex-1 h-full min-h-[96px] bg-[#F8FAFC]/80 dark:bg-[#17243A]/80 border border-[#E2E8F0] dark:border-[#263449] group-hover:border-[#2563EB] dark:group-hover:border-[#3B82F6] rounded-2xl p-4 sm:p-4.5 flex items-center justify-between gap-3 shadow-2xs group-hover:shadow-md transition-all duration-200">
+                        <div className="flex items-center gap-3.5">
+                          <div className="w-11 h-11 rounded-xl bg-[#EFF6FF] dark:bg-blue-900/20 text-[#2563EB] dark:text-[#60A5FA] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                            <Calendar className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h4 className="font-extrabold text-sm sm:text-base text-[#111827] dark:text-[#F1F5F9] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA] transition-colors">
+                              Scheduling
+                            </h4>
+                            <p className="text-xs text-[#64748B] dark:text-[#A3B1C6] leading-relaxed mt-0.5 line-clamp-2">
+                              Assign test windows, fullscreen enforcement rules, calculators, and generate candidate passcodes.
+                            </p>
+                          </div>
+                        </div>
+                        <div className="w-8 h-8 rounded-full border border-[#E2E8F0] dark:border-[#334155] flex items-center justify-center text-[#94A3B8] group-hover:border-[#2563EB] group-hover:text-[#2563EB] group-hover:bg-[#EFF6FF] transition-all shrink-0">
+                          <ChevronRight className="w-4 h-4" />
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+
+                  {/* Mobile Scroll Indicator Dots */}
+                  <div className="flex lg:hidden items-center justify-center gap-1.5 pt-2">
+                    <div className="w-5 h-1 rounded-full bg-[#2563EB] dark:bg-[#3B82F6]" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700" />
+                  </div>
+
+                </div>
+
+              </div>
+            )}
+
+            {/* ══════ TAB 2: STUDENT TEST RUNNER ══════ */}
+            {activeGuideTab === "student" && (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-stretch animate-fadeIn">
+                
+                {/* Left Preview - BORDERLESS */}
+                <div className="lg:col-span-6 xl:col-span-6 flex flex-col justify-between h-full space-y-6 p-1 sm:p-2">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-2xl bg-[#EFF6FF] dark:bg-blue-900/25 border border-blue-200/50 dark:border-blue-800/40 shadow-xs flex items-center justify-center text-[#2563EB] dark:text-[#60A5FA] shrink-0">
+                        <GraduationCap className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-extrabold tracking-wider text-[#2563EB] dark:text-[#60A5FA] uppercase bg-blue-500/10 px-2.5 py-0.5 rounded-full inline-block">
+                          AUTHENTICATE • ATTEMPT • AUTOSAVE
+                        </span>
+                        <h3 className="text-xl sm:text-2xl font-black text-[#111827] dark:text-[#F1F5F9] tracking-tight leading-snug mt-1">
+                          Candidate Testing & <br />
+                          <span className="text-[#2563EB] dark:text-[#60A5FA]">Response Sync Engine</span>
+                        </h3>
+                      </div>
+                    </div>
+                    <p className="text-xs sm:text-sm text-[#64748B] dark:text-[#A3B1C6] leading-relaxed">
+                      Secure, low-latency testing environment with dual background recovery and real-time keystroke sync.
+                    </p>
+                  </div>
+
+                  {/* Student Screen Preview WITH GLOW FLARE & FLOATING ANIMATION */}
+                  <div className="relative my-auto py-5 sm:py-7 flex items-center justify-center">
+                    {/* Glowing Radiant Flare Backdrop */}
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none -z-0">
+                      <div className="w-[360px] sm:w-[520px] h-[240px] sm:h-[340px] bg-gradient-to-tr from-blue-500/25 via-sky-400/30 to-indigo-500/25 dark:from-blue-600/40 dark:via-cyan-400/30 dark:to-indigo-500/35 rounded-full blur-3xl transform scale-110 opacity-85 animate-pulse" />
+                      <div className="absolute w-[240px] sm:w-[360px] h-[160px] sm:h-[230px] bg-sky-400/30 dark:bg-blue-400/35 rounded-full blur-2xl" />
+                      <div className="absolute w-[140px] sm:w-[190px] h-[90px] sm:h-[130px] bg-white/50 dark:bg-sky-300/20 rounded-full blur-xl" />
+                    </div>
+
+                    <div className="relative mx-auto w-full max-w-[400px] sm:max-w-[490px] flex items-center justify-center animate-float-slow">
+                      <img
+                        src="/images/laptop_student_exam.png"
+                        alt="Testora Candidate Testing Interface"
+                        className="w-full h-auto object-contain drop-shadow-[0_22px_40px_rgba(37,99,235,0.28)] dark:drop-shadow-[0_25px_45px_rgba(0,0,0,0.75)] select-none pointer-events-none transition-transform duration-300"
+                        draggable={false}
+                      />
+                      
+                      <MovableBadge
+                        icon={Zap}
+                        text="Dual Cloud Autosave"
+                        iconColorClass="text-amber-500"
+                        initialPos={{ top: "-12px", right: "-8px" }}
+                        animationClass="animate-float-slow"
+                      />
+                      <MovableBadge
+                        icon={Sparkles}
+                        text="KaTeX Math Engine"
+                        iconColorClass="text-[#2563EB] dark:text-[#60A5FA]"
+                        initialPos={{ top: "42%", right: "-12px" }}
+                        animationClass="animate-float-delayed"
+                      />
+                      <MovableBadge
+                        icon={Clock}
+                        text="Live Sync Timer"
+                        iconColorClass="text-blue-600"
+                        initialPos={{ bottom: "-8px", right: "-4px" }}
+                        animationClass="animate-float-reverse"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-4 border-t border-[#E2E8F0] dark:border-[#263449] text-xs">
+                    <div className="flex items-start gap-2">
+                      <div className="w-6 h-6 rounded-lg bg-blue-500/10 flex items-center justify-center text-[#2563EB] dark:text-[#60A5FA] shrink-0 mt-0.5">
+                        <Zap className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <div className="font-bold text-[#111827] dark:text-[#F1F5F9] text-[11px]">1-Click Fast Gateway</div>
+                        <div className="text-[10px] text-[#64748B] dark:text-[#A3B1C6]">Direct login & PIN access</div>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <div className="w-6 h-6 rounded-lg bg-blue-500/10 flex items-center justify-center text-[#2563EB] dark:text-[#60A5FA] shrink-0 mt-0.5">
+                        <Lock className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <div className="font-bold text-[#111827] dark:text-[#F1F5F9] text-[11px]">Dual Sync Engine</div>
+                        <div className="text-[10px] text-[#64748B] dark:text-[#A3B1C6]">Local & Cloud real-time sync</div>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <div className="w-6 h-6 rounded-lg bg-blue-500/10 flex items-center justify-center text-[#2563EB] dark:text-[#60A5FA] shrink-0 mt-0.5">
+                        <Sparkles className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <div className="font-bold text-[#111827] dark:text-[#F1F5F9] text-[11px]">Scientific Toolset</div>
+                        <div className="text-[10px] text-[#64748B] dark:text-[#A3B1C6]">Calculator & KaTeX math</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right 4 Steps - EQUAL TOP & BOTTOM ALIGNMENT */}
+                <div className="lg:col-span-6 xl:col-span-6 flex flex-col justify-between h-full relative pl-0 sm:pl-3 p-1 sm:p-2">
+                  <div className="absolute left-[20px] sm:left-[38px] top-8 bottom-8 w-0.5 border-l-2 border-dashed border-blue-500/25 z-0 hidden lg:block" />
+
+                  {/* Mobile Swipe Hint */}
+                  <div className="flex lg:hidden items-center justify-between px-1 mb-2 text-[11px] font-semibold text-[#64748B] dark:text-[#94A3B8]">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#2563EB] animate-pulse" />
+                      <span>Candidate Testing Journey (Swipe 1 → 4)</span>
+                    </span>
+                    <span className="text-[10px] text-[#2563EB] dark:text-[#60A5FA] font-bold flex items-center gap-0.5">
+                      Swipe &rarr;
+                    </span>
+                  </div>
+
+                  <div className="flex-1 flex flex-row lg:flex-col overflow-x-auto lg:overflow-visible snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden justify-between gap-3 sm:gap-3.5 h-full pb-2 lg:pb-0 px-1 sm:px-0 -mx-1 sm:mx-0">
+                    
+                    {/* Step 1 */}
+                    <div onClick={() => router.push("/login")} className="relative z-10 w-[84vw] max-w-[340px] sm:max-w-[380px] lg:w-auto shrink-0 snap-center lg:flex-1 flex items-center gap-3 sm:gap-4 group cursor-pointer animate-step-float-1 transition-all duration-300 hover:-translate-y-1">
+                      <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] text-white font-black text-xs sm:text-sm flex items-center justify-center shrink-0 shadow-xs ring-4 ring-white dark:ring-[#111C31]">1</div>
+                      <div className="flex-1 h-full min-h-[96px] bg-[#F8FAFC]/80 dark:bg-[#17243A]/80 border border-[#E2E8F0] dark:border-[#263449] group-hover:border-[#2563EB] dark:group-hover:border-[#3B82F6] rounded-2xl p-4 sm:p-4.5 flex items-center justify-between gap-3 shadow-2xs group-hover:shadow-md transition-all duration-200">
+                        <div className="flex items-center gap-3.5">
+                          <div className="w-11 h-11 rounded-xl bg-[#EFF6FF] dark:bg-blue-900/20 text-[#2563EB] dark:text-[#60A5FA] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                            <Zap className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h4 className="font-extrabold text-sm sm:text-base text-[#111827] dark:text-[#F1F5F9] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA] transition-colors">1-Click Gateway</h4>
+                            <p className="text-xs text-[#64748B] dark:text-[#A3B1C6] leading-relaxed mt-0.5 line-clamp-2">Authenticated students launch assessments instantly without passwords, or use 6-digit access PINs.</p>
+                          </div>
+                        </div>
+                        <div className="w-8 h-8 rounded-full border border-[#E2E8F0] dark:border-[#334155] flex items-center justify-center text-[#94A3B8] group-hover:border-[#2563EB] group-hover:text-[#2563EB] group-hover:bg-[#EFF6FF] transition-all shrink-0">
+                          <ChevronRight className="w-4 h-4" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Step 2 */}
+                    <div onClick={() => router.push("/login")} className="relative z-10 w-[84vw] max-w-[340px] sm:max-w-[380px] lg:w-auto shrink-0 snap-center lg:flex-1 flex items-center gap-3 sm:gap-4 group cursor-pointer animate-step-float-2 transition-all duration-300 hover:-translate-y-1">
+                      <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] text-white font-black text-xs sm:text-sm flex items-center justify-center shrink-0 shadow-xs ring-4 ring-white dark:ring-[#111C31]">2</div>
+                      <div className="flex-1 h-full min-h-[96px] bg-[#F8FAFC]/80 dark:bg-[#17243A]/80 border border-[#E2E8F0] dark:border-[#263449] group-hover:border-[#2563EB] dark:group-hover:border-[#3B82F6] rounded-2xl p-4 sm:p-4.5 flex items-center justify-between gap-3 shadow-2xs group-hover:shadow-md transition-all duration-200">
+                        <div className="flex items-center gap-3.5">
+                          <div className="w-11 h-11 rounded-xl bg-[#EFF6FF] dark:bg-blue-900/20 text-[#2563EB] dark:text-[#60A5FA] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                            <Lock className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h4 className="font-extrabold text-sm sm:text-base text-[#111827] dark:text-[#F1F5F9] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA] transition-colors">Dual Sync Engine</h4>
+                            <p className="text-xs text-[#64748B] dark:text-[#A3B1C6] leading-relaxed mt-0.5 line-clamp-2">Every keystroke is saved to LocalStorage and synchronized to the database on blur and selection.</p>
+                          </div>
+                        </div>
+                        <div className="w-8 h-8 rounded-full border border-[#E2E8F0] dark:border-[#334155] flex items-center justify-center text-[#94A3B8] group-hover:border-[#2563EB] group-hover:text-[#2563EB] group-hover:bg-[#EFF6FF] transition-all shrink-0">
+                          <ChevronRight className="w-4 h-4" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Step 3 */}
+                    <div onClick={() => router.push("/login")} className="relative z-10 w-[84vw] max-w-[340px] sm:max-w-[380px] lg:w-auto shrink-0 snap-center lg:flex-1 flex items-center gap-3 sm:gap-4 group cursor-pointer animate-step-float-3 transition-all duration-300 hover:-translate-y-1">
+                      <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] text-white font-black text-xs sm:text-sm flex items-center justify-center shrink-0 shadow-xs ring-4 ring-white dark:ring-[#111C31]">3</div>
+                      <div className="flex-1 h-full min-h-[96px] bg-[#F8FAFC]/80 dark:bg-[#17243A]/80 border border-[#E2E8F0] dark:border-[#263449] group-hover:border-[#2563EB] dark:group-hover:border-[#3B82F6] rounded-2xl p-4 sm:p-4.5 flex items-center justify-between gap-3 shadow-2xs group-hover:shadow-md transition-all duration-200">
+                        <div className="flex items-center gap-3.5">
+                          <div className="w-11 h-11 rounded-xl bg-[#EFF6FF] dark:bg-blue-900/20 text-[#2563EB] dark:text-[#60A5FA] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                            <Sparkles className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h4 className="font-extrabold text-sm sm:text-base text-[#111827] dark:text-[#F1F5F9] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA] transition-colors">Scientific Toolset</h4>
+                            <p className="text-xs text-[#64748B] dark:text-[#A3B1C6] leading-relaxed mt-0.5 line-clamp-2">Floating scientific calculator, formula rendering, flag-for-review navigation, and keyboard shortcuts.</p>
+                          </div>
+                        </div>
+                        <div className="w-8 h-8 rounded-full border border-[#E2E8F0] dark:border-[#334155] flex items-center justify-center text-[#94A3B8] group-hover:border-[#2563EB] group-hover:text-[#2563EB] group-hover:bg-[#EFF6FF] transition-all shrink-0">
+                          <ChevronRight className="w-4 h-4" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Step 4 */}
+                    <div onClick={() => router.push("/login")} className="relative z-10 w-[84vw] max-w-[340px] sm:max-w-[380px] lg:w-auto shrink-0 snap-center lg:flex-1 flex items-center gap-3 sm:gap-4 group cursor-pointer animate-step-float-4 transition-all duration-300 hover:-translate-y-1">
+                      <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] text-white font-black text-xs sm:text-sm flex items-center justify-center shrink-0 shadow-xs ring-4 ring-white dark:ring-[#111C31]">4</div>
+                      <div className="flex-1 h-full min-h-[96px] bg-[#F8FAFC]/80 dark:bg-[#17243A]/80 border border-[#E2E8F0] dark:border-[#263449] group-hover:border-[#2563EB] dark:group-hover:border-[#3B82F6] rounded-2xl p-4 sm:p-4.5 flex items-center justify-between gap-3 shadow-2xs group-hover:shadow-md transition-all duration-200">
+                        <div className="flex items-center gap-3.5">
+                          <div className="w-11 h-11 rounded-xl bg-[#EFF6FF] dark:bg-blue-900/20 text-[#2563EB] dark:text-[#60A5FA] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                            <CheckCircle2 className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h4 className="font-extrabold text-sm sm:text-base text-[#111827] dark:text-[#F1F5F9] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA] transition-colors">Atomic Submission</h4>
+                            <p className="text-xs text-[#64748B] dark:text-[#A3B1C6] leading-relaxed mt-0.5 line-clamp-2">Idempotent compare-and-swap submission engine preventing race conditions and double submission.</p>
+                          </div>
+                        </div>
+                        <div className="w-8 h-8 rounded-full border border-[#E2E8F0] dark:border-[#334155] flex items-center justify-center text-[#94A3B8] group-hover:border-[#2563EB] group-hover:text-[#2563EB] group-hover:bg-[#EFF6FF] transition-all shrink-0">
+                          <ChevronRight className="w-4 h-4" />
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+
+                  {/* Mobile Scroll Indicator Dots */}
+                  <div className="flex lg:hidden items-center justify-center gap-1.5 pt-2">
+                    <div className="w-5 h-1 rounded-full bg-[#2563EB] dark:bg-[#3B82F6]" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700" />
+                  </div>
+                </div>
+
+              </div>
+            )}
+
+            {/* ══════ TAB 3: ANTI-CHEAT TELEMETRY ══════ */}
+            {activeGuideTab === "proctor" && (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-stretch animate-fadeIn">
+                
+                {/* Left Preview - BORDERLESS */}
+                <div className="lg:col-span-6 xl:col-span-6 flex flex-col justify-between h-full space-y-6 p-1 sm:p-2">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-2xl bg-[#EFF6FF] dark:bg-blue-900/25 border border-blue-200/50 dark:border-blue-800/40 shadow-xs flex items-center justify-center text-[#2563EB] dark:text-[#60A5FA] shrink-0">
+                        <ShieldAlert className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-extrabold tracking-wider text-[#2563EB] dark:text-[#60A5FA] uppercase bg-blue-500/10 px-2.5 py-0.5 rounded-full inline-block">
+                          MONITOR • DETECT • INTERCEPT
+                        </span>
+                        <h3 className="text-xl sm:text-2xl font-black text-[#111827] dark:text-[#F1F5F9] tracking-tight leading-snug mt-1">
+                          Real-Time Proctoring <br />
+                          <span className="text-[#2563EB] dark:text-[#60A5FA]">Command Center</span>
+                        </h3>
+                      </div>
+                    </div>
+                    <p className="text-xs sm:text-sm text-[#64748B] dark:text-[#A3B1C6] leading-relaxed">
+                      Zero-trust browser sandbox with live WebSocket telemetry push directly to faculty dashboards.
+                    </p>
+                  </div>
+
+                  {/* Proctor Screen Preview WITH GLOW FLARE & FLOATING ANIMATION */}
+                  <div className="relative my-auto py-5 sm:py-7 flex items-center justify-center">
+                    {/* Glowing Radiant Flare Backdrop */}
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none -z-0">
+                      <div className="w-[360px] sm:w-[520px] h-[240px] sm:h-[340px] bg-gradient-to-tr from-blue-500/25 via-sky-400/30 to-indigo-500/25 dark:from-blue-600/40 dark:via-cyan-400/30 dark:to-indigo-500/35 rounded-full blur-3xl transform scale-110 opacity-85 animate-pulse" />
+                      <div className="absolute w-[240px] sm:w-[360px] h-[160px] sm:h-[230px] bg-sky-400/30 dark:bg-blue-400/35 rounded-full blur-2xl" />
+                      <div className="absolute w-[140px] sm:w-[190px] h-[90px] sm:h-[130px] bg-white/50 dark:bg-sky-300/20 rounded-full blur-xl" />
+                    </div>
+
+                    <div className="relative mx-auto w-full max-w-[400px] sm:max-w-[490px] flex items-center justify-center animate-float-slow">
+                      <img
+                        src="/images/laptop_proctor_radar.png"
+                        alt="Testora Anti-Cheat Proctoring Telemetry"
+                        className="w-full h-auto object-contain drop-shadow-[0_22px_40px_rgba(244,63,94,0.25)] dark:drop-shadow-[0_25px_45px_rgba(0,0,0,0.75)] select-none pointer-events-none transition-transform duration-300"
+                        draggable={false}
+                      />
+                      
+                      {/* Movable Badges */}
+                      <MovableBadge
+                        icon={ShieldAlert}
+                        text="Tab-Switch Alert"
+                        iconColorClass="text-rose-500"
+                        initialPos={{ top: "-12px", right: "-8px" }}
+                        animationClass="animate-float-slow"
+                      />
+                      <MovableBadge
+                        icon={Lock}
+                        text="Fullscreen Lock"
+                        iconColorClass="text-[#2563EB] dark:text-[#60A5FA]"
+                        initialPos={{ top: "42%", right: "-12px" }}
+                        animationClass="animate-float-delayed"
+                      />
+                      <MovableBadge
+                        icon={Zap}
+                        text="Remote Eject"
+                        iconColorClass="text-amber-500"
+                        initialPos={{ bottom: "-8px", right: "-4px" }}
+                        animationClass="animate-float-reverse"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-4 border-t border-[#E2E8F0] dark:border-[#263449] text-xs">
+                    <div className="flex items-start gap-2">
+                      <div className="w-6 h-6 rounded-lg bg-blue-500/10 flex items-center justify-center text-[#2563EB] dark:text-[#60A5FA] shrink-0 mt-0.5">
+                        <ShieldAlert className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <div className="font-bold text-[#111827] dark:text-[#F1F5F9] text-[11px]">Tab-Switch Interception</div>
+                        <div className="text-[10px] text-[#64748B] dark:text-[#A3B1C6]">Strict 1-warning policy</div>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <div className="w-6 h-6 rounded-lg bg-blue-500/10 flex items-center justify-center text-[#2563EB] dark:text-[#60A5FA] shrink-0 mt-0.5">
+                        <Zap className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <div className="font-bold text-[#111827] dark:text-[#F1F5F9] text-[11px]">WebSocket Stream</div>
+                        <div className="text-[10px] text-[#64748B] dark:text-[#A3B1C6]">Live telemetry radar</div>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <div className="w-6 h-6 rounded-lg bg-blue-500/10 flex items-center justify-center text-[#2563EB] dark:text-[#60A5FA] shrink-0 mt-0.5">
+                        <Lock className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <div className="font-bold text-[#111827] dark:text-[#F1F5F9] text-[11px]">Sandbox Hardening</div>
+                        <div className="text-[10px] text-[#64748B] dark:text-[#A3B1C6]">DevTools & Clipboard lock</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right 4 Steps - EQUAL TOP & BOTTOM ALIGNMENT */}
+                <div className="lg:col-span-6 xl:col-span-6 flex flex-col justify-between h-full relative pl-0 sm:pl-3 p-1 sm:p-2">
+                  <div className="absolute left-[20px] sm:left-[38px] top-8 bottom-8 w-0.5 border-l-2 border-dashed border-blue-500/25 z-0 hidden lg:block" />
+
+                  {/* Mobile Swipe Hint */}
+                  <div className="flex lg:hidden items-center justify-between px-1 mb-2 text-[11px] font-semibold text-[#64748B] dark:text-[#94A3B8]">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#2563EB] animate-pulse" />
+                      <span>Telemetry & Defense Chain (Swipe 1 → 4)</span>
+                    </span>
+                    <span className="text-[10px] text-[#2563EB] dark:text-[#60A5FA] font-bold flex items-center gap-0.5">
+                      Swipe &rarr;
+                    </span>
+                  </div>
+
+                  <div className="flex-1 flex flex-row lg:flex-col overflow-x-auto lg:overflow-visible snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden justify-between gap-3 sm:gap-3.5 h-full pb-2 lg:pb-0 px-1 sm:px-0 -mx-1 sm:mx-0">
+                    
+                    {/* Step 1 */}
+                    <div onClick={() => router.push(token ? "/dashboard/teacher" : "/login")} className="relative z-10 w-[84vw] max-w-[340px] sm:max-w-[380px] lg:w-auto shrink-0 snap-center lg:flex-1 flex items-center gap-3 sm:gap-4 group cursor-pointer animate-step-float-1 transition-all duration-300 hover:-translate-y-1">
+                      <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] text-white font-black text-xs sm:text-sm flex items-center justify-center shrink-0 shadow-xs ring-4 ring-white dark:ring-[#111C31]">1</div>
+                      <div className="flex-1 h-full min-h-[96px] bg-[#F8FAFC]/80 dark:bg-[#17243A]/80 border border-[#E2E8F0] dark:border-[#263449] group-hover:border-[#2563EB] dark:group-hover:border-[#3B82F6] rounded-2xl p-4 sm:p-4.5 flex items-center justify-between gap-3 shadow-2xs group-hover:shadow-md transition-all duration-200">
+                        <div className="flex items-center gap-3.5">
+                          <div className="w-11 h-11 rounded-xl bg-[#EFF6FF] dark:bg-blue-900/20 text-[#2563EB] dark:text-[#60A5FA] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                            <Lock className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h4 className="font-extrabold text-sm sm:text-base text-[#111827] dark:text-[#F1F5F9] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA] transition-colors">Fullscreen Lockdown</h4>
+                            <p className="text-xs text-[#64748B] dark:text-[#A3B1C6] leading-relaxed mt-0.5 line-clamp-2">Candidates are constrained to full-screen mode with ESC interception and persistent warnings.</p>
+                          </div>
+                        </div>
+                        <div className="w-8 h-8 rounded-full border border-[#E2E8F0] dark:border-[#334155] flex items-center justify-center text-[#94A3B8] group-hover:border-[#2563EB] group-hover:text-[#2563EB] group-hover:bg-[#EFF6FF] transition-all shrink-0">
+                          <ChevronRight className="w-4 h-4" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Step 2 */}
+                    <div onClick={() => router.push(token ? "/dashboard/teacher" : "/login")} className="relative z-10 w-[84vw] max-w-[340px] sm:max-w-[380px] lg:w-auto shrink-0 snap-center lg:flex-1 flex items-center gap-3 sm:gap-4 group cursor-pointer animate-step-float-2 transition-all duration-300 hover:-translate-y-1">
+                      <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] text-white font-black text-xs sm:text-sm flex items-center justify-center shrink-0 shadow-xs ring-4 ring-white dark:ring-[#111C31]">2</div>
+                      <div className="flex-1 h-full min-h-[96px] bg-[#F8FAFC]/80 dark:bg-[#17243A]/80 border border-[#E2E8F0] dark:border-[#263449] group-hover:border-[#2563EB] dark:group-hover:border-[#3B82F6] rounded-2xl p-4 sm:p-4.5 flex items-center justify-between gap-3 shadow-2xs group-hover:shadow-md transition-all duration-200">
+                        <div className="flex items-center gap-3.5">
+                          <div className="w-11 h-11 rounded-xl bg-[#EFF6FF] dark:bg-blue-900/20 text-[#2563EB] dark:text-[#60A5FA] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                            <ShieldAlert className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h4 className="font-extrabold text-sm sm:text-base text-[#111827] dark:text-[#F1F5F9] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA] transition-colors">Tab-Switch Tracker</h4>
+                            <p className="text-xs text-[#64748B] dark:text-[#A3B1C6] leading-relaxed mt-0.5 line-clamp-2">Real-time window blur and visibilitychange listeners logging exact departure timestamps.</p>
+                          </div>
+                        </div>
+                        <div className="w-8 h-8 rounded-full border border-[#E2E8F0] dark:border-[#334155] flex items-center justify-center text-[#94A3B8] group-hover:border-[#2563EB] group-hover:text-[#2563EB] group-hover:bg-[#EFF6FF] transition-all shrink-0">
+                          <ChevronRight className="w-4 h-4" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Step 3 */}
+                    <div onClick={() => router.push(token ? "/dashboard/teacher" : "/login")} className="relative z-10 w-[84vw] max-w-[340px] sm:max-w-[380px] lg:w-auto shrink-0 snap-center lg:flex-1 flex items-center gap-3 sm:gap-4 group cursor-pointer animate-step-float-3 transition-all duration-300 hover:-translate-y-1">
+                      <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] text-white font-black text-xs sm:text-sm flex items-center justify-center shrink-0 shadow-xs ring-4 ring-white dark:ring-[#111C31]">3</div>
+                      <div className="flex-1 h-full min-h-[96px] bg-[#F8FAFC]/80 dark:bg-[#17243A]/80 border border-[#E2E8F0] dark:border-[#263449] group-hover:border-[#2563EB] dark:group-hover:border-[#3B82F6] rounded-2xl p-4 sm:p-4.5 flex items-center justify-between gap-3 shadow-2xs group-hover:shadow-md transition-all duration-200">
+                        <div className="flex items-center gap-3.5">
+                          <div className="w-11 h-11 rounded-xl bg-[#EFF6FF] dark:bg-blue-900/20 text-[#2563EB] dark:text-[#60A5FA] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                            <Zap className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h4 className="font-extrabold text-sm sm:text-base text-[#111827] dark:text-[#F1F5F9] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA] transition-colors">Clipboard & DevTools Block</h4>
+                            <p className="text-xs text-[#64748B] dark:text-[#A3B1C6] leading-relaxed mt-0.5 line-clamp-2">F12, developer console, right-click, and copy-paste events are intercepted and silenced.</p>
+                          </div>
+                        </div>
+                        <div className="w-8 h-8 rounded-full border border-[#E2E8F0] dark:border-[#334155] flex items-center justify-center text-[#94A3B8] group-hover:border-[#2563EB] group-hover:text-[#2563EB] group-hover:bg-[#EFF6FF] transition-all shrink-0">
+                          <ChevronRight className="w-4 h-4" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Step 4 */}
+                    <div onClick={() => router.push(token ? "/dashboard/teacher" : "/login")} className="relative z-10 w-[84vw] max-w-[340px] sm:max-w-[380px] lg:w-auto shrink-0 snap-center lg:flex-1 flex items-center gap-3 sm:gap-4 group cursor-pointer animate-step-float-4 transition-all duration-300 hover:-translate-y-1">
+                      <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] text-white font-black text-xs sm:text-sm flex items-center justify-center shrink-0 shadow-xs ring-4 ring-white dark:ring-[#111C31]">4</div>
+                      <div className="flex-1 h-full min-h-[96px] bg-[#F8FAFC]/80 dark:bg-[#17243A]/80 border border-[#E2E8F0] dark:border-[#263449] group-hover:border-[#2563EB] dark:group-hover:border-[#3B82F6] rounded-2xl p-4 sm:p-4.5 flex items-center justify-between gap-3 shadow-2xs group-hover:shadow-md transition-all duration-200">
+                        <div className="flex items-center gap-3.5">
+                          <div className="w-11 h-11 rounded-xl bg-[#EFF6FF] dark:bg-blue-900/20 text-[#2563EB] dark:text-[#60A5FA] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                            <Radio className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h4 className="font-extrabold text-sm sm:text-base text-[#111827] dark:text-[#F1F5F9] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA] transition-colors">Live WebSocket Broadcast</h4>
+                            <p className="text-xs text-[#64748B] dark:text-[#A3B1C6] leading-relaxed mt-0.5 line-clamp-2">Telemetry frames stream directly to teacher dashboards with remote 1-click eject controls.</p>
+                          </div>
+                        </div>
+                        <div className="w-8 h-8 rounded-full border border-[#E2E8F0] dark:border-[#334155] flex items-center justify-center text-[#94A3B8] group-hover:border-[#2563EB] group-hover:text-[#2563EB] group-hover:bg-[#EFF6FF] transition-all shrink-0">
+                          <ChevronRight className="w-4 h-4" />
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+
+                  {/* Mobile Scroll Indicator Dots */}
+                  <div className="flex lg:hidden items-center justify-center gap-1.5 pt-2">
+                    <div className="w-5 h-1 rounded-full bg-[#2563EB] dark:bg-[#3B82F6]" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700" />
+                  </div>
+                </div>
+
+              </div>
+            )}
+
+            {/* ══════ TAB 4: EVALUATION & GRADEBOOK ══════ */}
+            {activeGuideTab === "analytics" && (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-stretch animate-fadeIn">
+                
+                {/* Left Preview - BORDERLESS */}
+                <div className="lg:col-span-6 xl:col-span-6 flex flex-col justify-between h-full space-y-6 p-1 sm:p-2">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-2xl bg-[#EFF6FF] dark:bg-blue-900/25 border border-blue-200/50 dark:border-blue-800/40 shadow-xs flex items-center justify-center text-[#2563EB] dark:text-[#60A5FA] shrink-0">
+                        <BarChart3 className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-extrabold tracking-wider text-[#2563EB] dark:text-[#60A5FA] uppercase bg-blue-500/10 px-2.5 py-0.5 rounded-full inline-block">
+                          EVALUATE • DIAGNOSE • EXPORT
+                        </span>
+                        <h3 className="text-xl sm:text-2xl font-black text-[#111827] dark:text-[#F1F5F9] tracking-tight leading-snug mt-1">
+                          Instant AI Grading & <br />
+                          <span className="text-[#2563EB] dark:text-[#60A5FA]">Cohort Analytics</span>
+                        </h3>
+                      </div>
+                    </div>
+                    <p className="text-xs sm:text-sm text-[#64748B] dark:text-[#A3B1C6] leading-relaxed">
+                      Hybrid grading engine combining deterministic objective evaluation with Gemini AI subjective rubrics.
+                    </p>
+                  </div>
+
+                  {/* Analytics Screen Preview WITH GLOW FLARE & FLOATING ANIMATION */}
+                  <div className="relative my-auto py-5 sm:py-7 flex items-center justify-center">
+                    {/* Glowing Radiant Flare Backdrop */}
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none -z-0">
+                      <div className="w-[360px] sm:w-[520px] h-[240px] sm:h-[340px] bg-gradient-to-tr from-blue-500/25 via-sky-400/30 to-indigo-500/25 dark:from-blue-600/40 dark:via-cyan-400/30 dark:to-indigo-500/35 rounded-full blur-3xl transform scale-110 opacity-85 animate-pulse" />
+                      <div className="absolute w-[240px] sm:w-[360px] h-[160px] sm:h-[230px] bg-sky-400/30 dark:bg-blue-400/35 rounded-full blur-2xl" />
+                      <div className="absolute w-[140px] sm:w-[190px] h-[90px] sm:h-[130px] bg-white/50 dark:bg-sky-300/20 rounded-full blur-xl" />
+                    </div>
+
+                    <div className="relative mx-auto w-full max-w-[400px] sm:max-w-[490px] flex items-center justify-center animate-float-slow">
+                      <img
+                        src="/images/laptop_analytics_gradebook.png"
+                        alt="Testora Cohort Analytics & Gradebook"
+                        className="w-full h-auto object-contain drop-shadow-[0_22px_40px_rgba(16,185,129,0.25)] dark:drop-shadow-[0_25px_45px_rgba(0,0,0,0.75)] select-none pointer-events-none transition-transform duration-300"
+                        draggable={false}
+                      />
+                      
+                      {/* Movable Badges */}
+                      <MovableBadge
+                        icon={CheckCircle2}
+                        text="Instant MCQ Grading"
+                        iconColorClass="text-emerald-600"
+                        initialPos={{ top: "-12px", right: "-8px" }}
+                        animationClass="animate-float-slow"
+                      />
+                      <MovableBadge
+                        icon={Sparkles}
+                        text="Gemini AI Rubrics"
+                        iconColorClass="text-[#2563EB] dark:text-[#60A5FA]"
+                        initialPos={{ top: "42%", right: "-12px" }}
+                        animationClass="animate-float-delayed"
+                      />
+                      <MovableBadge
+                        icon={BarChart3}
+                        text="Topic Mastery Radar"
+                        iconColorClass="text-blue-600"
+                        initialPos={{ bottom: "-8px", right: "-4px" }}
+                        animationClass="animate-float-reverse"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-4 border-t border-[#E2E8F0] dark:border-[#263449] text-xs">
+                    <div className="flex items-start gap-2">
+                      <div className="w-6 h-6 rounded-lg bg-blue-500/10 flex items-center justify-center text-[#2563EB] dark:text-[#60A5FA] shrink-0 mt-0.5">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <div className="font-bold text-[#111827] dark:text-[#F1F5F9] text-[11px]">Instant Scoring</div>
+                        <div className="text-[10px] text-[#64748B] dark:text-[#A3B1C6]">MCQ & negative marking</div>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <div className="w-6 h-6 rounded-lg bg-blue-500/10 flex items-center justify-center text-[#2563EB] dark:text-[#60A5FA] shrink-0 mt-0.5">
+                        <Sparkles className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <div className="font-bold text-[#111827] dark:text-[#F1F5F9] text-[11px]">Gemini Rubrics</div>
+                        <div className="text-[10px] text-[#64748B] dark:text-[#A3B1C6]">Constructive AI feedback</div>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <div className="w-6 h-6 rounded-lg bg-blue-500/10 flex items-center justify-center text-[#2563EB] dark:text-[#60A5FA] shrink-0 mt-0.5">
+                        <FileText className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <div className="font-bold text-[#111827] dark:text-[#F1F5F9] text-[11px]">1-Click Export</div>
+                        <div className="text-[10px] text-[#64748B] dark:text-[#A3B1C6]">PDF booklets & Excel</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right 4 Steps - EQUAL TOP & BOTTOM ALIGNMENT */}
+                <div className="lg:col-span-6 xl:col-span-6 flex flex-col justify-between h-full relative pl-0 sm:pl-3 p-1 sm:p-2">
+                  <div className="absolute left-[20px] sm:left-[38px] top-8 bottom-8 w-0.5 border-l-2 border-dashed border-blue-500/25 z-0 hidden lg:block" />
+
+                  {/* Mobile Swipe Hint */}
+                  <div className="flex lg:hidden items-center justify-between px-1 mb-2 text-[11px] font-semibold text-[#64748B] dark:text-[#94A3B8]">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#2563EB] animate-pulse" />
+                      <span>Grading & Analytics Flow (Swipe 1 → 4)</span>
+                    </span>
+                    <span className="text-[10px] text-[#2563EB] dark:text-[#60A5FA] font-bold flex items-center gap-0.5">
+                      Swipe &rarr;
+                    </span>
+                  </div>
+
+                  <div className="flex-1 flex flex-row lg:flex-col overflow-x-auto lg:overflow-visible snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden justify-between gap-3 sm:gap-3.5 h-full pb-2 lg:pb-0 px-1 sm:px-0 -mx-1 sm:mx-0">
+                    
+                    {/* Step 1 */}
+                    <div onClick={() => router.push(token ? "/dashboard/teacher" : "/login")} className="relative z-10 w-[84vw] max-w-[340px] sm:max-w-[380px] lg:w-auto shrink-0 snap-center lg:flex-1 flex items-center gap-3 sm:gap-4 group cursor-pointer animate-step-float-1 transition-all duration-300 hover:-translate-y-1">
+                      <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] text-white font-black text-xs sm:text-sm flex items-center justify-center shrink-0 shadow-xs ring-4 ring-white dark:ring-[#111C31]">1</div>
+                      <div className="flex-1 h-full min-h-[96px] bg-[#F8FAFC]/80 dark:bg-[#17243A]/80 border border-[#E2E8F0] dark:border-[#263449] group-hover:border-[#2563EB] dark:group-hover:border-[#3B82F6] rounded-2xl p-4 sm:p-4.5 flex items-center justify-between gap-3 shadow-2xs group-hover:shadow-md transition-all duration-200">
+                        <div className="flex items-center gap-3.5">
+                          <div className="w-11 h-11 rounded-xl bg-[#EFF6FF] dark:bg-blue-900/20 text-[#2563EB] dark:text-[#60A5FA] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                            <CheckCircle2 className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h4 className="font-extrabold text-sm sm:text-base text-[#111827] dark:text-[#F1F5F9] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA] transition-colors">Instant Objective Scoring</h4>
+                            <p className="text-xs text-[#64748B] dark:text-[#A3B1C6] leading-relaxed mt-0.5 line-clamp-2">Objective questions graded immediately; subjective answers evaluated by Gemini with feedback.</p>
+                          </div>
+                        </div>
+                        <div className="w-8 h-8 rounded-full border border-[#E2E8F0] dark:border-[#334155] flex items-center justify-center text-[#94A3B8] group-hover:border-[#2563EB] group-hover:text-[#2563EB] group-hover:bg-[#EFF6FF] transition-all shrink-0">
+                          <ChevronRight className="w-4 h-4" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Step 2 */}
+                    <div onClick={() => router.push(token ? "/dashboard/teacher" : "/login")} className="relative z-10 w-[84vw] max-w-[340px] sm:max-w-[380px] lg:w-auto shrink-0 snap-center lg:flex-1 flex items-center gap-3 sm:gap-4 group cursor-pointer animate-step-float-2 transition-all duration-300 hover:-translate-y-1">
+                      <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] text-white font-black text-xs sm:text-sm flex items-center justify-center shrink-0 shadow-xs ring-4 ring-white dark:ring-[#111C31]">2</div>
+                      <div className="flex-1 h-full min-h-[96px] bg-[#F8FAFC]/80 dark:bg-[#17243A]/80 border border-[#E2E8F0] dark:border-[#263449] group-hover:border-[#2563EB] dark:group-hover:border-[#3B82F6] rounded-2xl p-4 sm:p-4.5 flex items-center justify-between gap-3 shadow-2xs group-hover:shadow-md transition-all duration-200">
+                        <div className="flex items-center gap-3.5">
+                          <div className="w-11 h-11 rounded-xl bg-[#EFF6FF] dark:bg-blue-900/20 text-[#2563EB] dark:text-[#60A5FA] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                            <BarChart3 className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h4 className="font-extrabold text-sm sm:text-base text-[#111827] dark:text-[#F1F5F9] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA] transition-colors">Topic Mastery Heatmaps</h4>
+                            <p className="text-xs text-[#64748B] dark:text-[#A3B1C6] leading-relaxed mt-0.5 line-clamp-2">Radar charts break down candidate strengths, weak topics, cohort percentile ranks, and passing trends.</p>
+                          </div>
+                        </div>
+                        <div className="w-8 h-8 rounded-full border border-[#E2E8F0] dark:border-[#334155] flex items-center justify-center text-[#94A3B8] group-hover:border-[#2563EB] group-hover:text-[#2563EB] group-hover:bg-[#EFF6FF] transition-all shrink-0">
+                          <ChevronRight className="w-4 h-4" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Step 3 */}
+                    <div onClick={() => router.push(token ? "/dashboard/teacher" : "/login")} className="relative z-10 w-[84vw] max-w-[340px] sm:max-w-[380px] lg:w-auto shrink-0 snap-center lg:flex-1 flex items-center gap-3 sm:gap-4 group cursor-pointer animate-step-float-3 transition-all duration-300 hover:-translate-y-1">
+                      <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] text-white font-black text-xs sm:text-sm flex items-center justify-center shrink-0 shadow-xs ring-4 ring-white dark:ring-[#111C31]">3</div>
+                      <div className="flex-1 h-full min-h-[96px] bg-[#F8FAFC]/80 dark:bg-[#17243A]/80 border border-[#E2E8F0] dark:border-[#263449] group-hover:border-[#2563EB] dark:group-hover:border-[#3B82F6] rounded-2xl p-4 sm:p-4.5 flex items-center justify-between gap-3 shadow-2xs group-hover:shadow-md transition-all duration-200">
+                        <div className="flex items-center gap-3.5">
+                          <div className="w-11 h-11 rounded-xl bg-[#EFF6FF] dark:bg-blue-900/20 text-[#2563EB] dark:text-[#60A5FA] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                            <Sparkles className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h4 className="font-extrabold text-sm sm:text-base text-[#111827] dark:text-[#F1F5F9] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA] transition-colors">Subjective AI Evaluation</h4>
+                            <p className="text-xs text-[#64748B] dark:text-[#A3B1C6] leading-relaxed mt-0.5 line-clamp-2">Written answers evaluated against structured rubrics awarding partial marks with constructive notes.</p>
+                          </div>
+                        </div>
+                        <div className="w-8 h-8 rounded-full border border-[#E2E8F0] dark:border-[#334155] flex items-center justify-center text-[#94A3B8] group-hover:border-[#2563EB] group-hover:text-[#2563EB] group-hover:bg-[#EFF6FF] transition-all shrink-0">
+                          <ChevronRight className="w-4 h-4" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Step 4 */}
+                    <div onClick={() => router.push(token ? "/dashboard/teacher" : "/login")} className="relative z-10 w-[84vw] max-w-[340px] sm:max-w-[380px] lg:w-auto shrink-0 snap-center lg:flex-1 flex items-center gap-3 sm:gap-4 group cursor-pointer animate-step-float-4 transition-all duration-300 hover:-translate-y-1">
+                      <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] text-white font-black text-xs sm:text-sm flex items-center justify-center shrink-0 shadow-xs ring-4 ring-white dark:ring-[#111C31]">4</div>
+                      <div className="flex-1 h-full min-h-[96px] bg-[#F8FAFC]/80 dark:bg-[#17243A]/80 border border-[#E2E8F0] dark:border-[#263449] group-hover:border-[#2563EB] dark:group-hover:border-[#3B82F6] rounded-2xl p-4 sm:p-4.5 flex items-center justify-between gap-3 shadow-2xs group-hover:shadow-md transition-all duration-200">
+                        <div className="flex items-center gap-3.5">
+                          <div className="w-11 h-11 rounded-xl bg-[#EFF6FF] dark:bg-blue-900/20 text-[#2563EB] dark:text-[#60A5FA] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                            <FileText className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h4 className="font-extrabold text-sm sm:text-base text-[#111827] dark:text-[#F1F5F9] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA] transition-colors">Export & PDF Generation</h4>
+                            <p className="text-xs text-[#64748B] dark:text-[#A3B1C6] leading-relaxed mt-0.5 line-clamp-2">1-click PDF booklet downloads, official cohort gradebook spreadsheets, and audit logs.</p>
+                          </div>
+                        </div>
+                        <div className="w-8 h-8 rounded-full border border-[#E2E8F0] dark:border-[#334155] flex items-center justify-center text-[#94A3B8] group-hover:border-[#2563EB] group-hover:text-[#2563EB] group-hover:bg-[#EFF6FF] transition-all shrink-0">
+                          <ChevronRight className="w-4 h-4" />
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+
+                  {/* Mobile Scroll Indicator Dots */}
+                  <div className="flex lg:hidden items-center justify-center gap-1.5 pt-2">
+                    <div className="w-5 h-1 rounded-full bg-[#2563EB] dark:bg-[#3B82F6]" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700" />
+                  </div>
+                </div>
+
+              </div>
+            )}
+
+          </div>
 
         {/* ───────────────────────────────────────────────────────────
-            BOTTOM FEATURE SUMMARY ROW (As shown in Reference UI)
-            4 items: AI Powered, Print Ready, Organized, Secure
+            BOTTOM INFOGRAPHIC FEATURE PROGRESSION (Exact Reference Design)
+            AI Powered, Print Ready, Organized, Secure
+            Connected 2x2 grid on desktop, alternating vertical flow on mobile
         ─────────────────────────────────────────────────────────── */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 pt-6 sm:pt-10 max-w-4xl mx-auto text-center border-t border-slate-200/60 dark:border-slate-800/60">
-          {/* 1. AI Powered */}
-          <div className="space-y-1.5 p-2">
-            <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/70 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/60 flex items-center justify-center mx-auto shadow-xs">
-              <Zap className="w-5 h-5 fill-blue-500/20" />
-            </div>
-            <div className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">
-              AI Powered
-            </div>
-            <div className="text-xs text-slate-500 dark:text-slate-400 leading-tight">
-              Create questions in minutes
-            </div>
-          </div>
-
-          {/* 2. Print Ready */}
-          <div className="space-y-1.5 p-2">
-            <div className="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-950/70 text-purple-600 dark:text-purple-400 border border-purple-100 dark:border-purple-900/60 flex items-center justify-center mx-auto shadow-xs">
-              <FileText className="w-5 h-5" />
-            </div>
-            <div className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">
-              Print Ready
-            </div>
-            <div className="text-xs text-slate-500 dark:text-slate-400 leading-tight">
-              Professional exam papers
-            </div>
-          </div>
-
-          {/* 3. Organized */}
-          <div className="space-y-1.5 p-2">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/60 flex items-center justify-center mx-auto shadow-xs">
-              <Database className="w-5 h-5" />
-            </div>
-            <div className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">
-              Organized
-            </div>
-            <div className="text-xs text-slate-500 dark:text-slate-400 leading-tight">
-              Build and reuse your question bank
-            </div>
-          </div>
-
-          {/* 4. Secure */}
-          <div className="space-y-1.5 p-2">
-            <div className="w-12 h-12 rounded-2xl bg-rose-50 dark:bg-rose-950/70 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/60 flex items-center justify-center mx-auto shadow-xs">
-              <ShieldCheck className="w-5 h-5 fill-rose-500/20" />
-            </div>
-            <div className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">
-              Secure
-            </div>
-            <div className="text-xs text-slate-500 dark:text-slate-400 leading-tight">
-              Maintain fair and reliable exams
-            </div>
-          </div>
+        <div className="pt-8 sm:pt-12 border-t border-slate-200/60 dark:border-slate-800/60">
+          <InfographicFeatureSection withBackgroundDots={false} />
         </div>
       </div>
     </section>
   );
 }
-

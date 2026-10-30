@@ -87,12 +87,51 @@ html.dark, html[data-theme="dark"], .dark {
   --destructive-foreground: #0B1120;
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   HIGH-PERFORMANCE ZERO-DELAY CLICK & TOUCH RULES
+   Eliminates the 300ms mobile tap delay and adds instant tactile response
+   ══════════════════════════════════════════════════════════════════ */
+html,
+body,
+button,
+a,
+[role="button"],
+input,
+select,
+textarea {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+[role="button"],
+.cursor-pointer {
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Instant micro-interaction press response (40ms transition on active click) */
+button:active:not(:disabled),
+.active-press:active {
+  transform: scale(0.98);
+  transition: transform 40ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html {
+  overflow-x: clip;
+  max-width: 100vw;
+  scroll-behavior: smooth;
+}
+
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background-color: var(--background) !important;
   color: var(--foreground) !important;
-  transition: background-color 0.2s ease, color 0.2s ease;
   font-size: 14px;
+  overflow-x: clip;
+  max-width: 100vw;
+  min-height: 100vh;
 }
 
 .font-mono-data {
@@ -470,4 +509,159 @@ nextjs-portal,
   visibility: hidden !important;
   opacity: 0 !important;
   pointer-events: none !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   STANDARDIZED HOMEPAGE DESIGN SYSTEM: SPACING TOKENS & UTILITIES
+   - Section Vertical: Mobile 36px (py-9) | Tablet 48px (md:py-12) | Desktop 64px (lg:py-16)
+   - Content Container: Max-width 1240px with responsive 16px/24px/32px horizontal padding
+   - Scale: 8px, 12px, 16px, 20px, 24px, 32px, 48px, 64px
+   ══════════════════════════════════════════════════════════════════ */
+:root {
+  --space-section-mobile: 36px;
+  --space-section-tablet: 48px;
+  --space-section-desktop: 64px;
+  --container-max-width: 1240px;
+}
+
+.section-standard {
+  padding-top: var(--space-section-mobile);
+  padding-bottom: var(--space-section-mobile);
+}
+@media (min-width: 768px) {
+  .section-standard {
+    padding-top: var(--space-section-tablet);
+    padding-bottom: var(--space-section-tablet);
+  }
+}
+@media (min-width: 1024px) {
+  .section-standard {
+    padding-top: var(--space-section-desktop);
+    padding-bottom: var(--space-section-desktop);
+  }
+}
+
+.container-standard {
+  width: 100%;
+  max-width: var(--container-max-width);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+@media (min-width: 640px) {
+  .container-standard {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+}
+@media (min-width: 1024px) {
+  .container-standard {
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+}
+
+
+
+/* ══════════════════════════════════════════════════════════════════
+   PERSONALIZATION, ACCESSIBILITY & DENSITY SYSTEM
+   ══════════════════════════════════════════════════════════════════ */
+
+/* 1. Dynamic Font Family Tokens */
+html[data-font="inter"], body[data-font="inter"] {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+}
+
+html[data-font="sans"], body[data-font="sans"] {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+}
+
+html[data-font="serif"], body[data-font="serif"] {
+  font-family: Georgia, Cambria, 'Times New Roman', Times, serif !important;
+}
+
+html[data-font="arial"], body[data-font="arial"] {
+  font-family: Arial, Helvetica, sans-serif !important;
+}
+
+html[data-font="dyslexic"], body[data-font="dyslexic"] {
+  font-family: 'Comic Sans MS', 'Comic Neue', 'OpenDyslexic', cursive, sans-serif !important;
+  letter-spacing: 0.03em !important;
+  line-height: 1.65 !important;
+}
+
+/* 2. Text Scaling */
+:root {
+  --font-scale: 100%;
+}
+
+body {
+  font-size: var(--font-scale, 100%);
+}
+
+/* 3. Interface Density Tokens */
+html[data-density="compact"] {
+  --density-pad-y: 0.35rem;
+  --density-pad-x: 0.65rem;
+  --density-gap: 0.5rem;
+}
+
+html[data-density="standard"] {
+  --density-pad-y: 0.5rem;
+  --density-pad-x: 0.85rem;
+  --density-gap: 0.75rem;
+}
+
+html[data-density="comfortable"] {
+  --density-pad-y: 0.75rem;
+  --density-pad-x: 1.1rem;
+  --density-gap: 1rem;
+}
+
+html[data-density="spacious"] {
+  --density-pad-y: 1rem;
+  --density-pad-x: 1.35rem;
+  --density-gap: 1.25rem;
+}
+
+/* 4. High Contrast Accessibility */
+html[data-contrast="high"] {
+  --border-color: #0F172A !important;
+  --border: #0F172A !important;
+  --text-muted: #1E293B !important;
+}
+
+html.dark[data-contrast="high"], html[data-theme="dark"][data-contrast="high"] {
+  --border-color: #94A3B8 !important;
+  --border: #94A3B8 !important;
+  --text-muted: #F8FAFC !important;
+}
+
+/* 5. Reduced Motion */
+html[data-motion="reduced"] *,
+html[data-motion="reduced"] *::before,
+html[data-motion="reduced"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* 6. High Visibility Focus Rings */
+html[data-focus="high"] *:focus-visible {
+  outline: 3px solid #2563EB !important;
+  outline-offset: 2px !important;
+}
+
+
+/* Utility: Hide Scrollbar Across All Browsers */
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+.no-scrollbar {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
 }

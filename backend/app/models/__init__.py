@@ -15,10 +15,22 @@ from app.models.payment import PaymentOrder, CreditTransaction
 from app.models.registration_form import StudentRegistrationForm, StudentFormSubmission
 from app.models.custom_form import CustomForm, CustomFormSubmission
 from app.models.coupon import CouponCampaign, Coupon, SystemSetting
+from app.models.user_preference import UserPreference
+from app.models.support_ticket import SupportTicket, SupportTicketReply
+from app.models.credit_request import CreditRequest
+from app.models.institutional_request import InstitutionalRequest
+from app.models.pricing_plan import PricingPlan
+from app.models.feedback import FeedbackSubmission
 
 __all__ = [
     "Base",
     "TimeStampedModel",
+    "SupportTicket",
+    "SupportTicketReply",
+    "CreditRequest",
+    "InstitutionalRequest",
+    "PricingPlan",
+    "FeedbackSubmission",
     "Institution",
     "Department",
     "Course",
@@ -27,6 +39,7 @@ __all__ = [
     "Division",
     "AcademicYear",
     "User",
+    "UserPreference",
     "Student",
     "Workspace",
     "WorkspaceMember",

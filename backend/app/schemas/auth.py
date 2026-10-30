@@ -5,6 +5,7 @@ from datetime import datetime
 class UserLogin(BaseModel):
     email: str
     password: str
+    role: Optional[str] = None
 
 class UserCreate(BaseModel):
     email: EmailStr
@@ -28,6 +29,7 @@ class Token(BaseModel):
     full_name: str
     workspace_id: Optional[str] = None
     workspace_name: Optional[str] = None
+    avatar_url: Optional[str] = None
 
 class PasswordChange(BaseModel):
     old_password: str
@@ -53,15 +55,27 @@ class UserProfile(BaseModel):
     bonus_credits_expires_at: Optional[datetime] = None
     institution_name: Optional[str] = None
     department_name: Optional[str] = None
+    department: Optional[str] = None
     roll_number: Optional[str] = None
     division: Optional[str] = None
+    class_name: Optional[str] = None
+    section: Optional[str] = None
     batch: Optional[str] = None
+    phone: Optional[str] = None
+    status: Optional[str] = "active"
+    created_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
 
 class UpdateProfileRequest(BaseModel):
     full_name: Optional[str] = None
     avatar_url: Optional[str] = None
+    institution_name: Optional[str] = None
+    department: Optional[str] = None
+    class_name: Optional[str] = None
+    section: Optional[str] = None
+    batch: Optional[str] = None
+    phone: Optional[str] = None
 
 
 class GoogleAuthPayload(BaseModel):

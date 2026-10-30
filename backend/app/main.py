@@ -5,7 +5,7 @@ import os
 from sqlalchemy.orm import Session
 from app.config import settings
 from app.database import engine, Base, get_db
-from app.api import auth, students, kb, exams, attempts, reports, notifications, institutions, academic, assessment_groups, workspaces, student_directories, payments, registration_forms, custom_forms, admin
+from app.api import auth, students, kb, exams, attempts, reports, notifications, institutions, academic, assessment_groups, workspaces, student_directories, payments, registration_forms, custom_forms, admin, preferences, support, institutional_requests, pricing_plans, feedback
 
 import app.models
 
@@ -357,11 +357,20 @@ app.include_router(payments.router, prefix=settings.API_V1_STR)
 app.include_router(registration_forms.router, prefix=settings.API_V1_STR)
 app.include_router(custom_forms.router, prefix=settings.API_V1_STR)
 app.include_router(admin.router, prefix=settings.API_V1_STR)
+app.include_router(preferences.router, prefix=settings.API_V1_STR)
+app.include_router(support.router, prefix=settings.API_V1_STR)
+app.include_router(institutional_requests.router, prefix=settings.API_V1_STR)
+app.include_router(institutional_requests.router, prefix="/api")
+app.include_router(pricing_plans.router, prefix=settings.API_V1_STR)
+app.include_router(pricing_plans.router, prefix="/api")
+app.include_router(feedback.router, prefix=settings.API_V1_STR)
+app.include_router(feedback.router, prefix="/api")
 
 # Static files for avatars and uploads
 from fastapi.staticfiles import StaticFiles
 static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
 os.makedirs(os.path.join(static_dir, "avatars"), exist_ok=True)
+os.makedirs(os.path.join(static_dir, "feedback_screenshots"), exist_ok=True)
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 @app.get("/")

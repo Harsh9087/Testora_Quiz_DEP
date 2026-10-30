@@ -34,6 +34,15 @@ class Exam(TimeStampedModel):
     paid_question_count = Column(Integer, default=0, nullable=False)
     paid_amount_paise = Column(Integer, default=0, nullable=False)
     
+    # Conducting Teacher & Class Snapshot for Permanent Record
+    teacher_name_snapshot = Column(String(255), nullable=True)
+    teacher_email_snapshot = Column(String(255), nullable=True)
+    institution_name = Column(String(255), nullable=True)
+    class_name = Column(String(100), nullable=True)
+    section = Column(String(50), nullable=True)
+    batch = Column(String(100), nullable=True)
+    subject_name_snapshot = Column(String(255), nullable=True)
+    
     subject = relationship("Subject", back_populates="exams")
     workspace = relationship("Workspace", back_populates="exams")
     creator = relationship("User", foreign_keys=[created_by])
@@ -79,6 +88,8 @@ class ExamSubmission(TimeStampedModel):
     is_counted_for_result = Column(Boolean, default=True, nullable=False)
     reattempt_granted_by = Column(String(36), ForeignKey("users.id"), nullable=True)
     reopened_from_id = Column(String(36), ForeignKey("exam_submissions.id"), nullable=True)
+    student_user_id = Column(String(36), ForeignKey("users.id"), nullable=True, index=True)
+    student_id = Column(String(36), ForeignKey("students.id"), nullable=True, index=True)
     
     answers_json = Column(Text, nullable=True) # JSON of student answers
     questions_snapshot_json = Column(Text, nullable=True) # Immutable snapshot of questions at attempt start
@@ -101,6 +112,8 @@ class ExamSubmission(TimeStampedModel):
     credential = relationship("ExamCredential", back_populates="submission")
     granted_by = relationship("User", foreign_keys=[reattempt_granted_by])
     reopened_from = relationship("ExamSubmission", remote_side="ExamSubmission.id")
+    student_user = relationship("User", foreign_keys=[student_user_id])
+    student = relationship("Student", foreign_keys=[student_id])
     proctoring_logs = relationship("ProctoringLog", back_populates="submission", cascade="all, delete-orphan")
 
 class ProctoringLog(TimeStampedModel):

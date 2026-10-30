@@ -372,6 +372,23 @@ export default function StudentDashboard() {
                           <h3 className="font-bold text-sm text-[#111827] dark:text-[#F1F5F9] line-clamp-1">
                             {exam.name}
                           </h3>
+                          {exam.teacher_name && (
+                            <div className="flex items-center gap-1 text-[11px] text-[#64748B] dark:text-[#94A3B8] pt-0.5 flex-wrap">
+                              <span className="font-medium text-[#1E293B] dark:text-[#E2E8F0]">{exam.teacher_name}</span>
+                              {(exam.teacher_institution || exam.institution_name) && (
+                                <>
+                                  <span>•</span>
+                                  <span className="truncate max-w-[130px]">{exam.teacher_institution || exam.institution_name}</span>
+                                </>
+                              )}
+                              {exam.class_name && (
+                                <>
+                                  <span>•</span>
+                                  <span>{exam.class_name}{exam.section ? ` (${exam.section})` : ""}</span>
+                                </>
+                              )}
+                            </div>
+                          )}
                         </div>
 
                         {hasCompleted ? (
@@ -525,6 +542,17 @@ export default function StudentDashboard() {
                             <div className="text-[11px] font-semibold text-[#1E3A8A] dark:text-[#60A5FA] mt-0.5 flex items-center gap-1">
                               <User className="h-3 w-3" />
                               <span>{sub.student_name} {sub.roll_number ? `(${sub.roll_number})` : ""}</span>
+                            </div>
+                          )}
+                          {sub.teacher_name && !isTeacher && (
+                            <div className="text-[11px] font-medium text-[#475569] dark:text-[#94A3B8] mt-0.5 flex items-center gap-1.5 flex-wrap">
+                              <span className="font-semibold text-[#1E293B] dark:text-[#E2E8F0]">Teacher: {sub.teacher_name}</span>
+                              {sub.institution_name && (
+                                <span>• {sub.institution_name}</span>
+                              )}
+                              {sub.class_name && (
+                                <span>• {sub.class_name}{sub.section ? ` (${sub.section})` : ""}</span>
+                              )}
                             </div>
                           )}
                           <div className="text-[11px] text-[#64748B] dark:text-[#A3B1C6] mt-0.5 flex items-center gap-1.5 font-mono">

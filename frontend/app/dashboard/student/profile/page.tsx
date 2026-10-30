@@ -83,7 +83,7 @@ export default function StudentProfilePage() {
     if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) {
       return url;
     }
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
     return `${baseUrl}${url.startsWith("/") ? "" : "/"}${url}`;
   };
 
@@ -106,7 +106,7 @@ export default function StudentProfilePage() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
       const res = await fetch(`${baseUrl}/api/v1/auth/avatar/upload`, {
         method: "POST",
         headers: {
@@ -179,11 +179,15 @@ export default function StudentProfilePage() {
   };
 
   const loadData = async () => {
-    if (!token) return;
+    const activeToken = token || (typeof window !== "undefined" ? localStorage.getItem("token") : null);
+    if (!activeToken) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       // 1. Fetch Profile
-      const meRes = await apiFetch("/auth/me", { token });
+      const meRes = await apiFetch("/auth/me", { token: activeToken });
       if (meRes.ok) {
         const uData: StudentProfileData = await meRes.json();
         setProfile(uData);
@@ -194,7 +198,7 @@ export default function StudentProfilePage() {
 
       // 2. Fetch Credit Ledger (Safe fetch)
       try {
-        const credRes = await apiFetch("/payments/credits/transactions", { token });
+        const credRes = await apiFetch("/payments/credits/transactions", { token: activeToken });
         if (credRes.ok) {
           const cData = await credRes.json();
           setCreditTx(Array.isArray(cData) ? cData : []);
@@ -203,7 +207,7 @@ export default function StudentProfilePage() {
 
       // 3. Fetch Submissions stats
       try {
-        const subRes = await apiFetch("/reports/my-submissions", { token });
+        const subRes = await apiFetch("/reports/my-submissions", { token: activeToken });
         if (subRes.ok) {
           const sData = await subRes.json();
           if (Array.isArray(sData)) {

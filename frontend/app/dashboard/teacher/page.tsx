@@ -11,12 +11,13 @@ import {
 } from "../../../lib/dateUtils";
 
 import { 
-  Plus, BookOpen, Calendar, ChevronRight, ChevronDown, Check,
+  Plus, BookOpen, Calendar, ChevronRight, ChevronLeft, ChevronDown, Check,
   Users, BarChart3, GraduationCap, Clock, 
   Sparkles, ArrowRight, ArrowLeft, Radio, FileSpreadsheet,
-  UploadCloud, FileUp, FileText, Loader2, CheckCircle2, X,
+  UploadCloud, CloudUpload, FileUp, FileText, FilePlus, FileEdit, FileDown, Loader2, CheckCircle2, X,
   Lightbulb, HelpCircle, Sliders, Scale, Layers, Calculator,
-  ClipboardList, Wand2, ArrowUpRight, Database
+  ClipboardList, Wand2, ArrowUpRight, Database,
+  UserCheck, Contact, Settings, Play, AlertCircle, ShieldCheck, Eye, Key
 } from "lucide-react";
 
 import StudentDirectoryManager from "./_components/StudentDirectoryManager";
@@ -32,6 +33,7 @@ import GradebookAnalytics from "./_components/GradebookAnalytics";
 import UploadKBModal from "./_components/UploadKBModal";
 import FormsRegistrationManager from "./_components/FormsRegistrationManager";
 import CustomFormsManager from "./_components/CustomFormsManager";
+import CSVImportModal from "./_components/CSVImportModal";
 import { fetchStudentDirectories } from "@/lib/api/studentDirectories";
 import { StudentDirectory } from "@/types/studentDirectory";
 
@@ -123,10 +125,9 @@ export default function TeacherDashboard() {
       } else {
         window.location.hash = normalized;
       }
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.scrollTo(0, 0);
       window.dispatchEvent(new CustomEvent("switch-tab", { detail: normalized }));
     }
-    fetchData();
   };
 
   useEffect(() => {
@@ -144,7 +145,7 @@ export default function TeacherDashboard() {
       if (e.detail) {
         const target = e.detail === "all" ? "overview" : e.detail;
         setActiveSectionTab(target);
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        window.scrollTo(0, 0);
       }
     };
     window.addEventListener("hashchange", handleHash);
@@ -179,6 +180,7 @@ export default function TeacherDashboard() {
   const [liveProctorAlerts, setLiveProctorAlerts] = useState<any[]>([]);
   const [paymentModalExam, setPaymentModalExam] = useState<any | null>(null);
   const [isRechargeOpen, setIsRechargeOpen] = useState(false);
+  const [isCsvImportModalOpen, setIsCsvImportModalOpen] = useState(false);
 
   // Form: Exam Generator
   const [examName, setExamName] = useState("");
@@ -320,6 +322,9 @@ export default function TeacherDashboard() {
         const formsData = await formsRes.json().catch(() => []);
         setRegistrationFormsCount(Array.isArray(formsData) ? formsData.length : 0);
       }
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("refresh-sidebar-stats"));
+      }
     } catch (e) {
       console.warn("fetchData notice:", e);
     }
@@ -328,6 +333,33 @@ export default function TeacherDashboard() {
   useEffect(() => {
     fetchData();
   }, [token]);
+
+  // Real Computed Exam Statuses for Intelligent Activity Feed
+  const getExamStatus = (exam: any) => {
+    if (!exam.is_published) return { status: "draft", label: "Draft", dot: "bg-amber-500" };
+    const now = new Date();
+    const start = parseUtcDate(exam.start_time);
+    const end = parseUtcDate(exam.end_time);
+    if (start && now < start) return { status: "scheduled", label: "Scheduled", dot: "bg-blue-500" };
+    if (end && now > end) return { status: "completed", label: "Completed", dot: "bg-stone-400" };
+    return { status: "live", label: "Live Active", dot: "bg-emerald-500 animate-pulse" };
+  };
+
+  const liveExams = useMemo(() => {
+    return exams.filter((e) => getExamStatus(e).status === "live");
+  }, [exams]);
+
+  const upcomingExams = useMemo(() => {
+    return exams.filter((e) => getExamStatus(e).status === "scheduled");
+  }, [exams]);
+
+  const draftExams = useMemo(() => {
+    return exams.filter((e) => !e.is_published);
+  }, [exams]);
+
+  const completedExams = useMemo(() => {
+    return exams.filter((e) => e.is_published && getExamStatus(e).status === "completed");
+  }, [exams]);
 
   useEffect(() => {
     const handleHash = () => {
@@ -722,285 +754,668 @@ export default function TeacherDashboard() {
   ];
 
   return (
-    <div className="space-y-8 animate-fadeIn">
+    <div className="space-y-4 sm:space-y-6 md:space-y-7 animate-fadeIn">
       {/* ═══════ TOP COMMAND CENTER HEADER & STATS (Only on Main Dashboard / Overview) ═══════ */}
       {isOverview ? (
         <>
-          {/* Top Header & Metrics Bar */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#E2E8F0] dark:border-[#263449] pb-6">
-            <div>
-              <span className="text-xs font-semibold text-[#1E3A8A] dark:text-[#60A5FA] uppercase tracking-wider">
-                Academic Instructor Workspace
-              </span>
-              <h1 className="text-2xl font-serif font-bold text-[#111827] dark:text-[#F1F5F9] mt-1">
-                Teacher Command Center
-              </h1>
-              <p className="text-xs text-[#64748B] dark:text-[#A3B1C6] mt-0.5">
-                Welcome, <b>{mounted && fullName ? fullName : "Instructor"}</b>. Autonomous AI assessment synthesis & proctoring platform.
-              </p>
-            </div>
-
-            <div className="flex items-center gap-2.5 flex-wrap">
-              <button
-                onClick={() => switchSectionTab("create")}
-                className="btn-primary flex items-center gap-2 text-xs py-2 px-3.5 shadow-sm cursor-pointer"
-              >
-                <Plus className="h-4 w-4" />
-                <span>Create Assessment</span>
-              </button>
-
-              <button
-                onClick={() => switchSectionTab("custom-forms")}
-                className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-amber-800 dark:text-amber-200 bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/40 border border-amber-300 dark:border-amber-800 transition-all cursor-pointer shadow-2xs"
-              >
-                <Wand2 className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                <span>AI Form Studio</span>
-              </button>
-
-              <button
-                onClick={() => setIsStep1KbModalOpen(true)}
-                className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-purple-800 dark:text-purple-200 bg-purple-50 dark:bg-purple-950/60 hover:bg-purple-100 dark:hover:bg-purple-900/40 border border-purple-300 dark:border-purple-800 transition-all cursor-pointer shadow-2xs"
-              >
-                <UploadCloud className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-                <span>Upload Knowledge</span>
-              </button>
-
-              <button
-                onClick={() => switchSectionTab("students")}
-                className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-emerald-800 dark:text-emerald-200 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 border border-emerald-300 dark:border-emerald-800 transition-all cursor-pointer shadow-2xs"
-              >
-                <Users className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                <span>Student Rosters</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Systematic KPI Command Center Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
-            {/* Card 1: Assessments */}
-            <button
-              type="button"
-              onClick={() => switchSectionTab("exams")}
-              className="text-left bg-white dark:bg-[#111C31] border border-slate-200/90 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs hover:shadow-md hover:-translate-y-0.5 hover:border-blue-400 dark:hover:border-blue-600 transition-all duration-200 group relative overflow-hidden cursor-pointer"
-            >
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-600 opacity-80 group-hover:opacity-100 transition-opacity" />
-              
-              <div className="flex items-center justify-between gap-2 mb-3">
-                <div className="flex items-center gap-2">
-                  <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/50 group-hover:scale-105 transition-transform">
-                    <Calendar className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
-                      Assessments
-                    </span>
-                    <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-200">
-                      Testing Portal
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-900/60">
-                  {exams.filter((e) => e.is_published).length > 0 ? (
-                    <>
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                      <span>{exams.filter((e) => e.is_published).length} Live</span>
-                    </>
-                  ) : (
-                    <span>Ready</span>
-                  )}
-                  <ArrowUpRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity ml-0.5" />
-                </div>
-              </div>
-
-              <div className="flex items-baseline justify-between mt-1">
-                <div className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                  {exams.length}
-                </div>
-                <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                  {exams.filter((e) => !e.is_published).length} Draft{exams.filter((e) => !e.is_published).length !== 1 ? "s" : ""}
-                </div>
-              </div>
-
-              <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[11px]">
-                <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                  {exams.length === 0 ? "No active tests" : "Autonomous Proctoring"}
-                </span>
-                <span className="text-blue-600 dark:text-blue-400 font-semibold group-hover:translate-x-0.5 transition-transform text-[10px] flex items-center gap-0.5">
-                  View tests →
-                </span>
-              </div>
-            </button>
-
-            {/* Card 2: Knowledge Base (RAG Vectors) */}
-            <button
-              type="button"
-              onClick={() => switchSectionTab("kb")}
-              className="text-left bg-white dark:bg-[#111C31] border border-slate-200/90 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs hover:shadow-md hover:-translate-y-0.5 hover:border-purple-400 dark:hover:border-purple-600 transition-all duration-200 group relative overflow-hidden cursor-pointer"
-            >
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-indigo-600 opacity-80 group-hover:opacity-100 transition-opacity" />
-
-              <div className="flex items-center justify-between gap-2 mb-3">
-                <div className="flex items-center gap-2">
-                  <div className="p-2 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 border border-purple-100 dark:border-purple-900/50 group-hover:scale-105 transition-transform">
-                    <BookOpen className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
-                      Vector Docs
-                    </span>
-                    <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-200">
-                      RAG Knowledge
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200/80 dark:border-purple-900/60">
-                  <Database className="h-2.5 w-2.5" />
-                  <span>ChromaDB</span>
-                  <ArrowUpRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity ml-0.5" />
-                </div>
-              </div>
-
-              <div className="flex items-baseline justify-between mt-1">
-                <div className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                  {documents.length}
-                </div>
-                <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                  {kbSubjects.length} Subject{kbSubjects.length !== 1 ? "s" : ""}
-                </div>
-              </div>
-
-              <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[11px]">
-                <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                  <span className={`w-1.5 h-1.5 rounded-full ${documents.length > 0 ? "bg-emerald-500" : "bg-purple-400"}`} />
-                  {documents.length > 0 ? "AI Grounding Synced" : "Upload PDFs/Textbooks"}
-                </span>
-                <span className="text-purple-600 dark:text-purple-400 font-semibold group-hover:translate-x-0.5 transition-transform text-[10px] flex items-center gap-0.5">
-                  Manage RAG →
-                </span>
-              </div>
-            </button>
-
-            {/* Card 3: Cohorts & Student Rosters */}
-            <button
-              type="button"
-              onClick={() => switchSectionTab("students")}
-              className="text-left bg-white dark:bg-[#111C31] border border-slate-200/90 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs hover:shadow-md hover:-translate-y-0.5 hover:border-emerald-400 dark:hover:border-emerald-600 transition-all duration-200 group relative overflow-hidden cursor-pointer"
-            >
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-600 opacity-80 group-hover:opacity-100 transition-opacity" />
-
-              <div className="flex items-center justify-between gap-2 mb-3">
-                <div className="flex items-center gap-2">
-                  <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/50 group-hover:scale-105 transition-transform">
-                    <Users className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
-                      Cohorts & Classes
-                    </span>
-                    <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-200">
-                      Student Directories
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-900/60">
-                  <span>{studentDirectories.length} Active</span>
-                  <ArrowUpRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity ml-0.5" />
-                </div>
-              </div>
-
-              <div className="flex items-baseline justify-between mt-1">
-                <div className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                  {studentDirectories.reduce((acc, d) => acc + (d.student_count || 0), 0)}
-                </div>
-                <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                  Candidate{studentDirectories.reduce((acc, d) => acc + (d.student_count || 0), 0) !== 1 ? "s" : ""}
-                </div>
-              </div>
-
-              <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[11px]">
-                <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                  Auto-Credentials Emailed
-                </span>
-                <span className="text-emerald-600 dark:text-emerald-400 font-semibold group-hover:translate-x-0.5 transition-transform text-[10px] flex items-center gap-0.5">
-                  Open Rosters →
-                </span>
-              </div>
-            </button>
-
-            {/* Card 4: Registration & Custom Forms */}
-            <button
-              type="button"
-              onClick={() => switchSectionTab("custom-forms")}
-              className="text-left bg-white dark:bg-[#111C31] border border-slate-200/90 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs hover:shadow-md hover:-translate-y-0.5 hover:border-amber-400 dark:hover:border-amber-600 transition-all duration-200 group relative overflow-hidden cursor-pointer"
-            >
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-orange-500 opacity-80 group-hover:opacity-100 transition-opacity" />
-
-              <div className="flex items-center justify-between gap-2 mb-3">
-                <div className="flex items-center gap-2">
-                  <div className="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-900/50 group-hover:scale-105 transition-transform">
-                    <ClipboardList className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
-                      Registration Forms
-                    </span>
-                    <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-200">
-                      AI Form Studio
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/80 dark:border-amber-900/60">
-                  <Sparkles className="h-2.5 w-2.5" />
-                  <span>20 Themes</span>
-                  <ArrowUpRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity ml-0.5" />
-                </div>
-              </div>
-
-              <div className="flex items-baseline justify-between mt-1">
-                <div className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                  {registrationFormsCount}
-                </div>
-                <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                  Interactive Form{registrationFormsCount !== 1 ? "s" : ""}
-                </div>
-              </div>
-
-              <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[11px]">
-                <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                  Google Forms Style + Images
-                </span>
-                <span className="text-amber-600 dark:text-amber-400 font-semibold group-hover:translate-x-0.5 transition-transform text-[10px] flex items-center gap-0.5">
-                  Open Studio →
-                </span>
-              </div>
-            </button>
-          </div>
-
-          {/* Main Dashboard Live Assessments Monitoring Section */}
-          <section id="exams" className="scroll-mt-16 space-y-4 pt-2">
-            <div className="flex items-center justify-between">
+          {/* Header & Quick Action Toolbar Group (Compact Gap) */}
+          <div className="space-y-2 sm:space-y-3">
+            {/* Dashboard Heading Area */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b border-slate-200/80 dark:border-[#263449] pb-2 sm:pb-2.5">
               <div>
-                <h2 className="text-base font-bold text-[#111827] dark:text-[#F1F5F9]">
-                  Live Class Assessments & Proctoring
-                </h2>
-                <p className="text-xs text-[#64748B] dark:text-[#A3B1C6]">
-                  Real-time exam delivery, credentials dispatch, and autonomous fraud proctoring.
+                <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+                  ACADEMIC INSTRUCTOR WORKSPACE
+                </span>
+                <h1 className="text-xl sm:text-2xl font-bold text-[#111827] dark:text-[#F1F5F9] mt-0.5 tracking-tight">
+                  Teacher Command Center
+                </h1>
+                <p className="text-[11px] sm:text-xs text-[#64748B] dark:text-[#A3B1C6] mt-0.5">
+                  Manage assessments, students, questions and resources in one place.
                 </p>
               </div>
+            </div>
+
+            {/* Horizontal Quick-Action Toolbar (12 Core Shortcuts) - Compact & Elegant */}
+            <div className="relative bg-white dark:bg-[#111C31] border border-slate-200/90 dark:border-[#263449] rounded-2xl py-2 sm:py-3 px-1.5 xs:px-2.5 sm:px-4 shadow-xs flex items-center gap-1.5 xs:gap-2 sm:gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                const el = document.getElementById("quick-toolbar-scroll");
+                if (el) el.scrollBy({ left: -200, behavior: "smooth" });
+              }}
+              className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-slate-200/90 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 shrink-0 shadow-2xs cursor-pointer transition-all hover:scale-105 active:scale-95"
+              title="Scroll Left"
+              aria-label="Scroll Left"
+            >
+              <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.2]" />
+            </button>
+
+            <div 
+              id="quick-toolbar-scroll" 
+              className="flex items-start flex-1 overflow-x-auto no-scrollbar scroll-smooth gap-2 xs:gap-3 sm:gap-6 md:gap-7 py-1 px-0.5 xs:px-1"
+            >
+              {/* 1. Create Assessment */}
               <button
+                type="button"
                 onClick={() => switchSectionTab("create")}
-                className="btn-primary flex items-center gap-2 text-xs py-2 px-3.5 shadow-sm cursor-pointer"
+                className="flex flex-col items-center gap-1.5 sm:gap-2.5 shrink-0 group cursor-pointer focus:outline-none min-w-[58px] xs:min-w-[66px] sm:min-w-[84px] text-center"
               >
-                <Plus className="h-3.5 w-3.5" />
-                <span>+ Create Assessment</span>
+                <div className="w-8 h-8 xs:w-9 xs:h-9 sm:w-[46px] sm:h-[46px] rounded-full bg-[#1877F2] flex items-center justify-center shadow-xs group-hover:scale-110 group-hover:shadow-md active:scale-95 transition-all duration-200">
+                  <FilePlus className="w-4 h-4 xs:w-4.5 xs:h-4.5 sm:w-5 sm:h-5 text-white stroke-[2.2]" />
+                </div>
+                <span className="text-[10px] xs:text-[11px] sm:text-[12px] font-medium text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 text-center leading-[1.2] max-w-[58px] xs:max-w-[68px] sm:max-w-[80px]">
+                  Create<br />Assessment
+                </span>
+              </button>
+
+              {/* 2. AI Question Generator */}
+              <button
+                type="button"
+                onClick={() => switchSectionTab("create")}
+                className="flex flex-col items-center gap-1.5 sm:gap-2.5 shrink-0 group cursor-pointer focus:outline-none min-w-[58px] xs:min-w-[66px] sm:min-w-[84px] text-center"
+              >
+                <div className="w-8 h-8 xs:w-9 xs:h-9 sm:w-[46px] sm:h-[46px] rounded-full bg-[#00B5B8] flex items-center justify-center shadow-xs group-hover:scale-110 group-hover:shadow-md active:scale-95 transition-all duration-200">
+                  <Wand2 className="w-4 h-4 xs:w-4.5 xs:h-4.5 sm:w-5 sm:h-5 text-white stroke-[2.2]" />
+                </div>
+                <span className="text-[10px] xs:text-[11px] sm:text-[12px] font-medium text-slate-800 dark:text-slate-200 group-hover:text-teal-600 dark:group-hover:text-teal-400 text-center leading-[1.2] max-w-[58px] xs:max-w-[68px] sm:max-w-[80px]">
+                  AI Question<br />Generator
+                </span>
+              </button>
+
+              {/* 3. Upload PDF / Document */}
+              <button
+                type="button"
+                onClick={() => setIsStep1KbModalOpen(true)}
+                className="flex flex-col items-center gap-1.5 sm:gap-2.5 shrink-0 group cursor-pointer focus:outline-none min-w-[58px] xs:min-w-[66px] sm:min-w-[84px] text-center"
+              >
+                <div className="w-8 h-8 xs:w-9 xs:h-9 sm:w-[46px] sm:h-[46px] rounded-full bg-[#16A34A] flex items-center justify-center shadow-xs group-hover:scale-110 group-hover:shadow-md active:scale-95 transition-all duration-200">
+                  <CloudUpload className="w-4 h-4 xs:w-4.5 xs:h-4.5 sm:w-5 sm:h-5 text-white stroke-[2.2]" />
+                </div>
+                <span className="text-[10px] xs:text-[11px] sm:text-[12px] font-medium text-slate-800 dark:text-slate-200 group-hover:text-green-600 dark:group-hover:text-green-400 text-center leading-[1.2] max-w-[58px] xs:max-w-[68px] sm:max-w-[80px]">
+                  Upload PDF /<br />Document
+                </span>
+              </button>
+
+              {/* 4. AI Form Studio */}
+              <button
+                type="button"
+                onClick={() => switchSectionTab("custom-forms")}
+                className="flex flex-col items-center gap-1.5 sm:gap-2.5 shrink-0 group cursor-pointer focus:outline-none min-w-[58px] xs:min-w-[66px] sm:min-w-[84px] text-center"
+              >
+                <div className="w-8 h-8 xs:w-9 xs:h-9 sm:w-[46px] sm:h-[46px] rounded-full bg-[#F97316] flex items-center justify-center shadow-xs group-hover:scale-110 group-hover:shadow-md active:scale-95 transition-all duration-200">
+                  <FileEdit className="w-4 h-4 xs:w-4.5 xs:h-4.5 sm:w-5 sm:h-5 text-white stroke-[2.2]" />
+                </div>
+                <span className="text-[10px] xs:text-[11px] sm:text-[12px] font-medium text-slate-800 dark:text-slate-200 group-hover:text-orange-600 dark:group-hover:text-orange-400 text-center leading-[1.2] max-w-[58px] xs:max-w-[68px] sm:max-w-[80px]">
+                  AI Form<br />Studio
+                </span>
+              </button>
+
+              {/* 5. Question Bank */}
+              <button
+                type="button"
+                onClick={() => switchSectionTab("bank")}
+                className="flex flex-col items-center gap-1.5 sm:gap-2.5 shrink-0 group cursor-pointer focus:outline-none min-w-[58px] xs:min-w-[66px] sm:min-w-[84px] text-center"
+              >
+                <div className="w-8 h-8 xs:w-9 xs:h-9 sm:w-[46px] sm:h-[46px] rounded-full bg-[#EF4444] flex items-center justify-center shadow-xs group-hover:scale-110 group-hover:shadow-md active:scale-95 transition-all duration-200">
+                  <Database className="w-4 h-4 xs:w-4.5 xs:h-4.5 sm:w-5 sm:h-5 text-white stroke-[2.2]" />
+                </div>
+                <span className="text-[10px] xs:text-[11px] sm:text-[12px] font-medium text-slate-800 dark:text-slate-200 group-hover:text-red-600 dark:group-hover:text-red-400 text-center leading-[1.2] max-w-[58px] xs:max-w-[68px] sm:max-w-[80px]">
+                  Question<br />Bank
+                </span>
+              </button>
+
+              {/* 6. Knowledge Base */}
+              <button
+                type="button"
+                onClick={() => switchSectionTab("kb")}
+                className="flex flex-col items-center gap-1.5 sm:gap-2.5 shrink-0 group cursor-pointer focus:outline-none min-w-[58px] xs:min-w-[66px] sm:min-w-[84px] text-center"
+              >
+                <div className="w-8 h-8 xs:w-9 xs:h-9 sm:w-[46px] sm:h-[46px] rounded-full bg-[#8B5CF6] flex items-center justify-center shadow-xs group-hover:scale-110 group-hover:shadow-md active:scale-95 transition-all duration-200">
+                  <BookOpen className="w-4 h-4 xs:w-4.5 xs:h-4.5 sm:w-5 sm:h-5 text-white stroke-[2.2]" />
+                </div>
+                <span className="text-[10px] xs:text-[11px] sm:text-[12px] font-medium text-slate-800 dark:text-slate-200 group-hover:text-purple-600 dark:group-hover:text-purple-400 text-center leading-[1.2] max-w-[58px] xs:max-w-[68px] sm:max-w-[80px]">
+                  Knowledge<br />Base
+                </span>
+              </button>
+
+              {/* 7. Student Rosters */}
+              <button
+                type="button"
+                onClick={() => switchSectionTab("students")}
+                className="flex flex-col items-center gap-1.5 sm:gap-2.5 shrink-0 group cursor-pointer focus:outline-none min-w-[58px] xs:min-w-[66px] sm:min-w-[84px] text-center"
+              >
+                <div className="w-8 h-8 xs:w-9 xs:h-9 sm:w-[46px] sm:h-[46px] rounded-full bg-[#10B981] flex items-center justify-center shadow-xs group-hover:scale-110 group-hover:shadow-md active:scale-95 transition-all duration-200">
+                  <Users className="w-4 h-4 xs:w-4.5 xs:h-4.5 sm:w-5 sm:h-5 text-white stroke-[2.2]" />
+                </div>
+                <span className="text-[10px] xs:text-[11px] sm:text-[12px] font-medium text-slate-800 dark:text-slate-200 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 text-center leading-[1.2] max-w-[58px] xs:max-w-[68px] sm:max-w-[80px]">
+                  Student<br />Rosters
+                </span>
+              </button>
+
+              {/* 8. Student Directory */}
+              <button
+                type="button"
+                onClick={() => switchSectionTab("students")}
+                className="flex flex-col items-center gap-1.5 sm:gap-2.5 shrink-0 group cursor-pointer focus:outline-none min-w-[58px] xs:min-w-[66px] sm:min-w-[84px] text-center"
+              >
+                <div className="w-8 h-8 xs:w-9 xs:h-9 sm:w-[46px] sm:h-[46px] rounded-full bg-[#0284C7] flex items-center justify-center shadow-xs group-hover:scale-110 group-hover:shadow-md active:scale-95 transition-all duration-200">
+                  <Contact className="w-4 h-4 xs:w-4.5 xs:h-4.5 sm:w-5 sm:h-5 text-white stroke-[2.2]" />
+                </div>
+                <span className="text-[10px] xs:text-[11px] sm:text-[12px] font-medium text-slate-800 dark:text-slate-200 group-hover:text-sky-600 dark:group-hover:text-sky-400 text-center leading-[1.2] max-w-[58px] xs:max-w-[68px] sm:max-w-[80px]">
+                  Student<br />Directory
+                </span>
+              </button>
+
+              {/* 9. Results & Analytics */}
+              <button
+                type="button"
+                onClick={() => switchSectionTab("reports")}
+                className="flex flex-col items-center gap-1.5 sm:gap-2.5 shrink-0 group cursor-pointer focus:outline-none min-w-[58px] xs:min-w-[66px] sm:min-w-[84px] text-center"
+              >
+                <div className="w-8 h-8 xs:w-9 xs:h-9 sm:w-[46px] sm:h-[46px] rounded-full bg-[#14B8A6] flex items-center justify-center shadow-xs group-hover:scale-110 group-hover:shadow-md active:scale-95 transition-all duration-200">
+                  <BarChart3 className="w-4 h-4 xs:w-4.5 xs:h-4.5 sm:w-5 sm:h-5 text-white stroke-[2.2]" />
+                </div>
+                <span className="text-[10px] xs:text-[11px] sm:text-[12px] font-medium text-slate-800 dark:text-slate-200 group-hover:text-teal-600 dark:group-hover:text-teal-400 text-center leading-[1.2] max-w-[58px] xs:max-w-[68px] sm:max-w-[80px]">
+                  Results &<br />Analytics
+                </span>
+              </button>
+
+              {/* 10. Live Proctoring */}
+              <button
+                type="button"
+                onClick={() => {
+                  switchSectionTab("exams");
+                  if (exams && exams.length > 0) {
+                    const active = exams.find((e: any) => e.is_published || e.status === "active") || exams[0];
+                    setLiveProctorExam(active);
+                  }
+                }}
+                className="flex flex-col items-center gap-1.5 sm:gap-2.5 shrink-0 group cursor-pointer focus:outline-none min-w-[58px] xs:min-w-[66px] sm:min-w-[84px] text-center"
+              >
+                <div className="w-8 h-8 xs:w-9 xs:h-9 sm:w-[46px] sm:h-[46px] rounded-full bg-[#EC4899] flex items-center justify-center shadow-xs group-hover:scale-110 group-hover:shadow-md active:scale-95 transition-all duration-200">
+                  <Radio className="w-4 h-4 xs:w-4.5 xs:h-4.5 sm:w-5 sm:h-5 text-white stroke-[2.2]" />
+                </div>
+                <span className="text-[10px] xs:text-[11px] sm:text-[12px] font-medium text-slate-800 dark:text-slate-200 group-hover:text-pink-600 dark:group-hover:text-pink-400 text-center leading-[1.2] max-w-[58px] xs:max-w-[68px] sm:max-w-[80px]">
+                  Live<br />Proctoring
+                </span>
+              </button>
+
+              {/* 11. Import Questions */}
+              <button
+                type="button"
+                onClick={() => setIsCsvImportModalOpen(true)}
+                className="flex flex-col items-center gap-1.5 sm:gap-2.5 shrink-0 group cursor-pointer focus:outline-none min-w-[58px] xs:min-w-[66px] sm:min-w-[84px] text-center"
+              >
+                <div className="w-8 h-8 xs:w-9 xs:h-9 sm:w-[46px] sm:h-[46px] rounded-full bg-[#8B5CF6] flex items-center justify-center shadow-xs group-hover:scale-110 group-hover:shadow-md active:scale-95 transition-all duration-200">
+                  <FileDown className="w-4 h-4 xs:w-4.5 xs:h-4.5 sm:w-5 sm:h-5 text-white stroke-[2.2]" />
+                </div>
+                <span className="text-[10px] xs:text-[11px] sm:text-[12px] font-medium text-slate-800 dark:text-slate-200 group-hover:text-purple-600 dark:group-hover:text-purple-400 text-center leading-[1.2] max-w-[58px] xs:max-w-[68px] sm:max-w-[80px]">
+                  Import<br />Questions
+                </span>
+              </button>
+
+              {/* 12. Platform Settings */}
+              <button
+                type="button"
+                onClick={() => router.push("/dashboard/settings")}
+                className="flex flex-col items-center gap-1.5 sm:gap-2.5 shrink-0 group cursor-pointer focus:outline-none min-w-[58px] xs:min-w-[66px] sm:min-w-[84px] text-center"
+              >
+                <div className="w-8 h-8 xs:w-9 xs:h-9 sm:w-[46px] sm:h-[46px] rounded-full bg-[#3B82F6] flex items-center justify-center shadow-xs group-hover:scale-110 group-hover:shadow-md active:scale-95 transition-all duration-200">
+                  <Settings className="w-4 h-4 xs:w-4.5 xs:h-4.5 sm:w-5 sm:h-5 text-white stroke-[2.2]" />
+                </div>
+                <span className="text-[10px] xs:text-[11px] sm:text-[12px] font-medium text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 text-center leading-[1.2] max-w-[58px] xs:max-w-[68px] sm:max-w-[80px]">
+                  Platform<br />Settings
+                </span>
               </button>
             </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                const el = document.getElementById("quick-toolbar-scroll");
+                if (el) el.scrollBy({ left: 200, behavior: "smooth" });
+              }}
+              className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-slate-200/90 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 shrink-0 shadow-2xs cursor-pointer transition-all hover:scale-105 active:scale-95"
+              title="Scroll Right"
+              aria-label="Scroll Right"
+            >
+              <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.2]" />
+            </button>
+          </div>
+          </div>
+
+          {/* Systematic 4 Summary KPI Cards Redesigned to Match Reference UI (Compact 2x2 Grid) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+            {/* ══════════════════════════════════════════════════════
+                CARD 1 — ASSESSMENTS (Blue Gradient Header - Compact)
+               ══════════════════════════════════════════════════════ */}
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => switchSectionTab("exams")}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  switchSectionTab("exams");
+                }
+              }}
+              className="relative overflow-hidden rounded-2xl bg-white dark:bg-[#111C31] border border-slate-200/80 dark:border-[#263449] shadow-xs hover:shadow-md hover:border-blue-300 dark:hover:border-blue-700/60 transition-all duration-200 p-3.5 sm:p-4 group cursor-pointer flex flex-col justify-between"
+            >
+              {/* Curved Top-Left Header Background Decoration */}
+              <div className="absolute top-0 left-0 w-[110px] sm:w-[130px] h-[58px] sm:h-[68px] pointer-events-none select-none">
+                <svg 
+                  viewBox="0 0 190 100" 
+                  fill="none" 
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-full h-full"
+                  preserveAspectRatio="none"
+                >
+                  <defs>
+                    <linearGradient id="card-blue-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#0052D4" />
+                      <stop offset="50%" stopColor="#2563EB" />
+                      <stop offset="100%" stopColor="#38BDF8" />
+                    </linearGradient>
+                  </defs>
+                  <path 
+                    d="M0,0 L125,0 C155,0 185,8 180,30 C174,52 130,70 80,78 C38,84 14,86 0,86 Z" 
+                    fill="url(#card-blue-grad)" 
+                  />
+                </svg>
+              </div>
+
+              {/* Header White Outline Icon */}
+              <div className="absolute top-2.5 left-3 sm:top-3 sm:left-3.5 text-white z-10 pointer-events-none drop-shadow-xs">
+                <Calendar className="w-4 h-4 sm:w-4.5 sm:h-4.5 stroke-[2.2]" />
+              </div>
+
+              {/* Upper Block: Title & Subtitle + Big Metric */}
+              <div>
+                {/* Top Row: Spacer clearing the curve + Title block */}
+                <div className="flex items-start justify-between min-h-[34px] sm:min-h-[40px] mb-1 sm:mb-1.5">
+                  <div className="w-[80px] sm:w-[96px] shrink-0" />
+                  <div className="flex-1 text-left pl-2 min-w-0">
+                    <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-tight tracking-tight truncate">
+                      Assessments
+                    </h3>
+                    <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">
+                      Testing Portal
+                    </p>
+                  </div>
+                </div>
+
+                {/* Metric Number & Label (Underneath curve on left side) */}
+                <div className="mt-0.5 sm:mt-1 mb-1.5 sm:mb-2">
+                  <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-none">
+                    {exams.length}
+                  </div>
+                  <div className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">
+                    Total Assessments
+                  </div>
+                </div>
+
+                {/* Horizontal Divider */}
+                <div className="border-t border-slate-100 dark:border-slate-800/80 my-2 sm:my-2.5" />
+
+                {/* Status Sub-Metrics: 2 Columns */}
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="min-w-0">
+                    <div className="text-[9px] sm:text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5">
+                      LIVE
+                    </div>
+                    <div className="font-bold text-emerald-600 dark:text-emerald-400 text-xs sm:text-[13px] flex items-center gap-1.5 truncate">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0 animate-pulse" />
+                      <span className="truncate">{liveExams.length} Active</span>
+                    </div>
+                  </div>
+                  <div className="min-w-0 border-l border-slate-100 dark:border-slate-800/80 pl-2.5 sm:pl-3">
+                    <div className="text-[9px] sm:text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5">
+                      DRAFTS
+                    </div>
+                    <div className="font-bold text-slate-700 dark:text-slate-300 text-xs sm:text-[13px] truncate">
+                      {draftExams.length} Ready
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom Action Pill */}
+              <div className="mt-2.5 sm:mt-3 pt-0.5">
+                <div className="w-full flex items-center justify-between px-3 py-1.5 sm:py-2 rounded-xl bg-[#F0F6FF] dark:bg-blue-950/40 text-[#2563EB] dark:text-[#60A5FA] group-hover:bg-[#E0EDFF] dark:group-hover:bg-blue-950/60 transition-all">
+                  <span className="font-bold text-xs">View Assessments</span>
+                  <div className="w-6 h-6 sm:w-6.5 sm:h-6.5 rounded-full bg-[#DBEAFE] dark:bg-blue-900/60 text-[#2563EB] dark:text-[#93C5FD] flex items-center justify-center group-hover:scale-105 group-hover:translate-x-0.5 transition-all shrink-0 shadow-2xs">
+                    <ArrowRight className="w-3 h-3 stroke-[2.5]" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ══════════════════════════════════════════════════════
+                CARD 2 — KNOWLEDGE BASE (Orange Gradient Header - Compact)
+               ══════════════════════════════════════════════════════ */}
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => switchSectionTab("kb")}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  switchSectionTab("kb");
+                }
+              }}
+              className="relative overflow-hidden rounded-2xl bg-white dark:bg-[#111C31] border border-slate-200/80 dark:border-[#263449] shadow-xs hover:shadow-md hover:border-orange-300 dark:hover:border-orange-700/60 transition-all duration-200 p-3.5 sm:p-4 group cursor-pointer flex flex-col justify-between"
+            >
+              {/* Curved Top-Left Header Background Decoration */}
+              <div className="absolute top-0 left-0 w-[110px] sm:w-[130px] h-[58px] sm:h-[68px] pointer-events-none select-none">
+                <svg 
+                  viewBox="0 0 190 100" 
+                  fill="none" 
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-full h-full"
+                  preserveAspectRatio="none"
+                >
+                  <defs>
+                    <linearGradient id="card-orange-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#FF512F" />
+                      <stop offset="50%" stopColor="#F97316" />
+                      <stop offset="100%" stopColor="#FBBF24" />
+                    </linearGradient>
+                  </defs>
+                  <path 
+                    d="M0,0 L125,0 C155,0 185,8 180,30 C174,52 130,70 80,78 C38,84 14,86 0,86 Z" 
+                    fill="url(#card-orange-grad)" 
+                  />
+                </svg>
+              </div>
+
+              {/* Header White Outline Icon */}
+              <div className="absolute top-2.5 left-3 sm:top-3 sm:left-3.5 text-white z-10 pointer-events-none drop-shadow-xs">
+                <BookOpen className="w-4 h-4 sm:w-4.5 sm:h-4.5 stroke-[2.2]" />
+              </div>
+
+              {/* Upper Block: Title & Subtitle + Big Metric */}
+              <div>
+                {/* Top Row: Spacer clearing the curve + Title block */}
+                <div className="flex items-start justify-between min-h-[34px] sm:min-h-[40px] mb-1 sm:mb-1.5">
+                  <div className="w-[80px] sm:w-[96px] shrink-0" />
+                  <div className="flex-1 text-left pl-2 min-w-0">
+                    <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-tight tracking-tight truncate">
+                      Knowledge Base
+                    </h3>
+                    <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">
+                      RAG Sources
+                    </p>
+                  </div>
+                </div>
+
+                {/* Metric Number & Label */}
+                <div className="mt-0.5 sm:mt-1 mb-1.5 sm:mb-2">
+                  <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-none">
+                    {documents.length}
+                  </div>
+                  <div className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">
+                    Total Documents
+                  </div>
+                </div>
+
+                {/* Horizontal Divider */}
+                <div className="border-t border-slate-100 dark:border-slate-800/80 my-2 sm:my-2.5" />
+
+                {/* Status Sub-Metrics: 2 Columns */}
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="min-w-0">
+                    <div className="text-[9px] sm:text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5">
+                      COLLECTIONS
+                    </div>
+                    <div className="font-bold text-slate-700 dark:text-slate-300 text-xs sm:text-[13px] truncate">
+                      {kbSubjects.length} Subject{kbSubjects.length !== 1 ? "s" : ""}
+                    </div>
+                  </div>
+                  <div className="min-w-0 border-l border-slate-100 dark:border-slate-800/80 pl-2.5 sm:pl-3">
+                    <div className="text-[9px] sm:text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5">
+                      GROUNDING
+                    </div>
+                    <div 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsStep1KbModalOpen(true);
+                      }}
+                      className="font-bold text-orange-500 dark:text-orange-400 text-xs sm:text-[13px] truncate hover:underline cursor-pointer"
+                      title="Click to upload PDF study materials"
+                    >
+                      Upload PDFs
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom Action Pill */}
+              <div className="mt-2.5 sm:mt-3 pt-0.5">
+                <div className="w-full flex items-center justify-between px-3 py-1.5 sm:py-2 rounded-xl bg-[#FFF7ED] dark:bg-orange-950/40 text-[#EA580C] dark:text-[#FB923C] group-hover:bg-[#FFEDD5] dark:group-hover:bg-orange-950/60 transition-all">
+                  <span className="font-bold text-xs">Manage Knowledge</span>
+                  <div className="w-6 h-6 sm:w-6.5 sm:h-6.5 rounded-full bg-[#FFEDD5] dark:bg-orange-900/60 text-[#EA580C] dark:text-[#FDBA74] flex items-center justify-center group-hover:scale-105 group-hover:translate-x-0.5 transition-all shrink-0 shadow-2xs">
+                    <ArrowRight className="w-3 h-3 stroke-[2.5]" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ══════════════════════════════════════════════════════
+                CARD 3 — COHORTS & STUDENTS (Teal Gradient Header - Compact)
+               ══════════════════════════════════════════════════════ */}
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => switchSectionTab("students")}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  switchSectionTab("students");
+                }
+              }}
+              className="relative overflow-hidden rounded-2xl bg-white dark:bg-[#111C31] border border-slate-200/80 dark:border-[#263449] shadow-xs hover:shadow-md hover:border-teal-300 dark:hover:border-teal-700/60 transition-all duration-200 p-3.5 sm:p-4 group cursor-pointer flex flex-col justify-between"
+            >
+              {/* Curved Top-Left Header Background Decoration */}
+              <div className="absolute top-0 left-0 w-[110px] sm:w-[130px] h-[58px] sm:h-[68px] pointer-events-none select-none">
+                <svg 
+                  viewBox="0 0 190 100" 
+                  fill="none" 
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-full h-full"
+                  preserveAspectRatio="none"
+                >
+                  <defs>
+                    <linearGradient id="card-teal-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#009245" />
+                      <stop offset="50%" stopColor="#00A896" />
+                      <stop offset="100%" stopColor="#02C39A" />
+                    </linearGradient>
+                  </defs>
+                  <path 
+                    d="M0,0 L125,0 C155,0 185,8 180,30 C174,52 130,70 80,78 C38,84 14,86 0,86 Z" 
+                    fill="url(#card-teal-grad)" 
+                  />
+                </svg>
+              </div>
+
+              {/* Header White Outline Icon */}
+              <div className="absolute top-2.5 left-3 sm:top-3 sm:left-3.5 text-white z-10 pointer-events-none drop-shadow-xs">
+                <Users className="w-4 h-4 sm:w-4.5 sm:h-4.5 stroke-[2.2]" />
+              </div>
+
+              {/* Upper Block: Title & Subtitle + Big Metric */}
+              <div>
+                {/* Top Row: Spacer clearing the curve + Title block */}
+                <div className="flex items-start justify-between min-h-[34px] sm:min-h-[40px] mb-1 sm:mb-1.5">
+                  <div className="w-[80px] sm:w-[96px] shrink-0" />
+                  <div className="flex-1 text-left pl-2 min-w-0">
+                    <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-tight tracking-tight truncate">
+                      Cohorts & Students
+                    </h3>
+                    <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">
+                      Candidate Rosters
+                    </p>
+                  </div>
+                </div>
+
+                {/* Metric Number & Label */}
+                <div className="mt-0.5 sm:mt-1 mb-1.5 sm:mb-2">
+                  <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-none">
+                    {studentDirectories.reduce((acc, d) => acc + (d.student_count || 0), 0)}
+                  </div>
+                  <div className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">
+                    Total Candidates
+                  </div>
+                </div>
+
+                {/* Horizontal Divider */}
+                <div className="border-t border-slate-100 dark:border-slate-800/80 my-2 sm:my-2.5" />
+
+                {/* Status Sub-Metrics: 2 Columns */}
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="min-w-0">
+                    <div className="text-[9px] sm:text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5">
+                      COHORTS
+                    </div>
+                    <div className="font-bold text-slate-700 dark:text-slate-300 text-xs sm:text-[13px] truncate">
+                      {studentDirectories.length} Active
+                    </div>
+                  </div>
+                  <div className="min-w-0 border-l border-slate-100 dark:border-slate-800/80 pl-2.5 sm:pl-3">
+                    <div className="text-[9px] sm:text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5">
+                      PASSCODES
+                    </div>
+                    <div className="font-bold text-teal-600 dark:text-teal-400 text-xs sm:text-[13px] truncate">
+                      Auto-Emailed
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom Action Pill */}
+              <div className="mt-2.5 sm:mt-3 pt-0.5">
+                <div className="w-full flex items-center justify-between px-3 py-1.5 sm:py-2 rounded-xl bg-[#F0FDF4] dark:bg-emerald-950/40 text-[#0D9488] dark:text-[#2DD4BF] group-hover:bg-[#DCFCE7] dark:group-hover:bg-emerald-950/60 transition-all">
+                  <span className="font-bold text-xs">Student Rosters</span>
+                  <div className="w-6 h-6 sm:w-6.5 sm:h-6.5 rounded-full bg-[#CCFBF1] dark:bg-teal-900/60 text-[#0D9488] dark:text-[#5EEAD4] flex items-center justify-center group-hover:scale-105 group-hover:translate-x-0.5 transition-all shrink-0 shadow-2xs">
+                    <ArrowRight className="w-3 h-3 stroke-[2.5]" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ══════════════════════════════════════════════════════
+                CARD 4 — REGISTRATION FORMS (Purple Gradient Header - Compact)
+               ══════════════════════════════════════════════════════ */}
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => switchSectionTab("custom-forms")}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  switchSectionTab("custom-forms");
+                }
+              }}
+              className="relative overflow-hidden rounded-2xl bg-white dark:bg-[#111C31] border border-slate-200/80 dark:border-[#263449] shadow-xs hover:shadow-md hover:border-purple-300 dark:hover:border-purple-700/60 transition-all duration-200 p-3.5 sm:p-4 group cursor-pointer flex flex-col justify-between"
+            >
+              {/* Curved Top-Left Header Background Decoration */}
+              <div className="absolute top-0 left-0 w-[110px] sm:w-[130px] h-[58px] sm:h-[68px] pointer-events-none select-none">
+                <svg 
+                  viewBox="0 0 190 100" 
+                  fill="none" 
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-full h-full"
+                  preserveAspectRatio="none"
+                >
+                  <defs>
+                    <linearGradient id="card-purple-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#7F00FF" />
+                      <stop offset="50%" stopColor="#9333EA" />
+                      <stop offset="100%" stopColor="#E100FF" />
+                    </linearGradient>
+                  </defs>
+                  <path 
+                    d="M0,0 L125,0 C155,0 185,8 180,30 C174,52 130,70 80,78 C38,84 14,86 0,86 Z" 
+                    fill="url(#card-purple-grad)" 
+                  />
+                </svg>
+              </div>
+
+              {/* Header White Outline Icon */}
+              <div className="absolute top-2.5 left-3 sm:top-3 sm:left-3.5 text-white z-10 pointer-events-none drop-shadow-xs">
+                <ClipboardList className="w-4 h-4 sm:w-4.5 sm:h-4.5 stroke-[2.2]" />
+              </div>
+
+              {/* Upper Block: Title & Subtitle + Big Metric */}
+              <div>
+                {/* Top Row: Spacer clearing the curve + Title block */}
+                <div className="flex items-start justify-between min-h-[34px] sm:min-h-[40px] mb-1 sm:mb-1.5">
+                  <div className="w-[80px] sm:w-[96px] shrink-0" />
+                  <div className="flex-1 text-left pl-2 min-w-0">
+                    <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-tight tracking-tight truncate">
+                      Registration Forms
+                    </h3>
+                    <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">
+                      AI Form Studio
+                    </p>
+                  </div>
+                </div>
+
+                {/* Metric Number & Label */}
+                <div className="mt-0.5 sm:mt-1 mb-1.5 sm:mb-2">
+                  <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-none">
+                    {registrationFormsCount}
+                  </div>
+                  <div className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">
+                    Total Forms
+                  </div>
+                </div>
+
+                {/* Horizontal Divider */}
+                <div className="border-t border-slate-100 dark:border-slate-800/80 my-2 sm:my-2.5" />
+
+                {/* Status Sub-Metrics: 2 Columns */}
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="min-w-0">
+                    <div className="text-[9px] sm:text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5">
+                      TEMPLATES
+                    </div>
+                    <div className="font-bold text-slate-700 dark:text-slate-300 text-xs sm:text-[13px] truncate">
+                      20 Themes
+                    </div>
+                  </div>
+                  <div className="min-w-0 border-l border-slate-100 dark:border-slate-800/80 pl-2.5 sm:pl-3">
+                    <div className="text-[9px] sm:text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5">
+                      FORMAT
+                    </div>
+                    <div className="font-bold text-orange-500 dark:text-orange-400 text-xs sm:text-[13px] truncate">
+                      Google Forms
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom Action Pill */}
+              <div className="mt-2.5 sm:mt-3 pt-0.5">
+                <div className="w-full flex items-center justify-between px-3 py-1.5 sm:py-2 rounded-xl bg-[#FAF5FF] dark:bg-purple-950/40 text-[#9333EA] dark:text-[#C084FC] group-hover:bg-[#F3E8FF] dark:group-hover:bg-purple-950/60 transition-all">
+                  <span className="font-bold text-xs">AI Form Studio</span>
+                  <div className="w-6 h-6 sm:w-6.5 sm:h-6.5 rounded-full bg-[#F3E8FF] dark:bg-purple-900/60 text-[#9333EA] dark:text-[#D8B4FE] flex items-center justify-center group-hover:scale-105 group-hover:translate-x-0.5 transition-all shrink-0 shadow-2xs">
+                    <ArrowRight className="w-3 h-3 stroke-[2.5]" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Live Class Assessments & Proctoring Section */}
+          <section id="exams" className="scroll-mt-16 pt-2">
             <LiveAssessmentsTable
               exams={exams}
+              showCreateButton={false}
+              title="Live Class Assessments & Proctoring"
+              description="Manage active examination sessions, live anti-cheat monitoring, and candidate credentials."
               onOpenCreate={() => switchSectionTab("create")}
+              onViewAll={() => switchSectionTab("exams")}
               onPreviewExam={(exam) => setPreviewExam(exam)}
               onOpenLiveProctor={(exam) => {
                 setLiveProctorExam(exam);
@@ -1046,6 +1461,7 @@ export default function TeacherDashboard() {
       <section id="exams" className="scroll-mt-16 space-y-4">
         <LiveAssessmentsTable
           exams={exams}
+          showCreateButton={true}
           onOpenCreate={() => switchSectionTab("create")}
           onPreviewExam={(exam) => setPreviewExam(exam)}
           onOpenLiveProctor={(exam) => {
@@ -2713,6 +3129,17 @@ export default function TeacherDashboard() {
           fetchData();
         }}
       />
+
+      {/* ═══════ CSV / EXCEL QUESTIONS IMPORT MODAL ═══════ */}
+      {isCsvImportModalOpen && (
+        <CSVImportModal
+          onClose={() => setIsCsvImportModalOpen(false)}
+          onSuccess={() => {
+            setIsCsvImportModalOpen(false);
+            fetchData();
+          }}
+        />
+      )}
     </div>
   );
 }

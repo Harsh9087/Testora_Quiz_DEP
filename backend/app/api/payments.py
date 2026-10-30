@@ -1,3 +1,11 @@
+
+from app.models.credit_request import CreditRequest
+from app.models.notification import Notification
+from app.models.exam import AuditLog
+from app.utils.timezone import now_utc
+from pydantic import BaseModel, Field, EmailStr
+from jose import jwt
+import uuid
 from fastapi import APIRouter, Depends, HTTPException, Request, Header, status
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
@@ -530,3 +538,171 @@ def verify_subscription_payment(
         razorpay_signature=req.razorpay_signature,
         db=db
     )
+
+
+# =============================================================================
+# Teacher Free Credit / Institutional Requests
+# =============================================================================
+
+class CreditRequestSubmit(BaseModel):
+    name: str = Field(..., min_length=2, max_length=255)
+    email: EmailStr
+    phone: Optional[str] = None
+    institution_name: str = Field(..., min_length=2, max_length=255)
+    department: Optional[str] = None
+    designation: Optional[str] = None
+    institution_email: Optional[str] = None
+    requested_credits: int = Field(default=10000, ge=100, le=100000)
+    purpose: str = Field(..., min_length=5)
+    estimated_students: int = Field(default=0, ge=0)
+
+
+def get_opt_user(request: Request, db: Session) -> Optional[User]:
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        return None
+    token = auth_header.split(" ", 1)[1]
+    try:
+        from app.config import settings
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"], options={"verify_exp": True})
+        user_id = payload.get("sub")
+        if user_id:
+            return db.query(User).filter(User.id == user_id, User.is_deleted == False).first()
+    except Exception:
+        return None
+    return None
+
+
+@router.post("/credit-requests")
+def submit_institutional_credit_request(
+    payload: CreditRequestSubmit,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """
+    Submits a free credit grant application (e.g. 10,000 Institutional Credits).
+    - Can be submitted by logged-in faculty or prospective institutional partners.
+    - Automatically links to user profile if authenticated.
+    """
+    current_user = get_opt_user(request, db)
+    user_id = current_user.id if current_user else None
+
+    # Check if there is an existing pending request with same email to avoid accidental duplicate flood
+    existing = db.query(CreditRequest).filter(
+        CreditRequest.email == payload.email.lower().strip(),
+        CreditRequest.status.in_(["Pending", "Under Review"]),
+        CreditRequest.is_deleted == False
+    ).first()
+
+    if existing:
+        return {
+            "success": True,
+            "message": f"You already have an active request ({existing.request_code}) currently under review. Our administrative board will process it shortly.",
+            "request_code": existing.request_code,
+            "status": existing.status,
+            "is_existing": True
+        }
+
+    request_code = f"CR-INST-{uuid.uuid4().hex[:6].upper()}"
+
+    new_req = CreditRequest(
+        id=str(uuid.uuid4()),
+        request_code=request_code,
+        user_id=user_id,
+        name=payload.name.strip(),
+        email=payload.email.lower().strip(),
+        phone=payload.phone.strip() if payload.phone else None,
+        institution_name=payload.institution_name.strip(),
+        department=payload.department.strip() if payload.department else None,
+        designation=payload.designation.strip() if payload.designation else None,
+        institution_email=payload.institution_email.lower().strip() if payload.institution_email else None,
+        requested_credits=payload.requested_credits or 10000,
+        purpose=payload.purpose.strip(),
+        estimated_students=payload.estimated_students or 0,
+        status="Pending",
+        credits_issued=False,
+        created_at=now_utc()
+    )
+    db.add(new_req)
+    db.flush()
+
+    # Log audit
+    import json
+    audit = AuditLog(
+        id=str(uuid.uuid4()),
+        user_id=user_id,
+        action="SUBMIT_CREDIT_REQUEST",
+        details=json.dumps({
+            "request_code": request_code,
+            "institution": payload.institution_name,
+            "requested_credits": payload.requested_credits,
+            "email": payload.email
+        }),
+        timestamp=now_utc()
+    )
+    db.add(audit)
+
+    # In-app notification for logged-in user
+    if user_id:
+        try:
+            notif = Notification(
+                id=str(uuid.uuid4()),
+                user_id=user_id,
+                title=f"Application Received: {request_code}",
+                message=f"Your request for {payload.requested_credits:,} institutional credits for {payload.institution_name} has been submitted to the Admin Desk.",
+                type="info",
+                link="/dashboard/teacher/profile"
+            )
+            db.add(notif)
+        except Exception:
+            pass
+
+    db.commit()
+    db.refresh(new_req)
+
+    return {
+        "success": True,
+        "message": f"Credit request {request_code} has been successfully submitted! Our academic review team will evaluate your application within 24 hours.",
+        "request_code": request_code,
+        "requested_credits": new_req.requested_credits,
+        "status": new_req.status
+    }
+
+
+@router.get("/credit-requests/mine")
+def get_my_credit_requests(
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """
+    Returns the logged-in user's submitted credit requests and current review/issuance status.
+    """
+    current_user = get_opt_user(request, db)
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Authentication required")
+
+    requests = db.query(CreditRequest).filter(
+        (CreditRequest.user_id == current_user.id) | (CreditRequest.email == current_user.email.lower().strip()),
+        CreditRequest.is_deleted == False
+    ).order_by(CreditRequest.created_at.desc()).all()
+
+    return [
+        {
+            "id": r.id,
+            "request_code": r.request_code,
+            "institution_name": r.institution_name,
+            "department": r.department,
+            "designation": r.designation,
+            "requested_credits": r.requested_credits,
+            "approved_credits": r.approved_credits,
+            "purpose": r.purpose,
+            "estimated_students": r.estimated_students,
+            "status": r.status,
+            "credits_issued": r.credits_issued,
+            "credits_issued_at": r.credits_issued_at.isoformat() if r.credits_issued_at else None,
+            "decision_reason": r.decision_reason,
+            "decision_date": r.decision_date.isoformat() if r.decision_date else None,
+            "created_at": r.created_at.isoformat() if r.created_at else None
+        }
+        for r in requests
+    ]

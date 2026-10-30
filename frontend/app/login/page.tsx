@@ -1,31 +1,34 @@
 "use client";
 
-import { useState, useEffect, useRef, Suspense } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { useAuthStore } from "../../store/authStore";
-import { 
-  AlertCircle, 
-  Eye, 
-  EyeOff, 
-  ShieldCheck, 
-  School, 
-  Sun, 
-  Moon, 
-  Mail, 
-  Lock, 
-  ArrowRight, 
+import Link from "next/link";
+import Script from "next/script";
+import {
+  AlertCircle,
+  Eye,
+  EyeOff,
+  ShieldCheck,
+  Mail,
+  Lock,
+  ArrowRight,
   ArrowLeft,
-  Sparkles, 
-  CheckCircle2, 
-  KeyRound, 
+  Sparkles,
+  CheckCircle2,
+  KeyRound,
   X,
   FileCode2,
-  BookOpen,
   Check,
-  ExternalLink
+  ExternalLink,
+  Users,
+  FileText,
+  BarChart3,
+  ChevronRight,
+  Zap,
+  Database,
 } from "lucide-react";
 
-import Script from "next/script";
+import { useAuthStore } from "../../store/authStore";
 import { apiFetch } from "../../lib/api";
 import ThemeToggle from "../../components/ThemeToggle";
 import AppLogo from "../../components/AppLogo";
@@ -36,6 +39,7 @@ function LoginContent() {
   const searchParams = useSearchParams();
   const isRegisterRoute = pathname === "/register" || searchParams.get("mode") === "signup";
   const setAuth = useAuthStore((state) => state.setAuth);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -70,6 +74,7 @@ function LoginContent() {
 
   // Target destination query parameter
   const [targetDestination, setTargetDestination] = useState<string | null>(null);
+  const googleInitializedRef = useRef(false);
 
   // Forgot Password Modal State
   const [forgotModalOpen, setForgotModalOpen] = useState(false);
@@ -79,8 +84,6 @@ function LoginContent() {
   const [forgotError, setForgotError] = useState<string | null>(null);
 
   const resolveDestination = (userRole: string) => {
-    // Role-based routing is strictly authoritative:
-    // A student account must NEVER be sent to the teacher dashboard
     if (userRole === "student") {
       if (targetDestination && targetDestination.startsWith("/exam/")) {
         return targetDestination;
@@ -88,7 +91,6 @@ function LoginContent() {
       return "/dashboard/student";
     }
 
-    // Super admin account
     if (userRole === "super_admin") {
       if (targetDestination && targetDestination.startsWith("/") && !targetDestination.startsWith("/dashboard/student")) {
         return targetDestination;
@@ -96,15 +98,20 @@ function LoginContent() {
       return "/admin";
     }
 
-    // Teacher or institution administrator accounts
-    if (userRole === "teacher" || userRole === "inst_admin") {
-      if (targetDestination && targetDestination.startsWith("/") && !targetDestination.startsWith("/dashboard/student")) {
+    if (userRole === "inst_admin") {
+      if (targetDestination && targetDestination.startsWith("/admin")) {
+        return targetDestination;
+      }
+      return "/admin";
+    }
+
+    if (userRole === "teacher") {
+      if (targetDestination && targetDestination.startsWith("/") && !targetDestination.startsWith("/dashboard/student") && !targetDestination.startsWith("/admin")) {
         return targetDestination;
       }
       return "/dashboard/teacher";
     }
 
-    // Safe fallback if role is unrecognized
     if (targetDestination) {
       if (targetDestination === "student_dashboard") return "/dashboard/student";
       if (targetDestination === "teacher_dashboard") return "/dashboard/teacher";
@@ -115,7 +122,6 @@ function LoginContent() {
   };
 
   useEffect(() => {
-    // Check URL query parameters for initial mode, role, and target
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       if (params.get("mode") === "signup" || window.location.pathname === "/register") {
@@ -126,14 +132,20 @@ function LoginContent() {
         setRegRole("student");
         regRoleRef.current = "student";
         setTargetDestination("student_dashboard");
+        setCurrentStep(2);
       } else if (roleParam === "teacher") {
         setRegRole("teacher");
         regRoleRef.current = "teacher";
         setTargetDestination("teacher_dashboard");
+        setCurrentStep(2);
       }
-      const targetParam = params.get("target");
+      const targetParam = params.get("target") || params.get("redirect");
       if (targetParam) {
         setTargetDestination(targetParam);
+        if (targetParam === "/admin" || targetParam.startsWith("/admin")) {
+          setRegRole("teacher");
+          setCurrentStep(2);
+        }
       }
       const stepParam = params.get("step");
       if (stepParam === "2") {
@@ -146,10 +158,14 @@ function LoginContent() {
       } else if (demoParam === "student") {
         setEmail("student@aegeus.edu");
         setPassword("securepassword");
+      } else if (demoParam === "admin" || roleParam === "admin") {
+        setEmail("admin@aegeus.edu");
+        setPassword("securepassword");
+        setTargetDestination("/admin");
+        setCurrentStep(2);
       }
     }
 
-    // Load saved preferences
     const savedTheme = (localStorage.getItem("theme") as "light" | "dark") || "light";
     setTheme(savedTheme);
     if (savedTheme === "dark") document.documentElement.classList.add("dark");
@@ -160,7 +176,13 @@ function LoginContent() {
       setEmail(savedEmail);
       setRememberMe(true);
     }
-  }, []);
+
+    // Prefetch destination dashboards in the background so login transition is instant
+    try {
+      router.prefetch("/dashboard/teacher");
+      router.prefetch("/dashboard/student");
+    } catch {}
+  }, [router]);
 
   const handleGoogleCredentialResponse = async (response: any) => {
     setError(null);
@@ -187,7 +209,7 @@ function LoginContent() {
         localStorage.setItem("workspaceName", data.workspace_name || "Personal Workspace");
       }
 
-      setAuth(data.access_token, assignedRole, data.full_name);
+      setAuth(data.access_token, assignedRole, data.full_name, undefined, data.avatar_url);
       router.push(resolveDestination(assignedRole));
     } catch (err: any) {
       setError(err.message);
@@ -199,7 +221,6 @@ function LoginContent() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // Intercept GSI_LOGGER origin mismatch to prevent Next.js dev overlay from interrupting local testing
     const originalConsoleError = console.error;
     console.error = (...args: any[]) => {
       if (
@@ -217,18 +238,26 @@ function LoginContent() {
     };
   }, []);
 
+  const handleGoogleCredentialResponseRef = useRef(handleGoogleCredentialResponse);
+  handleGoogleCredentialResponseRef.current = handleGoogleCredentialResponse;
+
   const initGoogleGIS = () => {
     setGisLoaded(true);
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "716730043675-rq3tq97avgrrbtjoup3hjdhteg4k7pql.apps.googleusercontent.com";
     if (clientId && clientId.trim()) {
       if (typeof window !== "undefined" && (window as any).google?.accounts?.id) {
         try {
-          (window as any).google.accounts.id.initialize({
-            client_id: clientId.trim(),
-            callback: handleGoogleCredentialResponse,
-            auto_select: false,
-            cancel_on_tap_outside: true,
-          });
+          const isAlreadyInit = (window as any).__googleGsiInitialized;
+          if (!isAlreadyInit) {
+            (window as any).google.accounts.id.initialize({
+              client_id: clientId.trim(),
+              callback: (response: any) => handleGoogleCredentialResponseRef.current(response),
+              auto_select: false,
+              cancel_on_tap_outside: true,
+            });
+            (window as any).__googleGsiInitialized = true;
+            googleInitializedRef.current = true;
+          }
           const btnContainer = document.getElementById("google-signin-btn-container");
           if (btnContainer) {
             btnContainer.innerHTML = "";
@@ -242,7 +271,6 @@ function LoginContent() {
               logo_alignment: "left",
             });
           }
-          // Only prompt One-Tap outside of localhost or if origin is known valid
           if (window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
             try {
               (window as any).google.accounts.id.prompt();
@@ -261,15 +289,7 @@ function LoginContent() {
         setTimeout(initGoogleGIS, 60);
       }
     }
-  }, [theme, gisLoaded, authMode, regRole, currentStep]);
-
-  const toggleTheme = () => {
-    const next = theme === "light" ? "dark" : "light";
-    setTheme(next);
-    localStorage.setItem("theme", next);
-    if (next === "dark") document.documentElement.classList.add("dark");
-    else document.documentElement.classList.remove("dark");
-  };
+  }, [theme, authMode, regRole, currentStep]);
 
   const handleSignInSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -285,7 +305,7 @@ function LoginContent() {
 
       const response = await apiFetch("/auth/login", {
         method: "POST",
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, role: regRole }),
       });
 
       const data = await response.json();
@@ -299,7 +319,7 @@ function LoginContent() {
         localStorage.setItem("workspaceName", data.workspace_name || "Personal Workspace");
       }
 
-      setAuth(data.access_token, data.role, data.full_name);
+      setAuth(data.access_token, data.role, data.full_name, undefined, data.avatar_url);
       router.push(resolveDestination(data.role));
     } catch (err: any) {
       setError(err.message);
@@ -351,7 +371,7 @@ function LoginContent() {
         localStorage.setItem("workspaceName", data.workspace_name || "Personal Workspace");
       }
 
-      setAuth(data.access_token, data.role, data.full_name);
+      setAuth(data.access_token, data.role, data.full_name, undefined, data.avatar_url);
       router.push(resolveDestination(data.role));
     } catch (err: any) {
       setError(err.message);
@@ -363,8 +383,8 @@ function LoginContent() {
   const handleDirectExamJump = (e: React.FormEvent) => {
     e.preventDefault();
     if (!examCodeInput.trim()) return;
-    const cleanCode = examCodeInput.trim().replace(/^.*\/exam\//, "");
-    router.push(`/exam/${cleanCode}`);
+    const cleanCode = examCodeInput.trim().toUpperCase().replace(/^.*\/EXAM\//, "");
+    router.push(`/exam/${cleanCode}/instructions`);
   };
 
   const handleForgotPassword = async (e: React.FormEvent) => {
@@ -376,7 +396,7 @@ function LoginContent() {
     try {
       const res = await apiFetch("/auth/forgot-password", {
         method: "POST",
-        body: JSON.stringify({ email: forgotEmail.trim() })
+        body: JSON.stringify({ email: forgotEmail.trim() }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -407,106 +427,122 @@ function LoginContent() {
   const pwdStrength = getPasswordStrength(regPassword);
 
   return (
-    <div className="flex min-h-screen items-center justify-center relative overflow-hidden bg-[#F8FAFC] dark:bg-[#0B1120] px-4 py-4 sm:py-6 transition-colors duration-200">
+    <div className="relative min-h-screen w-full flex flex-col justify-between overflow-x-hidden bg-[#F4F7FB] dark:bg-[#070F1E] text-slate-800 dark:text-slate-100 transition-colors duration-200">
       <Script
         src="https://accounts.google.com/gsi/client"
         strategy="afterInteractive"
         onLoad={initGoogleGIS}
       />
-      
-      {/* Subtle Ambient Decorative Circles */}
-      <div className="absolute -top-40 -left-40 w-96 h-96 bg-blue-600/5 dark:bg-blue-400/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-blue-600/5 dark:bg-blue-400/5 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Top Navigation Options: Theme Toggle */}
-      <div className="absolute top-4 right-4 z-20 flex items-center">
+      {/* 1. REAL CAMPUS BACKGROUND (Crisp, High-Resolution Architectural Photography) */}
+      <div
+        className="fixed inset-0 z-0 pointer-events-none bg-cover bg-center bg-no-repeat opacity-35 dark:opacity-20 transition-opacity duration-300"
+        style={{ backgroundImage: "url('/images/campus_bg_highres.jpg')" }}
+        aria-hidden="true"
+      />
+      <div
+        className="fixed inset-0 z-0 pointer-events-none bg-gradient-to-b from-[#F4F7FB]/90 via-[#F4F7FB]/80 to-[#EEF4FC]/95 dark:from-[#070F1E]/90 dark:via-[#070F1E]/85 dark:to-[#0B1528]/98"
+        aria-hidden="true"
+      />
+
+      {/* Floating Theme Toggle */}
+      <div className="fixed top-3 right-3 sm:top-4 sm:right-4 z-50">
         <ThemeToggle />
       </div>
 
-      <div className="w-full max-w-[460px] z-10 space-y-4 my-auto">
-        
-        {/* Logo & Platform Headline */}
-        <div className="flex flex-col justify-center items-center text-center pb-1">
-          <a href="/" title="Testora Quiz Home" className="transition-transform hover:scale-105 duration-200">
-            <AppLogo variant="stacked" height={88} />
-          </a>
-        </div>
+      {/* 2. TOP HEADER - Centered Stacked Logo (Icon on top, Text below) */}
+      <header className="relative z-10 w-full max-w-[560px] mx-auto px-4 pt-5 sm:pt-7 pb-2 sm:pb-3 flex flex-col items-center justify-center text-center">
+        <Link
+          href="/"
+          className="inline-flex flex-col items-center justify-center transition-transform hover:opacity-95 active:scale-95"
+          title="Return to Testora Quiz Home"
+        >
+          <AppLogo variant="stacked" height={64} />
+        </Link>
+      </header>
 
-        {/* Main Authentication Card */}
-        <div className="bg-white dark:bg-[#111C31] rounded-2xl p-5 sm:p-7 border border-[#E2E8F0] dark:border-[#263449] shadow-sm relative overflow-hidden space-y-4">
-          <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#1E3A8A] via-[#2563EB] to-[#1E3A8A]" />
+      {/* 3. MAIN CONTAINER (Clean centered card on all viewports) */}
+      <main className="relative z-10 w-full max-w-[560px] mx-auto px-2.5 xs:px-3.5 sm:px-4 py-2 sm:py-6 flex-1 flex flex-col justify-center">
+        <div className="w-full">
+            <div className="w-full bg-white dark:bg-[#0D182E] rounded-2xl sm:rounded-3xl p-3.5 xs:p-4.5 sm:p-8 border border-slate-200/90 dark:border-slate-800 shadow-xl relative overflow-hidden space-y-3.5 sm:space-y-6">
 
-          {/* ═══════ STEPPER PROGRESS BAR ═══════ */}
-          <div className="flex items-center justify-between gap-3 pb-2.5 border-b border-[#E5E0D8]/60 dark:border-[#292524]/60">
+          {/* Stepper Progress Bar */}
+          <div className="flex items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
             <button
               type="button"
               onClick={() => setCurrentStep(1)}
               className={`flex items-center gap-2 text-xs font-bold transition-all cursor-pointer ${
-                currentStep === 1 
-                  ? "text-[#C84B18] dark:text-[#EA580C]" 
-                  : "text-[#716D67] hover:text-[#242321] dark:text-[#A8A29E] dark:hover:text-white"
+                currentStep === 1
+                  ? "text-[#1765F5] dark:text-blue-400"
+                  : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
               }`}
             >
-              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                currentStep === 1 
-                  ? "bg-[#C84B18] text-white dark:bg-[#EA580C]" 
-                  : "bg-emerald-600 text-white"
-              }`}>
+              <span
+                className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                  currentStep === 1
+                    ? "bg-[#1765F5] text-white shadow-xs"
+                    : "bg-emerald-600 text-white"
+                }`}
+              >
                 {currentStep > 1 ? <Check className="w-3 h-3 stroke-[3]" /> : "1"}
               </span>
               <span>1. Choose Mode</span>
             </button>
 
-            <div className={`flex-1 h-0.5 rounded-full transition-all duration-300 ${
-              currentStep > 1 ? "bg-emerald-600 dark:bg-emerald-500" : "bg-[#E5E0D8] dark:bg-[#292524]"
-            }`} />
+            <div
+              className={`flex-1 h-0.5 rounded-full transition-all duration-300 ${
+                currentStep > 1 ? "bg-[#1765F5] dark:bg-blue-500" : "bg-slate-200 dark:bg-slate-700"
+              }`}
+            />
 
             <button
               type="button"
               onClick={() => setCurrentStep(2)}
               className={`flex items-center gap-2 text-xs font-bold transition-all cursor-pointer ${
-                currentStep === 2 
-                  ? "text-[#C84B18] dark:text-[#EA580C]" 
-                  : "text-[#716D67] hover:text-[#242321] dark:text-[#A8A29E] dark:hover:text-white"
+                currentStep === 2
+                  ? "text-[#1765F5] dark:text-blue-400"
+                  : "text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
               }`}
             >
-              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                currentStep === 2 
-                  ? "bg-[#C84B18] text-white dark:bg-[#EA580C]" 
-                  : "bg-[#E5E0D8] dark:bg-[#292524] text-[#716D67] dark:text-[#A8A29E]"
-              }`}>
+              <span
+                className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                  currentStep === 2
+                    ? "bg-[#1765F5] text-white shadow-xs"
+                    : "bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
+                }`}
+              >
                 2
               </span>
               <span>2. {authMode === "signup" ? "Account Details" : "Sign In"}</span>
             </button>
           </div>
 
-          {/* ═══════════════════════════════════════════════════════════════
-              STEP 1: SELECT MODE & RICH FEATURE HIGHLIGHTS
-              ═══════════════════════════════════════════════════════════════ */}
+          {/* ══════════════════════════════════════════════════════════════
+              STEP 1: SELECT MODE & HIGHLIGHTS
+          ══════════════════════════════════════════════════════════════ */}
           {currentStep === 1 && (
-            <div className="space-y-4 animate-in fade-in duration-200">
-              <div className="flex items-center justify-between">
+            <div className="space-y-3.5 sm:space-y-5 animate-in fade-in duration-200">
+              {/* Heading & Role Tag */}
+              <div className="flex items-start justify-between gap-2 sm:gap-3 pt-0.5">
                 <div>
-                  <h2 className="text-xl font-bold text-[#242321] dark:text-[#F5F5F4] tracking-tight">
+                  <h1 className="text-xl sm:text-[26px] font-bold text-[#101D3A] dark:text-white tracking-tight leading-tight">
                     Select Portal Mode
-                  </h2>
-                  <p className="text-[#716D67] dark:text-[#A8A29E] text-xs mt-0.5">
-                    Choose your role to get tailored assessment tools & analytics
+                  </h1>
+                  <p className="text-[11px] sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-1">
+                    Choose your role to get tailored assessment tools &amp; analytics
                   </p>
                 </div>
-                <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border transition-colors shrink-0 ${
-                  regRole === "teacher"
-                    ? "bg-[#C84B18]/10 text-[#C84B18] dark:bg-[#EA580C]/15 dark:text-[#EA580C] border-[#C84B18]/20"
-                    : "bg-[#7C3AED]/10 text-[#7C3AED] dark:bg-[#8B5CF6]/15 dark:text-[#A78BFA] border-[#7C3AED]/20"
-                }`}>
-                  {regRole === "teacher" ? "Instructor Mode" : "Candidate Mode"}
-                </span>
+
+                <div className="shrink-0 mt-0.5">
+                  <span className="inline-flex items-center px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-xs font-semibold bg-[#EEF5FF] dark:bg-blue-950/70 text-[#1765F5] dark:text-blue-400 border border-blue-200/70 dark:border-blue-800/60 shadow-2xs whitespace-nowrap">
+                    {regRole === "teacher" ? "Instructor Mode" : "Student Mode"}
+                  </span>
+                </div>
               </div>
 
-              {/* 3D Mode Cards Side-by-Side (Duo Characters) */}
-              <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                {/* Teacher / Educator Mode Card */}
+              {/* Two Mode Cards Side-by-Side (Both cards visible in one row on mobile & desktop) */}
+              <div className="grid grid-cols-2 gap-2 sm:gap-4 mt-2 sm:mt-6">
+                {/* 1. TEACHER MODE CARD */}
                 <button
                   type="button"
                   onClick={() => {
@@ -514,44 +550,61 @@ function LoginContent() {
                     regRoleRef.current = "teacher";
                     setTargetDestination("teacher_dashboard");
                   }}
-                  className={`group relative rounded-2xl overflow-hidden border-2 text-center transition-all duration-300 cursor-pointer flex flex-col bg-white dark:bg-[#1C1A17] shadow-xs ${
+                  className={`group relative rounded-2xl p-1.5 xs:p-2 sm:p-2.5 pb-2.5 xs:pb-3 sm:pb-3.5 text-left transition-all duration-200 cursor-pointer flex flex-col ${
                     regRole === "teacher"
-                      ? "border-[#C84B18] dark:border-[#EA580C] ring-2 ring-[#C84B18]/30 shadow-md shadow-[#C84B18]/15 scale-[1.02]"
-                      : "border-[#E5E0D8] dark:border-[#292524] hover:border-[#C84B18]/50 opacity-80 hover:opacity-100 hover:scale-[1.01]"
+                      ? "bg-white dark:bg-[#121E36] border-2 border-[#1765F5] shadow-lg shadow-blue-500/10 ring-2 ring-blue-500/10"
+                      : "bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
                   }`}
                 >
-                  <div className="relative w-full aspect-square overflow-hidden bg-[#F5F2EB] dark:bg-[#201D1A]">
+                  <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 shadow-inner">
                     <img
-                      src="/images/teacher_mode_3d.jpg"
-                      alt="Teacher Mode Faculty"
-                      className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
+                      src="/images/teacher_group_faculty.jpg?v=hd4"
+                      alt="Teacher Mode - Faculty and Educators Group"
+                      loading="eager"
+                      decoding="async"
+                      className="w-full h-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-105"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = "/images/teacher_mode.jpg?v=hd4";
+                      }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent pointer-events-none" />
+                    {/* Subtle bottom gradient vignette for contrast and legibility */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent pointer-events-none" />
 
-                    {regRole === "teacher" ? (
-                      <div className="absolute top-2 right-2 bg-[#C84B18] text-white p-1 rounded-full shadow-sm">
-                        <Check className="w-3 h-3 stroke-[3]" />
-                      </div>
-                    ) : (
-                      <div className="absolute top-2 right-2 w-4 h-4 rounded-full border border-white/80 bg-black/25 backdrop-blur-xs" />
-                    )}
+                    {/* Selection Checkmark on Top-Right */}
+                    <div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 z-10">
+                      {regRole === "teacher" ? (
+                        <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-[#1765F5] text-white flex items-center justify-center shadow-md">
+                          <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[3]" />
+                        </div>
+                      ) : (
+                        <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white/90 dark:bg-slate-800/90 border border-slate-300 dark:border-slate-600 shadow-xs backdrop-blur-xs" />
+                      )}
+                    </div>
 
-                    <span className="absolute bottom-1.5 left-2 px-2 py-0.5 rounded-full text-[9px] font-bold bg-[#242321]/75 text-white backdrop-blur-xs shadow-2xs">
-                      Faculty & Admins
-                    </span>
+                    {/* Tag on Bottom-Left */}
+                    <div className="absolute bottom-1.5 left-1.5 sm:bottom-2 sm:left-2 z-10">
+                      <span className="px-1.5 xs:px-2 py-0.5 rounded-md text-[9px] xs:text-[10px] font-semibold bg-black/70 text-white backdrop-blur-md shadow-2xs inline-flex items-center gap-1 border border-white/10">
+                        <Users className="w-2.5 h-2.5 text-blue-300" />
+                        <span>
+                          <span className="hidden xs:inline">Faculty &amp; Admins</span>
+                          <span className="xs:hidden">Faculty</span>
+                        </span>
+                      </span>
+                    </div>
                   </div>
 
-                  <div className="p-2.5 sm:p-3 bg-white dark:bg-[#171615]">
-                    <h3 className="font-extrabold text-xs sm:text-sm text-[#242321] dark:text-[#F5F5F4] group-hover:text-[#C84B18] dark:group-hover:text-[#EA580C] transition-colors leading-tight">
+                  {/* Title & Subtitle */}
+                  <div className="text-center mt-2 sm:mt-3">
+                    <h2 className="text-xs xs:text-sm sm:text-base font-bold text-[#101D3A] dark:text-white leading-tight">
                       Teacher Mode
-                    </h3>
-                    <p className="text-[10px] text-[#716D67] dark:text-[#A8A29E] mt-0.5 truncate">
-                      Create & Proctor
+                    </h2>
+                    <p className="text-[10px] xs:text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      Create &amp; Proctor
                     </p>
                   </div>
                 </button>
 
-                {/* Student / Candidate Mode Card */}
+                {/* 2. STUDENT MODE CARD */}
                 <button
                   type="button"
                   onClick={() => {
@@ -559,192 +612,237 @@ function LoginContent() {
                     regRoleRef.current = "student";
                     setTargetDestination("student_dashboard");
                   }}
-                  className={`group relative rounded-2xl overflow-hidden border-2 text-center transition-all duration-300 cursor-pointer flex flex-col bg-white dark:bg-[#1C1A17] shadow-xs ${
+                  className={`group relative rounded-2xl p-1.5 xs:p-2 sm:p-2.5 pb-2.5 xs:pb-3 sm:pb-3.5 text-left transition-all duration-200 cursor-pointer flex flex-col ${
                     regRole === "student"
-                      ? "border-[#7C3AED] dark:border-[#8B5CF6] ring-2 ring-[#7C3AED]/30 shadow-md shadow-[#7C3AED]/15 scale-[1.02]"
-                      : "border-[#E5E0D8] dark:border-[#292524] hover:border-[#7C3AED]/50 opacity-80 hover:opacity-100 hover:scale-[1.01]"
+                      ? "bg-white dark:bg-[#121E36] border-2 border-[#1765F5] shadow-lg shadow-blue-500/10 ring-2 ring-blue-500/10"
+                      : "bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
                   }`}
                 >
-                  <div className="relative w-full aspect-square overflow-hidden bg-[#F5F2EB] dark:bg-[#201D1A]">
+                  <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 shadow-inner">
                     <img
-                      src="/images/student_mode_3d.jpg"
-                      alt="Student Mode Candidates"
-                      className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
+                      src="/images/student_group_college.jpg?v=hd4"
+                      alt="Student Mode - University Student Study Group"
+                      loading="eager"
+                      decoding="async"
+                      className="w-full h-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-105"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = "/images/student_mode.jpg?v=hd4";
+                      }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent pointer-events-none" />
+                    {/* Subtle bottom gradient vignette for contrast and legibility */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent pointer-events-none" />
 
-                    {regRole === "student" ? (
-                      <div className="absolute top-2 right-2 bg-[#7C3AED] text-white p-1 rounded-full shadow-sm">
-                        <Check className="w-3 h-3 stroke-[3]" />
-                      </div>
-                    ) : (
-                      <div className="absolute top-2 right-2 w-4 h-4 rounded-full border border-white/80 bg-black/25 backdrop-blur-xs" />
-                    )}
+                    {/* Selection Checkmark on Top-Right */}
+                    <div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 z-10">
+                      {regRole === "student" ? (
+                        <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-[#1765F5] text-white flex items-center justify-center shadow-md">
+                          <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[3]" />
+                        </div>
+                      ) : (
+                        <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white/90 dark:bg-slate-800/90 border border-slate-300 dark:border-slate-600 shadow-xs backdrop-blur-xs" />
+                      )}
+                    </div>
 
-                    <span className="absolute bottom-1.5 left-2 px-2 py-0.5 rounded-full text-[9px] font-bold bg-[#242321]/75 text-white backdrop-blur-xs shadow-2xs">
-                      Candidate Group
-                    </span>
+                    {/* Tag on Bottom-Left */}
+                    <div className="absolute bottom-1.5 left-1.5 sm:bottom-2 sm:left-2 z-10">
+                      <span className="px-1.5 xs:px-2 py-0.5 rounded-md text-[9px] xs:text-[10px] font-semibold bg-black/70 text-white backdrop-blur-md shadow-2xs inline-flex items-center gap-1 border border-white/10">
+                        <Users className="w-2.5 h-2.5 text-cyan-300" />
+                        <span>
+                          <span className="hidden xs:inline">Candidate Group</span>
+                          <span className="xs:hidden">Students</span>
+                        </span>
+                      </span>
+                    </div>
                   </div>
 
-                  <div className="p-2.5 sm:p-3 bg-white dark:bg-[#171615]">
-                    <h3 className="font-extrabold text-xs sm:text-sm text-[#242321] dark:text-[#F5F5F4] group-hover:text-[#7C3AED] dark:group-hover:text-[#A78BFA] transition-colors leading-tight">
+                  {/* Title & Subtitle */}
+                  <div className="text-center mt-2 sm:mt-3">
+                    <h2 className="text-xs xs:text-sm sm:text-base font-bold text-[#101D3A] dark:text-white leading-tight">
                       Student Mode
-                    </h3>
-                    <p className="text-[10px] text-[#716D67] dark:text-[#A8A29E] mt-0.5 truncate">
+                    </h2>
+                    <p className="text-[10px] xs:text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                       Take Assessments
                     </p>
                   </div>
                 </button>
               </div>
 
-              {/* Dynamic Mode Highlights / Info Card */}
-              {regRole === "teacher" ? (
-                <div className="bg-[#FAF8F5] dark:bg-[#1C1A17] border border-[#E5E0D8] dark:border-[#292524] rounded-xl p-3.5 space-y-2.5 transition-all">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-[#C84B18] dark:text-[#EA580C] uppercase tracking-wider flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5" />
-                      <span>Instructor Portal Highlights</span>
-                    </span>
-                    <span className="text-[10px] font-semibold text-[#716D67] dark:text-[#A8A29E]">
-                      Faculty & Admins
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-1 gap-2 text-xs">
-                    <div className="flex items-start gap-2.5">
-                      <div className="w-5 h-5 rounded-md bg-[#C84B18]/10 text-[#C84B18] dark:bg-[#EA580C]/15 dark:text-[#EA580C] flex items-center justify-center shrink-0 mt-0.5">
-                        <Sparkles className="w-3 h-3" />
-                      </div>
-                      <div>
-                        <p className="font-bold text-[#242321] dark:text-[#F5F5F4] leading-tight">AI Quiz & Question Generator</p>
-                        <p className="text-[11px] text-[#716D67] dark:text-[#A8A29E]">Instantly generate multi-tier quizzes from syllabus files and custom topics.</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-2.5">
-                      <div className="w-5 h-5 rounded-md bg-[#C84B18]/10 text-[#C84B18] dark:bg-[#EA580C]/15 dark:text-[#EA580C] flex items-center justify-center shrink-0 mt-0.5">
-                        <ShieldCheck className="w-3 h-3" />
-                      </div>
-                      <div>
-                        <p className="font-bold text-[#242321] dark:text-[#F5F5F4] leading-tight">Live Anti-Cheat Proctoring</p>
-                        <p className="text-[11px] text-[#716D67] dark:text-[#A8A29E]">Real-time face verification, tab switch telemetry & automated cheating logs.</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-2.5">
-                      <div className="w-5 h-5 rounded-md bg-[#C84B18]/10 text-[#C84B18] dark:bg-[#EA580C]/15 dark:text-[#EA580C] flex items-center justify-center shrink-0 mt-0.5">
-                        <CheckCircle2 className="w-3 h-3" />
-                      </div>
-                      <div>
-                        <p className="font-bold text-[#242321] dark:text-[#F5F5F4] leading-tight">Automated Grading & Student Directories</p>
-                        <p className="text-[11px] text-[#716D67] dark:text-[#A8A29E]">Detailed analytics, class score distribution and student roster management.</p>
-                      </div>
-                    </div>
-                  </div>
+              {/* Core Platform Features Infographic Panel */}
+              <div className="bg-[#EEF5FF]/70 dark:bg-[#111D35]/80 border border-blue-200/70 dark:border-[#263957] rounded-2xl p-2.5 xs:p-3 sm:p-4 space-y-2 sm:space-y-2.5 transition-all">
+                <div className="flex items-center justify-between pb-1 border-b border-blue-100/80 dark:border-blue-900/40">
+                  <span className="text-[10.5px] xs:text-xs font-bold text-[#1765F5] dark:text-[#278BFF] uppercase tracking-wider flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-[#278BFF]" />
+                    <span>CORE PLATFORM CAPABILITIES</span>
+                  </span>
+                  <span className="text-[10px] xs:text-[11px] font-semibold text-slate-500 dark:text-[#A9B9D3]">
+                    {regRole === "teacher" ? "Faculty & Admins" : "Candidate Group"}
+                  </span>
                 </div>
-              ) : (
-                <div className="bg-[#FAF8F5] dark:bg-[#1C1A17] border border-[#E5E0D8] dark:border-[#292524] rounded-xl p-3.5 space-y-2.5 transition-all">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-[#7C3AED] dark:text-[#A78BFA] uppercase tracking-wider flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5" />
-                      <span>Candidate Portal Highlights</span>
-                    </span>
-                    <span className="text-[10px] font-semibold text-[#716D67] dark:text-[#A8A29E]">
-                      Students & Learners
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-1 gap-2 text-xs">
-                    <div className="flex items-start gap-2.5">
-                      <div className="w-5 h-5 rounded-md bg-[#7C3AED]/10 text-[#7C3AED] dark:bg-[#8B5CF6]/15 dark:text-[#A78BFA] flex items-center justify-center shrink-0 mt-0.5">
-                        <FileCode2 className="w-3 h-3" />
-                      </div>
-                      <div>
-                        <p className="font-bold text-[#242321] dark:text-[#F5F5F4] leading-tight">Distraction-Free Exam Interface</p>
-                        <p className="text-[11px] text-[#716D67] dark:text-[#A8A29E]">Clean full-screen quiz runner with auto-save and responsive question palette.</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-2.5">
-                      <div className="w-5 h-5 rounded-md bg-[#7C3AED]/10 text-[#7C3AED] dark:bg-[#8B5CF6]/15 dark:text-[#A78BFA] flex items-center justify-center shrink-0 mt-0.5">
-                        <CheckCircle2 className="w-3 h-3" />
-                      </div>
-                      <div>
-                        <p className="font-bold text-[#242321] dark:text-[#F5F5F4] leading-tight">Instant Result Breakdown & Rationales</p>
-                        <p className="text-[11px] text-[#716D67] dark:text-[#A8A29E]">Immediate score feedback with clear explanations for all question solutions.</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-2.5">
-                      <div className="w-5 h-5 rounded-md bg-[#7C3AED]/10 text-[#7C3AED] dark:bg-[#8B5CF6]/15 dark:text-[#A78BFA] flex items-center justify-center shrink-0 mt-0.5">
-                        <ShieldCheck className="w-3 h-3" />
-                      </div>
-                      <div>
-                        <p className="font-bold text-[#242321] dark:text-[#F5F5F4] leading-tight">Academic Profile & Credit Wallet</p>
-                        <p className="text-[11px] text-[#716D67] dark:text-[#A8A29E]">Dedicated student dashboard with test history and allocated wallet balance.</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
 
-              {/* Step 1 Actions: Next Button */}
+                <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
+                  {/* 01 AI Powered */}
+                  <div className="flex items-center gap-1.5 xs:gap-2.5 p-1.5 xs:p-2 rounded-xl bg-white/80 dark:bg-[#080E1E]/80 border border-blue-100/90 dark:border-[#263957] shadow-2xs">
+                    <div className="w-6 h-6 xs:w-8 xs:h-8 rounded-full bg-[#278BFF] text-white flex items-center justify-center text-[10px] xs:text-xs font-black shrink-0 ring-1.5 xs:ring-2 ring-white dark:ring-[#111D35]">
+                      01
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h4 className="text-[11px] xs:text-xs font-bold text-slate-900 dark:text-[#F8FAFC] leading-tight truncate">
+                        AI Powered
+                      </h4>
+                      <p className="text-[9.5px] xs:text-[10.5px] text-slate-500 dark:text-[#A9B9D3] truncate">
+                        Create in minutes.
+                      </p>
+                    </div>
+                    <div className="w-6 h-6 xs:w-7 xs:h-7 rounded-full bg-blue-50 dark:bg-blue-950/70 text-[#278BFF] items-center justify-center shrink-0 hidden xs:flex">
+                      <Zap className="w-3 h-3 xs:w-3.5 xs:h-3.5" strokeWidth={2.3} />
+                    </div>
+                  </div>
+
+                  {/* 02 Print Ready */}
+                  <div className="flex items-center gap-1.5 xs:gap-2.5 p-1.5 xs:p-2 rounded-xl bg-white/80 dark:bg-[#080E1E]/80 border border-purple-100/90 dark:border-[#263957] shadow-2xs">
+                    <div className="w-6 h-6 xs:w-8 xs:h-8 rounded-full bg-[#8B4DFF] text-white flex items-center justify-center text-[10px] xs:text-xs font-black shrink-0 ring-1.5 xs:ring-2 ring-white dark:ring-[#111D35]">
+                      02
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h4 className="text-[11px] xs:text-xs font-bold text-slate-900 dark:text-[#F8FAFC] leading-tight truncate">
+                        Print Ready
+                      </h4>
+                      <p className="text-[9.5px] xs:text-[10.5px] text-slate-500 dark:text-[#A9B9D3] truncate">
+                        Exam papers.
+                      </p>
+                    </div>
+                    <div className="w-6 h-6 xs:w-7 xs:h-7 rounded-full bg-purple-50 dark:bg-purple-950/70 text-[#8B4DFF] items-center justify-center shrink-0 hidden xs:flex">
+                      <FileText className="w-3 h-3 xs:w-3.5 xs:h-3.5" strokeWidth={2.2} />
+                    </div>
+                  </div>
+
+                  {/* 03 Organized */}
+                  <div className="flex items-center gap-1.5 xs:gap-2.5 p-1.5 xs:p-2 rounded-xl bg-white/80 dark:bg-[#080E1E]/80 border border-emerald-100/90 dark:border-[#263957] shadow-2xs">
+                    <div className="w-6 h-6 xs:w-8 xs:h-8 rounded-full bg-[#10B981] text-white flex items-center justify-center text-[10px] xs:text-xs font-black shrink-0 ring-1.5 xs:ring-2 ring-white dark:ring-[#111D35]">
+                      03
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h4 className="text-[11px] xs:text-xs font-bold text-slate-900 dark:text-[#F8FAFC] leading-tight truncate">
+                        Organized
+                      </h4>
+                      <p className="text-[9.5px] xs:text-[10.5px] text-slate-500 dark:text-[#A9B9D3] truncate">
+                        Question banks.
+                      </p>
+                    </div>
+                    <div className="w-6 h-6 xs:w-7 xs:h-7 rounded-full bg-emerald-50 dark:bg-emerald-950/70 text-[#10B981] items-center justify-center shrink-0 hidden xs:flex">
+                      <Database className="w-3 h-3 xs:w-3.5 xs:h-3.5" strokeWidth={2.2} />
+                    </div>
+                  </div>
+
+                  {/* 04 Secure */}
+                  <div className="flex items-center gap-1.5 xs:gap-2.5 p-1.5 xs:p-2 rounded-xl bg-white/80 dark:bg-[#080E1E]/80 border border-rose-100/90 dark:border-[#263957] shadow-2xs">
+                    <div className="w-6 h-6 xs:w-8 xs:h-8 rounded-full bg-[#FF4D5A] text-white flex items-center justify-center text-[10px] xs:text-xs font-black shrink-0 ring-1.5 xs:ring-2 ring-white dark:ring-[#111D35]">
+                      04
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h4 className="text-[11px] xs:text-xs font-bold text-slate-900 dark:text-[#F8FAFC] leading-tight truncate">
+                        Secure
+                      </h4>
+                      <p className="text-[9.5px] xs:text-[10.5px] text-slate-500 dark:text-[#A9B9D3] truncate">
+                        Proctor radar.
+                      </p>
+                    </div>
+                    <div className="w-6 h-6 xs:w-7 xs:h-7 rounded-full bg-rose-50 dark:bg-rose-950/70 text-[#FF4D5A] items-center justify-center shrink-0 hidden xs:flex">
+                      <ShieldCheck className="w-3 h-3 xs:w-3.5 xs:h-3.5" strokeWidth={2.2} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 1 Actions: Continue Button */}
               <button
                 type="button"
                 onClick={() => setCurrentStep(2)}
-                className="w-full bg-[#C84B18] hover:bg-[#B33E0F] dark:bg-[#EA580C] dark:hover:bg-[#C2410C] text-white font-bold rounded-xl py-3 text-xs transition-all shadow-md shadow-[#C84B18]/20 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
+                className="w-full bg-[#1765F5] hover:bg-[#1253CE] text-white font-bold rounded-xl py-3 sm:py-3.5 text-xs sm:text-sm shadow-md shadow-blue-500/20 flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-[0.99]"
               >
                 <span>Continue to {authMode === "signup" ? "Account Details" : "Sign In"}</span>
                 <ArrowRight className="h-4 w-4" />
               </button>
 
-              {/* Taking a test shortcut */}
-              <div className="pt-1 text-center">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCurrentStep(2);
-                    setShowExamCodeGateway(true);
-                  }}
-                  className="text-xs font-semibold text-[#716D67] dark:text-[#A8A29E] hover:text-[#C84B18] dark:hover:text-[#EA580C] transition-colors inline-flex items-center gap-1.5 cursor-pointer"
-                >
-                  <FileCode2 className="h-3.5 w-3.5" />
-                  <span>Taking a Test? Enter Exam Code Directly →</span>
-                </button>
+              {/* Direct Code Gateway Link */}
+              <div className="space-y-3 pt-1">
+                <div className="relative flex items-center justify-center">
+                  <div className="border-t border-slate-200 dark:border-slate-800 w-full" />
+                  <span className="bg-white dark:bg-[#0D182E] px-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest shrink-0">
+                    OR
+                  </span>
+                  <div className="border-t border-slate-200 dark:border-slate-800 w-full" />
+                </div>
+
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCurrentStep(2);
+                      setShowExamCodeGateway(true);
+                    }}
+                    className="inline-flex items-center gap-2 text-xs font-semibold text-[#1765F5] dark:text-blue-400 hover:text-[#1253CE] dark:hover:text-blue-300 transition-colors cursor-pointer group"
+                  >
+                    <FileCode2 className="w-4 h-4" />
+                    <span>Taking a Test? Enter Exam Code Directly</span>
+                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                  </button>
+                </div>
+
+                <div className="text-center pt-1 border-t border-slate-100 dark:border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEmail("admin@aegeus.edu");
+                      setPassword("securepassword");
+                      setTargetDestination("/admin");
+                      setCurrentStep(2);
+                    }}
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 transition-colors cursor-pointer py-1"
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5 text-blue-500" />
+                    <span>Administrator? Sign in to Admin Control Center &rarr;</span>
+                  </button>
+                </div>
               </div>
             </div>
           )}
 
-          {/* ═══════════════════════════════════════════════════════════════
-              STEP 2: AUTHENTICATION FORM (WITH BACK BUTTON)
-              ═══════════════════════════════════════════════════════════════ */}
+          {/* ══════════════════════════════════════════════════════════════
+              STEP 2: AUTHENTICATION FORM
+          ══════════════════════════════════════════════════════════════ */}
           {currentStep === 2 && (
-            <div className="space-y-4 animate-in fade-in duration-200">
+            <div className="space-y-5 animate-in fade-in duration-200">
               {/* Step 2 Top Bar: Back Button & Active Role Badge */}
               <div className="flex items-center justify-between">
                 <button
                   type="button"
                   onClick={() => setCurrentStep(1)}
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#716D67] hover:text-[#242321] dark:text-[#A8A29E] dark:hover:text-white transition-colors cursor-pointer py-1 px-2.5 rounded-lg hover:bg-[#F0ECE4]/60 dark:hover:bg-[#292524] border border-[#E5E0D8]/60 dark:border-[#292524]"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors cursor-pointer py-1.5 px-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
                   <span>Back to Mode</span>
                 </button>
 
-                <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border ${
-                  regRole === "teacher"
-                    ? "bg-[#C84B18]/10 text-[#C84B18] dark:bg-[#EA580C]/15 dark:text-[#EA580C] border-[#C84B18]/20"
-                    : "bg-[#7C3AED]/10 text-[#7C3AED] dark:bg-[#8B5CF6]/15 dark:text-[#A78BFA] border-[#7C3AED]/20"
-                }`}>
+                <div className="flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-[#EEF5FF] dark:bg-blue-950/70 text-[#1765F5] dark:text-blue-400 border border-blue-200/70 dark:border-blue-800/60 shadow-2xs">
                   <img
-                    src={regRole === "teacher" ? "/images/teacher_mode_3d.jpg" : "/images/student_mode_3d.jpg"}
+                    src={regRole === "teacher" ? "/images/teacher_group_faculty.jpg?v=hd4" : "/images/student_group_college.jpg?v=hd4"}
                     alt=""
-                    className="w-4 h-4 rounded-full object-cover"
+                    className="w-4 h-4 rounded-full object-cover ring-1 ring-blue-500/30"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = regRole === "teacher" ? "/images/teacher_mode.jpg?v=3" : "/images/student_mode.jpg?v=3";
+                    }}
                   />
                   <span>{regRole === "teacher" ? "Instructor Mode" : "Candidate Mode"}</span>
                 </div>
               </div>
 
               <div>
-                <h2 className="text-xl font-bold text-[#242321] dark:text-[#F5F5F4] tracking-tight">
+                <h2 className="text-xl sm:text-2xl font-bold text-[#101D3A] dark:text-white tracking-tight">
                   {authMode === "signin" ? "Portal Sign In" : "Create New Account"}
                 </h2>
-                <p className="text-[#716D67] dark:text-[#A8A29E] text-xs mt-0.5">
-                  {authMode === "signin" 
+                <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm mt-0.5">
+                  {authMode === "signin"
                     ? `Sign in to access your ${regRole === "teacher" ? "instructor workspace" : "student portal"}`
                     : `Get started with your personalized ${regRole === "teacher" ? "teacher" : "student"} account`}
                 </p>
@@ -757,14 +855,12 @@ function LoginContent() {
                 </div>
               )}
 
-              {/* ═══════════════════════════════════════════════════════════════
-                  SIGN IN FORM
-                  ═══════════════════════════════════════════════════════════════ */}
+              {/* SIGN IN FORM */}
               {authMode === "signin" ? (
                 <form onSubmit={handleSignInSubmit} className="space-y-4">
                   {/* Email Field */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-[#57534E] dark:text-[#A8A29E] uppercase tracking-wider">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                       User Name / Email
                     </label>
                     <div className="relative">
@@ -774,16 +870,16 @@ function LoginContent() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="user@aegeus.edu"
-                        className="w-full bg-[#FBF9F5] dark:bg-[#1D1B19] border border-[#E5E0D8] dark:border-[#292524] rounded-xl pl-9.5 pr-3.5 py-2.5 text-sm text-[#242321] dark:text-[#F5F5F4] placeholder-[#A8A29E] focus:outline-none focus:ring-2 focus:ring-[#C84B18]/30 focus:border-[#C84B18] transition-all font-medium"
+                        className="w-full bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700 rounded-xl pl-10 pr-3.5 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1765F5]/40 focus:border-[#1765F5] transition-all font-medium"
                       />
-                      <Mail className="h-4 w-4 text-[#A8A29E] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <Mail className="h-4 w-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                     </div>
                   </div>
 
                   {/* Password Field */}
                   <div className="space-y-1.5">
                     <div className="flex justify-between items-center">
-                      <label className="text-xs font-bold text-[#57534E] dark:text-[#A8A29E] uppercase tracking-wider">
+                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                         Password
                       </label>
                       <button
@@ -794,7 +890,7 @@ function LoginContent() {
                           setForgotError(null);
                           setForgotModalOpen(true);
                         }}
-                        className="text-xs font-semibold text-[#C84B18] dark:text-[#EA580C] hover:underline cursor-pointer"
+                        className="text-xs font-semibold text-[#1765F5] dark:text-blue-400 hover:underline cursor-pointer"
                       >
                         Forgot Password?
                       </button>
@@ -805,14 +901,14 @@ function LoginContent() {
                         required
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        placeholder="••••••••"
-                        className="w-full bg-[#FBF9F5] dark:bg-[#1D1B19] border border-[#E5E0D8] dark:border-[#292524] rounded-xl pl-9.5 pr-10 py-2.5 text-sm text-[#242321] dark:text-[#F5F5F4] placeholder-[#A8A29E] focus:outline-none focus:ring-2 focus:ring-[#C84B18]/30 focus:border-[#C84B18] transition-all font-medium"
+                        placeholder="•••••••••"
+                        className="w-full bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700 rounded-xl pl-10 pr-10 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1765F5]/40 focus:border-[#1765F5] transition-all font-medium"
                       />
-                      <Lock className="h-4 w-4 text-[#A8A29E] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <Lock className="h-4 w-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#A8A29E] hover:text-[#242321] dark:hover:text-white cursor-pointer"
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
                       >
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
@@ -821,12 +917,12 @@ function LoginContent() {
 
                   {/* Remember Me Option */}
                   <div className="flex items-center justify-between pt-1">
-                    <label className="flex items-center gap-2 text-xs font-semibold text-[#716D67] dark:text-[#A8A29E] cursor-pointer select-none">
+                    <label className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-400 cursor-pointer select-none">
                       <input
                         type="checkbox"
                         checked={rememberMe}
                         onChange={(e) => setRememberMe(e.target.checked)}
-                        className="rounded border-[#E5E0D8] dark:border-[#292524] text-[#C84B18] focus:ring-[#C84B18]/30 cursor-pointer h-3.5 w-3.5"
+                        className="rounded border-slate-300 dark:border-slate-600 text-[#1765F5] focus:ring-[#1765F5]/30 cursor-pointer h-3.5 w-3.5"
                       />
                       <span>Remember my login email</span>
                     </label>
@@ -836,20 +932,27 @@ function LoginContent() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-[#C84B18] hover:bg-[#B33E0F] dark:bg-[#EA580C] dark:hover:bg-[#C2410C] text-white font-bold rounded-xl py-3 text-xs transition-all shadow-md shadow-[#C84B18]/20 flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full bg-[#1765F5] hover:bg-[#1253CE] text-white font-bold rounded-xl py-3.5 text-sm transition-all shadow-md shadow-blue-500/20 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99] disabled:opacity-60"
                   >
-                    {loading ? "Signing in..." : "Sign In to Portal"}
-                    {!loading && <ArrowRight className="h-4 w-4" />}
+                    {loading ? (
+                      <>
+                        <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
+                        <span>Signing in...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Sign In to Portal</span>
+                        <ArrowRight className="h-4 w-4" />
+                      </>
+                    )}
                   </button>
                 </form>
               ) : (
-                /* ═══════════════════════════════════════════════════════════════
-                   CREATE ACCOUNT (SIGN UP) FORM
-                   ═══════════════════════════════════════════════════════════════ */
+                /* CREATE ACCOUNT FORM */
                 <form onSubmit={handleRegisterSubmit} className="space-y-4">
                   {/* Full Name Field */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-[#57534E] dark:text-[#A8A29E] uppercase tracking-wider">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                       Full Name
                     </label>
                     <input
@@ -858,13 +961,13 @@ function LoginContent() {
                       value={regFullName}
                       onChange={(e) => setRegFullName(e.target.value)}
                       placeholder="e.g. Dr. Sarah Jenkins"
-                      className="w-full bg-[#FBF9F5] dark:bg-[#1D1B19] border border-[#E5E0D8] dark:border-[#292524] rounded-xl px-3.5 py-2.5 text-sm text-[#242321] dark:text-[#F5F5F4] placeholder-[#A8A29E] focus:outline-none focus:ring-2 focus:ring-[#C84B18]/30 focus:border-[#C84B18] transition-all font-medium"
+                      className="w-full bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1765F5]/40 focus:border-[#1765F5] transition-all font-medium"
                     />
                   </div>
 
                   {/* Email Field */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-[#57534E] dark:text-[#A8A29E] uppercase tracking-wider">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                       Email Address
                     </label>
                     <div className="relative">
@@ -874,20 +977,20 @@ function LoginContent() {
                         value={regEmail}
                         onChange={(e) => setRegEmail(e.target.value)}
                         placeholder="sarah@university.edu"
-                        className="w-full bg-[#FBF9F5] dark:bg-[#1D1B19] border border-[#E5E0D8] dark:border-[#292524] rounded-xl pl-9.5 pr-3.5 py-2.5 text-sm text-[#242321] dark:text-[#F5F5F4] placeholder-[#A8A29E] focus:outline-none focus:ring-2 focus:ring-[#C84B18]/30 focus:border-[#C84B18] transition-all font-medium"
+                        className="w-full bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700 rounded-xl pl-10 pr-3.5 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1765F5]/40 focus:border-[#1765F5] transition-all font-medium"
                       />
-                      <Mail className="h-4 w-4 text-[#A8A29E] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <Mail className="h-4 w-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                     </div>
                   </div>
 
                   {/* Password Field with Strength Indicator */}
                   <div className="space-y-1.5">
                     <div className="flex justify-between items-center">
-                      <label className="text-xs font-bold text-[#57534E] dark:text-[#A8A29E] uppercase tracking-wider">
+                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                         Create Password
                       </label>
                       {regPassword && (
-                        <span className="text-[10px] font-bold text-[#716D67] dark:text-[#A8A29E]">
+                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
                           Strength: <span className="font-semibold">{pwdStrength.text}</span>
                         </span>
                       )}
@@ -899,25 +1002,24 @@ function LoginContent() {
                         value={regPassword}
                         onChange={(e) => setRegPassword(e.target.value)}
                         placeholder="At least 6 characters"
-                        className="w-full bg-[#FBF9F5] dark:bg-[#1D1B19] border border-[#E5E0D8] dark:border-[#292524] rounded-xl pl-9.5 pr-10 py-2.5 text-sm text-[#242321] dark:text-[#F5F5F4] placeholder-[#A8A29E] focus:outline-none focus:ring-2 focus:ring-[#C84B18]/30 focus:border-[#C84B18] transition-all font-medium"
+                        className="w-full bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700 rounded-xl pl-10 pr-10 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1765F5]/40 focus:border-[#1765F5] transition-all font-medium"
                       />
-                      <Lock className="h-4 w-4 text-[#A8A29E] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <Lock className="h-4 w-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                       <button
                         type="button"
                         onClick={() => setRegShowPassword(!regShowPassword)}
-                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#A8A29E] hover:text-[#242321] dark:hover:text-white cursor-pointer"
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
                       >
                         {regShowPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
-                    {/* Strength Meter Bar */}
                     {regPassword && (
                       <div className="grid grid-cols-4 gap-1 pt-1">
                         {[1, 2, 3, 4].map((step) => (
                           <div
                             key={step}
                             className={`h-1 rounded-full transition-all ${
-                              step <= pwdStrength.score ? pwdStrength.color : "bg-[#E5E0D8] dark:bg-[#292524]"
+                              step <= pwdStrength.score ? pwdStrength.color : "bg-slate-200 dark:bg-slate-700"
                             }`}
                           />
                         ))}
@@ -927,7 +1029,7 @@ function LoginContent() {
 
                   {/* Confirm Password Field */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-[#57534E] dark:text-[#A8A29E] uppercase tracking-wider">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                       Confirm Password
                     </label>
                     <div className="relative">
@@ -937,9 +1039,9 @@ function LoginContent() {
                         value={regConfirmPassword}
                         onChange={(e) => setRegConfirmPassword(e.target.value)}
                         placeholder="Re-enter your password"
-                        className="w-full bg-[#FBF9F5] dark:bg-[#1D1B19] border border-[#E5E0D8] dark:border-[#292524] rounded-xl pl-9.5 pr-3.5 py-2.5 text-sm text-[#242321] dark:text-[#F5F5F4] placeholder-[#A8A29E] focus:outline-none focus:ring-2 focus:ring-[#C84B18]/30 focus:border-[#C84B18] transition-all font-medium"
+                        className="w-full bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700 rounded-xl pl-10 pr-3.5 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1765F5]/40 focus:border-[#1765F5] transition-all font-medium"
                       />
-                      <KeyRound className="h-4 w-4 text-[#A8A29E] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <KeyRound className="h-4 w-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                     </div>
                   </div>
 
@@ -947,21 +1049,30 @@ function LoginContent() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-[#C84B18] hover:bg-[#B33E0F] dark:bg-[#EA580C] dark:hover:bg-[#C2410C] text-white font-bold rounded-xl py-3 text-xs transition-all shadow-md shadow-[#C84B18]/20 flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full bg-[#1765F5] hover:bg-[#1253CE] text-white font-bold rounded-xl py-3.5 text-sm transition-all shadow-md shadow-blue-500/20 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99] disabled:opacity-60"
                   >
-                    {loading ? "Creating Account..." : "Create Account & Get Started"}
-                    {!loading && <ArrowRight className="h-4 w-4" />}
+                    {loading ? (
+                      <>
+                        <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
+                        <span>Creating Account...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Create Account & Get Started</span>
+                        <ArrowRight className="h-4 w-4" />
+                      </>
+                    )}
                   </button>
                 </form>
               )}
 
               {/* Divider */}
               <div className="relative flex items-center justify-center">
-                <div className="border-t border-[#E5E0D8] dark:border-[#292524] w-full" />
-                <span className="bg-white dark:bg-[#171615] px-3 text-[11px] font-semibold text-[#716D67] dark:text-[#A8A29E] uppercase tracking-wider shrink-0">
+                <div className="border-t border-slate-200 dark:border-slate-800 w-full" />
+                <span className="bg-white dark:bg-[#0D182E] px-3 text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider shrink-0">
                   or {authMode === "signup" ? "sign up with" : "continue with"}
                 </span>
-                <div className="border-t border-[#E5E0D8] dark:border-[#292524] w-full" />
+                <div className="border-t border-slate-200 dark:border-slate-800 w-full" />
               </div>
 
               {/* Google Identity Services Container */}
@@ -970,7 +1081,7 @@ function LoginContent() {
               </div>
 
               {/* Bottom Switcher: Sign In vs Create Account */}
-              <div className="text-center text-xs text-[#716D67] dark:text-[#A8A29E] pt-1">
+              <div className="text-center text-xs text-slate-500 dark:text-slate-400 pt-1">
                 {authMode === "signin" ? (
                   <p>
                     Don&apos;t have an account?{" "}
@@ -980,9 +1091,9 @@ function LoginContent() {
                         setAuthMode("signup");
                         setError(null);
                       }}
-                      className="font-bold text-[#C84B18] dark:text-[#EA580C] hover:underline cursor-pointer"
+                      className="font-bold text-[#1765F5] dark:text-blue-400 hover:underline cursor-pointer"
                     >
-                      Create one now →
+                      Create one now &rarr;
                     </button>
                   </p>
                 ) : (
@@ -994,36 +1105,39 @@ function LoginContent() {
                         setAuthMode("signin");
                         setError(null);
                       }}
-                      className="font-bold text-[#C84B18] dark:text-[#EA580C] hover:underline cursor-pointer"
+                      className="font-bold text-[#1765F5] dark:text-blue-400 hover:underline cursor-pointer"
                     >
-                      Sign in here →
+                      Sign in here &rarr;
                     </button>
                   </p>
                 )}
               </div>
 
               {/* Direct Exam Code Gateway Toggle */}
-              <div className="pt-2 border-t border-[#E5E0D8]/60 dark:border-[#292524]/60">
+              <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
                 {!showExamCodeGateway ? (
                   <button
                     type="button"
                     onClick={() => setShowExamCodeGateway(true)}
-                    className="w-full text-center text-xs font-semibold text-[#716D67] dark:text-[#A8A29E] hover:text-[#C84B18] dark:hover:text-[#EA580C] transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                    className="w-full text-center text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-[#1765F5] dark:hover:text-blue-400 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <FileCode2 className="h-3.5 w-3.5" />
                     <span>Taking a Test? Enter Exam Code</span>
                   </button>
                 ) : (
-                  <form onSubmit={handleDirectExamJump} className="space-y-2.5 bg-[#FBF9F5] dark:bg-[#1D1B19] p-3 rounded-xl border border-[#E5E0D8] dark:border-[#292524] overflow-hidden">
+                  <form
+                    onSubmit={handleDirectExamJump}
+                    className="space-y-2.5 bg-slate-50 dark:bg-slate-900/60 p-3 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden"
+                  >
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold text-[#57534E] dark:text-[#A8A29E] uppercase tracking-wider flex items-center gap-1.5">
-                        <FileCode2 className="h-3.5 w-3.5 text-[#C84B18] dark:text-[#EA580C]" />
+                      <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                        <FileCode2 className="h-3.5 w-3.5 text-[#1765F5]" />
                         <span>Candidate Direct Access</span>
                       </span>
                       <button
                         type="button"
                         onClick={() => setShowExamCodeGateway(false)}
-                        className="p-1 -mr-1 rounded-lg text-[#716D67] hover:text-[#242321] dark:hover:text-white hover:bg-[#E5E0D8]/50 dark:hover:bg-[#292524] transition-colors cursor-pointer"
+                        className="p-1 -mr-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors cursor-pointer"
                         title="Close"
                       >
                         <X className="h-3.5 w-3.5" />
@@ -1037,12 +1151,12 @@ function LoginContent() {
                           value={examCodeInput}
                           onChange={(e) => setExamCodeInput(e.target.value)}
                           placeholder="e.g. ex-com-1234"
-                          className="w-full h-9 bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-lg px-2.5 text-xs text-[#242321] dark:text-[#F5F5F4] placeholder:text-[#A8A29E] focus:outline-none focus:ring-1 focus:ring-[#C84B18]"
+                          className="w-full h-9 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1765F5]/40"
                         />
                       </div>
                       <button
                         type="submit"
-                        className="h-9 px-3.5 bg-[#C84B18] text-white rounded-lg text-xs font-bold hover:bg-[#B33E0F] active:scale-[0.98] transition-all flex items-center justify-center gap-1 shrink-0 cursor-pointer shadow-xs whitespace-nowrap"
+                        className="h-9 px-3.5 bg-[#1765F5] text-white rounded-lg text-xs font-bold hover:bg-[#1253CE] active:scale-[0.98] transition-all flex items-center justify-center gap-1 shrink-0 cursor-pointer shadow-xs whitespace-nowrap"
                       >
                         <span>Take Exam</span>
                         <ArrowRight className="h-3 w-3" />
@@ -1053,93 +1167,86 @@ function LoginContent() {
               </div>
             </div>
           )}
-        </div>
-        
-        {/* Footer Security Badge & Developer Credit */}
-        <div className="flex items-center justify-center gap-3 text-xs text-[#64748B] dark:text-[#A3B1C6]">
-          <div className="flex items-center gap-1 font-medium text-[11px]">
-            <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-            <span>AES-256 Secure</span>
-          </div>
-          <span className="text-slate-300 dark:text-slate-700">•</span>
-          <div className="flex items-center gap-1 text-[11px]">
-            <span>Developed by</span>
-            <a 
-              href="https://dpramp.com" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="inline-flex items-center gap-0.5 font-bold text-[#2563EB] dark:text-[#60A5FA] hover:underline"
-            >
-              <span>dpramp.com</span>
-              <ExternalLink className="w-2.5 h-2.5" />
-            </a>
-          </div>
-        </div>
-      </div>
-
-      {/* ═══════ FORGOT PASSWORD MODAL ═══════ */}
-      {forgotModalOpen && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-3 sm:p-4 animate-in fade-in"
-          onClick={() => setForgotModalOpen(false)}
-        >
-          <div 
-            className="bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl p-4 sm:p-6 max-w-md w-full shadow-2xl space-y-4 relative max-h-[92vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={() => setForgotModalOpen(false)}
-              className="absolute top-4 right-4 text-[#716D67] hover:text-[#242321] dark:hover:text-white p-1 rounded-lg hover:bg-[#F0ECE4]/50 dark:hover:bg-[#292524]"
-            >
-              <X className="h-4 w-4" />
-            </button>
-
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#C84B18]/10 text-[#C84B18] dark:bg-[#EA580C]/15 dark:text-[#EA580C] flex items-center justify-center font-bold">
-                <KeyRound className="h-5 w-5" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-[#242321] dark:text-[#F5F5F4]">Password Recovery</h3>
-                <p className="text-xs text-[#716D67] dark:text-[#A8A29E]">Receive a tokenized reset password link</p>
-              </div>
             </div>
 
+            {/* 4. FOOTER SECURITY & TRUST */}
+            <footer className="w-full max-w-[560px] mx-auto px-4 pt-4 pb-6 flex items-center justify-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+              <div className="flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                <span className="font-medium">AES-256 Secure</span>
+              </div>
+              <span className="text-slate-300 dark:text-slate-700">|</span>
+              <div className="flex items-center gap-1">
+                <span>Developed by</span>
+                <a
+                  href="https://dpramp.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#1765F5] dark:text-blue-400 font-semibold hover:underline inline-flex items-center gap-0.5"
+                >
+                  <span>dpramp.com</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
+            </footer>
+        </div>
+      </main>
+
+      {/* 5. FORGOT PASSWORD MODAL */}
+      {forgotModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
+          <div className="bg-white dark:bg-[#0D182E] border border-slate-200 dark:border-slate-800 rounded-2xl max-w-sm w-full p-5 sm:p-6 shadow-2xl space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                Reset Password
+              </h3>
+              <button
+                type="button"
+                onClick={() => setForgotModalOpen(false)}
+                className="text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Enter your registered account email. If the account exists, we will dispatch a secure reset token link.
+            </p>
+
+            {forgotError && (
+              <div className="p-3 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs rounded-xl flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
+                <span>{forgotError}</span>
+              </div>
+            )}
+
             {forgotMessage ? (
-              <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs space-y-2">
-                <div className="flex items-center gap-2 font-bold">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-                  <span>Recovery Dispatched</span>
+              <div className="space-y-3">
+                <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs rounded-xl flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500" />
+                  <span>{forgotMessage}</span>
                 </div>
-                <p>{forgotMessage}</p>
                 <button
                   type="button"
                   onClick={() => setForgotModalOpen(false)}
-                  className="mt-2 w-full py-2 bg-emerald-600 text-white rounded-lg font-bold text-xs hover:bg-emerald-700"
+                  className="w-full py-2.5 bg-[#1765F5] hover:bg-[#1253CE] text-white rounded-xl text-xs font-bold transition-all"
                 >
-                  Return to Sign In
+                  Close
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleForgotPassword} className="space-y-3.5">
-                {forgotError && (
-                  <div className="p-3 rounded-lg bg-rose-50 text-rose-700 text-xs border border-rose-200">
-                    {forgotError}
-                  </div>
-                )}
-                
-                <p className="text-xs text-[#716D67] dark:text-[#A8A29E] leading-relaxed">
-                  Enter your verified student or faculty email address below. We will send you a tokenized password reset link immediately.
-                </p>
-
+              <form onSubmit={handleForgotPassword} className="space-y-3">
                 <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-[#57534E] dark:text-[#A8A29E] uppercase">Registered Email</label>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                    Account Email
+                  </label>
                   <input
                     type="email"
                     required
                     value={forgotEmail}
                     onChange={(e) => setForgotEmail(e.target.value)}
-                    placeholder="e.g. teacher@aegeus.edu"
-                    className="w-full bg-[#FBF9F5] dark:bg-[#1D1B19] border border-[#E5E0D8] dark:border-[#292524] rounded-xl px-3 py-2 text-sm text-[#242321] dark:text-[#F5F5F4] focus:outline-none focus:ring-2 focus:ring-[#C84B18]/30"
+                    placeholder="name@university.edu"
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#1765F5]/40"
                   />
                 </div>
 
@@ -1147,14 +1254,14 @@ function LoginContent() {
                   <button
                     type="button"
                     onClick={() => setForgotModalOpen(false)}
-                    className="flex-1 py-2.5 rounded-xl border border-[#E5E0D8] dark:border-[#292524] text-xs font-semibold text-[#716D67] hover:bg-[#F0ECE4]/50"
+                    className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={forgotLoading}
-                    className="flex-1 py-2.5 bg-[#C84B18] hover:bg-[#B33E0F] text-white rounded-xl text-xs font-bold shadow-xs flex items-center justify-center gap-1.5"
+                    className="flex-1 py-2.5 bg-[#1765F5] hover:bg-[#1253CE] text-white rounded-xl text-xs font-bold shadow-xs flex items-center justify-center gap-1.5 transition-all disabled:opacity-60"
                   >
                     {forgotLoading ? "Dispatching..." : "Send Reset Link"}
                   </button>
@@ -1164,19 +1271,19 @@ function LoginContent() {
           </div>
         </div>
       )}
-
-      {/* ═══════ FORGOT PASSWORD MODAL ═══════ */}
     </div>
   );
 }
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-[#F7F4EF] dark:bg-[#0F0E0D] flex items-center justify-center">
-        <div className="w-6 h-6 rounded-full border-2 border-[#C84B18] border-t-transparent animate-spin" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#F4F7FB] dark:bg-[#070F1E] flex items-center justify-center">
+          <div className="w-7 h-7 rounded-full border-2 border-[#1765F5] border-t-transparent animate-spin" />
+        </div>
+      }
+    >
       <LoginContent />
     </Suspense>
   );

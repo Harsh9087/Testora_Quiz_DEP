@@ -1,21 +1,31 @@
-from sqlalchemy import Column, String, ForeignKey, Boolean, DateTime, Integer
+from sqlalchemy import Column, String, ForeignKey, Boolean, DateTime, Integer, UniqueConstraint
 from sqlalchemy.orm import relationship
 from app.models.base import TimeStampedModel
 
 class User(TimeStampedModel):
     __tablename__ = "users"
+    __table_args__ = (
+        UniqueConstraint("email", "role", name="uq_users_email_role"),
+        UniqueConstraint("google_subject", "role", name="uq_users_google_subject_role"),
+    )
     
-    email = Column(String(255), unique=True, index=True, nullable=False)
+    email = Column(String(255), index=True, nullable=False)
     hashed_password = Column(String(255), nullable=False)
     full_name = Column(String(255), nullable=False)
     role = Column(String(50), nullable=False)  # "super_admin", "inst_admin", "teacher", "student"
     institution_id = Column(String(36), ForeignKey("institutions.id"), nullable=True)
+    institution_name = Column(String(255), nullable=True)
+    department = Column(String(255), nullable=True)
+    class_name = Column(String(100), nullable=True)
+    section = Column(String(50), nullable=True)
+    batch = Column(String(100), nullable=True)
+    phone = Column(String(50), nullable=True)
     is_active = Column(Boolean, default=True)
     is_verified = Column(Boolean, default=True)
     verification_token = Column(String(255), nullable=True)
     auth_provider = Column(String(50), default="local") # "local", "google"
     google_id = Column(String(255), nullable=True)
-    google_subject = Column(String(255), unique=True, index=True, nullable=True)
+    google_subject = Column(String(255), index=True, nullable=True)
     avatar_url = Column(String(500), nullable=True)
     last_login_at = Column(DateTime, nullable=True)
     reset_token = Column(String(255), nullable=True)

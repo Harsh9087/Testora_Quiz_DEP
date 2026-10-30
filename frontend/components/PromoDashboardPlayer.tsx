@@ -110,25 +110,74 @@ export default function PromoDashboardPlayer() {
     setIsPlaying(true);
   };
 
-  // If a real MP4 video file is placed by the user, render pure full-frame video player (no timeline, no floating symbols, repeated looping)
+  const toggleMute = () => {
+    if (videoRef.current) {
+      videoRef.current.muted = !videoRef.current.muted;
+      setIsMuted(videoRef.current.muted);
+    } else {
+      setIsMuted((prev) => !prev);
+    }
+  };
+
+  // If a real MP4 video file is placed by the user, render video player with custom frame badges
   if (videoAvailable && !forcePreview) {
     return (
-      <div className="relative w-full aspect-video bg-black overflow-hidden select-none">
-        <video
-          ref={videoRef}
-          src="/videos/hero-section-video.mp4"
-          autoPlay
-          loop
-          muted
-          playsInline
-          onError={() => setVideoAvailable(false)}
-          className="w-full h-full object-cover block"
-        >
-          <source src="/videos/hero-section-video.mp4" type="video/mp4" />
-          <source src="/videos/hero%20setion%20video%20.mp4" type="video/mp4" />
-          <source src="/videos/testora-promo.mp4" type="video/mp4" />
-          Your browser does not support the video tag.
-        </video>
+      <div className="relative w-full group select-none">
+        {/* Subtle Cyber/Tech Corner Accent Brackets */}
+        <div className="absolute -top-2.5 -right-2.5 w-7 h-7 sm:w-9 sm:h-9 border-t-2 border-r-2 border-cyan-400/70 rounded-tr-xl pointer-events-none z-20 transition-transform duration-300 group-hover:scale-105" />
+        <div className="absolute -bottom-2.5 -left-2.5 w-7 h-7 sm:w-9 sm:h-9 border-b-2 border-l-2 border-cyan-400/70 rounded-bl-xl pointer-events-none z-20 transition-transform duration-300 group-hover:scale-105" />
+
+        {/* Top-Left Floating Pill Badge: 4.8★ Top Rated */}
+        <div className="absolute -top-3.5 left-4 sm:left-6 z-30 inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-[#081226]/95 dark:bg-[#070D1B]/95 backdrop-blur-md border border-slate-700/70 text-white shadow-xl shadow-black/40 text-xs sm:text-[13px] font-semibold tracking-wide">
+          <span className="w-4 h-4 sm:w-4.5 sm:h-4.5 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center text-[10px] sm:text-xs font-black shadow-xs shrink-0">
+            ★
+          </span>
+          <span className="text-white font-bold">4.8★</span>
+          <span className="text-slate-300 font-medium">Top Rated</span>
+        </div>
+
+        {/* Bottom-Right Floating Pill Badge: 100K+ Tests Taken */}
+        <div className="absolute -bottom-3.5 right-4 sm:right-6 z-30 inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-1 sm:py-1.5 rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white font-bold text-xs sm:text-[13px] shadow-lg shadow-blue-500/35 border border-white/25 backdrop-blur-sm tracking-wide">
+          <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-200 fill-cyan-200 shrink-0" />
+          <span>100K+ Tests Taken</span>
+        </div>
+
+        {/* Inner Video Container */}
+        <div className="relative w-full aspect-video rounded-2xl sm:rounded-3xl overflow-hidden bg-black shadow-2xl shadow-blue-900/20 dark:shadow-black/80 border border-slate-700/60 dark:border-slate-800 ring-1 ring-slate-900/5 dark:ring-white/10">
+          <video
+            ref={videoRef}
+            src="/videos/hero-section-video.mp4"
+            autoPlay
+            loop
+            muted={isMuted}
+            playsInline
+            onError={() => setVideoAvailable(false)}
+            className="w-full h-full object-cover block"
+          >
+            <source src="/videos/hero-section-video.mp4" type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+
+          {/* Bottom-Left Audio Toggle Control Button */}
+          <button
+            type="button"
+            onClick={toggleMute}
+            className="absolute bottom-3.5 sm:bottom-4 left-3.5 sm:left-4 z-20 inline-flex items-center gap-2 px-3 sm:px-3.5 py-1.5 rounded-full bg-black/65 hover:bg-black/85 backdrop-blur-md text-white text-xs font-medium border border-white/20 transition-all shadow-lg active:scale-95 cursor-pointer"
+            title={isMuted ? "Turn on sound" : "Turn off sound"}
+          >
+            {isMuted ? (
+              <>
+                <VolumeX className="w-3.5 h-3.5 text-slate-300" />
+                <span>Turn on sound</span>
+              </>
+            ) : (
+              <>
+                <Volume2 className="w-3.5 h-3.5 text-blue-400 animate-pulse" />
+                <span>Sound on</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
     );
   }
@@ -141,7 +190,27 @@ export default function PromoDashboardPlayer() {
     : circumference - (scoreCount / 100) * circumference;
 
   return (
-    <div className="relative w-full aspect-video rounded-3xl overflow-hidden shadow-2xl border border-slate-200/90 dark:border-slate-800/90 bg-gradient-to-br from-white via-slate-50 to-blue-50/40 dark:from-[#070D1B] dark:via-[#0B152B] dark:to-[#050914] text-slate-900 dark:text-white flex flex-col justify-between p-4 sm:p-6 select-none group ring-1 ring-slate-900/5 dark:ring-white/10 transition-colors duration-300">
+    <div className="relative w-full group select-none">
+      {/* Subtle Cyber/Tech Corner Accent Brackets */}
+      <div className="absolute -top-2.5 -right-2.5 w-7 h-7 sm:w-9 sm:h-9 border-t-2 border-r-2 border-cyan-400/70 rounded-tr-xl pointer-events-none z-20 transition-transform duration-300 group-hover:scale-105" />
+      <div className="absolute -bottom-2.5 -left-2.5 w-7 h-7 sm:w-9 sm:h-9 border-b-2 border-l-2 border-cyan-400/70 rounded-bl-xl pointer-events-none z-20 transition-transform duration-300 group-hover:scale-105" />
+
+      {/* Top-Left Floating Pill Badge: 4.8★ Top Rated */}
+      <div className="absolute -top-3.5 left-4 sm:left-6 z-30 inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-[#081226]/95 dark:bg-[#070D1B]/95 backdrop-blur-md border border-slate-700/70 text-white shadow-xl shadow-black/40 text-xs sm:text-[13px] font-semibold tracking-wide">
+        <span className="w-4 h-4 sm:w-4.5 sm:h-4.5 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center text-[10px] sm:text-xs font-black shadow-xs shrink-0">
+          ★
+        </span>
+        <span className="text-white font-bold">4.8★</span>
+        <span className="text-slate-300 font-medium">Top Rated</span>
+      </div>
+
+      {/* Bottom-Right Floating Pill Badge: 100K+ Tests Taken */}
+      <div className="absolute -bottom-3.5 right-4 sm:right-6 z-30 inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-1 sm:py-1.5 rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white font-bold text-xs sm:text-[13px] shadow-lg shadow-blue-500/35 border border-white/25 backdrop-blur-sm tracking-wide">
+        <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-200 fill-cyan-200 shrink-0" />
+        <span>100K+ Tests Taken</span>
+      </div>
+
+      <div className="relative w-full aspect-video rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border border-slate-200/90 dark:border-slate-800/90 bg-gradient-to-br from-white via-slate-50 to-blue-50/40 dark:from-[#070D1B] dark:via-[#0B152B] dark:to-[#050914] text-slate-900 dark:text-white flex flex-col justify-between p-4 sm:p-6 select-none group ring-1 ring-slate-900/5 dark:ring-white/10 transition-colors duration-300">
 
       {/* Background Ambient Glows & Grid Pattern */}
       <div className="absolute -top-28 -left-28 w-80 h-80 rounded-full bg-blue-400/10 dark:bg-blue-600/20 blur-3xl pointer-events-none" />
@@ -464,6 +533,7 @@ export default function PromoDashboardPlayer() {
         </div>
       </div>
 
+    </div>
     </div>
   );
 }

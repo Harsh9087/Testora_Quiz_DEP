@@ -1,3 +1,4 @@
+import sqlalchemy as sa
 import json
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, Header, Query
@@ -383,20 +384,17 @@ def get_my_progress(
     topic accuracy breakdown, and weak-topic callouts for the student.
     """
     # 1. Fetch student's submitted exam attempts strictly for current_user
-    student_records = db.query(Student).filter(
-        (Student.user_id == current_user.id) |
-        (Student.user.has(User.email == current_user.email))
-    ).all()
+    student_records = db.query(Student).filter(Student.user_id == current_user.id).all()
     student_ids = [s.id for s in student_records]
     
+    conds = [ExamSubmission.student_user_id == current_user.id]
     if student_ids:
-        submissions = db.query(ExamSubmission).join(ExamCredential).filter(
-            ExamSubmission.status.in_(["submitted", "auto_submitted"]),
-            ExamCredential.student_id.in_(student_ids)
-        ).order_by(ExamSubmission.submitted_at.asc()).all()
-    else:
-        # Strict tenant isolation: new students with no submissions get an empty list
-        submissions = []
+        conds.append(ExamSubmission.student_id.in_(student_ids))
+        
+    submissions = db.query(ExamSubmission).filter(
+        ExamSubmission.status.in_(["submitted", "auto_submitted"]),
+        sa.or_(*conds)
+    ).order_by(ExamSubmission.submitted_at.asc()).all()
         
     if not submissions:
         return {
@@ -523,46 +521,56 @@ def get_my_submissions(
             )
         submissions = query.order_by(ExamSubmission.submitted_at.desc()).all()
     else:
-        # Find student records strictly matching current_user ID or unique email
-        student_records = db.query(Student).filter(
-            (Student.user_id == current_user.id) |
-            (Student.user.has(User.email == current_user.email))
-        ).all()
-        
+        # Find student records strictly matching current_user ID (role-isolated)
+        student_records = db.query(Student).filter(Student.user_id == current_user.id).all()
         student_ids = [s.id for s in student_records]
         
+        conds = [ExamSubmission.student_user_id == current_user.id]
         if student_ids:
-            submissions = db.query(ExamSubmission).join(ExamCredential).filter(
-                ExamSubmission.status.in_(valid_statuses),
-                ExamCredential.student_id.in_(student_ids)
-            ).order_by(ExamSubmission.submitted_at.desc()).all()
-        else:
-            # Strict multi-tenant isolation: brand-new accounts have 0 submissions
-            submissions = []
+            conds.append(ExamSubmission.student_id.in_(student_ids))
+            
+        submissions = db.query(ExamSubmission).filter(
+            ExamSubmission.status.in_(valid_statuses),
+            sa.or_(*conds)
+        ).order_by(ExamSubmission.submitted_at.desc()).all()
         
     result = []
     for s in submissions:
-        student_obj = s.credential.student if s.credential else None
-        student_user = student_obj.user if student_obj else None
+        student_obj = s.student or (s.credential.student if s.credential else None)
+        student_user = s.student_user or (student_obj.user if student_obj else None)
         is_published = getattr(s.exam, "is_result_published", True) if s.exam else True
         
         # If student caller and exam results not published by teacher yet, mask score
         show_score = is_teacher or is_published
+        
+        teacher_name = s.exam.teacher_name_snapshot or (s.exam.creator.full_name if s.exam and s.exam.creator else "Instructor")
+        teacher_email = s.exam.teacher_email_snapshot or (s.exam.creator.email if s.exam and s.exam.creator else None)
+        inst_name = s.exam.institution_name or (s.exam.creator.institution_name if s.exam and s.exam.creator else None)
+        subj_name = s.exam.subject_name_snapshot or (s.exam.subject.name if s.exam and s.exam.subject else None)
         
         result.append({
             "id": s.id,
             "submission_id": s.id,
             "exam_id": s.exam_id,
             "exam_name": s.exam.name if s.exam else "Exam Quiz",
-            "student_name": student_user.full_name if student_user else "Guest Student",
+            "student_name": student_user.full_name if student_user else (current_user.full_name if current_user.id == s.student_user_id else "Guest Student"),
             "roll_number": student_obj.roll_number if student_obj else "",
-            "student_email": student_user.email if student_user else "",
+            "student_email": student_user.email if student_user else (current_user.email if current_user.id == s.student_user_id else ""),
             "score": s.score if show_score else None,
             "max_score": s.exam.total_marks if s.exam else 50.0,
             "percentage": s.percentage if show_score else None,
             "is_result_published": is_published,
             "results_status": "published" if is_published else "pending_review",
-            "submitted_at": s.submitted_at.isoformat() if s.submitted_at else ""
+            "submitted_at": s.submitted_at.isoformat() if s.submitted_at else "",
+            "attempt_status": s.status,
+            "teacher_name": teacher_name,
+            "teacher_email": teacher_email,
+            "teacher_institution": inst_name,
+            "institution_name": inst_name,
+            "subject_name": subj_name,
+            "class_name": s.exam.class_name if s.exam else None,
+            "section": s.exam.section if s.exam else None,
+            "batch": s.exam.batch if s.exam else None
         })
         
     # Context-aware sorting:

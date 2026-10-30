@@ -7,22 +7,15 @@ import {
   Sparkles, 
   X, 
   Search, 
-  ChevronRight, 
   ClipboardList, 
   Wand2, 
   FileEdit, 
-  ShieldAlert, 
   Users, 
-  CheckCircle2, 
-  HelpCircle,
-  ArrowRight,
-  BookOpen,
-  Send,
-  ExternalLink,
-  KeyRound,
-  ShieldCheck,
-  RefreshCw,
-  Cpu
+  Send, 
+  ExternalLink, 
+  KeyRound, 
+  ShieldCheck, 
+  RefreshCw 
 } from "lucide-react";
 
 export interface GuideTopic {
@@ -45,16 +38,16 @@ export const GUIDE_TOPICS: GuideTopic[] = [
     id: "create-quiz",
     title: "Create Smart Tests with AI",
     shortTitle: "Create Tests",
-    badge: "Instructor Studio",
+    badge: "Faculty Account Required",
     icon: FileEdit,
-    color: "text-blue-500 bg-blue-500/10 border-blue-500/20",
+    color: "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 border-blue-200/80 dark:border-blue-800/40",
     summary: "Synthesize calibrated assessments from syllabus blueprints, textbook chapters, or custom question banks with Gemini Pro AI.",
     steps: [
       "Open 'Teacher Assessment Studio' from the home card or faculty dashboard.",
-      "Click 'Create Test' and select your domain (e.g. Computer Science, Engineering, Mathematics).",
+      "Click 'Create Test' and select your academic domain (e.g. Computer Science, Engineering, Mathematics).",
       "Upload course PDFs or DOCX files into the ChromaDB vector knowledge base for exact syllabus alignment.",
-      "Choose question distribution: MCQs, Subjective, True/False, and calibrate Bloom taxonomy difficulty.",
-      "Review synthesized items with auto-formatted LaTeX formulas, edit questions, set time limits, and publish."
+      "Choose question distribution: MCQs, Subjective, True/False, and calibrate Bloom's taxonomy cognitive levels (L1 to L6).",
+      "Review synthesized items with auto-formatted KaTeX formulas, configure proctoring limits, and publish your test."
     ],
     actionText: "Open Instructor Studio →",
     actionUrl: "/dashboard/teacher",
@@ -65,16 +58,16 @@ export const GUIDE_TOPICS: GuideTopic[] = [
     id: "student-portal",
     title: "Take Your Test (Exam Code Access)",
     shortTitle: "Take Test",
-    badge: "Candidate HUD",
+    badge: "Exam Code Required",
     icon: KeyRound,
-    color: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20",
+    color: "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 border-emerald-200/80 dark:border-emerald-800/40",
     summary: "Students can access scheduled exams using a unique 6-digit access code without complicated account setups.",
     steps: [
       "Click 'Enter Exam Code' or visit the Candidate Portal.",
-      "Enter the 6-digit assessment access code provided by your instructor.",
+      "Enter the 6-digit assessment access code provided by your course instructor.",
       "Verify your full name, roll number, and student credentials on the verification screen.",
       "Complete the system proctoring check (camera, fullscreen mode, and browser permissions).",
-      "Answer questions with real-time autosave. Every answer is preserved locally and synced to the cloud."
+      "Answer questions with real-time autosave. Every response is securely preserved locally and synced to the cloud."
     ],
     actionText: "Enter Exam Code Now →",
     actionUrl: "modal:exam-code",
@@ -87,16 +80,16 @@ export const GUIDE_TOPICS: GuideTopic[] = [
     shortTitle: "Student Forms",
     badge: "No Login Needed",
     icon: ClipboardList,
-    color: "text-amber-500 bg-amber-500/10 border-amber-500/20",
+    color: "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 border-amber-200/80 dark:border-amber-800/40",
     summary: "Collect verified student information via shareable mobile-friendly online forms and import directly to student rosters.",
     steps: [
       "Navigate to 'Forms & Registrations' from the faculty dashboard sidebar.",
       "Click 'Create Registration Form' and enter the Form Name (e.g. 'CS Branch Batch 2026').",
       "Copy the unique shareable link or present the QR code for students to scan on mobile.",
       "Students fill in their Name, Email, Roll Number, and Phone without creating accounts or signing in.",
-      "Review live submissions with duplicate roll number detection, and click 'Import to Directory' or 'Export Excel'."
+      "Access submitted responses in the dashboard and export directly to CSV / Excel or import into student rosters."
     ],
-    actionText: "Create Student Form →",
+    actionText: "Open Forms & Registrations →",
     actionUrl: "/dashboard/teacher",
     actionType: "link",
     keywords: ["form", "registration", "student form", "collect", "qr", "link", "no login", "data", "excel", "roster"]
@@ -105,16 +98,16 @@ export const GUIDE_TOPICS: GuideTopic[] = [
     id: "custom-forms",
     title: "AI-Powered Custom Form Builder",
     shortTitle: "AI Form Builder",
-    badge: "Natural Language",
+    badge: "Faculty / Admin Studio",
     icon: Wand2,
-    color: "text-purple-500 bg-purple-500/10 border-purple-500/20",
+    color: "text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/50 border-purple-200/80 dark:border-purple-800/40",
     summary: "Describe any workshop evaluation, feedback survey, or event registration in plain English, and AI synthesizes the form instantly.",
     steps: [
-      "Open 'AI Form Builder' from the faculty dashboard.",
-      "Type a natural language prompt (e.g. 'Create a Faculty Development Program feedback form with ratings and suggestions').",
-      "Click 'Generate Form with AI' — Gemini synthesizes structured fields, rating scales, and choices in seconds.",
+      "Open 'Custom Forms' from the faculty sidebar and click 'Generate with AI'.",
+      "Enter a natural language description of your form (e.g. 'Post-exam feedback with rating scales and open comments').",
+      "AI automatically generates calibrated form sections, dropdowns, checkboxes, and text inputs.",
       "Customize field labels, toggle required validation, and click 'Publish & Copy Link'.",
-      "Analyze response charts and export submissions directly to CSV/Excel."
+      "Analyze response charts and export submissions directly to CSV / Excel."
     ],
     actionText: "Open AI Form Studio →",
     actionUrl: "/dashboard/teacher",
@@ -127,7 +120,7 @@ export const GUIDE_TOPICS: GuideTopic[] = [
     shortTitle: "Anti-Cheat",
     badge: "Server-Enforced",
     icon: ShieldCheck,
-    color: "text-cyan-500 bg-cyan-500/10 border-cyan-500/20",
+    color: "text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-950/50 border-cyan-200/80 dark:border-cyan-800/40",
     summary: "Server-side focus monitoring and strict tab-switch telemetry prevent cheating and unauthorized browsing during active exams.",
     steps: [
       "Tab-Switch Detection: Exactly 1 tab violation is permitted with a prominent warning modal.",
@@ -146,7 +139,7 @@ export const GUIDE_TOPICS: GuideTopic[] = [
     shortTitle: "Directories",
     badge: "Roster Management",
     icon: Users,
-    color: "text-rose-500 bg-rose-500/10 border-rose-500/20",
+    color: "text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/50 border-rose-200/80 dark:border-rose-800/40",
     summary: "Maintain cohorts, divisions, and batches for targeting assessments to specific groups of students.",
     steps: [
       "Access 'Student Directory' in the faculty dashboard sidebar.",
@@ -167,8 +160,8 @@ interface AIAgentGuideWidgetProps {
   onOpenExamModal?: () => void;
 }
 
-export default function AIAgentGuideWidget({ 
-  isOpen: controlledOpen, 
+export default function AIAgentGuideWidget({
+  isOpen: controlledOpen,
   onOpenChange,
   onOpenExamModal
 }: AIAgentGuideWidgetProps = {}) {
@@ -181,8 +174,7 @@ export default function AIAgentGuideWidget({
     onOpenChange?.(val);
   };
 
-  const [selectedTopicId, setSelectedTopicId] = useState<string>("create-quiz");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTopicId, setSelectedTopicId] = useState<string>("student-forms");
   const [userQuestion, setUserQuestion] = useState("");
   const [answeredQuery, setAnsweredQuery] = useState<string | null>(null);
 
@@ -254,6 +246,20 @@ export default function AIAgentGuideWidget({
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  // Keyboard navigation: Escape key closes the widget
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen]);
 
   // Click outside listener to close widget gently
   useEffect(() => {
@@ -336,7 +342,7 @@ export default function AIAgentGuideWidget({
     setIsDragging(false);
 
     if (dragRef.current.hasMoved) {
-      // It was a drag: persist position to localStorage
+      // Drag action: persist position to localStorage
       const dx = e.clientX - dragRef.current.startX;
       const dy = e.clientY - dragRef.current.startY;
       const maxX = Math.max(PADDING, window.innerWidth - BTN_SIZE - PADDING);
@@ -349,7 +355,7 @@ export default function AIAgentGuideWidget({
         // ignore
       }
     } else {
-      // It was a click without movement: toggle assistant
+      // Click without drag: toggle assistant
       setIsOpen(!isOpen);
     }
   };
@@ -374,7 +380,6 @@ export default function AIAgentGuideWidget({
 
     setAnsweredQuery(q);
 
-    // Score each topic based on keywords, title, summary, and steps
     let bestTopic = GUIDE_TOPICS[0];
     let highestScore = -1;
 
@@ -418,7 +423,10 @@ export default function AIAgentGuideWidget({
     }
   };
 
-  const selectedTopic = GUIDE_TOPICS.find((t) => t.id === selectedTopicId) || GUIDE_TOPICS[0];
+  // Find active topic (fallback to student-forms or first item)
+  const selectedTopic = GUIDE_TOPICS.find((t) => t.id === selectedTopicId) || 
+    GUIDE_TOPICS.find((t) => t.id === "forms-registrations") || 
+    GUIDE_TOPICS[0];
   const TopicIcon = selectedTopic.icon;
 
   // Dynamic positioning for the assistant card near the floating agent button
@@ -433,7 +441,7 @@ export default function AIAgentGuideWidget({
         bottom: "80px",
         left: "12px",
         right: "12px",
-        maxHeight: "calc(100vh - 100px)",
+        maxHeight: "calc(100vh - 95px)",
       };
     }
 
@@ -441,7 +449,6 @@ export default function AIAgentGuideWidget({
       return { bottom: "80px", right: "24px" };
     }
 
-    // On desktop, anchor card to the side of the button so it sits neatly adjacent
     const style: React.CSSProperties = {};
     const winW = window.innerWidth;
     const winH = window.innerHeight;
@@ -511,39 +518,41 @@ export default function AIAgentGuideWidget({
         <div
           ref={widgetRef}
           style={getWidgetPositionStyles()}
-          className="fixed z-50 w-[calc(100vw-24px)] sm:w-[410px] md:w-[430px] h-[560px] max-h-[calc(100vh-100px)] rounded-3xl bg-white dark:bg-[#0D1527] border border-slate-200/90 dark:border-slate-800 shadow-2xl shadow-slate-900/25 dark:shadow-black/70 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-3 duration-200 ring-1 ring-slate-900/5 dark:ring-white/10 select-none"
+          className="fixed z-50 w-[calc(100vw-24px)] sm:w-[420px] md:w-[440px] h-[580px] max-h-[calc(100vh-95px)] rounded-3xl bg-white dark:bg-[#0D1527] border border-slate-200/90 dark:border-slate-800 shadow-2xl shadow-slate-900/25 dark:shadow-black/70 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-3 duration-200 ring-1 ring-slate-900/5 dark:ring-white/10 select-none"
         >
-          {/* Header */}
-          <div className="px-4 py-3 bg-gradient-to-r from-slate-900 via-[#131D35] to-slate-900 text-white flex items-center justify-between border-b border-slate-800 shrink-0">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#9C3810] via-[#C84B18] to-[#EA580C] flex items-center justify-center text-white shadow-sm ring-1 ring-white/20">
+          {/* ── 1. HEADER (Dark Navy Background + Orange Bot + LIVE + Close) ── */}
+          <div className="px-4 py-3 bg-[#0A1128] dark:bg-[#070D1B] text-white flex items-center justify-between border-b border-slate-800/80 shrink-0">
+            <div className="flex items-center gap-2.5 min-w-0">
+              {/* Orange Square Bot Icon */}
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#9C3810] via-[#C84B18] to-[#EA580C] flex items-center justify-center text-white shadow-sm ring-1 ring-white/20 shrink-0">
                 <Bot className="w-4 h-4" />
               </div>
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <h3 className="text-xs font-bold text-white tracking-tight">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-xs sm:text-sm font-bold text-white tracking-tight truncate">
                     Testora AI Assistant
                   </h3>
-                  <span className="px-1.5 py-0.2 rounded-full text-[9px] font-extrabold uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                    Live
+                  <span className="px-1.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 tracking-wider shrink-0">
+                    LIVE
                   </span>
                 </div>
-                <p className="text-[10px] text-slate-400">
+                <p className="text-[10.5px] sm:text-[11px] text-slate-300 font-normal leading-tight truncate">
                   Instant step-by-step guidance &amp; quick actions
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 shrink-0 ml-2">
               {answeredQuery && (
                 <button
                   type="button"
                   onClick={() => {
                     setAnsweredQuery(null);
-                    setSelectedTopicId("create-quiz");
+                    setSelectedTopicId("forms-registrations");
                   }}
-                  className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
                   title="Reset to all guides"
+                  aria-label="Reset question"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
                 </button>
@@ -551,33 +560,40 @@ export default function AIAgentGuideWidget({
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
                 title="Close assistant"
+                aria-label="Close assistant"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
           </div>
 
-          {/* Quick Questions Chips / Shortcuts */}
-          <div className="px-3 py-2 bg-slate-50 dark:bg-[#0B1120] border-b border-slate-200/80 dark:border-slate-800/80 flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
-            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider shrink-0 pl-1">
-              Topics:
+          {/* ── 2. TOPIC NAVIGATION (Pill-Shaped Tabs with Blue Active Accent) ── */}
+          <div 
+            role="tablist" 
+            aria-label="Assistant Topics"
+            className="px-4 py-2 bg-white dark:bg-[#0D1527] border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth shrink-0"
+          >
+            <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider shrink-0 mr-0.5">
+              TOPICS:
             </span>
-            {GUIDE_TOPICS.map((topic) => {
-              const active = selectedTopicId === topic.id;
+            {GUIDE_TOPICS.slice(0, 4).map((topic) => {
+              const active = selectedTopic.id === topic.id;
               return (
                 <button
                   key={topic.id}
+                  role="tab"
+                  aria-selected={active}
                   type="button"
                   onClick={() => {
                     setSelectedTopicId(topic.id);
                     setAnsweredQuery(null);
                   }}
-                  className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all shrink-0 cursor-pointer flex items-center gap-1 border ${
+                  className={`px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all shrink-0 cursor-pointer ${
                     active
-                      ? "bg-[#C84B18] text-white border-[#C84B18] shadow-xs"
-                      : "bg-white dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700/80 hover:bg-slate-100 dark:hover:bg-slate-800"
+                      ? "bg-[#1765F5] hover:bg-[#1558D6] text-white font-bold shadow-xs ring-1 ring-blue-600/30"
+                      : "bg-slate-50 dark:bg-[#111A30] text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#162240] border border-slate-200 dark:border-slate-700/80"
                   }`}
                 >
                   <span>{topic.shortTitle}</span>
@@ -586,69 +602,68 @@ export default function AIAgentGuideWidget({
             })}
           </div>
 
-          {/* Content Area: Step-by-Step Instructions & Action Button */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white dark:bg-[#0D1527]">
-            
-            {/* If user asked a question, show user prompt pill */}
+          {/* ── 3. MAIN CONTENT (Scrollable Instructions & Action) ── */}
+          <div className="flex-1 overflow-y-auto px-4 py-3.5 space-y-3.5 bg-white dark:bg-[#0D1527]">
+
+            {/* If user asked a question, show prompt pill */}
             {answeredQuery && (
-              <div className="p-2.5 rounded-xl bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800/40 text-xs text-orange-900 dark:text-orange-200 flex items-center gap-2">
-                <Sparkles className="w-3.5 h-3.5 text-[#C84B18] shrink-0" />
+              <div className="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/50 text-xs text-blue-900 dark:text-blue-200 flex items-center gap-2">
+                <Sparkles className="w-3.5 h-3.5 text-[#1765F5] shrink-0" />
                 <span className="font-semibold truncate">Q: &ldquo;{answeredQuery}&rdquo;</span>
               </div>
             )}
 
             {/* Topic Overview Card */}
-            <div className="space-y-1.5 pb-3 border-b border-slate-100 dark:border-slate-800">
-              <div className="flex items-center gap-2.5">
-                <div className={`p-2 rounded-xl border ${selectedTopic.color}`}>
-                  <TopicIcon className="w-4 h-4" />
+            <div className="flex items-start gap-3 p-3 rounded-2xl bg-slate-50/70 dark:bg-[#111A30]/50 border border-slate-100 dark:border-slate-800">
+              <div className={`w-11 h-11 rounded-2xl border flex items-center justify-center shrink-0 ${selectedTopic.color}`}>
+                <TopicIcon className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white leading-tight">
+                    {selectedTopic.title}
+                  </h4>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shrink-0">
+                    {selectedTopic.badge}
+                  </span>
                 </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h4 className="text-sm font-bold text-slate-900 dark:text-white leading-tight">
-                      {selectedTopic.title}
-                    </h4>
-                    <span className="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                      {selectedTopic.badge}
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
-                    {selectedTopic.summary}
-                  </p>
-                </div>
+                <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 leading-relaxed mt-1">
+                  {selectedTopic.summary}
+                </p>
               </div>
             </div>
 
-            {/* Step-by-Step List */}
-            <div className="space-y-2.5">
-              <div className="flex items-center justify-between text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                <span>Step-by-Step Instructions</span>
-                <span className="text-[10px] text-slate-400 font-mono">
-                  {selectedTopic.steps.length} Steps
+            {/* Step-by-Step Instructions Block */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-[11px] font-bold tracking-wider uppercase text-slate-700 dark:text-slate-300 px-0.5">
+                <span>STEP-BY-STEP INSTRUCTIONS</span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono font-semibold">
+                  {selectedTopic.steps.length} STEPS
                 </span>
               </div>
 
+              {/* Numbered Step Cards */}
               <div className="space-y-2">
                 {selectedTopic.steps.map((step, idx) => (
                   <div
                     key={idx}
-                    className="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-50 dark:bg-[#111A30] border border-slate-200/80 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-200 leading-relaxed hover:border-blue-400/50 dark:hover:border-blue-500/40 transition-colors"
+                    className="flex items-start gap-3 p-3 rounded-2xl bg-white dark:bg-[#111A30] border border-blue-100/90 dark:border-slate-800 text-xs sm:text-[13px] text-slate-700 dark:text-slate-200 leading-relaxed shadow-2xs hover:border-blue-300/60 dark:hover:border-blue-500/40 transition-colors"
                   >
-                    <span className="w-5 h-5 rounded-full bg-gradient-to-tr from-[#9C3810] via-[#C84B18] to-[#EA580C] text-white font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
+                    <span className="w-6 h-6 rounded-full bg-[#C84B18] text-white font-extrabold text-xs flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
                       {idx + 1}
                     </span>
-                    <span className="flex-1">{step}</span>
+                    <span className="flex-1 pt-0.5 font-normal">{step}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* CLICKABLE ACTION BUTTON */}
-            <div className="pt-2">
+            {/* Clickable Action Button */}
+            <div className="pt-1">
               <button
                 type="button"
                 onClick={() => handleActionClick(selectedTopic)}
-                className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:via-indigo-500 hover:to-blue-600 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-blue-600/30 hover:shadow-lg hover:shadow-blue-600/40 hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer"
+                className="w-full py-2.5 px-4 rounded-xl bg-[#1765F5] hover:bg-[#1558D6] active:scale-[0.99] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm hover:shadow transition-all cursor-pointer"
               >
                 <span>{selectedTopic.actionText}</span>
                 <ExternalLink className="w-3.5 h-3.5" />
@@ -657,7 +672,7 @@ export default function AIAgentGuideWidget({
 
           </div>
 
-          {/* Bottom Question Input Bar ("Kaha user kuch pooch sakta") */}
+          {/* ── 4. BOTTOM QUESTION INPUT BAR ── */}
           <div className="p-3 bg-slate-50 dark:bg-[#0B1120] border-t border-slate-200/90 dark:border-slate-800 shrink-0">
             <form
               onSubmit={(e) => {
@@ -681,6 +696,7 @@ export default function AIAgentGuideWidget({
                 disabled={!userQuestion.trim()}
                 className="p-2 rounded-xl bg-[#C84B18] hover:bg-[#B33F10] disabled:opacity-40 text-white text-xs font-bold flex items-center justify-center shadow-xs transition-all cursor-pointer disabled:cursor-not-allowed shrink-0"
                 title="Send Question"
+                aria-label="Send Question"
               >
                 <Send className="w-3.5 h-3.5" />
               </button>

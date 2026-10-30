@@ -10,17 +10,7 @@ interface ThemeToggleProps {
 }
 
 export function applyThemePreference(pref: ThemePreference): "light" | "dark" {
-  let effectiveMode: "light" | "dark" = "light";
-
-  if (pref === "dark") {
-    effectiveMode = "dark";
-  } else if (pref === "light") {
-    effectiveMode = "light";
-  } else {
-    if (typeof window !== "undefined" && window.matchMedia) {
-      effectiveMode = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-    }
-  }
+  const effectiveMode: "light" | "dark" = pref === "dark" ? "dark" : "light";
 
   if (typeof document !== "undefined") {
     const root = document.documentElement;
@@ -60,12 +50,7 @@ export default function ThemeToggle({ className = "" }: ThemeToggleProps) {
       localStorage.getItem("theme") ||
       localStorage.getItem("theme_preference")) as "light" | "dark" | null;
 
-    let initialMode: "light" | "dark" = "light";
-    if (savedMode === "dark" || savedMode === "light") {
-      initialMode = savedMode;
-    } else if (typeof window !== "undefined" && window.matchMedia) {
-      initialMode = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-    }
+    const initialMode: "light" | "dark" = savedMode === "dark" ? "dark" : "light";
 
     setCurrentMode(initialMode);
     applyThemePreference(initialMode);

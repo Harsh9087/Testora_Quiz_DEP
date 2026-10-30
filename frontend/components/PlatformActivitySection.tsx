@@ -31,31 +31,31 @@ export default function PlatformActivitySection({ stats }: PlatformActivitySecti
   const activeInstitutions = stats?.institutions_active ?? 2;
 
   return (
-    <section className="relative overflow-hidden py-12 sm:py-16 lg:py-24 bg-white dark:bg-[#080E1E] border-b border-slate-100 dark:border-slate-800/80 transition-colors">
+    <section id="activity" className="relative overflow-hidden py-9 md:py-12 lg:py-16 bg-white dark:bg-[#080E1E] border-b border-slate-100 dark:border-slate-800/80 transition-colors">
       
       {/* Background Soft Organic Blobs matching reference */}
       <div className="absolute top-1/4 -left-20 w-72 sm:w-80 h-72 sm:h-80 rounded-full bg-blue-100/50 dark:bg-blue-600/10 blur-3xl pointer-events-none" />
       <div className="absolute top-1/3 -right-20 w-72 sm:w-80 h-72 sm:h-80 rounded-full bg-purple-100/40 dark:bg-purple-600/10 blur-3xl pointer-events-none" />
       <div className="absolute -bottom-16 left-1/2 -translate-x-1/2 w-[400px] sm:w-[500px] h-60 rounded-full bg-emerald-50/50 dark:bg-emerald-950/20 blur-3xl pointer-events-none" />
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="relative z-10 w-full max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
-        <div className="text-center max-w-2xl mx-auto space-y-2 mb-8 sm:mb-12 lg:mb-16">
+        <div className="text-center max-w-2xl mx-auto space-y-3 mb-7 sm:mb-8">
           {/* Top Pill Badge */}
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#EAF4FF] dark:bg-blue-950/80 border border-blue-200/80 dark:border-blue-800 text-[#0066FF] dark:text-[#38BDF8] text-xs font-semibold shadow-2xs">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#EAF4FF] dark:bg-blue-950/80 border border-blue-200/80 dark:border-blue-800 text-[#0066FF] dark:text-[#38BDF8] text-xs font-semibold shadow-2xs">
             <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse shrink-0" />
             <span>Live Platform Activity</span>
           </div>
 
           {/* Main Heading */}
-          <h2 className="text-2xl sm:text-3xl lg:text-[42px] font-black tracking-tight text-[#0B1B3D] dark:text-white leading-[1.2] mt-2">
+          <h2 className="text-2xl sm:text-3xl lg:text-[42px] font-black tracking-tight text-[#0B1B3D] dark:text-white leading-[1.2]">
             See What&rsquo;s Happening on{" "}
             <span className="block sm:inline text-[#0066FF] dark:text-[#38BDF8]">Testora Quiz</span>
           </h2>
 
           {/* Subtitle */}
-          <p className="text-xs sm:text-sm lg:text-base text-slate-500 dark:text-slate-400 font-normal mt-1 max-w-sm sm:max-w-md mx-auto">
+          <p className="text-xs sm:text-sm lg:text-base text-slate-500 dark:text-slate-400 font-normal mt-3 sm:mt-4 max-w-sm sm:max-w-md mx-auto">
             Live numbers from real activity on the platform.
           </p>
         </div>
@@ -223,10 +223,10 @@ export default function PlatformActivitySection({ stats }: PlatformActivitySecti
         <div className="xl:hidden relative max-w-[420px] sm:max-w-[480px] mx-auto">
           
           {/* TOP ROW: CARD 1 (Total Users) & CARD 2 (Tests Created) */}
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 relative z-20">
+          <div className="grid grid-cols-2 gap-4 sm:gap-5 relative z-20">
             
             {/* ── CARD 1: TOTAL USERS (Blue) ── */}
-            <div className="rounded-3xl bg-white dark:bg-[#0D1830] border-2 border-[#DCEBFE] dark:border-[#1E3A8A]/50 p-3.5 sm:p-5 shadow-xs flex flex-col justify-between transition-transform">
+            <div className="rounded-3xl bg-white dark:bg-[#0D1830] border-2 border-[#DCEBFE] dark:border-[#1E3A8A]/50 p-4 sm:p-5 lg:p-6 shadow-xs flex flex-col justify-between transition-transform">
               {/* Top Icons Row */}
               <div className="flex items-center justify-between">
                 <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-[#EBF3FF] dark:bg-blue-950/70 text-[#0066FF] dark:text-[#38BDF8] flex items-center justify-center shrink-0">
@@ -252,7 +252,7 @@ export default function PlatformActivitySection({ stats }: PlatformActivitySecti
             </div>
 
             {/* ── CARD 2: TESTS CREATED (Purple) ── */}
-            <div className="rounded-3xl bg-white dark:bg-[#0D1830] border-2 border-[#EDE9FE] dark:border-[#5B21B6]/50 p-3.5 sm:p-5 shadow-xs flex flex-col justify-between transition-transform">
+            <div className="rounded-3xl bg-white dark:bg-[#0D1830] border-2 border-[#EDE9FE] dark:border-[#5B21B6]/50 p-4 sm:p-5 lg:p-6 shadow-xs flex flex-col justify-between transition-transform">
               {/* Top Icons Row */}
               <div className="flex items-center justify-between">
                 <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-[#F3E8FF] dark:bg-purple-950/70 text-[#8B5CF6] dark:text-[#A78BFA] flex items-center justify-center shrink-0">
@@ -347,10 +347,10 @@ export default function PlatformActivitySection({ stats }: PlatformActivitySecti
           </div>
 
           {/* BOTTOM ROW: CARD 3 (Submissions Checked) & CARD 4 (Active Institutions) */}
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 relative z-20">
+          <div className="grid grid-cols-2 gap-4 sm:gap-5 relative z-20">
             
             {/* ── CARD 3: SUBMISSIONS CHECKED (Green) ── */}
-            <div className="rounded-3xl bg-white dark:bg-[#0D1830] border-2 border-[#D1F7E5] dark:border-[#065F46]/50 p-3.5 sm:p-5 shadow-xs flex flex-col justify-between transition-transform">
+            <div className="rounded-3xl bg-white dark:bg-[#0D1830] border-2 border-[#D1F7E5] dark:border-[#065F46]/50 p-4 sm:p-5 lg:p-6 shadow-xs flex flex-col justify-between transition-transform">
               {/* Top Icons Row */}
               <div className="flex items-center justify-between">
                 <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-[#E6F9F0] dark:bg-emerald-950/70 flex items-center justify-center shrink-0">
@@ -378,7 +378,7 @@ export default function PlatformActivitySection({ stats }: PlatformActivitySecti
             </div>
 
             {/* ── CARD 4: ACTIVE INSTITUTIONS (Pink) ── */}
-            <div className="rounded-3xl bg-white dark:bg-[#0D1830] border-2 border-[#FCE7F3] dark:border-[#831843]/50 p-3.5 sm:p-5 shadow-xs flex flex-col justify-between transition-transform">
+            <div className="rounded-3xl bg-white dark:bg-[#0D1830] border-2 border-[#FCE7F3] dark:border-[#831843]/50 p-4 sm:p-5 lg:p-6 shadow-xs flex flex-col justify-between transition-transform">
               {/* Top Icons Row */}
               <div className="flex items-center justify-between">
                 <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-[#FDF2F8] dark:bg-pink-950/70 text-[#D946EF] dark:text-[#F472B6] flex items-center justify-center shrink-0">

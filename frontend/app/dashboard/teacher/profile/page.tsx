@@ -110,7 +110,7 @@ export default function TeacherProfilePage() {
     if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) {
       return url;
     }
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
     return `${baseUrl}${url.startsWith("/") ? "" : "/"}${url}`;
   };
 
@@ -133,7 +133,7 @@ export default function TeacherProfilePage() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
       const res = await fetch(`${baseUrl}/api/v1/auth/avatar/upload`, {
         method: "POST",
         headers: {
@@ -147,6 +147,11 @@ export default function TeacherProfilePage() {
         setProfile((prev) => (prev ? { ...prev, avatar_url: data.avatar_url } : null));
         setEditAvatar(data.avatar_url || "");
         setImgError(false);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("avatarUrl", data.avatar_url);
+          window.dispatchEvent(new CustomEvent("avatar-updated", { detail: data.avatar_url }));
+        }
+        useAuthStore.getState().setAvatarUrl(data.avatar_url);
         showToast("Profile photo uploaded successfully!", "success");
       } else {
         const err = await res.json();
@@ -173,6 +178,11 @@ export default function TeacherProfilePage() {
         setProfile((prev) => (prev ? { ...prev, avatar_url: null } : null));
         setEditAvatar("");
         setImgError(false);
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("avatarUrl");
+          window.dispatchEvent(new CustomEvent("avatar-updated", { detail: null }));
+        }
+        useAuthStore.getState().setAvatarUrl(null);
         showToast("Profile photo removed. Person icon restored.", "success");
       }
     } catch (err: any) {
@@ -206,28 +216,39 @@ export default function TeacherProfilePage() {
   };
 
   const loadData = async () => {
-    if (!token) return;
+    const activeToken = token || (typeof window !== "undefined" ? localStorage.getItem("token") : null);
+    if (!activeToken) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       // 1. Fetch Profile
-      const meRes = await apiFetch("/auth/me", { token });
+      const meRes = await apiFetch("/auth/me", { token: activeToken });
       if (meRes.ok) {
         const uData: UserProfileData = await meRes.json();
         setProfile(uData);
         setEditName(uData.full_name || fullName || "");
         setEditAvatar(uData.avatar_url || "");
         setImgError(false);
+        if (uData.avatar_url) {
+          useAuthStore.getState().setAvatarUrl(uData.avatar_url);
+          if (typeof window !== "undefined") {
+            localStorage.setItem("avatarUrl", uData.avatar_url);
+            window.dispatchEvent(new CustomEvent("avatar-updated", { detail: uData.avatar_url }));
+          }
+        }
       }
 
       // 2. Fetch Payments
-      const payRes = await apiFetch("/payments/history", { token });
+      const payRes = await apiFetch("/payments/history", { token: activeToken });
       if (payRes.ok) {
         const pData = await payRes.json();
         setPayments(Array.isArray(pData) ? pData : []);
       }
 
       // 3. Fetch Credit Ledger
-      const credRes = await apiFetch("/payments/credits/transactions", { token });
+      const credRes = await apiFetch("/payments/credits/transactions", { token: activeToken });
       if (credRes.ok) {
         const cData = await credRes.json();
         setCreditTx(Array.isArray(cData) ? cData : []);

@@ -615,11 +615,24 @@ def create_exam(
     if not access_mode:
         access_mode = "ENROLLED_ONLY" if exam_in.student_directory_id else "OPEN_REGISTRATION"
 
+    inst_name = current_user.institution_name or (current_user.institution.name if current_user.institution else None)
+    settings_dict = exam_in.settings or {}
+    class_name = settings_dict.get("class_name") or current_user.class_name
+    section = settings_dict.get("section") or current_user.section
+    batch = settings_dict.get("batch") or current_user.batch
+
     exam = Exam(
         name=exam_in.name,
         subject_id=exam_in.subject_id,
         workspace_id=current_workspace.id,
         created_by=current_user.id,
+        teacher_name_snapshot=current_user.full_name,
+        teacher_email_snapshot=current_user.email,
+        institution_name=inst_name,
+        class_name=class_name,
+        section=section,
+        batch=batch,
+        subject_name_snapshot=subj.name if subj else None,
         student_directory_id=exam_in.student_directory_id,
         access_mode=access_mode,
         duration_minutes=exam_in.duration_minutes,
@@ -2054,9 +2067,19 @@ def clone_exam(
     new_code = f"ex-{clean_name}-{random.randint(1000, 9999)}"
     now = now_utc()
 
+    inst_name = original.institution_name or current_user.institution_name or (current_user.institution.name if current_user.institution else None)
     cloned = Exam(
         name=f"[Clone] {original.name}",
         subject_id=original.subject_id,
+        workspace_id=current_workspace.id,
+        created_by=current_user.id,
+        teacher_name_snapshot=current_user.full_name,
+        teacher_email_snapshot=current_user.email,
+        institution_name=inst_name,
+        class_name=original.class_name,
+        section=original.section,
+        batch=original.batch,
+        subject_name_snapshot=original.subject_name_snapshot,
         duration_minutes=original.duration_minutes,
         total_marks=original.total_marks,
         negative_marking=original.negative_marking,

@@ -1001,7 +1001,7 @@ export default function ExamPortal() {
                         key={optIdx}
                         type="button"
                         onClick={() => saveAnswerState(currentQ.id, opt)}
-                        className={`w-full text-left p-3 sm:p-3.5 rounded-xl border transition-all flex items-center gap-3 sm:gap-3.5 cursor-pointer ${
+                        className={`w-full text-left p-3 sm:p-3.5 rounded-xl border transition-all flex items-center gap-3 sm:gap-3.5 cursor-pointer active:scale-[0.99] select-none ${
                           isSelected
                             ? "bg-[#EFF6FF] dark:bg-[#172B4D] border-[#2563EB] dark:border-[#3B82F6] text-[#111827] dark:text-[#F1F5F9] shadow-xs font-semibold ring-1 ring-[#2563EB] dark:ring-[#3B82F6]"
                             : "bg-[#F8FAFC]/60 dark:bg-[#0B1120]/60 border-[#E2E8F0] dark:border-[#263449] text-[#64748B] dark:text-[#A3B1C6] hover:border-[#2563EB]/50 hover:text-[#111827] dark:hover:text-[#F1F5F9]"

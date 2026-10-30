@@ -425,8 +425,7 @@ def get_student_assigned_exams(
         ).order_by(Exam.start_time.desc()).all()
     
     student = db.query(Student).filter(
-        (Student.user_id == current_user.id) |
-        (Student.user.has(User.email == current_user.email))
+        Student.user_id == current_user.id
     ).first()
     
     if not student and current_user.role == "student":
@@ -445,8 +444,18 @@ def get_student_assigned_exams(
     
     results = []
     for exam in exams:
-        # Check selective directory targeting: if exam is restricted to a student directory
-        if not is_teacher and exam.student_directory_id:
+        # Check if student already attempted this exam (attempted exams permanently stay in student history)
+        has_prior_attempt = False
+        if student:
+            prior_sub = db.query(ExamSubmission).filter(
+                ExamSubmission.exam_id == exam.id,
+                (ExamSubmission.student_user_id == current_user.id) | (ExamSubmission.student_id == student.id)
+            ).first()
+            if prior_sub:
+                has_prior_attempt = True
+
+        # Check selective directory targeting if not already attempted
+        if not is_teacher and not has_prior_attempt and exam.student_directory_id:
             from app.models.candidate import ExamCandidate
             is_cand = db.query(ExamCandidate).filter(
                 ExamCandidate.exam_id == exam.id,
@@ -460,8 +469,8 @@ def get_student_assigned_exams(
             if not is_cand and not has_existing_cred:
                 continue
 
-        # Check selective targeting
-        if student and exam.settings_json:
+        # Check selective targeting if not already attempted
+        if student and not has_prior_attempt and exam.settings_json:
             try:
                 s_cfg = json.loads(exam.settings_json)
                 target_dept_ids = s_cfg.get("target_department_ids") or []
@@ -529,6 +538,11 @@ def get_student_assigned_exams(
         except Exception:
             questions_count = 0
             
+        teacher_name = exam.teacher_name_snapshot or (exam.creator.full_name if exam.creator else "Instructor")
+        teacher_email = exam.teacher_email_snapshot or (exam.creator.email if exam.creator else None)
+        inst_name = exam.institution_name or (exam.creator.institution_name if exam.creator else None)
+        subj_name = exam.subject_name_snapshot or (exam.subject.name if exam.subject else None)
+
         results.append({
             "id": exam.id,
             "exam_id": exam.id,
@@ -543,9 +557,18 @@ def get_student_assigned_exams(
             "status": sched_status,
             "questions_count": questions_count,
             "has_submitted": submission is not None and submission.status in ["submitted", "auto_submitted"],
+            "attempt_status": submission.status if submission else "not_attempted",
             "submission_score": submission.score if submission else None,
             "submission_percentage": submission.percentage if submission else None,
             "submission_id": submission.id if submission else None,
+            "teacher_name": teacher_name,
+            "teacher_email": teacher_email,
+            "teacher_institution": inst_name,
+            "institution_name": inst_name,
+            "subject_name": subj_name,
+            "class_name": exam.class_name,
+            "section": exam.section,
+            "batch": exam.batch,
             "credentials": {
                 "username": cred.username,
                 "password": cred.password,

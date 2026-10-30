@@ -1,26 +1,78 @@
 {
-  "name": "Testora Quiz - AI Dynamic Examination Platform",
+  "id": "/",
+  "name": "Testora Quiz",
   "short_name": "Testora Quiz",
   "description": "AI-Powered Examination, Proctoring & Student Analytics Platform",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#F7F4EF",
-  "theme_color": "#C84B18",
+  "orientation": "portrait-primary",
+  "background_color": "#0B132B",
+  "theme_color": "#2563EB",
+  "categories": [
+    "education",
+    "productivity"
+  ],
   "icons": [
-    {
-      "src": "/favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/x-icon"
-    },
     {
       "src": "/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "/icon-512.png",
       "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
       "type": "image/png"
+    },
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Teacher Studio",
+      "short_name": "Teacher",
+      "description": "Create and manage examinations",
+      "url": "/dashboard/teacher",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Student Portal",
+      "short_name": "Student",
+      "description": "Take tests and view scorecards",
+      "url": "/dashboard/student",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Settings & Preferences",
+      "short_name": "Settings",
+      "description": "Customize fonts, themes, and notifications",
+      "url": "/dashboard/settings",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
     }
   ]
 }
