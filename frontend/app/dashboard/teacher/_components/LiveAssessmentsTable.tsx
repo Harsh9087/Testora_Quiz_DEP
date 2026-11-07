@@ -559,7 +559,7 @@ export default function LiveAssessmentsTable({
                           </a>
                           {exam.is_paid && (
                             <a
-                              href={`${API_V1}/payments/receipt/${exam.id}/html`}
+                              href={`${API_V1}/payments/receipt/${exam.id}/html${token ? `?token=${encodeURIComponent(token)}` : ""}`}
                               target="_blank"
                               rel="noreferrer"
                               onClick={() => setActiveDropdownExamId(null)}
@@ -958,7 +958,7 @@ export default function LiveAssessmentsTable({
 
                                 {exam.is_paid && (
                                   <a
-                                    href={`${API_V1}/payments/receipt/${exam.id}/html`}
+                                    href={`${API_V1}/payments/receipt/${exam.id}/html${token ? `?token=${encodeURIComponent(token)}` : ""}`}
                                     target="_blank"
                                     rel="noreferrer"
                                     onClick={() => setActiveDropdownExamId(null)}

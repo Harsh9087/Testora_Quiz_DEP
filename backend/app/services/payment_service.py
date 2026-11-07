@@ -379,6 +379,7 @@ class PaymentService:
             institution_id=user.institution_id,
             exam_id=exam.id,
             order_type="EXAM_PAYMENT",
+            plan_id="per_test_billing",
             student_count=preview.student_count,
             question_count=preview.question_count,
             rate_per_unit_paise=preview.rate_per_unit_paise,
@@ -668,8 +669,10 @@ class PaymentService:
         Generates structured payment receipt details for an authorized user.
         """
         order = db.query(PaymentOrder).filter(
-            (PaymentOrder.id == order_id) | (PaymentOrder.razorpay_order_id == order_id)
-        ).first()
+            (PaymentOrder.id == order_id) | 
+            (PaymentOrder.razorpay_order_id == order_id) |
+            (PaymentOrder.exam_id == order_id)
+        ).order_by(PaymentOrder.created_at.desc()).first()
 
         if not order:
             raise HTTPException(status_code=404, detail="Payment receipt not found.")

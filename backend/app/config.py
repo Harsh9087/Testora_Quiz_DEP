@@ -105,7 +105,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         case_sensitive=True,
         extra="ignore",
-        env_file=[os.path.join(BASE_DIR, "..", ".env"), ".env"]
+        env_file=[os.path.join(BASE_DIR, ".env"), os.path.join(BASE_DIR, "..", ".env"), ".env"]
     )
 
 settings = Settings()

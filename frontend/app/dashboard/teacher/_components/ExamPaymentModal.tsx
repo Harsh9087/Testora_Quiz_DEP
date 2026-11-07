@@ -178,7 +178,7 @@ export default function ExamPaymentModal({
       setErrorMessage(null);
 
       // 1. Create order on backend
-      const orderRes = await apiFetch("/payments/exam/create-order", {
+      const orderRes = await apiFetch(`/payments/exam/${exam.id}/create-order`, {
         method: "POST",
         token,
         body: JSON.stringify({ exam_id: exam.id }),
@@ -353,7 +353,7 @@ export default function ExamPaymentModal({
   const handlePrintReceipt = (orderIdOrDbId?: string) => {
     const idToUse = orderIdOrDbId || successData?.order_db_id || successData?.razorpay_order_id;
     if (!idToUse) return;
-    const receiptUrl = `${API_V1}/payments/receipt/${idToUse}/html`;
+    const receiptUrl = `${API_V1}/payments/receipt/${idToUse}/html${token ? `?token=${encodeURIComponent(token)}` : ""}`;
     window.open(receiptUrl, "_blank", "noopener,noreferrer");
   };
 

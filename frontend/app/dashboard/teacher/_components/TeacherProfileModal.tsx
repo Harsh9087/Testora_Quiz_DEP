@@ -239,7 +239,7 @@ export default function TeacherProfileModal({
   };
 
   const handleDownloadReceipt = (orderId: string) => {
-    window.open(`${API_V1}/payments/receipt/${orderId}/html`, "_blank", "noopener,noreferrer");
+    window.open(`${API_V1}/payments/receipt/${orderId}/html${token ? `?token=${encodeURIComponent(token)}` : ""}`, "_blank", "noopener,noreferrer");
   };
 
   return (

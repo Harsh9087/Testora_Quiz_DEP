@@ -430,7 +430,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                           <td className="py-3 px-4 text-right">
                             {tx.status === "paid" && (
                               <a
-                                href={`${API_V1}/payments/receipt/${tx.id}/html`}
+                                href={`${API_V1}/payments/receipt/${tx.id}/html${token ? `?token=${encodeURIComponent(token)}` : ""}`}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-[#E5E0D8] dark:border-[#292524] text-[11px] font-semibold text-[#242321] dark:text-[#F5F5F4] hover:bg-[#E5E0D8]/40 dark:hover:bg-[#292524] transition-colors"

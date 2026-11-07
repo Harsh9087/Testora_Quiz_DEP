@@ -68,6 +68,27 @@ def get_authorized_exam(exam_id: str, user: User, db: Session) -> Exam:
     return exam
 
 
+def get_opt_user(request: Request, db: Session) -> Optional[User]:
+    token = None
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header.split(" ", 1)[1]
+    elif "token" in request.query_params:
+        token = request.query_params.get("token")
+        
+    if not token:
+        return None
+    try:
+        from app.config import settings
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"], options={"verify_exp": True})
+        user_id = payload.get("sub")
+        if user_id:
+            return db.query(User).filter(User.id == user_id, User.is_deleted == False).first()
+    except Exception:
+        return None
+    return None
+
+
 # =============================================================================
 # Per-Test Exam Billing & Razorpay Checkout Endpoints
 # =============================================================================
@@ -104,6 +125,27 @@ def create_exam_payment_order(
         exam=exam,
         user=current_user,
         notes=notes,
+        db=db
+    )
+
+
+@router.post("/exam/create-order", response_model=CreateExamOrderResponse)
+def create_exam_payment_order_body(
+    req: CreateExamOrderRequest,
+    current_user: User = Depends(teacher_required),
+    db: Session = Depends(get_db)
+):
+    """
+    Creates a server-side Razorpay payment order for an exam when exam_id is supplied in the request body.
+    """
+    target_exam_id = req.exam_id
+    if not target_exam_id:
+        raise HTTPException(status_code=400, detail="exam_id is required in request body")
+    exam = get_authorized_exam(target_exam_id, current_user, db)
+    return payment_service.create_exam_payment_order(
+        exam=exam,
+        user=current_user,
+        notes=req.notes,
         db=db
     )
 
@@ -264,13 +306,29 @@ def get_payment_receipt(
 @router.get("/receipt/{order_id}/html", response_class=HTMLResponse)
 def get_payment_receipt_html(
     order_id: str,
-    current_user: User = Depends(get_current_user),
+    request: Request,
+    token: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
     """
     Renders an official, printable Tax Invoice & Payment Receipt HTML document.
+    Supports authorization via Bearer header or '?token=' query parameter for opening in new tab.
     """
-    receipt = payment_service.get_receipt(order_id, current_user, db)
+    user = get_opt_user(request, db)
+    if not user and token:
+        try:
+            from app.config import settings
+            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"], options={"verify_exp": True})
+            user_id = payload.get("sub")
+            if user_id:
+                user = db.query(User).filter(User.id == user_id, User.is_deleted == False).first()
+        except Exception:
+            pass
+
+    if not user:
+        raise HTTPException(status_code=401, detail="Authentication required to view tax invoice.")
+
+    receipt = payment_service.get_receipt(order_id, user, db)
     
     html_content = f"""<!DOCTYPE html>
 <html lang="en">
@@ -557,20 +615,7 @@ class CreditRequestSubmit(BaseModel):
     estimated_students: int = Field(default=0, ge=0)
 
 
-def get_opt_user(request: Request, db: Session) -> Optional[User]:
-    auth_header = request.headers.get("Authorization")
-    if not auth_header or not auth_header.startswith("Bearer "):
-        return None
-    token = auth_header.split(" ", 1)[1]
-    try:
-        from app.config import settings
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"], options={"verify_exp": True})
-        user_id = payload.get("sub")
-        if user_id:
-            return db.query(User).filter(User.id == user_id, User.is_deleted == False).first()
-    except Exception:
-        return None
-    return None
+
 
 
 @router.post("/credit-requests")

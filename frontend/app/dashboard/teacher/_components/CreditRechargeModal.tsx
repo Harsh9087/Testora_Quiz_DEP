@@ -258,7 +258,7 @@ export default function CreditRechargeModal({
 
   const handlePrintReceipt = () => {
     if (!successInfo?.order_id) return;
-    window.open(`${API_V1}/payments/receipt/${successInfo.order_id}/html`, "_blank", "noopener,noreferrer");
+    window.open(`${API_V1}/payments/receipt/${successInfo.order_id}/html${token ? `?token=${encodeURIComponent(token)}` : ""}`, "_blank", "noopener,noreferrer");
   };
 
   return (

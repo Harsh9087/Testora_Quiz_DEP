@@ -151,6 +151,7 @@ class CreditTransactionResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 class CreateExamOrderRequest(BaseModel):
+    exam_id: Optional[str] = None
     notes: Optional[Dict[str, str]] = None
 
 class CreateExamOrderResponse(BaseModel):
