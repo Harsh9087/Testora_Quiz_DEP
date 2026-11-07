@@ -11,6 +11,8 @@ from app.database import get_db
 from app.models.user import User
 from app.models.workspace import Workspace
 from app.models.custom_form import CustomForm, CustomFormSubmission
+from app.models.student_directory import StudentDirectory, DirectoryStudent
+from app.schemas.registration_form import ImportToDirectoryRequest, ImportToDirectoryResponse
 from app.schemas.custom_form import (
     GenerateCustomFormRequest,
     GeneratedFormPreviewResponse,
@@ -263,11 +265,16 @@ def create_custom_form(
 @router.get("/", response_model=List[CustomFormResponse])
 def list_custom_forms(
     current_workspace: Workspace = Depends(get_current_workspace),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """List all custom forms in the current workspace with submission counts."""
+    """List all custom forms in the current workspace or created by the user with submission counts."""
+    from sqlalchemy import or_
     forms = db.query(CustomForm).filter(
-        CustomForm.workspace_id == current_workspace.id,
+        or_(
+            CustomForm.workspace_id == current_workspace.id,
+            CustomForm.created_by == current_user.id
+        ),
         CustomForm.is_deleted == False
     ).order_by(CustomForm.created_at.desc()).all()
 
@@ -600,3 +607,181 @@ def export_custom_form_excel(
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'}
     )
+
+
+@router.post("/{form_id}/import-to-directory", response_model=ImportToDirectoryResponse)
+def import_custom_form_submissions_to_directory(
+    form_id: str,
+    payload: ImportToDirectoryRequest,
+    current_workspace: Workspace = Depends(get_current_workspace),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Imports submissions from an AI Custom Form into a Student Directory.
+    Enforces the platform rule: The custom form MUST contain the required student fields
+    (Roll Number, Full Name, Email). Only forms matching this schema can populate a Student Directory.
+    """
+    from sqlalchemy import or_
+    form = db.query(CustomForm).filter(
+        CustomForm.id == form_id,
+        or_(
+            CustomForm.workspace_id == current_workspace.id,
+            CustomForm.created_by == current_user.id
+        ),
+        CustomForm.is_deleted == False
+    ).first()
+    if not form:
+        raise HTTPException(status_code=404, detail="Custom form not found.")
+
+    # Parse field schema
+    try:
+        fields = json.loads(form.fields_schema) if form.fields_schema else []
+    except Exception:
+        fields = []
+
+    # Detect field mappings for Roll Number, Name, Email, Phone, Section, Branch
+    roll_field_id = None
+    name_field_id = None
+    email_field_id = None
+    phone_field_id = None
+    section_field_id = None
+    branch_field_id = None
+
+    for f in fields:
+        label = f.get("label", "").lower()
+        fid = f.get("id")
+        ftype = f.get("field_type", "").lower()
+
+        if not roll_field_id and any(k in label for k in ["roll", "id", "reg", "enroll", "student id", "usn"]):
+            roll_field_id = fid
+        elif not name_field_id and any(k in label for k in ["name", "student name", "full name"]):
+            name_field_id = fid
+        elif not email_field_id and (ftype == "email" or any(k in label for k in ["email", "mail"])):
+            email_field_id = fid
+        elif not phone_field_id and (ftype == "phone" or any(k in label for k in ["phone", "mobile", "contact"])):
+            phone_field_id = fid
+        elif not section_field_id and any(k in label for k in ["section", "division", "sec", "batch", "class"]):
+            section_field_id = fid
+        elif not branch_field_id and any(k in label for k in ["branch", "dept", "department", "stream", "course"]):
+            branch_field_id = fid
+
+    # Enforce platform rule: Student Directory strictly requires Roll Number, Name, and Email
+    missing = []
+    if not roll_field_id:
+        missing.append("Roll Number / Student ID")
+    if not name_field_id:
+        missing.append("Full Name")
+    if not email_field_id:
+        missing.append("Email Address")
+
+    if missing:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Incompatible Form: This AI Form is missing platform required student fields ({', '.join(missing)}). Platform rule: only forms containing Roll Number, Name, and Email can be imported into Student Directories."
+        )
+
+    # 1. Resolve or create target StudentDirectory
+    target_directory = None
+    if payload.target_mode == "existing":
+        if not payload.directory_id:
+            raise HTTPException(status_code=400, detail="Target directory ID is required when target_mode is 'existing'.")
+        target_directory = db.query(StudentDirectory).filter(
+            StudentDirectory.id == payload.directory_id,
+            or_(
+                StudentDirectory.workspace_id == current_workspace.id,
+                StudentDirectory.created_by == current_user.id
+            ),
+            StudentDirectory.is_deleted == False
+        ).first()
+        if not target_directory:
+            raise HTTPException(status_code=404, detail="Selected student directory not found.")
+    else:
+        dir_name = (payload.new_directory_name or form.title or "Imported Directory").strip()
+        dir_desc = (payload.new_directory_description or f"Created via AI Form: {form.title}").strip()
+        target_directory = StudentDirectory(
+            workspace_id=current_workspace.id,
+            name=dir_name,
+            description=dir_desc,
+            created_by=current_user.id,
+            is_active=True
+        )
+        db.add(target_directory)
+        db.flush()
+
+    # 2. Query submissions
+    q = db.query(CustomFormSubmission).filter(
+        CustomFormSubmission.form_id == form.id,
+        CustomFormSubmission.is_deleted == False
+    )
+    if payload.submission_ids:
+        q = q.filter(CustomFormSubmission.id.in_(payload.submission_ids))
+    submissions = q.all()
+
+    if not submissions:
+        return {
+            "directory_id": target_directory.id,
+            "directory_name": target_directory.name,
+            "imported_count": 0,
+            "skipped_duplicate_count": 0,
+            "total_selected": 0,
+            "messages": ["No submissions available to import."]
+        }
+
+    # 3. Fetch existing students in directory to avoid duplicates
+    existing = db.query(DirectoryStudent).filter(
+        DirectoryStudent.directory_id == target_directory.id,
+        DirectoryStudent.is_deleted == False
+    ).all()
+    existing_emails = {s.email.lower().strip() for s in existing if s.email}
+    existing_rolls = {s.roll_number.upper().strip() for s in existing if s.roll_number}
+
+    imported_count = 0
+    skipped_count = 0
+
+    for sub in submissions:
+        try:
+            resp_dict = json.loads(sub.responses_json) if sub.responses_json else {}
+        except Exception:
+            resp_dict = {}
+
+        raw_name = str(resp_dict.get(name_field_id) or "").strip()
+        raw_email = str(resp_dict.get(email_field_id) or "").strip().lower()
+        raw_roll = str(resp_dict.get(roll_field_id) or "").strip().upper()
+        raw_phone = str(resp_dict.get(phone_field_id) or "").strip() if phone_field_id else None
+        raw_section = str(resp_dict.get(section_field_id) or "").strip() if section_field_id else None
+        raw_dept = str(resp_dict.get(branch_field_id) or "").strip() if branch_field_id else None
+
+        if not raw_name or not raw_email or not raw_roll:
+            skipped_count += 1
+            continue
+
+        if raw_email in existing_emails or raw_roll in existing_rolls:
+            skipped_count += 1
+            continue
+
+        new_st = DirectoryStudent(
+            directory_id=target_directory.id,
+            name=raw_name,
+            email=raw_email,
+            roll_number=raw_roll,
+            phone=raw_phone,
+            division=raw_section,
+            department=raw_dept,
+            status="active"
+        )
+        db.add(new_st)
+        existing_emails.add(raw_email)
+        existing_rolls.add(raw_roll)
+        imported_count += 1
+
+    db.commit()
+
+    return {
+        "directory_id": target_directory.id,
+        "directory_name": target_directory.name,
+        "imported_count": imported_count,
+        "skipped_duplicate_count": skipped_count,
+        "total_selected": len(submissions),
+        "messages": [f"Successfully imported {imported_count} student(s) into '{target_directory.name}'."]
+    }

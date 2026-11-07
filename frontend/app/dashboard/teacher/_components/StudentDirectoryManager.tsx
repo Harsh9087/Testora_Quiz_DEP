@@ -119,11 +119,65 @@ export default function StudentDirectoryManager({ token: propToken }: StudentDir
     if (!activeToken) return;
     try {
       setFormsLoading(true);
-      const res = await apiFetch('/registration-forms', { token: activeToken });
-      if (res.ok) {
-        const data = await res.json();
-        setRegistrationForms(Array.isArray(data) ? data : []);
+      const [regRes, customRes] = await Promise.all([
+        apiFetch('/registration-forms', { token: activeToken }).catch(() => null),
+        apiFetch('/custom-forms', { token: activeToken }).catch(() => null),
+      ]);
+      const allForms: any[] = [];
+      const frontendUrl = getFrontendBaseUrl();
+
+      if (regRes && regRes.ok) {
+        const regData = await regRes.json().catch(() => []);
+        if (Array.isArray(regData)) {
+          regData.forEach((f: any) => {
+            allForms.push({
+              ...f,
+              form_origin: 'registration',
+              origin_label: 'Registration Form',
+              is_compatible_with_directory: true,
+              compatibility_reason: 'Platform required schema (Roll, Name, Email, Phone, Section, Branch)',
+              share_link: `${frontendUrl}/forms/${f.share_slug}`,
+            });
+          });
+        }
       }
+
+      if (customRes && customRes.ok) {
+        const customData = await customRes.json().catch(() => []);
+        if (Array.isArray(customData)) {
+          customData.forEach((f: any) => {
+            const fList = f.fields || [];
+            const hasRoll = fList.some((field: any) => {
+              const l = (field.label || '').toLowerCase();
+              return l.includes('roll') || l.includes('id') || l.includes('reg') || l.includes('enroll') || l.includes('usn');
+            });
+            const hasName = fList.some((field: any) => {
+              const l = (field.label || '').toLowerCase();
+              return l.includes('name');
+            });
+            const hasEmail = fList.some((field: any) => {
+              const l = (field.label || '').toLowerCase();
+              const t = (field.field_type || '').toLowerCase();
+              return t === 'email' || l.includes('email') || l.includes('mail');
+            });
+            const isCompatible = hasRoll && hasName && hasEmail;
+
+            allForms.push({
+              ...f,
+              form_origin: 'custom',
+              origin_label: 'AI Form Studio',
+              is_compatible_with_directory: isCompatible,
+              compatibility_reason: isCompatible
+                ? 'Matches platform required student schema (Roll, Name, Email)'
+                : 'Missing Roll Number, Name, or Email',
+              share_link: `${frontendUrl}/custom-forms/${f.share_slug}`,
+            });
+          });
+        }
+      }
+
+      allForms.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      setRegistrationForms(allForms);
     } catch (err) {
       console.error('Failed to load registration forms:', err);
     } finally {
@@ -161,13 +215,17 @@ export default function StudentDirectoryManager({ token: propToken }: StudentDir
     reader.readAsText(file.slice(0, 4096));
   };
 
-  const handleDownloadFormCsv = (formId: string) => {
-    const downloadUrl = `${API_V1}/registration-forms/${formId}/export-csv?token=${encodeURIComponent(token)}`;
+  const handleDownloadFormCsv = (form: any) => {
+    const downloadUrl = form.form_origin === 'custom'
+      ? `${API_V1}/custom-forms/${form.id}/export-excel?token=${encodeURIComponent(token)}`
+      : `${API_V1}/registration-forms/${form.id}/export-csv?token=${encodeURIComponent(token)}`;
     window.open(downloadUrl, '_blank');
   };
 
-  const handleDownloadFormExcel = (formId: string) => {
-    const downloadUrl = `${API_V1}/registration-forms/${formId}/export-excel?token=${encodeURIComponent(token)}`;
+  const handleDownloadFormExcel = (form: any) => {
+    const downloadUrl = form.form_origin === 'custom'
+      ? `${API_V1}/custom-forms/${form.id}/export-excel?token=${encodeURIComponent(token)}`
+      : `${API_V1}/registration-forms/${form.id}/export-excel?token=${encodeURIComponent(token)}`;
     window.open(downloadUrl, '_blank');
   };
 
@@ -175,7 +233,11 @@ export default function StudentDirectoryManager({ token: propToken }: StudentDir
     try {
       setImportingFormId(form.id);
       setFormImportSuccess(null);
-      const res = await apiFetch(`/registration-forms/${form.id}/import-to-directory`, {
+      const endpoint = form.form_origin === 'custom'
+        ? `/custom-forms/${form.id}/import-to-directory`
+        : `/registration-forms/${form.id}/import-to-directory`;
+
+      const res = await apiFetch(endpoint, {
         method: 'POST',
         token,
         body: JSON.stringify({
@@ -191,6 +253,9 @@ export default function StudentDirectoryManager({ token: propToken }: StudentDir
           `✓ Created Directory "${form.title}" with ${data.imported_count} candidate(s) in required CSV format!`
         );
         loadDirectories(token);
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("refresh-student-directories"));
+        }
         setTimeout(() => {
           setActiveMainTab('directories');
           setFormImportSuccess(null);
@@ -887,9 +952,27 @@ export default function StudentDirectoryManager({ token: propToken }: StudentDir
                     </div>
 
                     <div>
+                      <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                        <span className={`px-2 py-0.5 text-[10px] font-bold rounded-md ${
+                          f.form_origin === 'custom'
+                            ? 'bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30'
+                            : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30'
+                        }`}>
+                          {f.origin_label || 'AI Form'}
+                        </span>
+                        {f.is_compatible_with_directory ? (
+                          <span className="px-2 py-0.5 text-[10px] font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 rounded-md flex items-center gap-1">
+                            ✓ Platform CSV Schema
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 text-[10px] font-semibold bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20 rounded-md" title={f.compatibility_reason}>
+                            Survey (Lacks Roll/Email)
+                          </span>
+                        )}
+                      </div>
                       <h4 className="text-base font-bold text-[#242321] dark:text-[#F5F5F4]">{f.title}</h4>
                       <p className="text-xs text-[#716D67] dark:text-[#A8A29E] mt-1 line-clamp-2">
-                        {f.description || 'Public student registration link'}
+                        {f.description || (f.form_origin === 'custom' ? 'Created via AI Form Studio' : 'Public student registration link')}
                       </p>
                     </div>
 
@@ -911,7 +994,7 @@ export default function StudentDirectoryManager({ token: propToken }: StudentDir
                     <button
                       type="button"
                       onClick={() => {
-                        const formUrl = `${getFrontendBaseUrl()}/forms/${f.share_slug}`;
+                        const formUrl = f.share_link || `${getFrontendBaseUrl()}/${f.form_origin === 'custom' ? 'custom-forms' : 'forms'}/${f.share_slug}`;
                         const msg = `Dear Students, please register your details for "${f.title}":\n\n📝 Registration Form: ${formUrl}\n\nPlease submit your Full Name, Roll Number, and Section so your details are synced for upcoming tests.`;
                         const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
                         window.open(waUrl, '_blank', 'noopener,noreferrer');
@@ -927,7 +1010,7 @@ export default function StudentDirectoryManager({ token: propToken }: StudentDir
                       <button
                         type="button"
                         onClick={() => {
-                          const formUrl = `${getFrontendBaseUrl()}/forms/${f.share_slug}`;
+                          const formUrl = f.share_link || `${getFrontendBaseUrl()}/${f.form_origin === 'custom' ? 'custom-forms' : 'forms'}/${f.share_slug}`;
                           navigator.clipboard.writeText(formUrl);
                           alert('Form link copied to clipboard!');
                         }}
@@ -940,9 +1023,9 @@ export default function StudentDirectoryManager({ token: propToken }: StudentDir
 
                       <button
                         type="button"
-                        onClick={() => handleDownloadFormCsv(f.id)}
+                        onClick={() => handleDownloadFormCsv(f)}
                         className="py-1.5 px-2 bg-[#F0ECE4] dark:bg-[#292524] text-[#242321] dark:text-[#F5F5F4] hover:bg-[#E5E0D8] dark:hover:bg-[#3E3A36] text-[11px] font-medium rounded-lg flex items-center justify-center gap-1 transition-colors cursor-pointer"
-                        title="Download Responses as Platform Required CSV"
+                        title="Download Responses as Platform Required CSV/Excel"
                       >
                         <DownloadCloud className="w-3 h-3 text-[#C84B18]" />
                         <span>CSV</span>
@@ -950,10 +1033,10 @@ export default function StudentDirectoryManager({ token: propToken }: StudentDir
 
                       <button
                         type="button"
-                        disabled={importingFormId === f.id}
+                        disabled={importingFormId === f.id || !f.is_compatible_with_directory}
                         onClick={() => handleImportFormAsDirectory(f)}
-                        className="py-1.5 px-2 bg-[#C84B18] hover:bg-[#B33F12] text-white text-[11px] font-semibold rounded-lg flex items-center justify-center gap-1 transition-colors cursor-pointer disabled:opacity-50"
-                        title="Convert Submissions into a Student Directory"
+                        className="py-1.5 px-2 bg-[#C84B18] hover:bg-[#B33F12] disabled:bg-gray-400 dark:disabled:bg-gray-700 text-white text-[11px] font-semibold rounded-lg flex items-center justify-center gap-1 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        title={f.is_compatible_with_directory ? "Convert Submissions into a Student Directory" : "Cannot import: Form is missing Roll Number or Email required by platform"}
                       >
                         <FolderPlus className="w-3 h-3" />
                         <span>{importingFormId === f.id ? 'Importing...' : 'To Directory'}</span>
