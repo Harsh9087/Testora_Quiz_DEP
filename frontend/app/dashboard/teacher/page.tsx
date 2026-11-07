@@ -14,7 +14,7 @@ import {
   Plus, BookOpen, Calendar, ChevronRight, ChevronLeft, ChevronDown, Check,
   Users, BarChart3, GraduationCap, Clock, 
   Sparkles, ArrowRight, ArrowLeft, Radio, FileSpreadsheet,
-  UploadCloud, CloudUpload, FileUp, FileText, FilePlus, FileEdit, FileDown, Loader2, CheckCircle2, X, RefreshCw,
+  UploadCloud, CloudUpload, FileUp, FileText, FilePlus, FileEdit, FileDown, Loader2, CheckCircle2, X, RefreshCw, Trash2,
   Lightbulb, HelpCircle, Sliders, Scale, Layers, Calculator,
   ClipboardList, Wand2, ArrowUpRight, Database,
   UserCheck, Contact, Settings, Play, AlertCircle, ShieldCheck, Eye, Key,
@@ -221,6 +221,7 @@ export default function TeacherDashboard() {
   const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
   const [isDraftRestored, setIsDraftRestored] = useState<boolean>(false);
   const [isDraftLoaded, setIsDraftLoaded] = useState<boolean>(false);
+  const [draftExpiresAt, setDraftExpiresAt] = useState<string | null>(null);
 
   // Custom Marks Distribution state
   const [marksDistMode, setMarksDistMode] = useState<"equal" | "by_type" | "by_difficulty" | "custom">("equal");
@@ -367,14 +368,25 @@ export default function TeacherDashboard() {
     return () => window.removeEventListener("refresh-student-directories", handleRefresh);
   }, [token]);
 
-  // Draft auto-save restoration on mount
+  // Draft auto-save restoration on mount (with 7-day auto-expiry)
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
       const saved = localStorage.getItem("testora_create_assessment_draft");
       if (saved) {
         const d = JSON.parse(saved);
+        const savedTime = d.savedAt ? new Date(d.savedAt).getTime() : Date.now();
+        const expiresAtTime = d.expiresAt ? new Date(d.expiresAt).getTime() : (savedTime + 7 * 24 * 60 * 60 * 1000);
+        
+        // Auto-expire check: If older than 7 days, remove from storage automatically
+        if (Date.now() > expiresAtTime) {
+          localStorage.removeItem("testora_create_assessment_draft");
+          setIsDraftLoaded(true);
+          return;
+        }
+
         if (d && (d.examName || d.examSubject || d.step1AiPrompt || (d.createStep && d.createStep > 1))) {
+          if (d.expiresAt) setDraftExpiresAt(d.expiresAt);
           if (d.examName !== undefined) setExamName(d.examName);
           if (d.examSubject !== undefined) setExamSubject(d.examSubject);
           if (d.examTopic !== undefined) setExamTopic(d.examTopic);
@@ -427,6 +439,7 @@ export default function TeacherDashboard() {
 
     const handler = setTimeout(() => {
       const nowIso = new Date().toISOString();
+      const expiresAtIso = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
       const draftObj = {
         examName,
         examSubject,
@@ -456,10 +469,12 @@ export default function TeacherDashboard() {
         createStep,
         expandedStep,
         savedAt: nowIso,
+        expiresAt: expiresAtIso,
       };
       try {
         localStorage.setItem("testora_create_assessment_draft", JSON.stringify(draftObj));
         setDraftSavedAt(nowIso);
+        setDraftExpiresAt(expiresAtIso);
       } catch (err) {
         console.warn("Failed to auto-save draft:", err);
       }
@@ -497,6 +512,56 @@ export default function TeacherDashboard() {
     expandedStep,
   ]);
 
+  const activeDraftInfo = useMemo(() => {
+    if (!mounted || typeof window === "undefined") return null;
+    const hasContent = Boolean(
+      examName.trim() ||
+      examSubject ||
+      step1AiPrompt.trim() ||
+      createStep > 1 ||
+      (customPromptInstructions && customPromptInstructions.trim())
+    );
+    if (!hasContent) return null;
+
+    const expiryTime = draftExpiresAt 
+      ? new Date(draftExpiresAt).getTime() 
+      : (draftSavedAt ? new Date(draftSavedAt).getTime() + 7 * 24 * 60 * 60 * 1000 : Date.now() + 7 * 24 * 60 * 60 * 1000);
+    
+    if (Date.now() > expiryTime) {
+      return null;
+    }
+
+    const msLeft = Math.max(0, expiryTime - Date.now());
+    const daysLeft = Math.max(1, Math.ceil(msLeft / (24 * 60 * 60 * 1000)));
+
+    return {
+      examName: examName.trim() || "Untitled Assessment Draft",
+      examSubject: examSubject || "General",
+      createStep,
+      totalSteps: 4,
+      stepTitle: WIZARD_STEPS[createStep - 1]?.shortTitle || `Step ${createStep}`,
+      questionsCount: computedQuestionCount || parseInt(numMcq) || 5,
+      duration: examDuration || "30",
+      marks: examMarks || "50",
+      savedAt: draftSavedAt || new Date().toISOString(),
+      expiresAt: draftExpiresAt,
+      daysLeft,
+    };
+  }, [
+    mounted,
+    examName,
+    examSubject,
+    step1AiPrompt,
+    createStep,
+    customPromptInstructions,
+    draftSavedAt,
+    draftExpiresAt,
+    computedQuestionCount,
+    numMcq,
+    examDuration,
+    examMarks,
+  ]);
+
   const handleClearDraft = () => {
     if (typeof window !== "undefined") {
       localStorage.removeItem("testora_create_assessment_draft");
@@ -529,6 +594,7 @@ export default function TeacherDashboard() {
     setCreateStep(1);
     setExpandedStep(1);
     setDraftSavedAt(null);
+    setDraftExpiresAt(null);
     setIsDraftRestored(false);
     showToast("Assessment draft cleared. Ready for a new test.", "info");
   };
@@ -1629,9 +1695,68 @@ export default function TeacherDashboard() {
             </div>
           </div>
 
+          {/* Incomplete Assessment Draft Alert Banner in Overview */}
+          {activeDraftInfo && (
+            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-[#FAF8F5] to-amber-500/5 dark:from-amber-950/30 dark:via-[#171615] dark:to-amber-950/20 border border-amber-500/30 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4 animate-fadeIn">
+              <div className="flex items-start gap-3.5">
+                <div className="p-2.5 rounded-xl bg-amber-500/20 text-amber-700 dark:text-amber-400 shrink-0 mt-0.5">
+                  <Clock className="w-5 h-5" />
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-amber-500/20 text-amber-800 dark:text-amber-300 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                      Incomplete Assessment Draft
+                    </span>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                      Saved at Step {activeDraftInfo.createStep} of 4 ({activeDraftInfo.stepTitle})
+                    </span>
+                  </div>
+                  <h3 className="text-sm sm:text-base font-bold text-[#242321] dark:text-[#F5F5F4]">
+                    {activeDraftInfo.examName}
+                  </h3>
+                  <p className="text-xs text-[#716D67] dark:text-[#A8A29E] flex items-center gap-2 flex-wrap">
+                    <span>{activeDraftInfo.questionsCount} Questions</span>
+                    <span>•</span>
+                    <span>{activeDraftInfo.duration} mins</span>
+                    <span>•</span>
+                    <span>{activeDraftInfo.marks} marks</span>
+                    <span>•</span>
+                    <span className="text-amber-700 dark:text-amber-400 font-semibold">
+                      Auto-expires in {activeDraftInfo.daysLeft} day{activeDraftInfo.daysLeft !== 1 ? 's' : ''}
+                    </span>
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2.5 self-end md:self-center shrink-0">
+                <button
+                  type="button"
+                  onClick={handleClearDraft}
+                  className="px-3 py-2 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl border border-rose-200 dark:border-rose-900/40 transition-colors cursor-pointer flex items-center gap-1.5"
+                  title="Discard or expire this draft immediately"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Expire Draft</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => switchSectionTab("create")}
+                  className="px-4 py-2 text-xs font-bold text-white bg-[#C84B18] hover:bg-[#B33F12] rounded-xl shadow-xs transition-all cursor-pointer flex items-center gap-1.5"
+                >
+                  <span>Resume Test Setup</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Live Class Assessments & Proctoring Section */}
           <section id="exams" className="scroll-mt-16 pt-2">
             <LiveAssessmentsTable
+              activeDraft={activeDraftInfo}
+              onResumeDraft={() => switchSectionTab("create")}
+              onDiscardDraft={handleClearDraft}
               exams={exams}
               showCreateButton={false}
               title="Live Class Assessments & Proctoring"
@@ -1682,6 +1807,9 @@ export default function TeacherDashboard() {
       {activeSectionTab === "exams" && (
       <section id="exams" className="scroll-mt-16 space-y-4">
         <LiveAssessmentsTable
+          activeDraft={activeDraftInfo}
+          onResumeDraft={() => switchSectionTab("create")}
+          onDiscardDraft={handleClearDraft}
           exams={exams}
           showCreateButton={true}
           onOpenCreate={() => switchSectionTab("create")}
@@ -1726,17 +1854,18 @@ export default function TeacherDashboard() {
                 {draftSavedAt && (
                   <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 text-[11px] font-medium" title={`Auto-saved at ${new Date(draftSavedAt).toLocaleTimeString()}`}>
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    <span>Draft Saved</span>
+                    <span>Draft Saved {activeDraftInfo ? `(Expires in ${activeDraftInfo.daysLeft}d)` : ""}</span>
                   </div>
                 )}
                 {(examName || examSubject || step1AiPrompt || createStep > 1) && (
                   <button
                     type="button"
                     onClick={handleClearDraft}
-                    className="px-2 py-1 text-[11px] font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition-colors cursor-pointer"
+                    className="px-2 py-1 text-[11px] font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition-colors cursor-pointer flex items-center gap-1"
                     title="Discard saved draft and start fresh"
                   >
-                    Reset Draft
+                    <Trash2 className="w-3 h-3" />
+                    <span>Expire Draft</span>
                   </button>
                 )}
                 <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EFF6FF] text-[#1E3A8A] dark:bg-[#172B4D] dark:text-[#60A5FA] text-xs font-bold">

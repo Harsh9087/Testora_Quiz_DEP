@@ -26,6 +26,20 @@ interface LiveAssessmentsTableProps {
   onRefreshExams?: () => void;
   onOpenPaymentModal?: (exam: any) => void;
   onViewAll?: () => void;
+  activeDraft?: {
+    examName: string;
+    examSubject: string;
+    createStep: number;
+    totalSteps: number;
+    stepTitle: string;
+    questionsCount: number;
+    duration: string;
+    marks: string;
+    savedAt: string;
+    daysLeft: number;
+  } | null;
+  onResumeDraft?: () => void;
+  onDiscardDraft?: () => void;
 }
 
 export default function LiveAssessmentsTable({
@@ -44,6 +58,9 @@ export default function LiveAssessmentsTable({
   onRefreshExams,
   onOpenPaymentModal,
   onViewAll,
+  activeDraft,
+  onResumeDraft,
+  onDiscardDraft,
 }: LiveAssessmentsTableProps) {
   const { token } = useAuthStore();
   const { showToast } = useToast();
@@ -270,6 +287,49 @@ export default function LiveAssessmentsTable({
 
       {/* ─── Mobile Card List (< md) ─── */}
       <div className="block md:hidden divide-y divide-[#E2E8F0] dark:divide-[#263449]">
+        {activeDraft && (
+          <div className="p-4 bg-amber-50/70 dark:bg-amber-950/20 border-l-4 border-l-amber-500 space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100/80 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                <span>Incomplete Draft (Step {activeDraft.createStep}/4)</span>
+              </span>
+              <span className="text-[11px] font-semibold text-amber-700 dark:text-amber-400">
+                Expires in {activeDraft.daysLeft}d
+              </span>
+            </div>
+
+            <div>
+              <h4 className="font-bold text-sm text-[#111827] dark:text-[#F1F5F9]">{activeDraft.examName}</h4>
+              <p className="text-xs text-[#64748B] dark:text-[#A3B1C6] mt-0.5">
+                {activeDraft.examSubject} • {activeDraft.questionsCount} Qs • {activeDraft.duration} mins
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 pt-1">
+              {onDiscardDraft && (
+                <button
+                  type="button"
+                  onClick={onDiscardDraft}
+                  className="flex-1 h-9 rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-xs font-semibold flex items-center justify-center gap-1 transition-colors cursor-pointer"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Expire Draft</span>
+                </button>
+              )}
+              {onResumeDraft && (
+                <button
+                  type="button"
+                  onClick={onResumeDraft}
+                  className="flex-1 h-9 rounded-xl bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                >
+                  <span>Resume Setup</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          </div>
+        )}
         {exams.length === 0 ? (
           <div className="py-10 px-4 text-center text-xs text-[#64748B] dark:text-[#A3B1C6]">
             No assessments yet. Tap "Create Assessment" to generate your first exam.
@@ -585,6 +645,62 @@ export default function LiveAssessmentsTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-[#E2E8F0] dark:divide-[#263449]">
+            {activeDraft && (
+              <tr className="bg-amber-50/60 dark:bg-amber-950/20 border-l-4 border-l-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors">
+                <td className="py-3.5 px-4 whitespace-nowrap">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100/80 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                    <span>Incomplete Draft</span>
+                  </span>
+                </td>
+                <td className="py-3.5 px-4">
+                  <div className="font-bold text-[#111827] dark:text-[#F1F5F9] flex items-center gap-2">
+                    <span className="truncate max-w-[240px]">{activeDraft.examName}</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-200/60 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 font-semibold">
+                      Step {activeDraft.createStep}/4
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-[#64748B] dark:text-[#A3B1C6] flex items-center gap-1.5 mt-0.5">
+                    <span>{activeDraft.examSubject}</span>
+                    <span>•</span>
+                    <span className="text-amber-700 dark:text-amber-400 font-medium">Auto-expires in {activeDraft.daysLeft} days</span>
+                  </div>
+                </td>
+                <td className="py-3.5 px-4 whitespace-nowrap text-[#111827] dark:text-[#F1F5F9] font-medium">
+                  {activeDraft.questionsCount} Qs ({activeDraft.marks} pts)
+                </td>
+                <td className="py-3.5 px-4 whitespace-nowrap text-[#111827] dark:text-[#F1F5F9] font-medium">
+                  {activeDraft.duration} mins
+                </td>
+                <td className="py-3.5 px-4 whitespace-nowrap text-[#64748B] dark:text-[#A3B1C6]">
+                  <span className="text-xs">Setup in progress</span>
+                </td>
+                <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                  <div className="flex items-center justify-end gap-2">
+                    {onDiscardDraft && (
+                      <button
+                        type="button"
+                        onClick={onDiscardDraft}
+                        className="px-2.5 py-1.5 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer"
+                        title="Expire / Discard this draft"
+                      >
+                        Expire Draft
+                      </button>
+                    )}
+                    {onResumeDraft && (
+                      <button
+                        type="button"
+                        onClick={onResumeDraft}
+                        className="px-3.5 py-1.5 text-xs font-bold text-white bg-[#2563EB] hover:bg-blue-700 rounded-lg shadow-2xs transition-all cursor-pointer flex items-center gap-1"
+                      >
+                        <span>Resume Setup</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            )}
             {exams.length === 0 ? (
               <tr>
                 <td colSpan={6} className="py-12 text-center text-xs text-[#64748B] dark:text-[#A3B1C6]">
