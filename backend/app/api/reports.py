@@ -223,6 +223,73 @@ def get_exam_analytics(
     # Sort candidates list by rank
     submissions_list.sort(key=lambda x: (x.get("rank", 999)))
 
+    # ── Append abandoned (mid-exam dropout) rows at the end ──────────────────
+    # These are separate from submitted rows: student started but never finished,
+    # past their deadline, not yet dismissed by teacher and not yet auto-expired.
+    from app.api.exams import mark_abandoned_submissions
+    mark_abandoned_submissions(exam_id, db)  # ensure stale "started" rows are flipped to "abandoned"
+
+    now_ts = now_utc()
+    abandoned_subs = db.query(ExamSubmission).filter(
+        ExamSubmission.exam_id == exam_id,
+        ExamSubmission.status == "abandoned",
+        ExamSubmission.is_dismissed_by_teacher == False,
+        (ExamSubmission.abandon_expires_at == None) | (ExamSubmission.abandon_expires_at > now_ts)
+    ).all()
+
+    exam_candidates_all = db.query(ExamCandidate).filter(ExamCandidate.exam_id == exam_id).all()
+    candidates_by_id_full = {c.id: c for c in exam_candidates_all}
+
+    abandoned_list = []
+    for ab in abandoned_subs:
+        cand = None
+        if ab.candidate_id and ab.candidate_id in candidates_by_id_full:
+            cand = candidates_by_id_full[ab.candidate_id]
+
+        ab_name = "Candidate"
+        ab_email = ""
+        ab_roll = "N/A"
+        if cand:
+            ab_name = cand.name_snapshot
+            ab_email = cand.email_snapshot or ""
+            ab_roll = cand.roll_number_snapshot or "N/A"
+        elif ab.credential and ab.credential.student and ab.credential.student.user:
+            ab_name = ab.credential.student.user.full_name
+            ab_email = ab.credential.student.user.email or ""
+            ab_roll = ab.credential.student.roll_number or "N/A"
+
+        answered = 0
+        if ab.answers_json:
+            try:
+                ans = json.loads(ab.answers_json)
+                answered = len([v for k, v in ans.items() if k != "_meta" and v])
+            except Exception:
+                answered = 0
+
+        from app.utils.timezone import format_ist_datetime
+        abandoned_list.append({
+            "submission_id": ab.id,
+            "student_name": ab_name,
+            "email": ab_email,
+            "roll_number": ab_roll,
+            "status": "abandoned",
+            "is_abandoned": True,
+            "is_dismissed": False,
+            "answered_count": answered,
+            "total_questions": len(questions_list),
+            "abandoned_at": ab.abandoned_at.strftime("%Y-%m-%d %H:%M") if ab.abandoned_at else "",
+            "abandoned_at_ist": format_ist_datetime(ab.abandoned_at) if ab.abandoned_at else "",
+            "abandon_expires_at": ab.abandon_expires_at.strftime("%Y-%m-%d %H:%M") if ab.abandon_expires_at else "",
+            "score": None,
+            "percentage": None,
+            "is_passed": None,
+            "proctor_alerts": 0,
+            "submitted_at": "",
+            "rank": None,
+            "max_score": exam.total_marks
+        })
+    # ─────────────────────────────────────────────────────────────────────────
+
     # Format topic analytics
     topic_analytics_list = []
     for t_name, t_data in topic_map.items():
@@ -257,7 +324,8 @@ def get_exam_analytics(
         "pass_rate": pass_rate,
         "distribution": dist,
         "topic_analytics": topic_analytics_list,
-        "submissions": submissions_list
+        "submissions": submissions_list,
+        "abandoned_submissions": abandoned_list
     }
 
 @router.get("/export-exam-csv/{exam_id}")

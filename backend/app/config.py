@@ -39,6 +39,9 @@ class Settings(BaseSettings):
     CREDIT_PER_UNIT: int = 1        # 1 Credit per student-question attempt
     MIN_ORDER_AMOUNT_PAISE: int = 100 # Razorpay minimum order value is ₹1.00 (100 paise)
 
+    # Abandoned attempt retention: how many days an "abandoned" attempt stays visible before auto-expiry
+    ABANDONED_ATTEMPT_RETENTION_DAYS: int = 7
+
     # Configurable Prepaid Credit Recharge Packages
     RECHARGE_PACKAGES: list = [
         {

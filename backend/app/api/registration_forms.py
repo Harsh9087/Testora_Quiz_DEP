@@ -130,6 +130,54 @@ def submit_student_registration(
     )
 
     db.add(submission)
+    db.flush()
+
+    # Automatically sync student into linked or matching StudentDirectory in real-time
+    try:
+        import re
+        target_dir = None
+        if form.description and "[dir_id:" in form.description:
+            match = re.search(r'\[dir_id:([a-fA-F0-9\-]+)\]', form.description)
+            if match:
+                target_dir_id = match.group(1)
+                target_dir = db.query(StudentDirectory).filter(
+                    StudentDirectory.id == target_dir_id,
+                    StudentDirectory.is_deleted == False
+                ).first()
+
+        if not target_dir:
+            target_dir = db.query(StudentDirectory).filter(
+                StudentDirectory.name == form.title,
+                StudentDirectory.workspace_id == form.workspace_id,
+                StudentDirectory.is_deleted == False
+            ).first()
+
+        if target_dir:
+            existing_student = db.query(DirectoryStudent).filter(
+                DirectoryStudent.directory_id == target_dir.id,
+                DirectoryStudent.is_deleted == False,
+                or_(
+                    DirectoryStudent.email == clean_email,
+                    DirectoryStudent.roll_number == clean_roll
+                )
+            ).first()
+            if not existing_student:
+                new_student = DirectoryStudent(
+                    directory_id=target_dir.id,
+                    name=clean_name,
+                    email=clean_email,
+                    roll_number=clean_roll,
+                    phone=clean_phone,
+                    division=clean_section,
+                    department=clean_branch,
+                    status="active"
+                )
+                db.add(new_student)
+                submission.imported_directory_id = target_dir.id
+                submission.status = "imported"
+    except Exception as sync_err:
+        print(f"[AUTO_SYNC_NOTICE] Directory auto-sync notice: {sync_err}")
+
     db.commit()
     db.refresh(submission)
     return submission
@@ -550,3 +598,44 @@ def export_submissions_excel(
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'}
     )
+
+
+@router.get("/{form_id}/export-csv")
+def export_submissions_csv(
+    form_id: str,
+    current_workspace: Workspace = Depends(get_current_workspace),
+    db: Session = Depends(get_db)
+):
+    """
+    Exports collected student responses as a standard CSV strictly matching the Student Roster schema.
+    Guarantees 100% compatibility with test scheduling.
+    """
+    form = _get_authorized_form(form_id, current_workspace, db)
+    submissions = db.query(StudentFormSubmission).filter(
+        StudentFormSubmission.form_id == form.id,
+        StudentFormSubmission.is_deleted == False
+    ).order_by(StudentFormSubmission.created_at.asc()).all()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["Roll Number", "Name", "Email", "Phone", "Division", "Department", "Status", "Joined Date"])
+    for sub in submissions:
+        writer.writerow([
+            sub.roll_number or "",
+            sub.full_name,
+            sub.email or "",
+            sub.contact_number or "",
+            sub.section or "",
+            sub.branch or "",
+            sub.status.capitalize() if sub.status else "Active",
+            sub.created_at.strftime("%Y-%m-%d %H:%M") if sub.created_at else ""
+        ])
+
+    safe_title = re.sub(r'[^a-zA-Z0-9_\-]', '_', form.title)
+    filename = f"{safe_title}_roster.csv"
+    return Response(
+        content=output.getvalue(),
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+    )
+

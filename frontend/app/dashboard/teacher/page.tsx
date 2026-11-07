@@ -14,10 +14,11 @@ import {
   Plus, BookOpen, Calendar, ChevronRight, ChevronLeft, ChevronDown, Check,
   Users, BarChart3, GraduationCap, Clock, 
   Sparkles, ArrowRight, ArrowLeft, Radio, FileSpreadsheet,
-  UploadCloud, CloudUpload, FileUp, FileText, FilePlus, FileEdit, FileDown, Loader2, CheckCircle2, X,
+  UploadCloud, CloudUpload, FileUp, FileText, FilePlus, FileEdit, FileDown, Loader2, CheckCircle2, X, RefreshCw,
   Lightbulb, HelpCircle, Sliders, Scale, Layers, Calculator,
   ClipboardList, Wand2, ArrowUpRight, Database,
-  UserCheck, Contact, Settings, Play, AlertCircle, ShieldCheck, Eye, Key
+  UserCheck, Contact, Settings, Play, AlertCircle, ShieldCheck, Eye, Key,
+  Camera, Bot, Sparkles as SparklesIcon
 } from "lucide-react";
 
 import StudentDirectoryManager from "./_components/StudentDirectoryManager";
@@ -117,6 +118,9 @@ export default function TeacherDashboard() {
   const switchSectionTab = (tab: string) => {
     const normalized = (tab === "all" || tab === "overview" || !tab) ? "overview" : tab;
     setActiveSectionTab(normalized);
+    if (normalized === "create") {
+      reloadStudentDirectories();
+    }
     if (typeof window !== "undefined") {
       if (normalized === "overview") {
         if (window.location.hash) {
@@ -166,13 +170,19 @@ export default function TeacherDashboard() {
   const [registrationFormsCount, setRegistrationFormsCount] = useState<number>(0);
   
   // Step 1 Direct KB Upload state
-  const [step1SourceMode, setStep1SourceMode] = useState<"select" | "upload">("select");
+  const [step1SourceMode, setStep1SourceMode] = useState<"select" | "upload" | "ai_prompt" | "camera">("select");
   const [step1UploadFile, setStep1UploadFile] = useState<File | null>(null);
   const [step1UploadSubject, setStep1UploadSubject] = useState("");
   const [isStep1Uploading, setIsStep1Uploading] = useState(false);
   const [step1UploadSuccess, setStep1UploadSuccess] = useState<{ fileName: string; subjectId: string } | null>(null);
   const [isStep1KbModalOpen, setIsStep1KbModalOpen] = useState(false);
   const [step1IsDragging, setStep1IsDragging] = useState(false);
+  // AI Prompt mode state
+  const [step1AiPrompt, setStep1AiPrompt] = useState("");
+  // Camera mode state
+  const [step1CameraPhoto, setStep1CameraPhoto] = useState<File | null>(null);
+  const [step1CameraPreview, setStep1CameraPreview] = useState<string | null>(null);
+  const [step1CameraUploading, setStep1CameraUploading] = useState(false);
   
   // Modal states
   const [previewExam, setPreviewExam] = useState<any | null>(null);
@@ -208,6 +218,9 @@ export default function TeacherDashboard() {
   const [selectedDirectoryId, setSelectedDirectoryId] = useState<string>("");
   const [isCreateDirModalOpen, setIsCreateDirModalOpen] = useState(false);
   const [workspaceName, setWorkspaceName] = useState<string>("");
+  const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
+  const [isDraftRestored, setIsDraftRestored] = useState<boolean>(false);
+  const [isDraftLoaded, setIsDraftLoaded] = useState<boolean>(false);
 
   // Custom Marks Distribution state
   const [marksDistMode, setMarksDistMode] = useState<"equal" | "by_type" | "by_difficulty" | "custom">("equal");
@@ -328,6 +341,196 @@ export default function TeacherDashboard() {
     } catch (e) {
       console.warn("fetchData notice:", e);
     }
+  };
+
+  const reloadStudentDirectories = async (forcedToken?: string) => {
+    const activeToken = forcedToken || token || (typeof window !== "undefined" ? localStorage.getItem("token") : null);
+    if (!activeToken) return;
+    try {
+      const dirs = await fetchStudentDirectories(activeToken);
+      if (Array.isArray(dirs)) {
+        setStudentDirectories(dirs);
+        if (dirs.length > 0 && !selectedDirectoryId) {
+          setSelectedDirectoryId(dirs[0].id);
+        }
+      }
+    } catch (err) {
+      console.warn("Failed to reload student directories:", err);
+    }
+  };
+
+  useEffect(() => {
+    const handleRefresh = () => {
+      reloadStudentDirectories();
+    };
+    window.addEventListener("refresh-student-directories", handleRefresh);
+    return () => window.removeEventListener("refresh-student-directories", handleRefresh);
+  }, [token]);
+
+  // Draft auto-save restoration on mount
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const saved = localStorage.getItem("testora_create_assessment_draft");
+      if (saved) {
+        const d = JSON.parse(saved);
+        if (d && (d.examName || d.examSubject || d.step1AiPrompt || (d.createStep && d.createStep > 1))) {
+          if (d.examName !== undefined) setExamName(d.examName);
+          if (d.examSubject !== undefined) setExamSubject(d.examSubject);
+          if (d.examTopic !== undefined) setExamTopic(d.examTopic);
+          if (d.examDuration !== undefined) setExamDuration(d.examDuration);
+          if (d.examMarks !== undefined) setExamMarks(d.examMarks);
+          if (d.examPass !== undefined) setExamPass(d.examPass);
+          if (d.examNegative !== undefined) setExamNegative(d.examNegative);
+          if (d.numMcq !== undefined) setNumMcq(d.numMcq);
+          if (d.numSubjective !== undefined) setNumSubjective(d.numSubjective);
+          if (d.questionType !== undefined) setQuestionType(d.questionType);
+          if (d.difficulty !== undefined) setDifficulty(d.difficulty);
+          if (d.cognitiveTarget !== undefined) setCognitiveTarget(d.cognitiveTarget);
+          if (d.diffEasyPct !== undefined) setDiffEasyPct(d.diffEasyPct);
+          if (d.diffMedPct !== undefined) setDiffMedPct(d.diffMedPct);
+          if (d.diffHardPct !== undefined) setDiffHardPct(d.diffHardPct);
+          if (d.customPromptInstructions !== undefined) setCustomPromptInstructions(d.customPromptInstructions);
+          if (d.examStartDate !== undefined) setExamStartDate(d.examStartDate);
+          if (d.examEndDate !== undefined) setExamEndDate(d.examEndDate);
+          if (d.selectedDirectoryId !== undefined) setSelectedDirectoryId(d.selectedDirectoryId);
+          if (d.marksDistMode !== undefined) setMarksDistMode(d.marksDistMode);
+          if (d.marksByType !== undefined) setMarksByType(d.marksByType);
+          if (d.marksByDiff !== undefined) setMarksByDiff(d.marksByDiff);
+          if (Array.isArray(d.customSlotMarks)) setCustomSlotMarks(d.customSlotMarks);
+          if (d.step1SourceMode !== undefined) setStep1SourceMode(d.step1SourceMode);
+          if (d.step1AiPrompt !== undefined) setStep1AiPrompt(d.step1AiPrompt);
+          if (d.createStep !== undefined) setCreateStep(d.createStep);
+          if (d.expandedStep !== undefined) setExpandedStep(d.expandedStep);
+          if (d.savedAt) setDraftSavedAt(d.savedAt);
+          setIsDraftRestored(true);
+        }
+      }
+    } catch (e) {
+      console.warn("Could not parse saved draft", e);
+    } finally {
+      setIsDraftLoaded(true);
+    }
+  }, []);
+
+  // Draft auto-saving debounced
+  useEffect(() => {
+    if (!isDraftLoaded || typeof window === "undefined") return;
+    const hasMeaningfulContent = Boolean(
+      examName.trim() ||
+      examSubject ||
+      step1AiPrompt.trim() ||
+      createStep > 1 ||
+      (customPromptInstructions && customPromptInstructions.trim())
+    );
+    if (!hasMeaningfulContent) return;
+
+    const handler = setTimeout(() => {
+      const nowIso = new Date().toISOString();
+      const draftObj = {
+        examName,
+        examSubject,
+        examTopic,
+        examDuration,
+        examMarks,
+        examPass,
+        examNegative,
+        numMcq,
+        numSubjective,
+        questionType,
+        difficulty,
+        cognitiveTarget,
+        diffEasyPct,
+        diffMedPct,
+        diffHardPct,
+        customPromptInstructions,
+        examStartDate,
+        examEndDate,
+        selectedDirectoryId,
+        marksDistMode,
+        marksByType,
+        marksByDiff,
+        customSlotMarks,
+        step1SourceMode,
+        step1AiPrompt,
+        createStep,
+        expandedStep,
+        savedAt: nowIso,
+      };
+      try {
+        localStorage.setItem("testora_create_assessment_draft", JSON.stringify(draftObj));
+        setDraftSavedAt(nowIso);
+      } catch (err) {
+        console.warn("Failed to auto-save draft:", err);
+      }
+    }, 400);
+
+    return () => clearTimeout(handler);
+  }, [
+    isDraftLoaded,
+    examName,
+    examSubject,
+    examTopic,
+    examDuration,
+    examMarks,
+    examPass,
+    examNegative,
+    numMcq,
+    numSubjective,
+    questionType,
+    difficulty,
+    cognitiveTarget,
+    diffEasyPct,
+    diffMedPct,
+    diffHardPct,
+    customPromptInstructions,
+    examStartDate,
+    examEndDate,
+    selectedDirectoryId,
+    marksDistMode,
+    marksByType,
+    marksByDiff,
+    customSlotMarks,
+    step1SourceMode,
+    step1AiPrompt,
+    createStep,
+    expandedStep,
+  ]);
+
+  const handleClearDraft = () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("testora_create_assessment_draft");
+    }
+    setExamName("");
+    setExamSubject("");
+    setExamTopic("General");
+    setExamDuration("30");
+    setExamMarks("50");
+    setExamPass("20");
+    setExamNegative("0");
+    setNumMcq("5");
+    setNumSubjective("0");
+    setQuestionType("mcq");
+    setDifficulty("medium");
+    setCognitiveTarget("apply");
+    setDiffEasyPct(30);
+    setDiffMedPct(50);
+    setDiffHardPct(20);
+    setCustomPromptInstructions("");
+    setExamStartDate("");
+    setExamEndDate("");
+    setSelectedDirectoryId("");
+    setMarksDistMode("by_type");
+    setMarksByType({ mcq: 2, subjective: 5, tf: 1 });
+    setMarksByDiff({ easy: 1, medium: 2, hard: 3 });
+    setCustomSlotMarks([]);
+    setStep1SourceMode("select");
+    setStep1AiPrompt("");
+    setCreateStep(1);
+    setExpandedStep(1);
+    setDraftSavedAt(null);
+    setIsDraftRestored(false);
+    showToast("Assessment draft cleared. Ready for a new test.", "info");
   };
 
   useEffect(() => {
@@ -503,7 +706,21 @@ export default function TeacherDashboard() {
   // Create Exam Handler
   const handleCreateExam = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!examName || !examSubject) {
+
+    // AI Prompt mode: use prompt as knowledge context, no KB required
+    const isAiPromptMode = step1SourceMode === "ai_prompt";
+    if (isAiPromptMode && !step1AiPrompt.trim()) {
+      showToast("Please enter a topic/prompt for AI to generate questions from.", "error");
+      return;
+    }
+    const effectiveSubject = isAiPromptMode
+      ? (examSubject || "ai_prompt_generated")
+      : examSubject;
+    const effectiveCustomInstructions = isAiPromptMode
+      ? `${step1AiPrompt.trim()}${customPromptInstructions ? `\n\nAdditional: ${customPromptInstructions}` : ""}`
+      : customPromptInstructions;
+
+    if (!examName || !effectiveSubject) {
       showToast("Please provide an assessment title and select a knowledge source", "error");
       return;
     }
@@ -550,8 +767,8 @@ export default function TeacherDashboard() {
 
       const payload = {
         name: examName,
-        subject_id: examSubject,
-        topic: examTopic || "General",
+        subject_id: effectiveSubject,
+        topic: examTopic || (isAiPromptMode ? step1AiPrompt.slice(0, 80) : "General"),
         num_questions: numQuestions,
         num_mcq: questionType === "mixed" ? (parseInt(numMcq) || 0) : questionType === "subjective" ? 0 : numQuestions,
         num_subjective: questionType === "mixed" ? (parseInt(numSubjective) || 0) : questionType === "subjective" ? numQuestions : 0,
@@ -565,8 +782,8 @@ export default function TeacherDashboard() {
         start_time: examStartDate ? parseISTInputToUtcIso(examStartDate) : null,
         end_time: examEndDate ? parseISTInputToUtcIso(examEndDate) : null,
         student_directory_id: selectedDirectoryId || null,
-        custom_instructions: customPromptInstructions,
-        blueprint: blueprint,
+        custom_instructions: effectiveCustomInstructions,
+        blueprint: { ...blueprint, custom_instructions: effectiveCustomInstructions },
         enable_ai_paper: true,
         is_published: true,
       };
@@ -580,6 +797,11 @@ export default function TeacherDashboard() {
       if (res.ok) {
         const newExam = await res.json();
         showToast(`Assessment "${newExam.name}" successfully created and published!`, "success");
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("testora_create_assessment_draft");
+        }
+        setDraftSavedAt(null);
+        setIsDraftRestored(false);
         setCreateStep(1);
         setExpandedStep(1);
         setExamName("");
@@ -1501,6 +1723,22 @@ export default function TeacherDashboard() {
 
               {/* Step Progress Pill & Toggle Buttons */}
               <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+                {draftSavedAt && (
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 text-[11px] font-medium" title={`Auto-saved at ${new Date(draftSavedAt).toLocaleTimeString()}`}>
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span>Draft Saved</span>
+                  </div>
+                )}
+                {(examName || examSubject || step1AiPrompt || createStep > 1) && (
+                  <button
+                    type="button"
+                    onClick={handleClearDraft}
+                    className="px-2 py-1 text-[11px] font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition-colors cursor-pointer"
+                    title="Discard saved draft and start fresh"
+                  >
+                    Reset Draft
+                  </button>
+                )}
                 <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EFF6FF] text-[#1E3A8A] dark:bg-[#172B4D] dark:text-[#60A5FA] text-xs font-bold">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#2563EB] animate-pulse" />
                   <span>Step {createStep} of 4: {WIZARD_STEPS[createStep - 1].shortTitle}</span>
@@ -1522,6 +1760,23 @@ export default function TeacherDashboard() {
                 style={{ width: `${(createStep / 4) * 100}%` }}
               />
             </div>
+
+            {/* Restored Draft Notice Banner */}
+            {isDraftRestored && (
+              <div className="flex items-center justify-between p-2.5 rounded-xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-900/40 text-blue-900 dark:text-blue-200 text-xs animate-fadeIn">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                  <span>Resumed from your auto-saved draft. All configured steps and settings are preserved.</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsDraftRestored(false)}
+                  className="text-[11px] font-bold text-blue-700 hover:text-blue-900 dark:text-blue-300 dark:hover:text-white px-2 py-0.5 rounded cursor-pointer"
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
 
             {/* ═══════ INTERACTIVE STEPS TAB BAR NAVIGATION ═══════ */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 pt-1">
@@ -1653,31 +1908,70 @@ export default function TeacherDashboard() {
                       </button>
                     </div>
 
-                    {/* Mode Toggle Switcher */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 p-1 bg-[#F0ECE4]/60 dark:bg-[#1D1B19] rounded-xl border border-[#E5E0D8] dark:border-[#292524] gap-1.5">
+                    {/* Mode Toggle Switcher — 4 compact options */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 p-1 bg-[#F0ECE4]/60 dark:bg-[#1D1B19] rounded-xl border border-[#E5E0D8] dark:border-[#292524] gap-1">
+                      {/* 1. Existing KB */}
                       <button
                         type="button"
                         onClick={() => setStep1SourceMode("select")}
-                        className={`py-2 px-3 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                        className={`py-2 px-2 text-[11px] font-bold rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer ${
                           step1SourceMode === "select"
                             ? "bg-white dark:bg-[#292524] text-[#242321] dark:text-[#F5F5F4] shadow-xs"
                             : "text-[#716D67] dark:text-[#A8A29E] hover:text-[#242321] dark:hover:text-white"
                         }`}
+                        title="Use existing indexed Knowledge Base"
                       >
                         <BookOpen className="h-3.5 w-3.5 shrink-0" />
-                        <span className="truncate">Existing Knowledge Base</span>
+                        <span className="truncate hidden xs:inline">Existing KB</span>
+                        <span className="xs:hidden">KB</span>
                       </button>
+
+                      {/* 2. Upload Document */}
                       <button
                         type="button"
                         onClick={() => setStep1SourceMode("upload")}
-                        className={`py-2 px-3 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                        className={`py-2 px-2 text-[11px] font-bold rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer ${
                           step1SourceMode === "upload"
                             ? "bg-[#C84B18] dark:bg-[#EA580C] text-white shadow-xs"
                             : "text-[#716D67] dark:text-[#A8A29E] hover:text-[#242321] dark:hover:text-white"
                         }`}
+                        title="Upload a PDF/DOCX/TXT document as source"
                       >
                         <UploadCloud className="h-3.5 w-3.5 shrink-0" />
-                        <span className="truncate">Upload New Document Now</span>
+                        <span className="truncate hidden xs:inline">Upload Doc</span>
+                        <span className="xs:hidden">Doc</span>
+                      </button>
+
+                      {/* 3. AI Prompt */}
+                      <button
+                        type="button"
+                        onClick={() => setStep1SourceMode("ai_prompt")}
+                        className={`py-2 px-2 text-[11px] font-bold rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                          step1SourceMode === "ai_prompt"
+                            ? "bg-purple-600 text-white shadow-xs"
+                            : "text-[#716D67] dark:text-[#A8A29E] hover:text-[#242321] dark:hover:text-white"
+                        }`}
+                        title="Describe the topic — AI generates questions directly"
+                      >
+                        <Bot className="h-3.5 w-3.5 shrink-0" />
+                        <span className="truncate hidden xs:inline">AI Prompt</span>
+                        <span className="xs:hidden">AI</span>
+                      </button>
+
+                      {/* 4. Camera Photo */}
+                      <button
+                        type="button"
+                        onClick={() => setStep1SourceMode("camera")}
+                        className={`py-2 px-2 text-[11px] font-bold rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                          step1SourceMode === "camera"
+                            ? "bg-blue-600 text-white shadow-xs"
+                            : "text-[#716D67] dark:text-[#A8A29E] hover:text-[#242321] dark:hover:text-white"
+                        }`}
+                        title="Take a photo of notes/textbook — AI reads & creates questions"
+                      >
+                        <Camera className="h-3.5 w-3.5 shrink-0" />
+                        <span className="truncate hidden xs:inline">Camera</span>
+                        <span className="xs:hidden">📷</span>
                       </button>
                     </div>
 
@@ -1856,6 +2150,169 @@ export default function TeacherDashboard() {
                             </>
                           )}
                         </button>
+                      </div>
+                    )}
+
+                    {/* ── MODE C: AI Prompt — describe topic, AI generates directly ── */}
+                    {step1SourceMode === "ai_prompt" && (
+                      <div className="space-y-3 p-3.5 rounded-xl bg-purple-50/60 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800/50">
+                        <div className="flex items-center gap-2 text-[11px] font-bold text-purple-700 dark:text-purple-300">
+                          <Bot className="h-3.5 w-3.5 shrink-0" />
+                          <span>AI Direct Prompt — No KB Required</span>
+                        </div>
+                        <p className="text-[11px] text-purple-600 dark:text-purple-400 leading-relaxed">
+                          Describe the topic you want tested. The AI will generate questions directly from your description — no document needed.
+                        </p>
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-bold text-[#57534E] dark:text-[#A8A29E] uppercase tracking-wider">
+                            Your Prompt / Topic Description <span className="text-[#C84B18]">*</span>
+                          </label>
+                          <textarea
+                            rows={3}
+                            value={step1AiPrompt}
+                            onChange={(e) => {
+                              setStep1AiPrompt(e.target.value);
+                              // Auto-fill topic and subject from prompt
+                              if (e.target.value.trim() && !examTopic) {
+                                setExamTopic(e.target.value.trim().slice(0, 60));
+                              }
+                              if (e.target.value.trim() && !examSubject) {
+                                setExamSubject("ai_prompt_generated");
+                              }
+                            }}
+                            placeholder="e.g. Generate MCQs on the water cycle, photosynthesis, and plant respiration for Class 10 Biology students at medium difficulty."
+                            className="w-full px-3 py-2 text-xs rounded-xl border border-purple-200 dark:border-purple-800/60 bg-white dark:bg-[#171615] text-[#242321] dark:text-[#F5F5F4] focus:outline-none focus:border-purple-500 placeholder:text-[#A8A29E] resize-none"
+                          />
+                          {step1AiPrompt.trim() && (
+                            <div className="flex items-center gap-1.5 text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                              <CheckCircle2 className="h-3 w-3 shrink-0" />
+                              <span>Ready — AI will use this prompt as the knowledge context</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ── MODE D: Camera / Photo Upload — take or pick a photo of notes ── */}
+                    {step1SourceMode === "camera" && (
+                      <div className="space-y-3 p-3.5 rounded-xl bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800/50">
+                        <div className="flex items-center gap-2 text-[11px] font-bold text-blue-700 dark:text-blue-300">
+                          <Camera className="h-3.5 w-3.5 shrink-0" />
+                          <span>Photo of Notes / Textbook Page</span>
+                        </div>
+                        <p className="text-[11px] text-blue-600 dark:text-blue-400 leading-relaxed">
+                          Take a photo of your textbook, whiteboard, or handwritten notes. Gemini Vision will read the content and generate questions from it.
+                        </p>
+
+                        {/* Preview + Clear */}
+                        {step1CameraPreview ? (
+                          <div className="relative rounded-xl overflow-hidden border border-blue-200 dark:border-blue-800/50">
+                            <img
+                              src={step1CameraPreview}
+                              alt="Captured notes preview"
+                              className="w-full max-h-48 object-contain bg-black/5 dark:bg-white/5"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setStep1CameraPhoto(null);
+                                setStep1CameraPreview(null);
+                              }}
+                              className="absolute top-2 right-2 p-1 rounded-full bg-white/90 dark:bg-black/70 text-rose-600 hover:bg-rose-100 transition-all shadow cursor-pointer"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                            <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-emerald-600 text-white text-[10px] font-bold">
+                              ✓ Photo Ready
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-2 gap-2">
+                            {/* Take Photo — opens camera on mobile */}
+                            <label className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border-2 border-dashed border-blue-300 dark:border-blue-700 bg-white dark:bg-[#171615] cursor-pointer hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-all text-center">
+                              <input
+                                type="file"
+                                accept="image/*"
+                                capture="environment"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (!file) return;
+                                  setStep1CameraPhoto(file);
+                                  const reader = new FileReader();
+                                  reader.onload = (ev) => setStep1CameraPreview(ev.target?.result as string);
+                                  reader.readAsDataURL(file);
+                                  // auto-fill subject if empty
+                                  if (!examSubject) setExamSubject("photo_scan_source");
+                                }}
+                              />
+                              <Camera className="h-6 w-6 text-blue-500" />
+                              <span className="text-[11px] font-bold text-blue-700 dark:text-blue-300">Take Photo</span>
+                              <span className="text-[10px] text-blue-500 dark:text-blue-400">Opens Camera</span>
+                            </label>
+
+                            {/* Upload existing photo */}
+                            <label className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border-2 border-dashed border-blue-300 dark:border-blue-700 bg-white dark:bg-[#171615] cursor-pointer hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-all text-center">
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (!file) return;
+                                  setStep1CameraPhoto(file);
+                                  const reader = new FileReader();
+                                  reader.onload = (ev) => setStep1CameraPreview(ev.target?.result as string);
+                                  reader.readAsDataURL(file);
+                                  if (!examSubject) setExamSubject("photo_scan_source");
+                                }}
+                              />
+                              <UploadCloud className="h-6 w-6 text-blue-500" />
+                              <span className="text-[11px] font-bold text-blue-700 dark:text-blue-300">Upload Photo</span>
+                              <span className="text-[10px] text-blue-500 dark:text-blue-400">From Gallery</span>
+                            </label>
+                          </div>
+                        )}
+
+                        {/* Upload photo to KB as image */}
+                        {step1CameraPhoto && (
+                          <button
+                            type="button"
+                            disabled={step1CameraUploading}
+                            onClick={async () => {
+                              setStep1CameraUploading(true);
+                              try {
+                                const subjectId = examSubject || "photo_scan_source";
+                                const formData = new FormData();
+                                formData.append("file", step1CameraPhoto);
+                                formData.append("subject_id", subjectId);
+                                const res = await apiFetch("/kb/upload", { token, method: "POST", body: formData });
+                                if (res.ok) {
+                                  setExamSubject(subjectId);
+                                  setStep1UploadSuccess({ fileName: step1CameraPhoto.name, subjectId });
+                                  showToast("Photo indexed! AI will generate questions from it.", "success");
+                                  setStep1SourceMode("select");
+                                  setStep1CameraPhoto(null);
+                                  setStep1CameraPreview(null);
+                                  fetchData();
+                                } else {
+                                  showToast("Failed to upload photo. Please try again.", "error");
+                                }
+                              } catch {
+                                showToast("Network error uploading photo.", "error");
+                              } finally {
+                                setStep1CameraUploading(false);
+                              }
+                            }}
+                            className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition-all shadow-xs disabled:opacity-50 cursor-pointer"
+                          >
+                            {step1CameraUploading ? (
+                              <><Loader2 className="h-4 w-4 animate-spin" /><span>Indexing Photo with Gemini Vision...</span></>
+                            ) : (
+                              <><Camera className="h-4 w-4" /><span>Index Photo & Use as Knowledge Source</span></>
+                            )}
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
@@ -2865,21 +3322,71 @@ export default function TeacherDashboard() {
               {/* Step 4 Body */}
               {expandedStep === 4 && (
                 <div className="p-4 sm:p-5 pt-1 border-t border-[#E5E0D8] dark:border-[#292524] space-y-5 max-w-3xl animate-fadeIn">
-                  {/* Student Directory Selector with + Create Directory button */}
+                  {/* Assessment Title (Auto-generated + Fully Customizable) */}
+                  <div className="pt-2 space-y-1.5 p-3.5 bg-white dark:bg-[#1E1C1A] border border-[#E5E0D8] dark:border-[#292524] rounded-xl shadow-xs">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-[#242321] dark:text-[#F5F5F4] uppercase tracking-wider flex items-center gap-1.5">
+                        <FileText className="h-3.5 w-3.5 text-[#C84B18]" />
+                        <span>Assessment Title</span>
+                      </label>
+                      <span className="text-[11px] font-medium text-[#C84B18] dark:text-[#EA580C] bg-[#C84B18]/10 px-2 py-0.5 rounded-full">
+                        Customizable
+                      </span>
+                    </div>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={examName}
+                        onChange={(e) => setExamName(e.target.value)}
+                        placeholder="e.g. Unit 1 Examination Paper"
+                        className={`${inputCls} font-semibold text-sm pl-3 pr-24`}
+                      />
+                      {examSubject && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const clean = examSubject.replace(/[_-]/g, " ");
+                            setExamName(`${clean} Assessment`);
+                            showToast("Title reset to default auto-generated name", "info");
+                          }}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-[#C84B18] hover:text-[#A0360D] bg-[#C84B18]/10 hover:bg-[#C84B18]/20 px-2 py-1 rounded cursor-pointer transition-colors"
+                          title="Re-generate title from source name"
+                        >
+                          Auto-Fill
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-[#716D67] dark:text-[#A8A29E]">
+                      Auto-generated from your knowledge source. You can customize this title anytime before creating the test.
+                    </p>
+                  </div>
+
+                  {/* Student Directory Selector with + Create Directory & Refresh buttons */}
                   <div className="pt-2 space-y-2">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                       <label className="text-xs font-bold text-[#242321] dark:text-[#F5F5F4] uppercase tracking-wider flex items-center gap-1.5">
                         <Users className="h-3.5 w-3.5 text-[#C84B18]" />
                         <span>Target Student Directory</span>
                       </label>
-                      <button
-                        type="button"
-                        onClick={() => setIsCreateDirModalOpen(true)}
-                        className="inline-flex items-center gap-1 text-[11px] font-bold text-[#C84B18] hover:text-[#A0360D] dark:text-[#EA580C] dark:hover:text-[#F97316] transition-colors cursor-pointer self-start sm:self-auto"
-                      >
-                        <Plus className="h-3.5 w-3.5" />
-                        <span>Create New Student Directory</span>
-                      </button>
+                      <div className="flex items-center gap-2 self-start sm:self-auto">
+                        <button
+                          type="button"
+                          onClick={() => reloadStudentDirectories()}
+                          className="inline-flex items-center gap-1 text-[11px] font-medium text-[#716D67] hover:text-[#242321] dark:hover:text-white transition-colors cursor-pointer"
+                          title="Refresh Directories list"
+                        >
+                          <RefreshCw className="h-3 w-3" />
+                          <span className="hidden sm:inline">Refresh</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setIsCreateDirModalOpen(true)}
+                          className="inline-flex items-center gap-1 text-[11px] font-bold text-[#C84B18] hover:text-[#A0360D] dark:text-[#EA580C] dark:hover:text-[#F97316] transition-colors cursor-pointer"
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                          <span>Create New Student Directory</span>
+                        </button>
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-1 gap-2">
@@ -3045,9 +3552,12 @@ export default function TeacherDashboard() {
         isOpen={isCreateDirModalOpen}
         onClose={() => setIsCreateDirModalOpen(false)}
         onCreated={(newDir) => {
-          setStudentDirectories((prev) => [newDir, ...prev]);
+          setStudentDirectories((prev) => [newDir, ...prev.filter(d => d.id !== newDir.id)]);
           setSelectedDirectoryId(newDir.id);
           showToast(`Student Directory "${newDir.name}" created and selected!`, "success");
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(new CustomEvent("refresh-student-directories"));
+          }
         }}
       />
 

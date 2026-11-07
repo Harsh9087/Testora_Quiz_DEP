@@ -12,6 +12,7 @@ import {
   Timer, ChevronRight, ExternalLink, FileCode2
 } from "lucide-react";
 import MathText from "../../../components/MathText";
+import FeaturedHighYieldTests from "../../../components/FeaturedHighYieldTests";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, RadarChart, PolarGrid, PolarAngleAxis, Radar } from "recharts";
 import { useRouter } from "next/navigation";
 
@@ -333,6 +334,40 @@ export default function StudentDashboard() {
               </button>
             </form>
           </div>
+
+          {/* ═══════ FEATURED HIGH-YIELD TESTS CAROUSEL ═══════ */}
+          {assignedExams.length > 0 && (
+            <FeaturedHighYieldTests
+              isTeacher={isTeacher}
+              exams={assignedExams.map((e) => ({
+                exam_id: e.exam_id,
+                exam_code: e.exam_code,
+                name: e.name,
+                subject: e.subject_name || e.subject_id || "General",
+                description: e.description,
+                duration_minutes: e.duration_minutes ?? 30,
+                questions_count: e.questions_count ?? 0,
+                total_marks: e.total_marks ?? 0,
+                status: e.status as "active" | "scheduled" | "ended",
+                difficulty: e.difficulty ?? "medium",
+                access_type: e.has_submitted ? "enrolled" : (e.is_paid === false ? "free" : "enrolled"),
+                has_submitted: e.has_submitted,
+                submission_percentage: e.submission_percentage,
+                is_paid: e.is_paid,
+              }))}
+              onStartTest={(examCode) => {
+                const found = assignedExams.find((e) => e.exam_code === examCode);
+                if (found?.has_submitted && found?.submission_id) {
+                  setActivePortalTab("submissions");
+                  loadSubDetail(found.submission_id);
+                } else {
+                  window.location.href = isTeacher
+                    ? `/exam/${examCode}?mode=teacher_preview`
+                    : `/exam/${examCode}`;
+                }
+              }}
+            />
+          )}
 
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-bold text-[#111827] dark:text-[#F1F5F9] uppercase tracking-wider">

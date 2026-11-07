@@ -16,7 +16,13 @@ import {
   Phone,
   Hash,
   FileText,
-  X
+  X,
+  Share2,
+  Copy,
+  Check,
+  Sparkles,
+  RefreshCw,
+  ExternalLink
 } from 'lucide-react';
 import {
   fetchStudentDirectories,
@@ -32,7 +38,7 @@ import {
   DirectoryStudent,
   CSVImportResult
 } from '@/types/studentDirectory';
-import { API_V1 } from '@/lib/api';
+import { API_V1, apiFetch, getFrontendBaseUrl } from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import CreateDirectoryModal from './CreateDirectoryModal';
 
@@ -73,6 +79,23 @@ export default function StudentDirectoryManager({ token: propToken }: StudentDir
   const [csvImportLoading, setCsvImportLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // WhatsApp Roster & Form Collection State
+  const [createModalMethod, setCreateModalMethod] = useState<'csv' | 'form'>('csv');
+  const [shareModalDir, setShareModalDir] = useState<StudentDirectory | null>(null);
+  const [shareModalSlug, setShareModalSlug] = useState<string>('');
+  const [shareModalLoading, setShareModalLoading] = useState(false);
+  const [shareModalCopied, setShareModalCopied] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<string | null>(null);
+
+  // Active Main Tab: Directories vs AI Forms
+  const [activeMainTab, setActiveMainTab] = useState<'directories' | 'forms'>('directories');
+  const [registrationForms, setRegistrationForms] = useState<any[]>([]);
+  const [formsLoading, setFormsLoading] = useState(false);
+  const [csvValidationError, setCsvValidationError] = useState<string | null>(null);
+  const [importingFormId, setImportingFormId] = useState<string | null>(null);
+  const [formImportSuccess, setFormImportSuccess] = useState<string | null>(null);
+
   const loadDirectories = async (authToken?: string) => {
     const activeToken = authToken || token;
     if (!activeToken) {
@@ -88,6 +111,98 @@ export default function StudentDirectoryManager({ token: propToken }: StudentDir
       setError(err.message || 'Failed to load student directories');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadRegistrationForms = async (authToken?: string) => {
+    const activeToken = authToken || token;
+    if (!activeToken) return;
+    try {
+      setFormsLoading(true);
+      const res = await apiFetch('/registration-forms', { token: activeToken });
+      if (res.ok) {
+        const data = await res.json();
+        setRegistrationForms(Array.isArray(data) ? data : []);
+      }
+    } catch (err) {
+      console.error('Failed to load registration forms:', err);
+    } finally {
+      setFormsLoading(false);
+    }
+  };
+
+  const validateCsvFileHeaders = (file: File) => {
+    setCsvValidationError(null);
+    if (!file.name.toLowerCase().endsWith('.csv') && !file.name.toLowerCase().endsWith('.txt')) {
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target?.result as string;
+      if (!content) {
+        setCsvValidationError('The selected CSV file is empty.');
+        return;
+      }
+      const firstLine = content.split('\n')[0].toLowerCase();
+      const hasName = firstLine.includes('name');
+      const hasEmail = firstLine.includes('email') || firstLine.includes('mail');
+      const hasRoll = firstLine.includes('roll') || firstLine.includes('id') || firstLine.includes('reg') || firstLine.includes('enroll');
+
+      if (!hasName || !hasEmail || !hasRoll) {
+        const missing = [];
+        if (!hasRoll) missing.push('Roll Number / Student ID');
+        if (!hasName) missing.push('Full Name');
+        if (!hasEmail) missing.push('Email Address');
+        setCsvValidationError(
+          `Invalid CSV Format: File is missing required platform columns (${missing.join(', ')}). Platform rule: Student Directory CSV must strictly include Roll Number, Name, and Email.`
+        );
+      }
+    };
+    reader.readAsText(file.slice(0, 4096));
+  };
+
+  const handleDownloadFormCsv = (formId: string) => {
+    const downloadUrl = `${API_V1}/registration-forms/${formId}/export-csv?token=${encodeURIComponent(token)}`;
+    window.open(downloadUrl, '_blank');
+  };
+
+  const handleDownloadFormExcel = (formId: string) => {
+    const downloadUrl = `${API_V1}/registration-forms/${formId}/export-excel?token=${encodeURIComponent(token)}`;
+    window.open(downloadUrl, '_blank');
+  };
+
+  const handleImportFormAsDirectory = async (form: any) => {
+    try {
+      setImportingFormId(form.id);
+      setFormImportSuccess(null);
+      const res = await apiFetch(`/registration-forms/${form.id}/import-to-directory`, {
+        method: 'POST',
+        token,
+        body: JSON.stringify({
+          target_mode: 'new',
+          new_directory_name: form.title,
+          new_directory_description: form.description || `Imported via AI Form: ${form.title}`
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setFormImportSuccess(
+          `✓ Created Directory "${form.title}" with ${data.imported_count} candidate(s) in required CSV format!`
+        );
+        loadDirectories(token);
+        setTimeout(() => {
+          setActiveMainTab('directories');
+          setFormImportSuccess(null);
+        }, 1500);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(err.detail || 'Failed to import form as student directory');
+      }
+    } catch (err: any) {
+      alert(err.message || 'Import failed');
+    } finally {
+      setImportingFormId(null);
     }
   };
 
@@ -108,6 +223,7 @@ export default function StudentDirectoryManager({ token: propToken }: StudentDir
   useEffect(() => {
     if (token) {
       loadDirectories(token);
+      loadRegistrationForms(token);
     }
   }, [token]);
 
@@ -125,6 +241,9 @@ export default function StudentDirectoryManager({ token: propToken }: StudentDir
       if (selectedDirectory?.id === dirId) {
         setSelectedDirectory(null);
         setStudents([]);
+      }
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('refresh-student-directories'));
       }
     } catch (err: any) {
       alert(err.message || 'Failed to delete directory');
@@ -167,6 +286,9 @@ export default function StudentDirectoryManager({ token: propToken }: StudentDir
       setNewStudentDivision('');
       setNewStudentDepartment('');
       setIsAddStudentModalOpen(false);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('refresh-student-directories'));
+      }
     } catch (err: any) {
       setStudentActionError(err.message || 'Failed to add student');
     } finally {
@@ -217,6 +339,9 @@ export default function StudentDirectoryManager({ token: propToken }: StudentDir
             : d
         )
       );
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('refresh-student-directories'));
+      }
     } catch (err: any) {
       alert(err.message || 'Failed to upload student roster');
     } finally {
@@ -238,6 +363,108 @@ export default function StudentDirectoryManager({ token: propToken }: StudentDir
       token
     )}`;
     window.open(downloadUrl, '_blank');
+  };
+
+  // Open WhatsApp Share & Form Modal for a Directory
+  const handleOpenWhatsAppShare = async (dir: StudentDirectory, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setShareModalDir(dir);
+    setShareModalSlug('');
+    setSyncResult(null);
+    setShareModalLoading(true);
+
+    try {
+      // 1. Check if a registration form already exists for this directory
+      const res = await apiFetch('/registration-forms', { token });
+      if (res.ok) {
+        const forms = await res.json();
+        const matched = forms.find(
+          (f: any) => f.title.toLowerCase().trim() === dir.name.toLowerCase().trim()
+        );
+        if (matched) {
+          setShareModalSlug(matched.share_slug);
+          setShareModalLoading(false);
+          return;
+        }
+      }
+
+      // 2. If no matching form, auto-create one for this directory
+      const createRes = await apiFetch('/registration-forms', {
+        method: 'POST',
+        token,
+        body: JSON.stringify({
+          title: dir.name,
+          description: dir.description || undefined
+        })
+      });
+      if (createRes.ok) {
+        const newForm = await createRes.json();
+        setShareModalSlug(newForm.share_slug);
+      }
+    } catch (err) {
+      console.error('Failed to configure WhatsApp form for directory:', err);
+    } finally {
+      setShareModalLoading(false);
+    }
+  };
+
+  // Sync Form Submissions directly into Directory
+  const handleSyncSubmissions = async () => {
+    if (!shareModalDir || !shareModalSlug) return;
+    setIsSyncing(true);
+    setSyncResult(null);
+
+    try {
+      const res = await apiFetch('/registration-forms', { token });
+      if (res.ok) {
+        const forms = await res.json();
+        const matched = forms.find((f: any) => f.share_slug === shareModalSlug);
+        if (matched) {
+          const importRes = await apiFetch(`/registration-forms/${matched.id}/import-to-directory`, {
+            method: 'POST',
+            token,
+            body: JSON.stringify({
+              target_mode: 'existing',
+              directory_id: shareModalDir.id
+            })
+          });
+
+          if (importRes.ok) {
+            const data = await importRes.json();
+            setSyncResult(
+              `Synced ${data.imported_count} new student(s) into directory! (Duplicates skipped: ${data.skipped_duplicate_count})`
+            );
+            if (selectedDirectory?.id === shareModalDir.id) {
+              loadStudents(shareModalDir.id);
+            }
+            loadDirectories(token);
+          } else {
+            const err = await importRes.json().catch(() => ({}));
+            setSyncResult(err.detail || 'Failed to sync submissions');
+          }
+        }
+      }
+    } catch (err: any) {
+      setSyncResult(err.message || 'Sync failed');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const handleSendWhatsApp = () => {
+    if (!shareModalDir || !shareModalSlug) return;
+    const formUrl = `${getFrontendBaseUrl()}/forms/${shareModalSlug}`;
+    const msg = `Dear Students, please register your details for "${shareModalDir.name}":\n\n📝 Registration Form: ${formUrl}\n\nPlease submit your Full Name, Roll Number, Email, and Section so your details are saved for upcoming tests.`;
+    const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
+    window.open(waUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleCopyShareLink = () => {
+    if (!shareModalSlug) return;
+    const formUrl = `${getFrontendBaseUrl()}/forms/${shareModalSlug}`;
+    navigator.clipboard.writeText(formUrl);
+    setShareModalCopied(true);
+    setTimeout(() => setShareModalCopied(false), 2200);
   };
 
   const filteredDirectories = directories.filter(
@@ -271,9 +498,23 @@ export default function StudentDirectoryManager({ token: propToken }: StudentDir
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
           <button
-            onClick={() => setIsCreateModalOpen(true)}
+            onClick={() => {
+              setCreateModalMethod('form');
+              setIsCreateModalOpen(true);
+            }}
+            className="flex items-center gap-2 px-4 py-2.5 bg-[#25D366] hover:bg-[#20BD5A] text-white text-xs font-semibold rounded-xl shadow-sm transition-all cursor-pointer"
+            title="Create directory & collect students via WhatsApp Form"
+          >
+            <Share2 className="w-4 h-4" />
+            <span>Collect via WhatsApp</span>
+          </button>
+          <button
+            onClick={() => {
+              setCreateModalMethod('csv');
+              setIsCreateModalOpen(true);
+            }}
             className="flex items-center gap-2 px-4 py-2.5 bg-[#C84B18] hover:bg-[#B33F12] text-white text-xs font-semibold rounded-xl shadow-sm transition-all cursor-pointer"
           >
             <FolderPlus className="w-4 h-4" />
@@ -289,7 +530,45 @@ export default function StudentDirectoryManager({ token: propToken }: StudentDir
         </div>
       )}
 
-      {/* Main View: Directory Roster Detail OR Directories Grid */}
+      {/* Main Mode Switcher: Directories vs AI Forms (visible when no directory is open) */}
+      {!selectedDirectory && (
+        <div className="flex items-center gap-2 p-1 bg-[#F5F2EB] dark:bg-[#1E1C1A] rounded-2xl border border-[#E5E0D8] dark:border-[#292524] w-fit">
+          <button
+            type="button"
+            onClick={() => setActiveMainTab('directories')}
+            className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
+              activeMainTab === 'directories'
+                ? 'bg-[#FFFFFF] dark:bg-[#292524] text-[#C84B18] dark:text-[#EA580C] shadow-sm'
+                : 'text-[#716D67] hover:text-[#242321] dark:hover:text-[#F5F5F4]'
+            }`}
+          >
+            <Users className="w-4 h-4" />
+            <span>Student Directories ({directories.length})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveMainTab('forms')}
+            className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
+              activeMainTab === 'forms'
+                ? 'bg-[#FFFFFF] dark:bg-[#292524] text-emerald-600 dark:text-emerald-400 shadow-sm'
+                : 'text-[#716D67] hover:text-[#242321] dark:hover:text-[#F5F5F4]'
+            }`}
+          >
+            <Sparkles className="w-4 h-4 text-emerald-500" />
+            <span>AI Registration Forms ({registrationForms.length})</span>
+          </button>
+        </div>
+      )}
+
+      {formImportSuccess && (
+        <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-700 dark:text-emerald-300 text-xs flex items-center gap-2">
+          <CheckCircle className="w-4 h-4 flex-shrink-0" />
+          <span>{formImportSuccess}</span>
+        </div>
+      )}
+
+      {/* Main View: Directory Roster Detail OR AI Forms Tab OR Directories Grid */}
       {selectedDirectory ? (
         /* DETAIL ROSTER VIEW */
         <div className="space-y-6 animate-in fade-in duration-200">
@@ -319,6 +598,15 @@ export default function StudentDirectoryManager({ token: propToken }: StudentDir
             </div>
 
             <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
+              <button
+                onClick={() => handleOpenWhatsAppShare(selectedDirectory)}
+                className="flex items-center gap-1.5 px-3 py-2 bg-[#25D366]/10 text-emerald-700 dark:text-emerald-400 hover:bg-[#25D366]/20 text-xs font-semibold rounded-xl border border-emerald-500/30 transition-colors cursor-pointer shadow-2xs"
+                title="Share WhatsApp Registration Form & Sync Responses to CSV"
+              >
+                <Share2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                <span>WhatsApp Form</span>
+              </button>
+
               <button
                 onClick={() => {
                   setCsvFile(null);
@@ -531,6 +819,152 @@ export default function StudentDirectoryManager({ token: propToken }: StudentDir
             )}
           </div>
         </div>
+      ) : activeMainTab === 'forms' ? (
+        /* AI REGISTRATION FORMS VIEW */
+        <div className="space-y-6">
+          <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 font-bold text-xs text-emerald-800 dark:text-emerald-300">
+                <Sparkles className="w-4 h-4 text-emerald-600" />
+                <span>AI Registration Forms — 100% Platform Required CSV Guaranteed</span>
+              </div>
+              <p className="text-[11px] text-[#57534E] dark:text-[#A8A29E] max-w-2xl leading-relaxed">
+                Forms created with AI collect student responses matching the exact required platform schema (Roll Number, Name, Email, Phone, Division, Department). You can share via WhatsApp, copy link, download the verified CSV, or import directly into a Student Directory!
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                setCreateModalMethod('form');
+                setIsCreateModalOpen(true);
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#25D366] hover:bg-[#20BD5A] text-white text-xs font-semibold rounded-xl shadow-sm transition-all cursor-pointer shrink-0"
+            >
+              <Share2 className="w-4 h-4" />
+              <span>Create New AI Form</span>
+            </button>
+          </div>
+
+          {formsLoading ? (
+            <div className="py-20 text-center text-[#716D67] dark:text-[#A8A29E] flex flex-col items-center gap-3">
+              <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+              <p className="text-xs">Loading AI registration forms...</p>
+            </div>
+          ) : registrationForms.length === 0 ? (
+            <div className="py-20 text-center bg-[#FFFFFF] dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl p-8 shadow-sm">
+              <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center justify-center mx-auto mb-4">
+                <Sparkles className="w-7 h-7" />
+              </div>
+              <h3 className="text-base font-bold text-[#242321] dark:text-[#F5F5F4]">No AI Registration Forms Created Yet</h3>
+              <p className="text-xs text-[#716D67] dark:text-[#A8A29E] mt-1 max-w-md mx-auto">
+                Generate online registration links to spread via WhatsApp so candidates can submit their details in the required CSV schema.
+              </p>
+              <button
+                onClick={() => {
+                  setCreateModalMethod('form');
+                  setIsCreateModalOpen(true);
+                }}
+                className="mt-5 inline-flex items-center gap-2 px-5 py-2.5 bg-[#25D366] hover:bg-[#20BD5A] text-white text-xs font-semibold rounded-xl shadow-sm transition-all cursor-pointer"
+              >
+                <Share2 className="w-4 h-4" />
+                <span>Create AI Form & Get WhatsApp Link</span>
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {registrationForms.map((f: any) => (
+                <div
+                  key={f.id}
+                  className="bg-[#FFFFFF] dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] hover:border-emerald-500/50 rounded-2xl p-5 transition-all shadow-sm flex flex-col justify-between"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                        <Sparkles className="w-5 h-5" />
+                      </div>
+                      <span className="px-2.5 py-1 text-[11px] font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 rounded-full">
+                        {f.submission_count} Submissions
+                      </span>
+                    </div>
+
+                    <div>
+                      <h4 className="text-base font-bold text-[#242321] dark:text-[#F5F5F4]">{f.title}</h4>
+                      <p className="text-xs text-[#716D67] dark:text-[#A8A29E] mt-1 line-clamp-2">
+                        {f.description || 'Public student registration link'}
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap gap-1 text-[10px]">
+                      <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 rounded-md font-mono">
+                        ✓ Roll Number
+                      </span>
+                      <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 rounded-md font-mono">
+                        ✓ Name
+                      </span>
+                      <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 rounded-md font-mono">
+                        ✓ Email
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 pt-4 border-t border-[#E5E0D8] dark:border-[#292524] space-y-2.5">
+                    {/* Primary WhatsApp Action */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const formUrl = `${getFrontendBaseUrl()}/forms/${f.share_slug}`;
+                        const msg = `Dear Students, please register your details for "${f.title}":\n\n📝 Registration Form: ${formUrl}\n\nPlease submit your Full Name, Roll Number, and Section so your details are synced for upcoming tests.`;
+                        const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
+                        window.open(waUrl, '_blank', 'noopener,noreferrer');
+                      }}
+                      className="w-full py-2 px-3 bg-[#25D366] hover:bg-[#20BD5A] text-white text-xs font-semibold rounded-xl flex items-center justify-center gap-2 shadow-xs transition-colors cursor-pointer"
+                    >
+                      <Share2 className="w-3.5 h-3.5" />
+                      <span>Share on WhatsApp</span>
+                    </button>
+
+                    {/* Secondary Actions */}
+                    <div className="grid grid-cols-3 gap-1.5 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const formUrl = `${getFrontendBaseUrl()}/forms/${f.share_slug}`;
+                          navigator.clipboard.writeText(formUrl);
+                          alert('Form link copied to clipboard!');
+                        }}
+                        className="py-1.5 px-2 bg-[#F0ECE4] dark:bg-[#292524] text-[#242321] dark:text-[#F5F5F4] hover:bg-[#E5E0D8] dark:hover:bg-[#3E3A36] text-[11px] font-medium rounded-lg flex items-center justify-center gap-1 transition-colors cursor-pointer"
+                        title="Copy Form URL"
+                      >
+                        <Copy className="w-3 h-3" />
+                        <span>Copy</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleDownloadFormCsv(f.id)}
+                        className="py-1.5 px-2 bg-[#F0ECE4] dark:bg-[#292524] text-[#242321] dark:text-[#F5F5F4] hover:bg-[#E5E0D8] dark:hover:bg-[#3E3A36] text-[11px] font-medium rounded-lg flex items-center justify-center gap-1 transition-colors cursor-pointer"
+                        title="Download Responses as Platform Required CSV"
+                      >
+                        <DownloadCloud className="w-3 h-3 text-[#C84B18]" />
+                        <span>CSV</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={importingFormId === f.id}
+                        onClick={() => handleImportFormAsDirectory(f)}
+                        className="py-1.5 px-2 bg-[#C84B18] hover:bg-[#B33F12] text-white text-[11px] font-semibold rounded-lg flex items-center justify-center gap-1 transition-colors cursor-pointer disabled:opacity-50"
+                        title="Convert Submissions into a Student Directory"
+                      >
+                        <FolderPlus className="w-3 h-3" />
+                        <span>{importingFormId === f.id ? 'Importing...' : 'To Directory'}</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       ) : (
         /* DIRECTORIES GRID VIEW */
         <div className="space-y-6">
@@ -560,13 +994,28 @@ export default function StudentDirectoryManager({ token: propToken }: StudentDir
               <p className="text-xs text-[#716D67] dark:text-[#A8A29E] mt-1 max-w-md mx-auto">
                 Directories organize your students into distinct classes or cohorts so you can target them seamlessly when publishing exams.
               </p>
-              <button
-                onClick={() => setIsCreateModalOpen(true)}
-                className="mt-5 inline-flex items-center gap-2 px-5 py-2.5 bg-[#C84B18] hover:bg-[#B33F12] text-white text-xs font-semibold rounded-xl shadow-sm transition-all cursor-pointer"
-              >
-                <FolderPlus className="w-4 h-4" />
-                <span>Create Your First Directory</span>
-              </button>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-5">
+                <button
+                  onClick={() => {
+                    setCreateModalMethod('form');
+                    setIsCreateModalOpen(true);
+                  }}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#25D366] hover:bg-[#20BD5A] text-white text-xs font-semibold rounded-xl shadow-sm transition-all cursor-pointer"
+                >
+                  <Share2 className="w-4 h-4" />
+                  <span>Collect via WhatsApp Form</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setCreateModalMethod('csv');
+                    setIsCreateModalOpen(true);
+                  }}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#F0ECE4] dark:bg-[#292524] text-[#242321] dark:text-[#F5F5F4] hover:bg-[#E5E0D8] dark:hover:bg-[#3E3A36] text-xs font-semibold rounded-xl border border-[#E5E0D8] dark:border-[#3E3A36] transition-all cursor-pointer"
+                >
+                  <FolderPlus className="w-4 h-4 text-[#C84B18]" />
+                  <span>Create with Excel / CSV</span>
+                </button>
+              </div>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -598,13 +1047,23 @@ export default function StudentDirectoryManager({ token: propToken }: StudentDir
                     <span className="text-[11px]">
                       Created {new Date(dir.created_at).toLocaleDateString()}
                     </span>
-                    <button
-                      onClick={(e) => handleDeleteDirectory(dir.id, e)}
-                      className="p-1.5 text-[#716D67] dark:text-[#A8A29E] hover:text-red-500 rounded-lg hover:bg-[#F0ECE4] dark:hover:bg-[#292524] transition-colors cursor-pointer"
-                      title="Delete Directory"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={(e) => handleOpenWhatsAppShare(dir, e)}
+                        className="px-2 py-1 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors cursor-pointer flex items-center gap-1 text-[11px] font-medium"
+                        title="Share WhatsApp Registration Form"
+                      >
+                        <Share2 className="w-3.5 h-3.5" />
+                        <span>WhatsApp</span>
+                      </button>
+                      <button
+                        onClick={(e) => handleDeleteDirectory(dir.id, e)}
+                        className="p-1.5 text-[#716D67] dark:text-[#A8A29E] hover:text-red-500 rounded-lg hover:bg-[#F0ECE4] dark:hover:bg-[#292524] transition-colors cursor-pointer"
+                        title="Delete Directory"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -616,12 +1075,154 @@ export default function StudentDirectoryManager({ token: propToken }: StudentDir
       {/* CREATE DIRECTORY MODAL */}
       <CreateDirectoryModal
         isOpen={isCreateModalOpen}
+        defaultMethod={createModalMethod}
         onClose={() => setIsCreateModalOpen(false)}
         onCreated={(newDir) => {
           setDirectories((prev) => [newDir, ...prev]);
           handleSelectDirectory(newDir);
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('refresh-student-directories'));
+          }
         }}
       />
+
+      {/* WHATSAPP FORM SHARE & SYNC MODAL FOR EXISTING DIRECTORY */}
+      {shareModalDir && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in"
+          onClick={() => setShareModalDir(null)}
+        >
+          <div
+            className="w-full max-w-md mx-3 sm:mx-auto bg-[#FFFFFF] dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl shadow-2xl overflow-hidden max-h-[92vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-5 sm:px-6 py-4 sm:py-5 border-b border-[#E5E0D8] dark:border-[#292524] bg-[#FAF8F5] dark:bg-[#141312] shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                  <Share2 className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-[#242321] dark:text-[#F5F5F4] truncate max-w-[240px]">
+                    {shareModalDir.name}
+                  </h3>
+                  <p className="text-[11px] text-[#716D67] dark:text-[#A8A29E]">
+                    WhatsApp Roster Collection & Sync
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShareModalDir(null)}
+                className="p-1.5 text-[#716D67] dark:text-[#A8A29E] hover:text-[#242321] dark:hover:text-white rounded-lg cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-5 sm:p-6 space-y-4 overflow-y-auto">
+              {shareModalLoading ? (
+                <div className="py-10 text-center flex flex-col items-center gap-2 text-xs text-[#716D67]">
+                  <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                  <span>Configuring registration link...</span>
+                </div>
+              ) : (
+                <>
+                  {/* WhatsApp Action Button */}
+                  <button
+                    type="button"
+                    onClick={handleSendWhatsApp}
+                    className="w-full py-3 px-4 bg-[#25D366] hover:bg-[#20BD5A] text-white font-semibold rounded-xl flex items-center justify-center gap-2.5 shadow-md shadow-emerald-500/10 transition-all cursor-pointer text-xs sm:text-sm"
+                  >
+                    <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                      <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.36 3.45 16.86L2.05 22L7.3 20.62C8.75 21.41 10.38 21.83 12.04 21.83C17.5 21.83 21.95 17.38 21.95 11.92C21.95 9.27 20.92 6.78 19.05 4.91C17.18 3.04 14.69 2 12.04 2M12.05 3.67C14.25 3.67 16.31 4.53 17.87 6.09C19.42 7.65 20.28 9.72 20.28 11.92C20.28 16.46 16.58 20.15 12.04 20.15C10.56 20.15 9.11 19.76 7.85 19L7.55 18.83L4.43 19.65L5.26 16.61L5.06 16.29C4.24 15 3.8 13.47 3.8 11.91C3.81 7.37 7.5 3.67 12.05 3.67M9.53 7.33C9.33 7.33 9 7.41 8.76 7.67C8.5 7.94 7.82 8.58 7.82 9.87C7.82 11.16 8.76 12.41 8.9 12.59C9.03 12.77 10.73 15.4 13.36 16.54C15.54 17.48 16 17.29 16.46 17.25C16.93 17.21 17.97 16.63 18.19 16.03C18.41 15.42 18.41 14.9 18.34 14.79C18.28 14.68 18.1 14.62 17.84 14.49C17.58 14.36 16.3 13.73 16.06 13.65C15.83 13.56 15.66 13.52 15.5 13.78C15.33 14.04 14.85 14.62 14.71 14.79C14.56 14.96 14.42 14.98 14.16 14.85C13.9 14.72 13.06 14.45 12.06 13.56C11.28 12.87 10.76 12.01 10.61 11.75C10.46 11.49 10.6 11.35 10.73 11.22C10.84 11.11 10.98 10.92 11.12 10.76C11.25 10.6 11.3 10.48 11.39 10.31C11.47 10.13 11.43 9.98 11.37 9.85C11.3 9.72 10.83 8.56 10.63 8.08C10.44 7.62 10.24 7.68 10.09 7.67C9.95 7.67 9.78 7.33 9.53 7.33Z"/>
+                    </svg>
+                    <span>Share on WhatsApp</span>
+                  </button>
+
+                  {/* Copy Link Input */}
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-semibold text-[#57534E] dark:text-[#A8A29E]">
+                      Student Registration Form Link
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        readOnly
+                        value={shareModalSlug ? `${getFrontendBaseUrl()}/forms/${shareModalSlug}` : ''}
+                        className="flex-1 px-3 py-2 bg-[#F7F4EF] dark:bg-[#141312] border border-[#E5E0D8] dark:border-[#292524] rounded-xl text-xs text-[#242321] dark:text-[#F5F5F4] select-all outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleCopyShareLink}
+                        className="px-3.5 py-2 text-xs font-semibold rounded-xl border border-[#E5E0D8] dark:border-[#292524] bg-white dark:bg-[#1E1C1A] text-[#242321] dark:text-[#F5F5F4] hover:bg-[#F5F2EB] dark:hover:bg-[#292524] flex items-center gap-1.5 transition-all cursor-pointer shrink-0"
+                      >
+                        {shareModalCopied ? (
+                          <>
+                            <Check className="w-3.5 h-3.5 text-emerald-600" />
+                            <span className="text-emerald-600">Copied!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5" />
+                            <span>Copy</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Sync Form Submissions directly into directory */}
+                  <div className="p-3.5 rounded-xl bg-[#FAF8F5] dark:bg-[#141312] border border-[#E5E0D8] dark:border-[#292524] space-y-2.5">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <h5 className="text-xs font-bold text-[#242321] dark:text-[#F5F5F4] flex items-center gap-1.5">
+                          <Sparkles className="w-3.5 h-3.5 text-[#C84B18]" />
+                          <span>Sync WhatsApp Submissions</span>
+                        </h5>
+                        <p className="text-[11px] text-[#716D67] dark:text-[#A8A29E] mt-0.5">
+                          Import new responses from the online form directly into this directory
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        disabled={isSyncing}
+                        onClick={handleSyncSubmissions}
+                        className="px-3.5 py-2 text-xs font-semibold bg-[#C84B18] hover:bg-[#B33F12] text-white rounded-xl flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 shrink-0"
+                      >
+                        <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
+                        <span>{isSyncing ? 'Syncing...' : 'Sync Responses'}</span>
+                      </button>
+                    </div>
+
+                    {syncResult && (
+                      <div className="p-2.5 text-[11px] font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 rounded-lg border border-emerald-200 dark:border-emerald-800/40">
+                        {syncResult}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Pre-formatted Schema Guidance */}
+                  <div className="text-[11px] text-[#716D67] dark:text-[#A8A29E] bg-[#F7F4EF]/60 dark:bg-[#141312] p-2.5 rounded-xl border border-[#E5E0D8]/60 dark:border-[#292524]">
+                    Students submit Name, Roll Number, Email, and Section. Responses automatically match the CSV format required to publish assessments.
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-5 py-3 border-t border-[#E5E0D8] dark:border-[#292524] flex justify-end">
+              <button
+                type="button"
+                onClick={() => setShareModalDir(null)}
+                className="px-4 py-2 text-xs font-medium text-[#716D67] dark:text-[#A8A29E] hover:text-[#242321] dark:hover:text-white cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ADD STUDENT MODAL */}
       {isAddStudentModalOpen && (
@@ -781,6 +1382,45 @@ export default function StudentDirectoryManager({ token: propToken }: StudentDir
             </div>
 
             <div className="p-5 sm:p-6 space-y-4 overflow-y-auto">
+              {/* Platform Required CSV Schema Specification (Strict Rule) */}
+              <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/30 rounded-xl space-y-2">
+                <div className="flex items-center justify-between text-xs font-bold text-emerald-800 dark:text-emerald-300">
+                  <span className="flex items-center gap-1.5">
+                    <CheckCircle className="w-4 h-4 text-emerald-600" />
+                    <span>Platform Required CSV Schema (Mandatory Rule)</span>
+                  </span>
+                  <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 rounded">
+                    Strict Verification
+                  </span>
+                </div>
+                <p className="text-[11px] text-[#57534E] dark:text-[#A8A29E] leading-relaxed">
+                  Only CSV files following TestoraQuiz&apos;s required schema are accepted for student directories. Files must include:
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 pt-0.5">
+                  <div className="px-2 py-1 bg-white dark:bg-[#1E1C1A] border border-emerald-500/30 rounded text-[11px] flex items-center justify-between">
+                    <span className="font-mono font-bold text-emerald-700 dark:text-emerald-300">Roll Number</span>
+                    <span className="text-red-500 font-bold">*</span>
+                  </div>
+                  <div className="px-2 py-1 bg-white dark:bg-[#1E1C1A] border border-emerald-500/30 rounded text-[11px] flex items-center justify-between">
+                    <span className="font-mono font-bold text-emerald-700 dark:text-emerald-300">Name</span>
+                    <span className="text-red-500 font-bold">*</span>
+                  </div>
+                  <div className="px-2 py-1 bg-white dark:bg-[#1E1C1A] border border-emerald-500/30 rounded text-[11px] flex items-center justify-between">
+                    <span className="font-mono font-bold text-emerald-700 dark:text-emerald-300">Email</span>
+                    <span className="text-red-500 font-bold">*</span>
+                  </div>
+                  <div className="px-2 py-1 bg-white dark:bg-[#1E1C1A] border border-emerald-500/30 rounded text-[11px]">
+                    <span className="font-mono text-[#57534E] dark:text-[#A8A29E]">Phone</span>
+                  </div>
+                  <div className="px-2 py-1 bg-white dark:bg-[#1E1C1A] border border-emerald-500/30 rounded text-[11px]">
+                    <span className="font-mono text-[#57534E] dark:text-[#A8A29E]">Division</span>
+                  </div>
+                  <div className="px-2 py-1 bg-white dark:bg-[#1E1C1A] border border-emerald-500/30 rounded text-[11px]">
+                    <span className="font-mono text-[#57534E] dark:text-[#A8A29E]">Department</span>
+                  </div>
+                </div>
+              </div>
+
               {/* Downloadable Reference File Box */}
               <div className="p-3.5 bg-[#FAF8F5] dark:bg-[#141312] border border-[#E5E0D8] dark:border-[#292524] rounded-xl space-y-2">
                 <div className="flex items-center justify-between">
@@ -819,8 +1459,10 @@ export default function StudentDirectoryManager({ token: propToken }: StudentDir
                 accept=".csv, .xlsx, .xls, .tsv, .txt, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
                 onChange={(e) => {
                   if (e.target.files && e.target.files[0]) {
-                    setCsvFile(e.target.files[0]);
+                    const file = e.target.files[0];
+                    setCsvFile(file);
                     setCsvImportResult(null);
+                    validateCsvFileHeaders(file);
                   }
                 }}
                 className="hidden"
@@ -837,27 +1479,43 @@ export default function StudentDirectoryManager({ token: propToken }: StudentDir
                     Supports .xlsx, .xls, .csv, and .tsv with automatic comma, semicolon, and tab detection
                   </p>
                   <span className="inline-block mt-1 px-2.5 py-0.5 rounded-full text-[10px] bg-[#E5E0D8]/60 dark:bg-[#292524] text-[#716D67] dark:text-[#A8A29E] font-medium">
-                    Headers: Full Name, Email, Roll Number, Phone, Division, Department
+                    Headers: Roll Number, Full Name, Email, Phone, Division, Department
                   </span>
                 </div>
               ) : (
-                <div className="flex items-center justify-between p-3.5 bg-[#C84B18]/10 border border-[#C84B18]/20 rounded-xl">
-                  <div className="flex items-center gap-3">
-                    <FileText className="w-5 h-5 text-[#C84B18]" />
-                    <div>
-                      <p className="text-xs font-medium text-[#242321] dark:text-[#F5F5F4]">{csvFile.name}</p>
-                      <p className="text-[10px] text-[#716D67] dark:text-[#A8A29E]">{(csvFile.size / 1024).toFixed(1)} KB</p>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between p-3.5 bg-[#C84B18]/10 border border-[#C84B18]/20 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <FileText className="w-5 h-5 text-[#C84B18]" />
+                      <div>
+                        <p className="text-xs font-medium text-[#242321] dark:text-[#F5F5F4]">{csvFile.name}</p>
+                        <p className="text-[10px] text-[#716D67] dark:text-[#A8A29E]">{(csvFile.size / 1024).toFixed(1)} KB</p>
+                      </div>
                     </div>
+                    <button
+                      onClick={() => {
+                        setCsvFile(null);
+                        setCsvImportResult(null);
+                        setCsvValidationError(null);
+                      }}
+                      className="p-1 text-[#716D67] hover:text-red-500 rounded cursor-pointer"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
                   </div>
-                  <button
-                    onClick={() => {
-                      setCsvFile(null);
-                      setCsvImportResult(null);
-                    }}
-                    className="p-1 text-[#716D67] hover:text-red-500 rounded cursor-pointer"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+
+                  {/* Schema Validation Status */}
+                  {csvValidationError ? (
+                    <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-600 dark:text-red-400 text-xs flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      <span>{csvValidationError}</span>
+                    </div>
+                  ) : (
+                    <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-700 dark:text-emerald-300 text-xs flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 shrink-0 text-emerald-600" />
+                      <span>✓ Platform CSV Verified: Required columns detected!</span>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -892,11 +1550,11 @@ export default function StudentDirectoryManager({ token: propToken }: StudentDir
                 </button>
                 <button
                   type="button"
-                  disabled={!csvFile || csvImportLoading}
+                  disabled={!csvFile || csvImportLoading || !!csvValidationError}
                   onClick={handleImportCsv}
                   className="px-4 py-2 text-xs font-semibold bg-[#C84B18] hover:bg-[#B33F12] disabled:opacity-50 text-white rounded-xl shadow-sm transition-colors cursor-pointer"
                 >
-                  {csvImportLoading ? 'Uploading Roster...' : 'Upload Excel Roster'}
+                  {csvImportLoading ? 'Uploading Roster...' : 'Upload Verified Roster'}
                 </button>
               </div>
             </div>

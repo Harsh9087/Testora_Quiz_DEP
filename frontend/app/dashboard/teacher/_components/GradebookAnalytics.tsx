@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { 
-  BarChart3, Download, Trophy, BookOpen, FileText, ExternalLink, X 
+import {
+  BarChart3, Download, Trophy, BookOpen, FileText, ExternalLink, X, Trash2, Clock
 } from "lucide-react";
 import { API_V1, apiFetch } from "../../../../lib/api";
 import { useAuthStore } from "../../../../store/authStore";
@@ -69,6 +69,24 @@ export default function GradebookAnalytics({ exams }: GradebookAnalyticsProps) {
       }
     } catch {
       showToast("Failed to download gradebook CSV", "error");
+    }
+  };
+
+  const handleDismissAbandoned = async (examId: string, submissionId: string) => {
+    try {
+      const res = await apiFetch(`/exams/${examId}/submissions/${submissionId}/dismiss-abandoned`, {
+        token,
+        method: "POST",
+      });
+      if (res.ok) {
+        showToast("Abandoned attempt dismissed successfully", "success");
+        // Reload analytics to refresh the list
+        loadExamAnalytics(examId);
+      } else {
+        showToast("Failed to dismiss abandoned attempt", "error");
+      }
+    } catch {
+      showToast("Network error while dismissing attempt", "error");
     }
   };
 
@@ -319,9 +337,16 @@ export default function GradebookAnalytics({ exams }: GradebookAnalyticsProps) {
                   Individual student rankings, earned marks, and anti-cheat telemetry.
                 </p>
               </div>
-              <span className="text-xs font-semibold px-2.5 py-1 rounded bg-[#EFF6FF] dark:bg-[#172B4D] text-[#2563EB] dark:text-[#60A5FA] border border-[#2563EB]/20">
-                {reportAnalytics.submissions?.length || 0} Submissions
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold px-2.5 py-1 rounded bg-[#EFF6FF] dark:bg-[#172B4D] text-[#2563EB] dark:text-[#60A5FA] border border-[#2563EB]/20">
+                  {reportAnalytics.submissions?.length || 0} Submissions
+                </span>
+                {reportAnalytics.abandoned_submissions && reportAnalytics.abandoned_submissions.length > 0 && (
+                  <span className="text-xs font-semibold px-2.5 py-1 rounded bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                    {reportAnalytics.abandoned_submissions.length} Abandoned
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* Mobile Stacked Card View (< 768px) */}
@@ -480,6 +505,126 @@ export default function GradebookAnalytics({ exams }: GradebookAnalyticsProps) {
                 </tbody>
               </table>
             </div>
+
+            {/* ════ Abandoned Attempts Section ════ */}
+            {reportAnalytics.abandoned_submissions && reportAnalytics.abandoned_submissions.length > 0 && (
+              <div className="mt-6 pt-6 border-t border-[#E2E8F0] dark:border-[#263449] space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-bold text-[#D97706] dark:text-[#FBBF24] flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      <span>Abandoned Attempts (Mid-Exam Dropouts)</span>
+                    </h3>
+                    <p className="text-xs text-[#64748B] dark:text-[#A3B1C6] mt-0.5">
+                      Students who started but did not submit. Auto-dismissed after 7 days.
+                    </p>
+                  </div>
+                  <span className="text-xs font-semibold px-2.5 py-1 rounded bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                    {reportAnalytics.abandoned_submissions.length} Abandoned
+                  </span>
+                </div>
+
+                {/* Mobile Stacked Card View */}
+                <div className="block md:hidden divide-y divide-[#E2E8F0] dark:divide-[#263449]">
+                  {reportAnalytics.abandoned_submissions.map((ab: any) => (
+                    <div key={ab.submission_id} className="py-3.5 space-y-2.5 first:pt-0 last:pb-0 bg-amber-50/30 dark:bg-amber-950/10 rounded-lg border border-amber-200 dark:border-amber-900/50">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="font-bold text-xs text-[#111827] dark:text-[#F1F5F9] truncate">
+                            {ab.student_name}
+                          </div>
+                          <div className="text-[10px] text-[#64748B] dark:text-[#A3B1C6] truncate">
+                            {ab.email}
+                          </div>
+                        </div>
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-300 dark:border-amber-700 shrink-0">
+                          ABANDONED
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 bg-white dark:bg-[#17243A] p-2.5 rounded-lg border border-[#E2E8F0] dark:border-[#263449] text-[11px]">
+                        <div>
+                          <span className="text-[10px] text-[#64748B] dark:text-[#A3B1C6] block">Answered</span>
+                          <span className="font-bold text-[#111827] dark:text-[#F1F5F9]">
+                            {ab.answered_count} / {ab.total_questions}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-[#64748B] dark:text-[#A3B1C6] block">Roll Number</span>
+                          <span className="font-mono text-[#111827] dark:text-[#F1F5F9] break-all">
+                            {ab.roll_number || "N/A"}
+                          </span>
+                        </div>
+                        <div className="col-span-2 flex items-center justify-between pt-1.5 border-t border-[#E2E8F0] dark:border-[#263449]">
+                          <span className="text-[10px] text-[#64748B] dark:text-[#A3B1C6]">
+                            Abandoned: {ab.abandoned_at_ist || ab.abandoned_at}
+                          </span>
+                          <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
+                            Expires: {ab.abandon_expires_at}
+                          </span>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => handleDismissAbandoned(reportAnalytics.exam_id, ab.submission_id)}
+                        className="w-full py-2 px-3 rounded-lg border border-amber-200 dark:border-amber-800 bg-white dark:bg-[#111C31] hover:bg-amber-50 dark:hover:bg-amber-950/20 text-amber-700 dark:text-amber-300 text-xs font-semibold flex items-center justify-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        <span>Dismiss from Gradebook</span>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Desktop Table View */}
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="w-full text-left text-xs border-collapse min-w-[620px]">
+                    <thead>
+                      <tr className="border-b border-[#E2E8F0] dark:border-[#263449] bg-amber-50 dark:bg-amber-950/20 text-[#64748B] dark:text-[#A3B1C6]">
+                        <th className="py-2.5 px-3 font-semibold">Candidate</th>
+                        <th className="py-2.5 px-3 font-semibold">Roll Number</th>
+                        <th className="py-2.5 px-3 font-semibold">Answered</th>
+                        <th className="py-2.5 px-3 font-semibold">Abandoned At</th>
+                        <th className="py-2.5 px-3 font-semibold">Expires At</th>
+                        <th className="py-2.5 px-3 font-semibold text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#E2E8F0] dark:divide-[#263449]">
+                      {reportAnalytics.abandoned_submissions.map((ab: any) => (
+                        <tr
+                          key={ab.submission_id}
+                          className="hover:bg-amber-50/50 dark:hover:bg-amber-950/10 transition-colors"
+                        >
+                          <td className="py-3 px-3">
+                            <div className="font-semibold text-[#111827] dark:text-[#F1F5F9]">{ab.student_name}</div>
+                            <div className="text-[11px] text-[#64748B] dark:text-[#A3B1C6]">{ab.email}</div>
+                          </td>
+                          <td className="py-3 px-3 font-mono text-[#64748B] dark:text-[#A3B1C6]">{ab.roll_number || "N/A"}</td>
+                          <td className="py-3 px-3 font-bold text-[#111827] dark:text-[#F1F5F9]">
+                            {ab.answered_count} / {ab.total_questions}
+                          </td>
+                          <td className="py-3 px-3 text-[#64748B] dark:text-[#A3B1C6]">
+                            {ab.abandoned_at_ist || ab.abandoned_at}
+                          </td>
+                          <td className="py-3 px-3 text-amber-600 dark:text-amber-400 font-medium">
+                            {ab.abandon_expires_at}
+                          </td>
+                          <td className="py-3 px-3 text-right">
+                            <button
+                              onClick={() => handleDismissAbandoned(reportAnalytics.exam_id, ab.submission_id)}
+                              className="px-2.5 py-1 rounded border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/20 text-[11px] font-semibold transition-all cursor-pointer flex items-center gap-1 ml-auto"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                              Dismiss
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       ) : null}

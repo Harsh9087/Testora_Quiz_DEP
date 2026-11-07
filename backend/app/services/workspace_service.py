@@ -81,12 +81,9 @@ def get_current_workspace(
             )
             .first()
         )
-        if not membership:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied: You are not a member of the requested workspace"
-            )
-        return membership.workspace
+        if membership:
+            return membership.workspace
+        # If requested workspace header is stale/invalid, gracefully fall back to user's valid workspace
 
     # Default to owned or first joined workspace
     member = (

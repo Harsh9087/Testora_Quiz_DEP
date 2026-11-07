@@ -96,7 +96,7 @@ class ExamSubmission(TimeStampedModel):
     answer_version = Column(Integer, default=0, nullable=False) # Server-controlled monotonic autosave version
     score = Column(Float, default=0.0)
     percentage = Column(Float, default=0.0)
-    status = Column(String(50), default="not_started") # "not_started", "started", "submitting", "submitted", "auto_submitted", "graded", "terminated"
+    status = Column(String(50), default="not_started") # "not_started", "started", "submitting", "submitted", "auto_submitted", "graded", "terminated", "abandoned"
     grading_status = Column(String(50), default="COMPLETED", nullable=False) # "COMPLETED", "PENDING_MANUAL_REVIEW"
     ai_feedback = Column(Text, nullable=True)
     started_at = Column(DateTime(timezone=True), nullable=True)
@@ -106,6 +106,11 @@ class ExamSubmission(TimeStampedModel):
     
     tab_switch_count = Column(Integer, default=0, nullable=False)
     auto_submit_reason = Column(String(100), nullable=True) # "TAB_SWITCH", "TIME_EXPIRED", etc.
+    
+    # Abandoned attempt tracking
+    abandoned_at = Column(DateTime(timezone=True), nullable=True)  # when status flipped to "abandoned"
+    abandon_expires_at = Column(DateTime(timezone=True), nullable=True)  # teacher-visible until this time
+    is_dismissed_by_teacher = Column(Boolean, default=False, nullable=False)  # teacher manually dismissed
     
     exam = relationship("Exam", back_populates="submissions")
     candidate = relationship("ExamCandidate", back_populates="submissions")

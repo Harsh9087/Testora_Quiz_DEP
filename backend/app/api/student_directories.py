@@ -70,11 +70,16 @@ def _get_authorized_directory(directory_id: str, workspace: Workspace, db: Sessi
 @router.get("/", response_model=List[StudentDirectoryResponse])
 def list_student_directories(
     current_workspace: Workspace = Depends(get_current_workspace),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Lists all student directories belonging to the active workspace."""
+    """Lists all student directories belonging to the active workspace or created by this user."""
+    from sqlalchemy import or_
     directories = db.query(StudentDirectory).filter(
-        StudentDirectory.workspace_id == current_workspace.id,
+        or_(
+            StudentDirectory.workspace_id == current_workspace.id,
+            StudentDirectory.created_by == current_user.id
+        ),
         StudentDirectory.is_deleted == False
     ).order_by(StudentDirectory.created_at.desc()).all()
 

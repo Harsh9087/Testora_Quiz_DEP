@@ -268,116 +268,124 @@ export default function LiveAssessmentsTable({
         </div>
       </div>
 
-      {/* Mobile Card List View (< 768px): Perfectly Proportioned & Symmetrical */}
+      {/* ─── Mobile Card List (< md) ─── */}
       <div className="block md:hidden divide-y divide-[#E2E8F0] dark:divide-[#263449]">
         {exams.length === 0 ? (
-          <div className="py-8 px-4 text-center text-xs text-[#64748B] dark:text-[#A3B1C6]">
-            No assessments created yet. Click "Create Assessment" to synthesize a new examination.
+          <div className="py-10 px-4 text-center text-xs text-[#64748B] dark:text-[#A3B1C6]">
+            No assessments yet. Tap "Create Assessment" to generate your first exam.
           </div>
         ) : (
           exams.map((exam) => {
-            const sched = getExamScheduleInfo(exam);
+            const sched   = getExamScheduleInfo(exam);
             const isLoadingCreds = loadingCredsExamId === exam.id;
-            const qCount = exam.questions_count || (exam.questions_json ? JSON.parse(exam.questions_json).length : 0);
+            const qCount  = exam.questions_count ?? 0;
+
+            /* ── derive a single clean status label ── */
+            type StatusKey = "draft_unpaid" | "draft_paid" | "scheduled" | "live" | "completed";
+            let statusKey: StatusKey = "draft_unpaid";
+            if (sched.status === "completed")  statusKey = "completed";
+            else if (sched.status === "live")   statusKey = "live";
+            else if (sched.status === "scheduled") statusKey = "scheduled";
+            else if (exam.is_paid)              statusKey = "draft_paid";
+            else                                statusKey = "draft_unpaid";
+
+            const STATUS_UI: Record<StatusKey, { label: string; dot: string; pill: string }> = {
+              draft_unpaid: { label: "Draft",     dot: "bg-amber-400",                        pill: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800/60" },
+              draft_paid:   { label: "Draft",     dot: "bg-amber-400",                        pill: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800/60" },
+              scheduled:    { label: "Scheduled", dot: "bg-blue-500",                         pill: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-800/60" },
+              live:         { label: "Live",      dot: "bg-emerald-500 animate-pulse",        pill: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800/60" },
+              completed:    { label: "Completed", dot: "bg-slate-400",                        pill: "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700" },
+            };
+            const ui = STATUS_UI[statusKey];
 
             return (
-              <div key={exam.id} className="p-3.5 xs:p-4 space-y-3 hover:bg-[#F8FAFC] dark:hover:bg-[#17243A]/50 transition-colors">
-                {/* Top Row: Status Badges & QR Code Trigger */}
+              <div key={exam.id} className="px-4 py-4 space-y-3 hover:bg-[#F8FAFC] dark:hover:bg-[#17243A]/40 transition-colors">
+
+                {/* ── Row 1: status pill + paid chip + QR ── */}
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold ${
-                      sched.status === "live"
-                        ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80"
-                        : sched.status === "scheduled"
-                        ? "bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800/80"
-                        : sched.status === "completed"
-                        ? "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
-                        : "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/80"
-                    }`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${sched.dot}`} />
-                      <span>{sched.label}</span>
+                    {/* single status */}
+                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold border ${ui.pill}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${ui.dot}`} />
+                      {ui.label}
                     </span>
 
+                    {/* paid / unpaid chip */}
                     {exam.is_paid ? (
-                      <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md bg-emerald-100/80 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 text-[10px] font-bold border border-emerald-200/70 dark:border-emerald-800/60">
-                        <Check className="h-3 w-3 stroke-[2.5]" /> Paid
+                      <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800/60">
+                        <Check className="h-2.5 w-2.5 stroke-[2.5]" /> Paid
                       </span>
                     ) : (
                       <button
                         type="button"
                         onClick={() => onOpenPaymentModal && onOpenPaymentModal(exam)}
-                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 text-[10px] font-bold border border-amber-200 dark:border-amber-800/60 hover:opacity-85 cursor-pointer"
+                        className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-800/60 cursor-pointer hover:opacity-80"
                       >
-                        <CreditCard className="h-3 w-3 text-amber-600" /> Unpaid
+                        <CreditCard className="h-2.5 w-2.5" /> Unpaid
                       </button>
                     )}
                   </div>
 
+                  {/* QR icon */}
                   <button
                     type="button"
                     onClick={() => setQrModalExam(exam)}
-                    className="w-8 h-8 rounded-xl border border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center justify-center shrink-0 shadow-2xs transition-colors cursor-pointer"
-                    title="View QR Code Flyer"
-                    aria-label="View QR Code Flyer"
+                    className="w-7 h-7 rounded-lg border border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center shrink-0 transition-colors cursor-pointer"
+                    aria-label="QR Code"
                   >
-                    <QrCode className="h-4 w-4" />
+                    <QrCode className="h-3.5 w-3.5" />
                   </button>
                 </div>
 
-                {/* Title & Exam Code */}
+                {/* ── Row 2: name + code ── */}
                 <div className="space-y-1">
-                  <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100 leading-snug break-words">
+                  <h3 className="font-bold text-[14px] text-[#111827] dark:text-[#F1F5F9] leading-snug break-words">
                     {exam.name}
                   </h3>
-                  <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-                    <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500">Code:</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[11px] text-slate-400 dark:text-slate-500">Code:</span>
                     <button
                       type="button"
                       onClick={() => {
                         const code = exam.exam_code || exam.code;
-                        if (code) {
-                          navigator.clipboard.writeText(code);
-                          showToast("Exam code copied!", "success");
-                        }
+                        if (code) { navigator.clipboard.writeText(code); showToast("Code copied!", "success"); }
                       }}
-                      className="inline-flex items-center gap-1 font-mono font-bold text-[#2563EB] dark:text-[#60A5FA] bg-blue-50 dark:bg-blue-950/50 hover:bg-blue-100 dark:hover:bg-blue-900/50 px-2 py-0.5 rounded border border-blue-200/60 dark:border-blue-900/60 text-[11px] transition-colors cursor-pointer"
-                      title="Click to copy code"
+                      className="inline-flex items-center gap-1 font-mono font-bold text-[#2563EB] dark:text-[#60A5FA] bg-blue-50 dark:bg-blue-950/50 hover:bg-blue-100 dark:hover:bg-blue-900/50 px-1.5 py-0.5 rounded text-[11px] border border-blue-200/60 dark:border-blue-900/60 transition-colors cursor-pointer"
                     >
-                      <span>{exam.exam_code || exam.code}</span>
-                      <Copy className="h-2.5 w-2.5 opacity-60" />
+                      {exam.exam_code || exam.code}
+                      <Copy className="h-2.5 w-2.5 opacity-50" />
                     </button>
                   </div>
                 </div>
 
-                {/* Metrics Badges: Questions/Marks, Duration, Schedule Date */}
-                <div className="flex flex-wrap items-center gap-1.5 xs:gap-2 text-[11px]">
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 border border-slate-200/70 dark:border-slate-700/70 font-medium">
-                    <ClipboardList className="h-3 w-3 text-slate-400" />
-                    <span>{qCount} Qs ({exam.total_marks || 0} pts)</span>
+                {/* ── Row 3: metrics ── */}
+                <div className="flex flex-wrap gap-1.5 text-[11px]">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-[#F1F5F9] dark:bg-[#17243A] text-[#475569] dark:text-[#94A3B8] border border-[#E2E8F0] dark:border-[#263449]">
+                    <ClipboardList className="h-3 w-3 opacity-60" />
+                    {qCount} Qs ({exam.total_marks ?? 0} pts)
                   </span>
-
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 border border-slate-200/70 dark:border-slate-700/70 font-medium">
-                    <Clock className="h-3 w-3 text-slate-400" />
-                    <span>{exam.duration_minutes} mins</span>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-[#F1F5F9] dark:bg-[#17243A] text-[#475569] dark:text-[#94A3B8] border border-[#E2E8F0] dark:border-[#263449]">
+                    <Clock className="h-3 w-3 opacity-60" />
+                    {exam.duration_minutes} mins
                   </span>
-
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 border border-slate-200/70 dark:border-slate-700/70 font-medium">
-                    <Calendar className="h-3 w-3 text-slate-400" />
-                    <span>{exam.start_time ? formatISTDate(exam.start_time) : "Flexible Schedule"}</span>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-[#F1F5F9] dark:bg-[#17243A] text-[#475569] dark:text-[#94A3B8] border border-[#E2E8F0] dark:border-[#263449]">
+                    <Calendar className="h-3 w-3 opacity-60" />
+                    {exam.start_time ? formatISTDate(exam.start_time) : "Flexible"}
                   </span>
                 </div>
 
-                {/* Action Buttons Row: Symmetrical, Full-Width & Balanced */}
-                <div className="flex items-center gap-2 pt-2.5 border-t border-slate-100 dark:border-[#263449]">
-                  {/* Primary Context Button */}
-                  {exam.is_published && sched.status === "live" ? (
+                {/* ── Row 4: action buttons ── */}
+                <div className="flex items-center gap-2 pt-1">
+
+                  {/* PRIMARY action — depends on state */}
+                  {sched.status === "live" ? (
                     <button
                       type="button"
                       onClick={() => setLiveProctorExamId(exam.id)}
-                      className="flex-1 h-9 px-3 rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-950/60 text-rose-700 dark:text-rose-300 text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                      className="flex-1 h-9 rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-rose-100 dark:hover:bg-rose-950/60 transition-colors cursor-pointer"
                     >
-                      <Radio className="h-3.5 w-3.5 text-rose-600 animate-pulse shrink-0" />
-                      <span className="truncate">Live Monitor</span>
+                      <Radio className="h-3.5 w-3.5 animate-pulse shrink-0" />
+                      Live Monitor
                     </button>
                   ) : !exam.is_published ? (
                     <button
@@ -386,35 +394,37 @@ export default function LiveAssessmentsTable({
                         if (!exam.is_paid && onOpenPaymentModal) onOpenPaymentModal(exam);
                         else onPublishExam(exam.id);
                       }}
-                      className="flex-1 h-9 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                      className="flex-1 h-9 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer"
                     >
-                      {exam.is_paid ? <Sparkles className="h-3.5 w-3.5 shrink-0" /> : <CreditCard className="h-3.5 w-3.5 shrink-0" />}
-                      <span className="truncate">{exam.is_paid ? "Publish" : "Pay & Publish"}</span>
+                      {exam.is_paid
+                        ? <><Sparkles className="h-3.5 w-3.5 shrink-0" /> Publish</>
+                        : <><CreditCard className="h-3.5 w-3.5 shrink-0" /> Pay &amp; Publish</>
+                      }
                     </button>
                   ) : (
                     <button
                       type="button"
                       disabled={isLoadingCreds}
                       onClick={() => handleOpenCredentialsPreview(exam)}
-                      className="flex-1 h-9 px-3 rounded-xl border border-amber-200/80 dark:border-amber-800/70 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-950/60 text-amber-800 dark:text-amber-300 text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                      className="flex-1 h-9 rounded-xl border border-amber-200 dark:border-amber-800/70 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-amber-100 dark:hover:bg-amber-950/60 transition-colors cursor-pointer"
                     >
                       <Key className="h-3.5 w-3.5 text-amber-600 shrink-0" />
-                      <span className="truncate">Credentials</span>
+                      {isLoadingCreds ? "Loading…" : "Credentials"}
                     </button>
                   )}
 
-                  {/* Secondary Test Run Button */}
+                  {/* SECONDARY — Test Run */}
                   <a
                     href={`/exam/${exam.exam_code || exam.code}?mode=teacher_preview`}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex-1 h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/80 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center justify-center gap-1.5 shadow-2xs transition-colors"
+                    className="flex-1 h-9 rounded-xl border border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-[#17243A] text-[#475569] dark:text-[#94A3B8] text-xs font-semibold flex items-center justify-center gap-1.5 hover:bg-[#F1F5F9] dark:hover:bg-[#1E2D47] transition-colors"
                   >
                     <Play className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                    <span className="truncate">Test Run</span>
+                    Test Run
                   </a>
 
-                  {/* More Dropdown Button */}
+                  {/* MORE ··· */}
                   <div className="relative shrink-0">
                     <button
                       type="button"
@@ -422,9 +432,8 @@ export default function LiveAssessmentsTable({
                         e.stopPropagation();
                         setActiveDropdownExamId(activeDropdownExamId === exam.id ? null : exam.id);
                       }}
-                      className="w-9 h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center justify-center transition-colors shadow-2xs cursor-pointer"
-                      title="More Options"
-                      aria-label="More Options"
+                      className="w-9 h-9 rounded-xl border border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-[#17243A] text-[#64748B] dark:text-[#94A3B8] hover:bg-[#F1F5F9] dark:hover:bg-[#1E2D47] flex items-center justify-center transition-colors cursor-pointer"
+                      aria-label="More options"
                     >
                       <MoreHorizontal className="h-4 w-4" />
                     </button>

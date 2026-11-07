@@ -204,7 +204,7 @@ export default function StudentRegistrationPublicPage() {
                 <span className="font-bold text-[#111827] dark:text-[#F1F5F9]">{section}</span>
               </div>
               <div>
-                <span className="text-[#64748B] dark:text-[#A3B1C6] block">Branch / Dept:</span>
+                <span className="text-[#64748B] dark:text-[#A3B1C6] block">Institute / College:</span>
                 <span className="font-bold text-[#111827] dark:text-[#F1F5F9]">{branch}</span>
               </div>
             </div>
@@ -368,19 +368,19 @@ export default function StudentRegistrationPublicPage() {
                     />
                   </div>
 
-                  {/* 6. Branch */}
+                  {/* 6. Institute */}
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-[#111827] dark:text-[#F1F5F9] flex items-center justify-between">
                       <span className="flex items-center gap-1.5">
                         <Building2 className="h-3.5 w-3.5 text-[#2563EB] dark:text-[#60A5FA]" />
-                        Branch / Department
+                        Institute / College / School
                       </span>
                       <span className="text-[10px] text-[#2563EB] dark:text-[#60A5FA] font-bold">*</span>
                     </label>
                     <input
                       type="text"
                       required
-                      placeholder="e.g. AIML / Computer Science"
+                      placeholder="e.g. MIT College of Engineering"
                       value={branch}
                       onChange={(e) => setBranch(e.target.value)}
                       className="w-full px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-[#17243A] text-[#111827] dark:text-[#F1F5F9] focus:border-[#2563EB] dark:focus:border-[#3B82F6] focus:ring-1 focus:ring-[#2563EB] outline-none transition-all placeholder:text-[#94A3B8]"

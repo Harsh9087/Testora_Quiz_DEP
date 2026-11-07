@@ -375,13 +375,17 @@ def generate_exam_from_kb(
     computed_total_marks = round(calc_total, 2) if calc_total > 0 else (req.total_marks or 50.0)
     logger.info(f"[QUESTIONS_VALIDATED] Compiled {len(compiled)} questions, computed total marks: {computed_total_marks}")
 
-    # 5. Resolve student directory safely within current workspace (by UUID or name)
+    # 5. Resolve student directory safely within current workspace or created by user (by UUID or name)
     resolved_directory_id = None
     if req.student_directory_id:
         clean_dir_input = str(req.student_directory_id).strip()
+        from sqlalchemy import or_
         target_dir = db.query(StudentDirectory).filter(
             (StudentDirectory.id == clean_dir_input) | (func.lower(StudentDirectory.name) == func.lower(clean_dir_input)),
-            StudentDirectory.workspace_id == current_workspace.id,
+            or_(
+                StudentDirectory.workspace_id == current_workspace.id,
+                StudentDirectory.created_by == current_user.id
+            ),
             StudentDirectory.is_deleted == False
         ).first()
         if target_dir:
@@ -1995,6 +1999,139 @@ def get_exam_live_monitor(
         "server_time_ist": format_ist_datetime(now),
         "candidates": candidates_list
     }
+
+# ─── Abandoned Attempt Helpers ────────────────────────────────────────────────
+
+def mark_abandoned_submissions(exam_id: str, db: Session):
+    """
+    Finds all 'started'/'submitting' submissions for an exam that are past their
+    deadline (or past exam end_time) and marks them as 'abandoned'.
+    Sets abandoned_at = now and abandon_expires_at = now + ABANDONED_ATTEMPT_RETENTION_DAYS.
+    Called automatically by live-monitor and analytics sweeps.
+    """
+    from app.config import settings as _settings
+    now = now_utc()
+    retention_days = getattr(_settings, "ABANDONED_ATTEMPT_RETENTION_DAYS", 7)
+
+    exam = db.query(Exam).filter(Exam.id == exam_id, Exam.is_deleted == False).first()
+    if not exam:
+        return
+
+    exam_end = to_utc_instant(exam.end_time)
+
+    stale = db.query(ExamSubmission).filter(
+        ExamSubmission.exam_id == exam_id,
+        ExamSubmission.status.in_(["started", "in_progress", "submitting"]),
+        ExamSubmission.started_at.isnot(None),
+        ExamSubmission.is_dismissed_by_teacher == False
+    ).all()
+
+    changed = False
+    for sub in stale:
+        started = to_utc_instant(sub.started_at) or now
+        deadline = to_utc_instant(sub.deadline_at) or (started + timedelta(minutes=exam.duration_minutes or 30))
+        # Also cap at exam end_time
+        if exam_end and exam_end < deadline:
+            deadline = exam_end
+
+        if now >= deadline:
+            sub.status = "abandoned"
+            sub.abandoned_at = now
+            sub.abandon_expires_at = now + timedelta(days=retention_days)
+            changed = True
+
+    if changed:
+        db.commit()
+
+
+@router.post("/{exam_id}/submissions/{submission_id}/dismiss-abandoned")
+def dismiss_abandoned_attempt(
+    exam_id: str,
+    submission_id: str,
+    current_user: User = Depends(teacher_required),
+    db: Session = Depends(get_db)
+):
+    """
+    Teacher manually dismisses an abandoned attempt so it no longer shows in the gradebook.
+    Sets is_dismissed_by_teacher = True and clears abandon_expires_at.
+    """
+    exam = db.query(Exam).filter(Exam.id == exam_id, Exam.is_deleted == False).first()
+    if not exam:
+        raise HTTPException(status_code=404, detail="Exam not found")
+
+    if current_user.role != "super_admin":
+        teacher_ws_ids = [m.workspace_id for m in db.query(WorkspaceMember).filter(
+            WorkspaceMember.user_id == current_user.id).all()]
+        if not (exam.created_by == current_user.id or (exam.workspace_id and exam.workspace_id in teacher_ws_ids)):
+            raise HTTPException(status_code=403, detail="Access denied")
+
+    sub = db.query(ExamSubmission).filter(
+        ExamSubmission.id == submission_id,
+        ExamSubmission.exam_id == exam_id
+    ).first()
+    if not sub:
+        raise HTTPException(status_code=404, detail="Submission not found")
+
+    sub.is_dismissed_by_teacher = True
+    sub.abandon_expires_at = None
+    db.commit()
+
+    db.add(AuditLog(
+        user_id=current_user.id,
+        action="ABANDONED_ATTEMPT_DISMISSED",
+        details=json.dumps({
+            "exam_id": exam_id,
+            "submission_id": submission_id,
+            "candidate_id": sub.candidate_id,
+        }),
+        timestamp=now_utc()
+    ))
+    db.commit()
+    return {"success": True, "message": "Abandoned attempt dismissed from gradebook."}
+
+
+@router.post("/{exam_id}/expire-abandoned")
+def expire_abandoned_attempts(
+    exam_id: str,
+    days: int = 0,
+    current_user: User = Depends(teacher_required),
+    db: Session = Depends(get_db)
+):
+    """
+    Teacher manually triggers expiry of all abandoned attempts for this exam.
+    days=0 (default) expires ALL abandoned attempts immediately.
+    days=N expires only those older than N days.
+    """
+    exam = db.query(Exam).filter(Exam.id == exam_id, Exam.is_deleted == False).first()
+    if not exam:
+        raise HTTPException(status_code=404, detail="Exam not found")
+
+    if current_user.role != "super_admin":
+        teacher_ws_ids = [m.workspace_id for m in db.query(WorkspaceMember).filter(
+            WorkspaceMember.user_id == current_user.id).all()]
+        if not (exam.created_by == current_user.id or (exam.workspace_id and exam.workspace_id in teacher_ws_ids)):
+            raise HTTPException(status_code=403, detail="Access denied")
+
+    now = now_utc()
+    q = db.query(ExamSubmission).filter(
+        ExamSubmission.exam_id == exam_id,
+        ExamSubmission.status == "abandoned",
+        ExamSubmission.is_dismissed_by_teacher == False
+    )
+    if days > 0:
+        cutoff = now - timedelta(days=days)
+        q = q.filter(ExamSubmission.abandoned_at <= cutoff)
+
+    subs = q.all()
+    count = len(subs)
+    for sub in subs:
+        sub.is_dismissed_by_teacher = True
+        sub.abandon_expires_at = now
+
+    db.commit()
+    return {"success": True, "expired_count": count, "message": f"Dismissed {count} abandoned attempt(s)."}
+
+# ─────────────────────────────────────────────────────────────────────────────
 
 @router.post("/{exam_id}/extend-time")
 def extend_exam_time(
