@@ -1794,7 +1794,7 @@ export default function TeacherDashboard() {
               Viewing Module:
             </span>
             <span className="px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-bold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-900/60 uppercase tracking-wide truncate max-w-[170px] xs:max-w-[210px] sm:max-w-none shadow-2xs">
-              {activeSectionTab === "create" && "Create Assessment Wizard"}
+              {activeSectionTab === "create" && "Create Assessment"}
               {activeSectionTab === "exams" && "Assessments Management"}
               {activeSectionTab === "bank" && "Question Bank Studio"}
               {activeSectionTab === "kb" && "Knowledge Base (RAG)"}
@@ -1849,7 +1849,7 @@ export default function TeacherDashboard() {
                   </h2>
                 </div>
                 <p className="text-xs text-[#64748B] dark:text-[#A3B1C6] mt-0.5">
-                  Follow the 4 calibrated steps below or tap any tab to jump directly.
+                  Configure your knowledge source, question specifications, schedule, and candidate directory.
                 </p>
               </div>
 
@@ -1910,65 +1910,6 @@ export default function TeacherDashboard() {
                 </button>
               </div>
             )}
-
-            {/* ═══════ INTERACTIVE STEPS TAB BAR NAVIGATION ═══════ */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 pt-1">
-              {WIZARD_STEPS.map((s) => {
-                const isActive = createStep === s.step;
-                const isExpanded = expandedStep === s.step;
-                const isCompleted = createStep > s.step;
-                const StepIcon = s.icon;
-                return (
-                  <button
-                    key={s.step}
-                    type="button"
-                    onClick={() => {
-                      setCreateStep(s.step);
-                      setExpandedStep(s.step);
-                    }}
-                    className={`p-2.5 sm:p-3 rounded-xl border text-left transition-all cursor-pointer flex items-center gap-2.5 relative group ${
-                      isActive && isExpanded
-                        ? "bg-white dark:bg-[#172B4D] border-[#2563EB] dark:border-[#3B82F6] shadow-xs ring-1 ring-[#2563EB]/30"
-                        : isActive
-                        ? "bg-[#EFF6FF] dark:bg-[#172B4D]/60 border-[#2563EB]/50"
-                        : isCompleted
-                        ? "bg-emerald-50/40 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800/60 hover:border-emerald-400"
-                        : "bg-[#F8FAFC]/50 dark:bg-[#0B1120]/50 border-[#E2E8F0] dark:border-[#263449] hover:bg-white dark:hover:bg-[#111C31] hover:border-[#2563EB]/40"
-                    }`}
-                  >
-                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 font-bold text-xs transition-colors ${
-                      isActive
-                        ? "bg-[#2563EB] text-white shadow-xs"
-                        : isCompleted
-                        ? "bg-emerald-600 text-white"
-                        : "bg-[#E2E8F0] dark:bg-[#263449] text-[#64748B] group-hover:bg-[#EFF6FF] group-hover:text-[#2563EB]"
-                    }`}>
-                      {isCompleted ? <Check className="h-4 w-4" /> : s.step}
-                    </div>
-
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between">
-                        <span className={`text-xs font-bold truncate ${
-                          isActive
-                            ? "text-[#2563EB] dark:text-[#60A5FA]"
-                            : isCompleted
-                            ? "text-emerald-700 dark:text-emerald-400"
-                            : "text-[#111827] dark:text-[#F1F5F9]"
-                        }`}>
-                          {s.shortTitle}
-                        </span>
-                        {isActive && isExpanded && (
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#2563EB] dark:bg-[#60A5FA] shrink-0" />
-                        )}
-                      </div>
-                      <p className="text-[10px] text-[#64748B] dark:text-[#A3B1C6] truncate">
-                        {s.summary}
-                      </p>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
           </div>
 
           {/* ═══════ TOP-DOWN COLLAPSIBLE STEPPER ═══════ */}
@@ -2037,7 +1978,7 @@ export default function TeacherDashboard() {
                         className="text-xs font-bold text-[#C84B18] dark:text-[#EA580C] hover:underline flex items-center gap-1 cursor-pointer"
                       >
                         <Plus className="h-3.5 w-3.5" />
-                        <span>+ Upload New KB</span>
+                        <span>Upload New KB</span>
                       </button>
                     </div>
 
