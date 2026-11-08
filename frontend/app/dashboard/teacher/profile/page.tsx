@@ -512,30 +512,30 @@ export default function TeacherProfilePage() {
         {/* Clickable Header Block */}
         <div 
           onClick={() => setExpandWallet(!expandWallet)}
-          className="flex items-center justify-between p-4 cursor-pointer hover:bg-[#FAF8F5] dark:hover:bg-[#201D1A]/50 transition-colors"
+          className="flex items-center justify-between gap-3 p-3.5 sm:p-4 cursor-pointer hover:bg-[#FAF8F5] dark:hover:bg-[#201D1A]/50 transition-colors select-none"
         >
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
             <div className="h-9 w-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
               <Coins className="h-5 w-5" />
             </div>
-            <div>
-              <div className="text-sm font-bold text-[#242321] dark:text-[#F5F5F4]">
+            <div className="min-w-0 flex-1">
+              <div className="text-xs sm:text-sm font-bold text-[#242321] dark:text-[#F5F5F4] truncate">
                 Credits & Balance
               </div>
-              <div className="text-[11px] text-[#716D67] dark:text-[#A8A29E]">
+              <div className="text-[10px] sm:text-[11px] text-[#716D67] dark:text-[#A8A29E] truncate">
                 1 Credit = 1 Student Attempt per Question
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <span className="px-2.5 py-1 rounded-full text-xs font-black bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-300/60 dark:border-amber-800/60">
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+            <span className="px-2.5 py-1 rounded-full text-xs font-black bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-300/60 dark:border-amber-800/60 shrink-0 whitespace-nowrap shadow-xs">
               {profile?.credits_balance !== undefined ? profile.credits_balance.toLocaleString() : "0"} Credits
             </span>
             {expandWallet ? (
-              <ChevronUp className="h-4 w-4 text-[#716D67]" />
+              <ChevronUp className="h-4 w-4 text-[#716D67] shrink-0" />
             ) : (
-              <ChevronDown className="h-4 w-4 text-[#716D67]" />
+              <ChevronDown className="h-4 w-4 text-[#716D67] shrink-0" />
             )}
           </div>
         </div>

@@ -293,9 +293,9 @@ export default function StudentProfilePage() {
       {/* ══════════════════════════════════════════════════════
           BLOCK 1: PERSONAL PROFILE (Essential Info)
          ══════════════════════════════════════════════════════ */}
-      <div className="bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-2xl p-5 shadow-xs">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
+      <div className="bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-2xl p-4 sm:p-5 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+          <div className="flex items-center gap-3.5 sm:gap-4 min-w-0 flex-1">
             {/* Avatar with fallback Person icon */}
             <div className="relative shrink-0">
               {getAvatarUrl(profile?.avatar_url) && !imgError ? (
@@ -303,14 +303,14 @@ export default function StudentProfilePage() {
                   src={getAvatarUrl(profile?.avatar_url)!}
                   alt={profile?.full_name || "Profile"}
                   onError={() => setImgError(true)}
-                  className="w-16 h-16 rounded-2xl object-cover border-2 border-[#E2E8F0] dark:border-[#263449] shadow-xs bg-[#F8FAFC] dark:bg-[#0B1120]"
+                  className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-cover border-2 border-[#E2E8F0] dark:border-[#263449] shadow-xs bg-[#F8FAFC] dark:bg-[#0B1120]"
                 />
               ) : (
                 <div 
-                  className="w-16 h-16 rounded-2xl bg-[#EFF6FF] dark:bg-[#172B4D] border-2 border-[#E2E8F0] dark:border-[#263449] flex items-center justify-center text-[#1E3A8A] dark:text-[#60A5FA] shadow-xs"
+                  className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-[#EFF6FF] dark:bg-[#172B4D] border-2 border-[#E2E8F0] dark:border-[#263449] flex items-center justify-center text-[#1E3A8A] dark:text-[#60A5FA] shadow-xs"
                   title="Person Icon"
                 >
-                  <User className="w-8 h-8 text-[#1E3A8A] dark:text-[#60A5FA]" />
+                  <User className="w-7 h-7 sm:w-8 sm:h-8 text-[#1E3A8A] dark:text-[#60A5FA]" />
                 </div>
               )}
 
@@ -335,21 +335,21 @@ export default function StudentProfilePage() {
             </div>
 
             {/* Profile Identity Details */}
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-lg font-black text-[#111827] dark:text-[#F1F5F9]">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-base sm:text-lg font-black text-[#111827] dark:text-[#F1F5F9] whitespace-nowrap truncate max-w-[200px] xs:max-w-[260px] sm:max-w-none">
                   {profile?.full_name || fullName || "Student Candidate"}
                 </h1>
-                <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
                   {profile?.role || role || "STUDENT"}
                 </span>
               </div>
-              <div className="text-xs text-[#64748B] dark:text-[#A3B1C6] mt-0.5 flex items-center gap-1.5">
-                <Mail className="h-3.5 w-3.5" />
-                <span>{profile?.email}</span>
+              <div className="text-xs text-[#64748B] dark:text-[#A3B1C6] mt-0.5 flex items-center gap-1.5 truncate">
+                <Mail className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">{profile?.email}</span>
               </div>
               <div className="text-[11px] text-[#64748B] dark:text-[#A3B1C6] mt-1 flex flex-wrap items-center gap-2">
-                <span>{profile?.institution_name || "Testora Quiz Academy"}</span>
+                <span className="truncate max-w-[150px] xs:max-w-none">{profile?.institution_name || "Testora Quiz Academy"}</span>
                 {profile?.roll_number && (
                   <>
                     <span>•</span>
@@ -366,7 +366,7 @@ export default function StudentProfilePage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
             {!isEditing ? (
               <button
                 onClick={() => setIsEditing(true)}
@@ -474,31 +474,34 @@ export default function StudentProfilePage() {
       <div className="bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-2xl shadow-xs overflow-hidden">
         <div 
           onClick={() => setExpandWallet(!expandWallet)}
-          className="p-4 flex items-center justify-between cursor-pointer hover:bg-[#F8FAFC]/60 dark:hover:bg-[#17243A]/60 transition-colors"
+          className="p-3.5 sm:p-4 flex items-center justify-between gap-3 cursor-pointer hover:bg-[#F8FAFC]/60 dark:hover:bg-[#17243A]/60 transition-colors select-none"
         >
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 shrink-0">
               <Coins className="h-4.5 w-4.5" />
             </div>
-            <div>
-              <h2 className="text-xs font-bold text-[#111827] dark:text-[#F1F5F9]">
+            <div className="min-w-0 flex-1">
+              <h2 className="text-xs sm:text-sm font-bold text-[#111827] dark:text-[#F1F5F9] truncate">
                 Available Credits Balance
               </h2>
-              <p className="text-[11px] text-[#64748B] dark:text-[#A3B1C6]">
+              <p className="text-[10px] sm:text-[11px] text-[#64748B] dark:text-[#A3B1C6] truncate">
                 Credits for student assessments and practice exams
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-black text-amber-600 dark:text-amber-400 px-2.5 py-0.5 rounded-lg bg-amber-500/10 border border-amber-500/20">
-              {(profile?.credits_balance || 0).toLocaleString()} Credits
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+            <span className="inline-flex items-center gap-1 text-xs font-black text-amber-600 dark:text-amber-400 px-2.5 py-1 rounded-xl bg-amber-500/10 border border-amber-500/20 whitespace-nowrap shrink-0 shadow-xs">
+              <span>{(profile?.credits_balance || 0).toLocaleString()}</span>
+              <span>Credits</span>
             </span>
-            {expandWallet ? (
-              <ChevronUp className="h-4 w-4 text-[#64748B]" />
-            ) : (
-              <ChevronDown className="h-4 w-4 text-[#64748B]" />
-            )}
+            <div className="p-1 rounded-lg text-[#64748B] dark:text-[#A3B1C6] shrink-0">
+              {expandWallet ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+            </div>
           </div>
         </div>
 
