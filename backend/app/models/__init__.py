@@ -21,10 +21,13 @@ from app.models.credit_request import CreditRequest
 from app.models.institutional_request import InstitutionalRequest
 from app.models.pricing_plan import PricingPlan
 from app.models.feedback import FeedbackSubmission
+from app.models.mock_test import MockTest, MockTestPurchase
 
 __all__ = [
     "Base",
     "TimeStampedModel",
+    "MockTest",
+    "MockTestPurchase",
     "SupportTicket",
     "SupportTicketReply",
     "CreditRequest",

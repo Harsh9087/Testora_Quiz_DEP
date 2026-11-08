@@ -9,10 +9,11 @@ import {
   Trophy, Target, BarChart3, XCircle, ChevronDown, ChevronUp, Medal,
   RefreshCw, CheckCircle2, AlertCircle, Clock, Sparkles, User, ArrowRight, ArrowLeft,
   BookMarked, HelpCircle, ShieldCheck, GraduationCap, Play, Key, Lock, Check,
-  Timer, ChevronRight, ExternalLink, FileCode2
+  Timer, ChevronRight, ExternalLink, FileCode2, Building2
 } from "lucide-react";
 import MathText from "../../../components/MathText";
 import FeaturedHighYieldTests from "../../../components/FeaturedHighYieldTests";
+import CompanyPlacementTests from "./_components/CompanyPlacementTests";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, RadarChart, PolarGrid, PolarAngleAxis, Radar } from "recharts";
 import { useRouter } from "next/navigation";
 
@@ -30,7 +31,7 @@ export default function StudentDashboard() {
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   
   // UI States
-  const [activePortalTab, setActivePortalTab] = useState<"assigned" | "submissions" | "progress">("assigned");
+  const [activePortalTab, setActivePortalTab] = useState<"assigned" | "company-tests" | "submissions" | "progress">("assigned");
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeViewTab, setActiveViewTab] = useState<"questions" | "topics" | "leaderboard">("questions");
@@ -102,6 +103,24 @@ export default function StudentDashboard() {
     const storedToken = typeof window !== "undefined" ? localStorage.getItem("token") : null;
     if (token || storedToken) {
       fetchData();
+    }
+
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get("tab");
+      if (tabParam === "company-tests") {
+        setActivePortalTab("company-tests");
+      }
+
+      const handleSwitchTab = (e: any) => {
+        if (e.detail === "company-tests") {
+          setActivePortalTab("company-tests");
+        } else if (e.detail === "assigned") {
+          setActivePortalTab("assigned");
+        }
+      };
+      window.addEventListener("switch-tab", handleSwitchTab);
+      return () => window.removeEventListener("switch-tab", handleSwitchTab);
     }
   }, [token, selectedStudentFilter]);
 
@@ -238,6 +257,22 @@ export default function StudentDashboard() {
             <Play className="h-3.5 w-3.5" />
             <span className="sm:hidden">Assigned ({assignedExams.length})</span>
             <span className="hidden sm:inline">Assigned & Live Tests ({assignedExams.length})</span>
+          </button>
+
+          <button
+            onClick={() => setActivePortalTab("company-tests")}
+            className={`px-3 sm:px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 sm:gap-2 shrink-0 cursor-pointer ${
+              activePortalTab === "company-tests"
+                ? "bg-[#2563EB] text-white shadow-xs"
+                : "bg-[#F1F5F9] dark:bg-[#17243A] text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9]"
+            }`}
+          >
+            <Building2 className="h-3.5 w-3.5" />
+            <span className="sm:hidden">Placement Tests</span>
+            <span className="hidden sm:inline">Company Placement Tests (TCS, Infosys, HCL)</span>
+            <span className="px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-amber-400 text-amber-950 ml-0.5">
+              ₹9 / Free
+            </span>
           </button>
 
           <button
@@ -530,6 +565,11 @@ export default function StudentDashboard() {
             </div>
           )}
         </div>
+      )}
+
+      {/* ═══════ SECTION: COMPANY PLACEMENT & MOCK TESTS ═══════ */}
+      {activePortalTab === "company-tests" && (
+        <CompanyPlacementTests />
       )}
 
       {/* ═══════ SECTION 2: SUBMISSIONS & PERFORMANCE BREAKDOWN ═══════ */}

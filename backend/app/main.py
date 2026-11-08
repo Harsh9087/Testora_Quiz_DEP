@@ -5,7 +5,7 @@ import os
 from sqlalchemy.orm import Session
 from app.config import settings
 from app.database import engine, Base, get_db
-from app.api import auth, students, kb, exams, attempts, reports, notifications, institutions, academic, assessment_groups, workspaces, student_directories, payments, registration_forms, custom_forms, admin, preferences, support, institutional_requests, pricing_plans, feedback
+from app.api import auth, students, kb, exams, attempts, reports, notifications, institutions, academic, assessment_groups, workspaces, student_directories, payments, registration_forms, custom_forms, admin, preferences, support, institutional_requests, pricing_plans, feedback, mock_tests
 
 import app.models
 
@@ -365,6 +365,8 @@ app.include_router(pricing_plans.router, prefix=settings.API_V1_STR)
 app.include_router(pricing_plans.router, prefix="/api")
 app.include_router(feedback.router, prefix=settings.API_V1_STR)
 app.include_router(feedback.router, prefix="/api")
+app.include_router(mock_tests.router, prefix=settings.API_V1_STR)
+app.include_router(mock_tests.router, prefix="/api")
 
 # Static files for avatars and uploads
 from fastapi.staticfiles import StaticFiles

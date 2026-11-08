@@ -21,6 +21,7 @@ import {
   Bell, 
   ExternalLink,
   UserCheck,
+  Building2,
   Search,
   HelpCircle,
   Sun,
@@ -909,20 +910,77 @@ export default function DashboardLayout({
                   </button>
                 </>
               ) : (
-                <a
-                  href="/dashboard/student"
-                  onClick={closeSidebarMobile}
-                  className={`group relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200/50 dark:border-blue-900/50 transition-all ${
-                    sidebarCollapsed ? "md:justify-center md:px-0" : ""
-                  }`}
-                >
-                  <div className="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
-                    <UserCheck className="h-4 w-4" />
-                  </div>
-                  <span className={`truncate text-left flex-1 ${sidebarCollapsed ? "md:hidden" : ""}`}>
-                    Student Portal
-                  </span>
-                </a>
+                <div className="space-y-1">
+                  <a
+                    href="/dashboard/student"
+                    onClick={(e) => {
+                      closeSidebarMobile();
+                      if (pathname === "/dashboard/student") {
+                        e.preventDefault();
+                        window.dispatchEvent(new CustomEvent("switch-tab", { detail: "assigned" }));
+                        setCurrentTab("overview");
+                      }
+                    }}
+                    className={`group relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                      sidebarCollapsed ? "md:justify-center md:px-0" : ""
+                    } ${
+                      pathname === "/dashboard/student" && currentTab !== "company-tests"
+                        ? "bg-blue-50/90 text-[#2563EB] dark:bg-blue-950/60 dark:text-[#60A5FA] border border-blue-200/60 dark:border-blue-900/60 font-bold shadow-2xs"
+                        : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                    }`}
+                  >
+                    <div className="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105">
+                      <UserCheck className="h-4 w-4" />
+                    </div>
+                    <span className={`truncate text-left flex-1 ${sidebarCollapsed ? "md:hidden" : ""}`}>
+                      Student Portal
+                    </span>
+                    {!sidebarCollapsed && (
+                      <ChevronRight className="h-3.5 w-3.5 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 dark:group-hover:text-slate-400 shrink-0 transition-transform group-hover:translate-x-0.5" />
+                    )}
+                  </a>
+
+                  {/* Company Placement Tests Section (TCS, Infosys, HCL, etc.) */}
+                  <a
+                    href="/dashboard/student?tab=company-tests"
+                    onClick={(e) => {
+                      closeSidebarMobile();
+                      if (pathname === "/dashboard/student") {
+                        e.preventDefault();
+                        window.dispatchEvent(new CustomEvent("switch-tab", { detail: "company-tests" }));
+                        window.history.pushState(null, "", "/dashboard/student?tab=company-tests");
+                        setCurrentTab("company-tests");
+                      }
+                    }}
+                    className={`group relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                      sidebarCollapsed ? "md:justify-center md:px-0" : ""
+                    } ${
+                      pathname === "/dashboard/student" && currentTab === "company-tests"
+                        ? "bg-blue-50/90 text-[#2563EB] dark:bg-blue-950/60 dark:text-[#60A5FA] border border-blue-200/60 dark:border-blue-900/60 font-bold shadow-2xs"
+                        : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                    }`}
+                  >
+                    <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105">
+                      <Building2 className="h-4 w-4" />
+                    </div>
+                    <div className={`flex flex-col text-left flex-1 min-w-0 ${sidebarCollapsed ? "md:hidden" : ""}`}>
+                      <span className="truncate">Placement Tests</span>
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500 font-normal truncate">
+                        TCS, Infosys, HCL, Wipro
+                      </span>
+                    </div>
+                    {!sidebarCollapsed && (
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 shrink-0">
+                        ₹9 / Free
+                      </span>
+                    )}
+                    {sidebarCollapsed && (
+                      <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
+                        Placement Tests (TCS, Infosys, HCL)
+                      </span>
+                    )}
+                  </a>
+                </div>
               )}
             </div>
           </div>

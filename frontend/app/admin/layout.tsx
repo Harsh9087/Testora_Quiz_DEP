@@ -30,7 +30,8 @@ import {
   KeyRound,
   ArrowRight,
   CheckCircle2,
-  Tag
+  Tag,
+  Award
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { apiFetch } from "@/lib/api";
@@ -52,6 +53,7 @@ const navItems: NavItem[] = [
   { name: "User Directory", href: "/admin/users", icon: Users },
   { name: "Institutions", href: "/admin/institutions", icon: Building2 },
   { name: "Assessments", href: "/admin/exams", icon: FileSpreadsheet },
+  { name: "Placement Tests", href: "/admin/mock-tests", icon: Award },
   { name: "Credit Ledger", href: "/admin/credits", icon: Coins },
   { name: "Coupons & Vouchers", href: "/admin/coupons", icon: Ticket },
   { name: "Pricing Plans", href: "/admin/pricing-plans", icon: Tag },
