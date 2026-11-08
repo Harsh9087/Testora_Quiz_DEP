@@ -1779,17 +1779,21 @@ export default function TeacherDashboard() {
         </>
       ) : (
         /* Top Navigation Bar when in single module view */
-        <div className="flex items-center justify-between pb-3 border-b border-[#E2E8F0] dark:border-[#263449]">
+        <div className="flex items-center justify-between gap-2.5 pb-3 border-b border-[#E2E8F0] dark:border-[#263449]">
           <button
             onClick={() => switchSectionTab("overview")}
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-[#2563EB] dark:text-[#60A5FA] bg-[#EFF6FF] dark:bg-[#172B4D] hover:bg-blue-100 dark:hover:bg-[#1e3a66] border border-[#2563EB]/20 transition-all cursor-pointer shadow-2xs"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-[#2563EB] dark:text-[#60A5FA] bg-[#EFF6FF] dark:bg-[#172B4D] hover:bg-blue-100 dark:hover:bg-[#1e3a66] border border-[#2563EB]/20 transition-all cursor-pointer shadow-2xs shrink-0 whitespace-nowrap"
+            title="Return to Main Dashboard"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>← Back to Main Dashboard</span>
+            <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
+            <span className="hidden xs:inline">Back to Dashboard</span>
+            <span className="xs:hidden">Dashboard</span>
           </button>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Viewing Module:</span>
-            <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-900/60 uppercase tracking-wide">
+          <div className="flex items-center gap-2 min-w-0 justify-end">
+            <span className="hidden md:inline text-xs text-slate-500 dark:text-slate-400 font-medium whitespace-nowrap">
+              Viewing Module:
+            </span>
+            <span className="px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-bold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-900/60 uppercase tracking-wide truncate max-w-[170px] xs:max-w-[210px] sm:max-w-none shadow-2xs">
               {activeSectionTab === "create" && "Create Assessment Wizard"}
               {activeSectionTab === "exams" && "Assessments Management"}
               {activeSectionTab === "bank" && "Question Bank Studio"}
