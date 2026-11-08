@@ -155,8 +155,8 @@ export default function StudentRegistrationPublicPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0B1120] flex flex-col justify-center p-3 sm:p-5 text-[#111827] dark:text-[#F1F5F9] transition-colors">
-      <div className="max-w-2xl w-full mx-auto space-y-3.5 my-auto">
+    <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0B1120] flex flex-col justify-between p-3 sm:p-5 text-[#111827] dark:text-[#F1F5F9] transition-colors">
+      <div className="max-w-2xl w-full mx-auto space-y-3.5 flex-1 flex flex-col justify-center py-4">
         
         {/* Brand Banner */}
         <div className="flex items-center justify-between pb-2.5 border-b border-[#E2E8F0] dark:border-[#263449]">
@@ -418,11 +418,12 @@ export default function StudentRegistrationPublicPage() {
           </div>
         )}
 
-        <div className="text-center text-[11px] text-[#64748B] dark:text-[#A3B1C6] space-y-1">
-          <p>Powered by <span className="font-semibold text-[#111827] dark:text-[#F1F5F9]">TestoraQuiz</span> — Automated Examination & Student Management</p>
-        </div>
-
       </div>
+
+      {/* Pinned Bottom Footer */}
+      <footer className="w-full text-center text-[11px] text-[#64748B] dark:text-[#A3B1C6] py-3 mt-auto shrink-0 border-t border-[#E2E8F0]/40 dark:border-[#263449]/40">
+        <p>Powered by <span className="font-semibold text-[#111827] dark:text-[#F1F5F9]">TestoraQuiz</span> — Automated Examination & Student Management</p>
+      </footer>
     </div>
   );
 }

@@ -182,7 +182,7 @@ export default function PublicCustomFormPage() {
       className={`min-h-screen ${theme.pageBackground} flex flex-col justify-between p-3 sm:p-6 lg:p-8 transition-colors`}
       style={customColors?.pageBackground ? { background: customColors.pageBackground } : undefined}
     >
-      <div className="max-w-3xl w-full mx-auto space-y-5 my-auto">
+      <div className="max-w-3xl w-full mx-auto space-y-5 flex-1 flex flex-col justify-center py-4">
         
         {/* Brand Bar */}
         <div className="flex items-center justify-between pb-2">
@@ -496,11 +496,12 @@ export default function PublicCustomFormPage() {
           </div>
         )}
 
-        <div className={`text-center text-[11px] ${theme.mutedTextColor} pt-2`}>
-          Powered by <span className={`font-semibold ${theme.textColor}`}>TestoraQuiz Custom Forms</span>
-        </div>
-
       </div>
+
+      {/* Pinned Bottom Footer */}
+      <footer className={`w-full text-center text-[11px] ${theme.mutedTextColor} py-3 mt-auto shrink-0 border-t border-slate-200/40 dark:border-slate-800/40`}>
+        Powered by <span className={`font-semibold ${theme.textColor}`}>TestoraQuiz Custom Forms</span>
+      </footer>
     </div>
   );
 }
