@@ -16,6 +16,30 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
+  async redirects() {
+    return [
+      {
+        source: '/dashboard/teacher/exams/create',
+        destination: '/dashboard/teacher?tab=create',
+        permanent: false,
+      },
+      {
+        source: '/dashboard/teacher/ai-forms',
+        destination: '/dashboard/teacher?tab=custom-forms',
+        permanent: false,
+      },
+      {
+        source: '/dashboard/teacher/directories',
+        destination: '/dashboard/teacher?tab=students',
+        permanent: false,
+      },
+      {
+        source: '/dashboard/teacher/:tab(forms|custom-forms|exams|students|kb|bank|create|reports|proctoring|mock-tests|certificates)',
+        destination: '/dashboard/teacher?tab=:tab',
+        permanent: false,
+      },
+    ];
+  },
   async headers() {
     return [
       {

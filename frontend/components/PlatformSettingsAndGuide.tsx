@@ -46,7 +46,7 @@ const GUIDE_TOPICS: GuideTopic[] = [
     badge: "Direct Public Link",
     icon: ClipboardList,
     color: "text-[#2563EB] bg-[#EFF6FF] dark:bg-[#172B4D] dark:text-[#60A5FA]",
-    routeHref: "/dashboard/teacher/forms",
+    routeHref: "/dashboard/teacher?tab=forms",
     summary: "Collect student information via shareable online forms without requiring students to create accounts, and import directly into Student Directories.",
     steps: [
       "Navigate to 'Forms & Registrations' from the faculty dashboard sidebar or click the action button.",
@@ -63,7 +63,7 @@ const GUIDE_TOPICS: GuideTopic[] = [
     badge: "Gemini AI Engine",
     icon: Wand2,
     color: "text-blue-600 bg-blue-50 dark:bg-blue-950/40",
-    routeHref: "/dashboard/teacher/ai-forms",
+    routeHref: "/dashboard/teacher?tab=custom-forms",
     summary: "Generate custom surveys, workshop evaluations, and event registrations simply by describing them in natural language.",
     steps: [
       "Go to 'AI Form Builder' from the sidebar.",
@@ -80,7 +80,7 @@ const GUIDE_TOPICS: GuideTopic[] = [
     badge: "ChromaDB + Gemini",
     icon: FileEdit,
     color: "text-indigo-600 bg-indigo-50 dark:bg-indigo-950/40",
-    routeHref: "/dashboard/teacher/exams/create",
+    routeHref: "/dashboard/teacher?tab=create",
     summary: "Synthesize calibrated assessments from course documents, textbook chapters, or custom syllabus blueprints.",
     steps: [
       "Open 'Create Quiz Wizard' from the Creator Studio sidebar.",
@@ -111,7 +111,7 @@ const GUIDE_TOPICS: GuideTopic[] = [
     badge: "Class Cohorts",
     icon: Users,
     color: "text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40",
-    routeHref: "/dashboard/teacher/directories",
+    routeHref: "/dashboard/teacher?tab=students",
     summary: "Maintain cohorts, divisions, and batches for targeting assessments to specific groups of students.",
     steps: [
       "Access 'Student Directory' in the sidebar.",
@@ -124,10 +124,10 @@ const GUIDE_TOPICS: GuideTopic[] = [
 
 const ROUTE_INFO_ITEMS = [
   { path: "/dashboard/teacher", name: "Faculty Command Center", type: "Dynamic SSR", auth: "Teacher / Faculty" },
-  { path: "/dashboard/teacher/exams/create", name: "AI Quiz Creator & RAG", type: "Client & Vector", auth: "Teacher" },
-  { path: "/dashboard/teacher/forms", name: "Student Online Forms", type: "Dynamic SSR", auth: "Teacher" },
-  { path: "/dashboard/teacher/ai-forms", name: "AI Natural Language Form Builder", type: "Dynamic SSR", auth: "Teacher" },
-  { path: "/dashboard/teacher/directories", name: "Student Cohort Directories", type: "Dynamic SSR", auth: "Teacher" },
+  { path: "/dashboard/teacher?tab=create", name: "AI Quiz Creator & RAG", type: "Client & Vector", auth: "Teacher" },
+  { path: "/dashboard/teacher?tab=forms", name: "Student Online Forms", type: "Dynamic SSR", auth: "Teacher" },
+  { path: "/dashboard/teacher?tab=custom-forms", name: "AI Natural Language Form Builder", type: "Dynamic SSR", auth: "Teacher" },
+  { path: "/dashboard/teacher?tab=students", name: "Student Cohort Directories", type: "Dynamic SSR", auth: "Teacher" },
   { path: "/dashboard/student", name: "Candidate Assessment Portal", type: "Dynamic SSR", auth: "Student" },
   { path: "/exam/[code]", name: "Proctored Exam Room", type: "Dynamic Real-Time", auth: "Student" },
   { path: "/forms/[slug]", name: "Public Registration Link", type: "Static / ISR", auth: "Public (No Login)" },

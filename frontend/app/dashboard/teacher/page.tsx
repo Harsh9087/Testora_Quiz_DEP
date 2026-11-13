@@ -145,7 +145,13 @@ export default function TeacherDashboard() {
       if (hash) {
         setActiveSectionTab(hash);
       } else {
-        setActiveSectionTab("overview");
+        const params = new URLSearchParams(window.location.search);
+        const tab = params.get("tab");
+        if (tab) {
+          setActiveSectionTab(tab);
+        } else {
+          setActiveSectionTab("overview");
+        }
       }
     };
     handleHash();
