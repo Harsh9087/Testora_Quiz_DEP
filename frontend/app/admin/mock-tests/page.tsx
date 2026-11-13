@@ -284,7 +284,7 @@ export default function AdminMockTestsPage() {
   const [newQExpl, setNewQExpl] = useState("");
   const [newQImageUrl, setNewQImageUrl] = useState("");
   const [newQImageCaption, setNewQImageCaption] = useState("");
-  const [newQDiagramType, setNewQDiagramType] = useState("circuit");
+  const [newQDiagramType, setNewQDiagramType] = useState("general");
   const [newQDiagramPos, setNewQDiagramPos] = useState<"above_question" | "below_question">("above_question");
   const [newQPassage, setNewQPassage] = useState("");
   const [newQTolerance, setNewQTolerance] = useState<number | "">("");
@@ -714,6 +714,7 @@ export default function AdminMockTestsPage() {
     setNewQExpl("");
     setNewQImageUrl("");
     setNewQImageCaption("");
+    setNewQDiagramType("general");
     setNewQPassage("");
     setNewQTolerance("");
     setQuestionModalTab("list");
@@ -2590,6 +2591,8 @@ export default function AdminMockTestsPage() {
                           onChange={(e) => setNewQDiagramType(e.target.value)}
                           className="w-full px-3 py-1.5 text-xs bg-white dark:bg-[#111C31] border border-blue-200 dark:border-blue-900 rounded-xl text-slate-900 dark:text-white"
                         >
+                          <option value="general">General Figure / Illustration</option>
+                          <option value="figure">Reference Diagram / Photo</option>
                           <option value="circuit">Electric Circuit</option>
                           <option value="ray_optics">Ray Optics / Lens</option>
                           <option value="geometry">Geometry / Trigonometry</option>
@@ -2597,7 +2600,6 @@ export default function AdminMockTestsPage() {
                           <option value="reaction">Chemical Reaction Mechanism</option>
                           <option value="engineering">Engineering Diagram</option>
                           <option value="table">Data / Truth Table</option>
-                          <option value="general">General Illustration</option>
                         </select>
                       </div>
                     </div>

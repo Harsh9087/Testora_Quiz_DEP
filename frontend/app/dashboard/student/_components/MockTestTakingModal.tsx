@@ -19,7 +19,8 @@ import {
   FileQuestion,
   Lightbulb,
   CheckCheck,
-  AlertTriangle
+  AlertTriangle,
+  ZoomIn
 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
@@ -274,13 +275,27 @@ export default function MockTestTakingModal({
       percentage: Math.round((data.correct / data.total) * 100),
     }));
   })() : [];
+
+  const getDiagramLabel = (type?: string) => {
+    if (!type || type === "general") return "Reference Diagram / Figure";
+    if (type === "figure") return "Reference Figure";
+    if (type === "circuit") return "Circuit Diagram";
+    if (type === "ray_optics") return "Ray Optics / Lens Diagram";
+    if (type === "geometry") return "Geometry Figure";
+    if (type === "graph") return "Graph / Function Chart";
+    if (type === "reaction") return "Chemical Reaction / Structure";
+    if (type === "engineering") return "Engineering Diagram";
+    if (type === "table") return "Data / Truth Table";
+    return type.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) + " Diagram";
+  };
+
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn"
+      className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 bg-slate-950/85 backdrop-blur-md animate-fadeIn"
       onClick={handleSafeClose}
     >
       <div 
-        className="w-full max-w-6xl bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[96vh] animate-scaleUp transition-colors"
+        className="w-full h-full sm:h-auto sm:max-h-[94vh] max-w-6xl bg-white dark:bg-[#111C31] sm:border border-[#E2E8F0] dark:border-[#263449] rounded-none sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-scaleUp transition-colors"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ═══════ TOP HEADER BAR ═══════ */}
@@ -369,9 +384,10 @@ export default function MockTestTakingModal({
           {/* ═══════ ACTIVE TEST RUNNER (DESKTOP SPLIT / MOBILE SINGLE) ═══════ */}
           {!loading && !result && questions.length > 0 && currentQ && (
             <>
-              {/* Center / Main Examination Column */}
-              <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-7 space-y-5 flex flex-col justify-between">
-                <div className="space-y-4">
+              {/* Center / Main Examination Column (With Fixed Bottom Toolbar) */}
+              <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
+                {/* Scrollable Question Content Area */}
+                <div className="flex-1 overflow-y-auto p-3.5 sm:p-6 lg:p-7 space-y-4">
                   
                   {/* Question Meta Badges */}
                   <div className="flex items-center justify-between gap-2 flex-wrap pb-2 border-b border-slate-100 dark:border-slate-800/80">
@@ -417,7 +433,7 @@ export default function MockTestTakingModal({
 
                   {/* Optional Passage/Context */}
                   {currentQ.passage && (
-                    <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#15233D] border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-700 dark:text-slate-300 italic leading-relaxed">
+                    <div className="p-3.5 sm:p-4 rounded-xl bg-slate-50 dark:bg-[#15233D] border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-700 dark:text-slate-300 italic leading-relaxed">
                       <strong className="block not-italic text-[10px] uppercase font-bold text-slate-500 mb-1">Passage / Reference Material:</strong>
                       {currentQ.passage}
                     </div>
@@ -425,25 +441,36 @@ export default function MockTestTakingModal({
 
                   {/* Diagram (Above question if applicable) */}
                   {currentQ.image_url && currentQ.diagram_position !== "below_question" && (
-                    <div className="relative group max-w-xl mx-auto rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 p-2 text-center">
-                      <div className="flex items-center justify-between pb-1.5 px-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                        <span>{currentQ.diagram_type ? `${currentQ.diagram_type.replace('_', ' ')} Diagram` : "Diagram / Figure"}</span>
+                    <div className="relative group max-w-lg mx-auto w-full rounded-xl sm:rounded-2xl overflow-hidden border border-slate-200/90 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/50 p-2 sm:p-2.5 shadow-2xs">
+                      <div className="flex items-center justify-between pb-1.5 px-1 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
+                          <span className="font-bold uppercase tracking-wider text-[10px] text-slate-700 dark:text-slate-300 truncate">
+                            {getDiagramLabel(currentQ.diagram_type)}
+                          </span>
+                        </div>
                         <button
                           type="button"
                           onClick={() => setZoomDiagramUrl(currentQ.image_url!)}
-                          className="text-blue-600 hover:underline cursor-pointer flex items-center gap-1"
+                          className="px-2 py-0.5 rounded-md bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/60 dark:hover:bg-blue-900/60 text-blue-600 dark:text-blue-400 text-[10px] sm:text-[11px] font-bold flex items-center gap-1 transition-colors cursor-pointer shrink-0"
+                          title="Click to view full screen"
                         >
-                          Click to Enlarge
+                          <ZoomIn className="w-3 h-3" />
+                          <span>Tap to Enlarge</span>
                         </button>
                       </div>
-                      <img
-                        src={currentQ.image_url}
-                        alt={currentQ.image_caption || currentQ.image_alt || "Question Diagram"}
+                      <div 
                         onClick={() => setZoomDiagramUrl(currentQ.image_url!)}
-                        className="max-h-64 sm:max-h-80 w-auto mx-auto object-contain rounded-xl cursor-zoom-in"
-                      />
+                        className="relative overflow-hidden rounded-lg sm:rounded-xl bg-slate-950/5 dark:bg-black/30 flex items-center justify-center cursor-zoom-in"
+                      >
+                        <img
+                          src={currentQ.image_url}
+                          alt={currentQ.image_caption || currentQ.image_alt || "Question Diagram"}
+                          className="max-h-36 sm:max-h-56 md:max-h-64 w-auto max-w-full object-contain mx-auto"
+                        />
+                      </div>
                       {currentQ.image_caption && (
-                        <p className="text-[11px] text-center text-slate-500 dark:text-slate-400 italic mt-1.5 px-2">
+                        <p className="text-[11px] text-center text-slate-500 dark:text-slate-400 italic mt-1.5 px-2 leading-tight">
                           {currentQ.image_caption}
                         </p>
                       )}
@@ -457,25 +484,36 @@ export default function MockTestTakingModal({
 
                   {/* Diagram (Below question if applicable) */}
                   {currentQ.image_url && currentQ.diagram_position === "below_question" && (
-                    <div className="relative group max-w-xl mx-auto rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 p-2 text-center">
-                      <div className="flex items-center justify-between pb-1.5 px-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                        <span>{currentQ.diagram_type ? `${currentQ.diagram_type.replace('_', ' ')} Diagram` : "Diagram / Figure"}</span>
+                    <div className="relative group max-w-lg mx-auto w-full rounded-xl sm:rounded-2xl overflow-hidden border border-slate-200/90 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/50 p-2 sm:p-2.5 shadow-2xs">
+                      <div className="flex items-center justify-between pb-1.5 px-1 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
+                          <span className="font-bold uppercase tracking-wider text-[10px] text-slate-700 dark:text-slate-300 truncate">
+                            {getDiagramLabel(currentQ.diagram_type)}
+                          </span>
+                        </div>
                         <button
                           type="button"
                           onClick={() => setZoomDiagramUrl(currentQ.image_url!)}
-                          className="text-blue-600 hover:underline cursor-pointer flex items-center gap-1"
+                          className="px-2 py-0.5 rounded-md bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/60 dark:hover:bg-blue-900/60 text-blue-600 dark:text-blue-400 text-[10px] sm:text-[11px] font-bold flex items-center gap-1 transition-colors cursor-pointer shrink-0"
+                          title="Click to view full screen"
                         >
-                          Click to Enlarge
+                          <ZoomIn className="w-3 h-3" />
+                          <span>Tap to Enlarge</span>
                         </button>
                       </div>
-                      <img
-                        src={currentQ.image_url}
-                        alt={currentQ.image_caption || currentQ.image_alt || "Question Diagram"}
+                      <div 
                         onClick={() => setZoomDiagramUrl(currentQ.image_url!)}
-                        className="max-h-64 sm:max-h-80 w-auto mx-auto object-contain rounded-xl cursor-zoom-in"
-                      />
+                        className="relative overflow-hidden rounded-lg sm:rounded-xl bg-slate-950/5 dark:bg-black/30 flex items-center justify-center cursor-zoom-in"
+                      >
+                        <img
+                          src={currentQ.image_url}
+                          alt={currentQ.image_caption || currentQ.image_alt || "Question Diagram"}
+                          className="max-h-36 sm:max-h-56 md:max-h-64 w-auto max-w-full object-contain mx-auto"
+                        />
+                      </div>
                       {currentQ.image_caption && (
-                        <p className="text-[11px] text-center text-slate-500 dark:text-slate-400 italic mt-1.5 px-2">
+                        <p className="text-[11px] text-center text-slate-500 dark:text-slate-400 italic mt-1.5 px-2 leading-tight">
                           {currentQ.image_caption}
                         </p>
                       )}
@@ -546,27 +584,27 @@ export default function MockTestTakingModal({
                   )}
                 </div>
 
-                {/* Question Runner Control Toolbar (Section 4) */}
-                <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2 flex-wrap">
+                {/* Question Runner Control Toolbar (Sticky at bottom) */}
+                <div className="shrink-0 px-3.5 sm:px-6 py-2.5 sm:py-3 border-t border-[#E2E8F0] dark:border-[#263449] bg-white/95 dark:bg-[#111C31]/95 backdrop-blur-sm flex items-center justify-between gap-2 shadow-xs z-10">
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() => setCurrentIndex((prev) => Math.max(0, prev - 1))}
                       disabled={currentIndex === 0}
-                      className="px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5 cursor-pointer"
+                      className="px-3 sm:px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5 cursor-pointer"
                     >
                       <ArrowLeft className="w-3.5 h-3.5" />
-                      <span>Previous</span>
+                      <span className="hidden xs:inline">Previous</span>
                     </button>
 
                     {answers[currentQ.id] && (
                       <button
                         type="button"
                         onClick={() => handleClearResponse(currentQ.id)}
-                        className="px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer"
+                        className="px-2.5 sm:px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer"
                         title="Clear chosen response"
                       >
-                        Clear Response
+                        Clear
                       </button>
                     )}
                   </div>
@@ -575,20 +613,20 @@ export default function MockTestTakingModal({
                     <button
                       type="button"
                       onClick={() => handleToggleMarkForReview(currentQ.id)}
-                      className={`px-3 py-2 rounded-xl text-xs font-bold border transition-colors cursor-pointer ${
+                      className={`px-2.5 sm:px-3 py-2 rounded-xl text-xs font-bold border transition-colors cursor-pointer ${
                         markedForReview[currentQ.id]
                           ? "bg-purple-100 border-purple-300 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300"
                           : "border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
                       }`}
                     >
-                      {markedForReview[currentQ.id] ? "Flagged for Review" : "Mark for Review"}
+                      {markedForReview[currentQ.id] ? "Flagged" : "Review"}
                     </button>
 
                     {currentIndex < questions.length - 1 ? (
                       <button
                         type="button"
                         onClick={() => setCurrentIndex((prev) => Math.min(questions.length - 1, prev + 1))}
-                        className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
+                        className="px-4 sm:px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
                       >
                         <span>Save &amp; Next</span>
                         <ArrowRight className="w-3.5 h-3.5" />
@@ -597,7 +635,7 @@ export default function MockTestTakingModal({
                       <button
                         type="button"
                         onClick={() => setShowConfirmSubmit(true)}
-                        className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
+                        className="px-4 sm:px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
                       >
                         <span>Submit Final Test</span>
                         <CheckCircle2 className="w-4 h-4" />
@@ -871,11 +909,22 @@ export default function MockTestTakingModal({
                         {/* Review Diagram if present */}
                         {rev.image_url && (
                           <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 p-2 text-center max-w-sm">
+                            <div className="flex items-center justify-between pb-1 px-1 text-[10px] font-semibold text-slate-500">
+                              <span>Figure Reference</span>
+                              <button
+                                type="button"
+                                onClick={() => setZoomDiagramUrl(rev.image_url!)}
+                                className="px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 text-[10px] font-bold flex items-center gap-1 hover:underline cursor-pointer"
+                              >
+                                <ZoomIn className="w-3 h-3" />
+                                <span>Tap to Enlarge</span>
+                              </button>
+                            </div>
                             <img
                               src={rev.image_url}
                               alt={rev.image_caption || "Question Diagram"}
                               onClick={() => setZoomDiagramUrl(rev.image_url!)}
-                              className="max-h-48 w-auto mx-auto object-contain rounded-lg cursor-zoom-in"
+                              className="max-h-40 sm:max-h-48 w-auto mx-auto object-contain rounded-lg cursor-zoom-in"
                             />
                             {rev.image_caption && (
                               <p className="text-[10px] text-slate-500 mt-1 italic">{rev.image_caption}</p>
@@ -1118,27 +1167,27 @@ export default function MockTestTakingModal({
       {/* ═══════ FULL-RESOLUTION DIAGRAM ZOOM MODAL ═══════ */}
       {zoomDiagramUrl && (
         <div
-          className="fixed inset-0 z-70 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-[120] bg-black/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-6"
           onClick={() => setZoomDiagramUrl(null)}
         >
           <div
-            className="relative max-w-4xl max-h-[90vh] bg-white dark:bg-[#111C31] rounded-2xl p-4 shadow-2xl border border-slate-700 flex flex-col items-center"
+            className="relative max-w-4xl max-h-[92vh] w-full bg-white dark:bg-[#111C31] rounded-2xl p-4 sm:p-5 shadow-2xl border border-slate-700 flex flex-col items-center"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               type="button"
               onClick={() => setZoomDiagramUrl(null)}
-              className="absolute top-3 right-3 p-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 cursor-pointer shadow-md"
+              className="absolute top-3 right-3 p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 cursor-pointer shadow-md z-10"
               title="Close Diagram"
             >
               <X className="w-5 h-5" />
             </button>
-            <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">High-Resolution Diagram Inspection</div>
-            <div className="overflow-auto max-h-[80vh] w-full flex items-center justify-center">
+            <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 text-center">High-Resolution Diagram Inspection</div>
+            <div className="overflow-auto max-h-[80vh] w-full flex items-center justify-center p-2">
               <img
                 src={zoomDiagramUrl}
                 alt="High-resolution diagram"
-                className="max-h-[75vh] w-auto object-contain rounded-lg"
+                className="max-h-[75vh] w-auto max-w-full object-contain rounded-xl shadow-sm"
               />
             </div>
           </div>
