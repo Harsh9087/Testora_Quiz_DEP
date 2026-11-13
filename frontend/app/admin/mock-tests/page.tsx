@@ -2151,112 +2151,171 @@ export default function AdminMockTestsPage() {
                 </div>
               </div>
 
-              {/* Target Display Arena / Section Selector (Mock Test Library vs Placement Tests vs Both) */}
-              <div className="p-3.5 rounded-xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200/90 dark:border-blue-900/60 space-y-2.5">
+              {/* Target Display Arena / Section Selector & Visibility & Publication Controls */}
+              <div className="p-3.5 sm:p-4 rounded-2xl bg-blue-50/70 dark:bg-blue-950/30 border-2 border-blue-300/80 dark:border-blue-800/80 space-y-3.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                    <Compass className="w-3.5 h-3.5 text-blue-600" />
-                    <span>Target Display Section / Arena *</span>
-                  </label>
-                  <span className="text-[10px] font-bold text-slate-500">
-                    Active Target:{" "}
-                    <b className="text-blue-600 dark:text-blue-400">
-                      {targetSection === "both"
-                        ? "Both Sections (Global)"
-                        : targetSection === "placement_tests"
-                        ? "Placement Tests Arena"
-                        : "Mock Test Library"}
-                    </b>
+                  <div className="flex items-center gap-1.5">
+                    <Compass className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                    <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                      Target Section &amp; Visibility Controls
+                    </span>
+                  </div>
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300">
+                    {targetSection === "both"
+                      ? "🌐 Both Sections"
+                      : targetSection === "placement_tests"
+                      ? "🏢 Placement Mock Test"
+                      : "🎓 Mock Test Library"}
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setTargetSection("mock_test_library")}
-                    className={`p-2.5 rounded-xl text-xs font-bold transition-all border cursor-pointer flex flex-col items-center justify-center text-center gap-1 ${
-                      targetSection === "mock_test_library"
-                        ? "bg-blue-600 text-white border-blue-700 shadow-xs ring-2 ring-blue-400/40"
-                        : "bg-white dark:bg-[#111C31] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-blue-300"
-                    }`}
-                  >
-                    <div className="flex items-center gap-1.5">
-                      <GraduationCap className="w-4 h-4" />
-                      <span>Mock Test Library</span>
-                    </div>
-                    <span className={`text-[10px] font-medium leading-tight ${targetSection === "mock_test_library" ? "text-blue-100" : "text-slate-400"}`}>
-                      School Boards, Class 11/12, JEE Main, NEET & Foundation
-                    </span>
-                  </button>
+                {/* 3 Main Dropdowns Grid (Target Section Dropdown + Audience Visibility + Publication Status) */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {/* Dropdown 1: Target Display Section Dropdown */}
+                  <div>
+                    <label className="block text-xs font-bold text-blue-800 dark:text-blue-300 mb-1">
+                      Display Section (कशात दिसावी) *
+                    </label>
+                    <select
+                      value={targetSection}
+                      onChange={(e) => {
+                        const val = e.target.value as "mock_test_library" | "placement_tests" | "both";
+                        setTargetSection(val);
+                        if (val === "placement_tests" && examType !== "Corporate Placement") {
+                          setExamType("Corporate Placement");
+                        }
+                      }}
+                      className="w-full px-3 py-2 text-xs bg-white dark:bg-[#111C31] border-2 border-blue-500 rounded-xl text-slate-900 dark:text-white font-bold shadow-xs focus:ring-2 focus:ring-blue-400"
+                    >
+                      <option value="mock_test_library">🎓 Mock Test Library (School / Academic / JEE / NEET)</option>
+                      <option value="placement_tests">🏢 Placement Mock Test (Corporate - TCS, Infosys, etc.)</option>
+                      <option value="both">🌐 Both Sections (Library &amp; Placement Arena)</option>
+                    </select>
+                  </div>
 
-                  <button
-                    type="button"
-                    onClick={() => setTargetSection("placement_tests")}
-                    className={`p-2.5 rounded-xl text-xs font-bold transition-all border cursor-pointer flex flex-col items-center justify-center text-center gap-1 ${
-                      targetSection === "placement_tests"
-                        ? "bg-emerald-600 text-white border-emerald-700 shadow-xs ring-2 ring-emerald-400/40"
-                        : "bg-white dark:bg-[#111C31] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-emerald-300"
-                    }`}
-                  >
-                    <div className="flex items-center gap-1.5">
-                      <Building2 className="w-4 h-4" />
-                      <span>Placement Tests</span>
-                    </div>
-                    <span className={`text-[10px] font-medium leading-tight ${targetSection === "placement_tests" ? "text-emerald-100" : "text-slate-400"}`}>
-                      Corporate campus recruitment (TCS, Infosys, Wipro, Paid ₹9/₹12)
-                    </span>
-                  </button>
+                  {/* Dropdown 2: Audience Visibility */}
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      Audience Visibility *
+                    </label>
+                    <select
+                      value={visibilityTarget}
+                      onChange={(e) => setVisibilityTarget(e.target.value)}
+                      className="w-full px-3 py-2 text-xs bg-white dark:bg-[#111C31] border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-medium"
+                    >
+                      <option value="all">Students &amp; Teachers (All Users)</option>
+                      <option value="students_only">Students Only</option>
+                      <option value="teachers_only">Teachers Only (Hidden from Students)</option>
+                    </select>
+                  </div>
 
-                  <button
-                    type="button"
-                    onClick={() => setTargetSection("both")}
-                    className={`p-2.5 rounded-xl text-xs font-bold transition-all border cursor-pointer flex flex-col items-center justify-center text-center gap-1 ${
-                      targetSection === "both"
-                        ? "bg-indigo-600 text-white border-indigo-700 shadow-xs ring-2 ring-indigo-400/40"
-                        : "bg-white dark:bg-[#111C31] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-300"
-                    }`}
-                  >
-                    <div className="flex items-center gap-1.5">
-                      <Layers className="w-4 h-4" />
-                      <span>Both Sections</span>
-                    </div>
-                    <span className={`text-[10px] font-medium leading-tight ${targetSection === "both" ? "text-indigo-100" : "text-slate-400"}`}>
-                      Visible in both Mock Test Library & Campus Placement Arena
-                    </span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Visibility and Publication Controls */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Audience Visibility *
-                  </label>
-                  <select
-                    value={visibilityTarget}
-                    onChange={(e) => setVisibilityTarget(e.target.value)}
-                    className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-[#15233D] border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white"
-                  >
-                    <option value="all">Students & Teachers (All Users)</option>
-                    <option value="students_only">Students Only</option>
-                    <option value="teachers_only">Teachers Only (Hidden from Students)</option>
-                  </select>
+                  {/* Dropdown 3: Publication Status */}
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      Publication Status *
+                    </label>
+                    <select
+                      value={statusVal}
+                      onChange={(e) => setStatusVal(e.target.value)}
+                      className="w-full px-3 py-2 text-xs bg-white dark:bg-[#111C31] border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-medium"
+                    >
+                      <option value="published">Published (Live &amp; Accessible)</option>
+                      <option value="draft">Draft (Admin Only)</option>
+                      <option value="unpublished">Unpublished (Hidden)</option>
+                    </select>
+                  </div>
                 </div>
 
+                {/* Quick Select Buttons */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Publication Status *
-                  </label>
-                  <select
-                    value={statusVal}
-                    onChange={(e) => setStatusVal(e.target.value)}
-                    className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-[#15233D] border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white"
-                  >
-                    <option value="published">Published (Live & Accessible)</option>
-                    <option value="draft">Draft (Admin Only)</option>
-                    <option value="unpublished">Unpublished (Hidden)</option>
-                  </select>
+                  <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                    <span>Quick Select Target Arena:</span>
+                    <span className="font-semibold text-blue-600 dark:text-blue-400">
+                      Active: {targetSection === "both" ? "Both Sections" : targetSection === "placement_tests" ? "Placement Mock Test" : "Mock Test Library"}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setTargetSection("mock_test_library")}
+                      className={`p-2.5 rounded-xl text-xs font-bold transition-all border cursor-pointer flex flex-col items-center justify-center text-center gap-1 ${
+                        targetSection === "mock_test_library"
+                          ? "bg-blue-600 text-white border-blue-700 shadow-xs ring-2 ring-blue-400/40"
+                          : "bg-white dark:bg-[#111C31] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-blue-300"
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <GraduationCap className="w-4 h-4" />
+                        <span>Mock Test Library</span>
+                      </div>
+                      <span className={`text-[10px] font-medium leading-tight ${targetSection === "mock_test_library" ? "text-blue-100" : "text-slate-400"}`}>
+                        School, Class 11/12, JEE Main, NEET &amp; Foundation
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTargetSection("placement_tests");
+                        if (examType !== "Corporate Placement") setExamType("Corporate Placement");
+                      }}
+                      className={`p-2.5 rounded-xl text-xs font-bold transition-all border cursor-pointer flex flex-col items-center justify-center text-center gap-1 ${
+                        targetSection === "placement_tests"
+                          ? "bg-emerald-600 text-white border-emerald-700 shadow-xs ring-2 ring-emerald-400/40"
+                          : "bg-white dark:bg-[#111C31] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-emerald-300"
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <Building2 className="w-4 h-4" />
+                        <span>Placement Mock Test</span>
+                      </div>
+                      <span className={`text-[10px] font-medium leading-tight ${targetSection === "placement_tests" ? "text-emerald-100" : "text-slate-400"}`}>
+                        Corporate Recruitment (TCS, Infosys, Wipro, Accenture)
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setTargetSection("both")}
+                      className={`p-2.5 rounded-xl text-xs font-bold transition-all border cursor-pointer flex flex-col items-center justify-center text-center gap-1 ${
+                        targetSection === "both"
+                          ? "bg-indigo-600 text-white border-indigo-700 shadow-xs ring-2 ring-indigo-400/40"
+                          : "bg-white dark:bg-[#111C31] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-300"
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <Layers className="w-4 h-4" />
+                        <span>Both Sections</span>
+                      </div>
+                      <span className={`text-[10px] font-medium leading-tight ${targetSection === "both" ? "text-indigo-100" : "text-slate-400"}`}>
+                        Visible in Mock Test Library + Placement Tests Arena
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Explanatory Live Location Card */}
+                <div className="p-2.5 rounded-xl bg-white/90 dark:bg-[#111C31]/90 border border-blue-200/80 dark:border-blue-900/60 text-xs text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                  <span className="text-base shrink-0">
+                    {targetSection === "mock_test_library" ? "🎓" : targetSection === "placement_tests" ? "🏢" : "🌐"}
+                  </span>
+                  <div className="text-[11px] leading-relaxed">
+                    {targetSection === "mock_test_library" && (
+                      <span>
+                        <strong>Live Placement:</strong> This mock test will be listed inside <strong>Mock Test Library</strong> under academic categories (School Boards, Class 11/12, JEE Main, NEET).
+                      </span>
+                    )}
+                    {targetSection === "placement_tests" && (
+                      <span>
+                        <strong>Live Placement:</strong> This mock test will be listed inside the <strong>Placement Mock Tests Arena</strong> for campus corporate hiring (TCS, Infosys, Wipro, Accenture).
+                      </span>
+                    )}
+                    {targetSection === "both" && (
+                      <span>
+                        <strong>Live Placement:</strong> This mock test will be featured in <strong>Both Portals</strong> (simultaneously accessible in Mock Test Library and Placement Tests).
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
 
