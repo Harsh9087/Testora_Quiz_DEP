@@ -403,10 +403,10 @@ export default function StudentDashboard() {
               window.history.pushState(null, "", "/dashboard/student");
               window.dispatchEvent(new CustomEvent("switch-tab", { detail: "assigned" }));
             }}
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white dark:bg-[#111C31] border border-slate-200/90 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-300 dark:hover:border-blue-700 shadow-2xs transition-all cursor-pointer group active:scale-95"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-[#111C31] border border-slate-200/90 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-300 dark:hover:border-blue-700 shadow-2xs transition-all cursor-pointer group active:scale-95"
           >
             <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5 text-slate-500 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400" />
-            <span>Back to Dashboard</span>
+            <span>Back</span>
           </button>
           <span className="text-[11.5px] font-semibold text-slate-500 dark:text-slate-400">
             {activePortalTab === "mock-tests" && "Mock Test Library"}
@@ -782,7 +782,7 @@ export default function StudentDashboard() {
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#E2E8F0] dark:border-[#263449] bg-[#F8FAFC] dark:bg-[#0B1120] text-xs font-semibold text-[#64748B] hover:text-[#111827] cursor-pointer"
                     >
                       <ArrowLeft className="h-3.5 w-3.5" />
-                      <span>Back to Completed Quizzes List</span>
+                      <span>Back</span>
                     </button>
                   </div>
 
