@@ -85,6 +85,107 @@ interface MockTestItem {
   end_time?: string;
 }
 
+interface MockTestTheme {
+  bgGradient: string;
+  acronym: string;
+  headerTitle: string;
+  patternType: string;
+}
+
+const getMockTestTheme = (test: MockTestItem): MockTestTheme => {
+  const subj = (test.subject || "").toLowerCase();
+  const title = (test.title || "").toLowerCase();
+  const cat = (test.category || "").toLowerCase();
+  const companySlug = (test.company_slug || "").toLowerCase();
+
+  if (companySlug === "tcs" || title.includes("tcs")) {
+    return {
+      bgGradient: "from-[#0F172A] via-[#1E293B] to-[#1E3A8A]",
+      acronym: "TCS",
+      headerTitle: "TCS Corporate Qualifier",
+      patternType: "TCS National Qualifier Test"
+    };
+  }
+  if (companySlug === "infosys" || title.includes("infosys")) {
+    return {
+      bgGradient: "from-[#0A192F] via-[#0D2447] to-[#0284C7]",
+      acronym: "INF",
+      headerTitle: "Infosys Campus Qualifier",
+      patternType: "DSE & Specialist Programmer"
+    };
+  }
+  if (companySlug === "hcl" || title.includes("hcl")) {
+    return {
+      bgGradient: "from-[#1C1917] via-[#292524] to-[#C2410C]",
+      acronym: "HCL",
+      headerTitle: "HCLTech Placement Drive",
+      patternType: "First Careers & Tech Core"
+    };
+  }
+  if (companySlug === "wipro" || title.includes("wipro")) {
+    return {
+      bgGradient: "from-[#18181B] via-[#27272A] to-[#7E22CE]",
+      acronym: "WIP",
+      headerTitle: "Wipro Elite National",
+      patternType: "Elite NLTH Aptitude Qualifier"
+    };
+  }
+  if (companySlug === "accenture" || title.includes("accenture")) {
+    return {
+      bgGradient: "from-[#0F172A] via-[#1E1B4B] to-[#6D28D9]",
+      acronym: "ACC",
+      headerTitle: "Accenture Digital Qualifier",
+      patternType: "Cognitive & Technical MCQ"
+    };
+  }
+  if (subj.includes("physic") || title.includes("physic")) {
+    return {
+      bgGradient: "from-[#0F172A] via-[#1E293B] to-[#1E3A8A]",
+      acronym: "PHY",
+      headerTitle: test.company_name && test.company_name !== "Testora Mock" ? test.company_name : "Testora National Mocks",
+      patternType: test.exam_type || "School Board & Foundation"
+    };
+  }
+  if (subj.includes("math") || title.includes("math")) {
+    return {
+      bgGradient: "from-[#0A192F] via-[#0D2447] to-[#0284C7]",
+      acronym: "MTH",
+      headerTitle: test.company_name && test.company_name !== "Testora Mock" ? test.company_name : "Testora National Mocks",
+      patternType: test.exam_type || "Board & Competitive Prep"
+    };
+  }
+  if (subj.includes("chem") || title.includes("chem")) {
+    return {
+      bgGradient: "from-[#1C1917] via-[#292524] to-[#C2410C]",
+      acronym: "CHM",
+      headerTitle: test.company_name && test.company_name !== "Testora Mock" ? test.company_name : "Testora National Mocks",
+      patternType: test.exam_type || "Core Entrance & Board"
+    };
+  }
+  if (subj.includes("comp") || subj.includes("cse") || title.includes("cse") || title.includes("engineer")) {
+    return {
+      bgGradient: "from-[#064E3B] via-[#065F46] to-[#0F766E]",
+      acronym: "CSE",
+      headerTitle: test.company_name && test.company_name !== "Testora Mock" ? test.company_name : "Testora National Mocks",
+      patternType: test.exam_type || "Core Engineering Branch"
+    };
+  }
+  if (title.includes("jee") || cat.includes("engineer")) {
+    return {
+      bgGradient: "from-[#1E1B4B] via-[#312E81] to-[#4338CA]",
+      acronym: "JEE",
+      headerTitle: test.company_name && test.company_name !== "Testora Mock" ? test.company_name : "Testora National Mocks",
+      patternType: test.exam_type || "JEE Main Grand Mock"
+    };
+  }
+  return {
+    bgGradient: "from-[#0F172A] via-[#1E293B] to-[#334155]",
+    acronym: (test.company_name && test.company_name !== "Testora Mock" ? test.company_name : test.subject || "TES").slice(0, 3).toUpperCase(),
+    headerTitle: test.company_name && test.company_name !== "Testora Mock" ? test.company_name : "Testora National Mocks",
+    patternType: test.exam_type || test.test_type || "Placement Assessment"
+  };
+};
+
 export default function MockTestLibrary() {
   const { token, fullName } = useAuthStore();
   const [tests, setTests] = useState<MockTestItem[]>([]);
@@ -661,190 +762,183 @@ export default function MockTestLibrary() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
           {filteredTests.map((test) => {
             const isCompleted = test.has_attempted;
             const isPassed = test.last_passed;
+            const theme = getMockTestTheme(test);
 
             return (
               <div
                 key={test.id}
-                className="group p-5 rounded-2xl bg-white dark:bg-[#111C31] border border-slate-200 dark:border-slate-800 hover:border-blue-500/50 hover:shadow-md transition-all flex flex-col justify-between space-y-4"
+                className="group bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-2xl sm:rounded-3xl overflow-hidden shadow-xs hover:shadow-xl hover:border-blue-500/50 dark:hover:border-blue-500/50 transition-all duration-300 flex flex-col justify-between"
               >
-                <div className="space-y-3">
-                  {/* Top Badges */}
-                  <div className="flex items-center justify-between gap-1.5 flex-wrap">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300">
-                        {test.category}
-                      </span>
+                <div>
+                  {/* Top Header Ribbon with Subject / Exam Theme */}
+                  <div className={`p-4 sm:p-5 bg-gradient-to-r ${theme.bgGradient} text-white relative overflow-hidden`}>
+                    
+                    {/* Decorative shimmer line */}
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-xl pointer-events-none" />
 
-                      {test.test_type && (
-                        <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200/60">
-                          {test.test_type}
-                        </span>
-                      )}
+                    <div className="relative z-10 flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-9 h-9 rounded-xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center font-black text-xs shrink-0 shadow-xs tracking-wider">
+                          {theme.acronym}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="font-extrabold text-sm tracking-wide truncate">
+                            {theme.headerTitle}
+                          </div>
+                          <div className="text-[10px] text-white/70 font-medium truncate">
+                            {theme.patternType}
+                          </div>
+                        </div>
+                      </div>
 
-                      {test.is_free || test.price_inr === 0 ? (
-                        <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200/60">
-                          100% Free
-                        </span>
-                      ) : (
-                        <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-50 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200/80">
-                          ₹{test.price_inr} Paid
-                        </span>
-                      )}
+                      {/* Price Badge */}
+                      <div className="shrink-0">
+                        {test.is_free || (test.price_inr || 0) === 0 ? (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black bg-emerald-500 text-white shadow-xs">
+                            <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                            <span>FREE MOCK</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-xs">
+                            <Tag className="w-3 h-3 text-slate-900" />
+                            <span>₹{test.price_inr} ONLY</span>
+                          </span>
+                        )}
+                      </div>
                     </div>
-
-                    <span
-                      className={`px-2 py-0.5 rounded-md text-[10px] font-semibold ${
-                        test.difficulty === "Easy"
-                          ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
-                          : test.difficulty === "Medium"
-                          ? "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
-                          : "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300"
-                      }`}
-                    >
-                      {test.difficulty}
-                    </span>
                   </div>
 
-                  {/* Title & Subject */}
-                  <div>
-                    <h3 className="font-bold text-sm text-slate-900 dark:text-white group-hover:text-blue-600 transition-colors line-clamp-2">
-                      {test.title}
-                    </h3>
-                    <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-500 font-medium flex-wrap">
-                      <span>{test.subject || "General"}</span>
-                      {test.class_level && (
-                        <>
-                          <span>•</span>
-                          <span>{test.class_level}</span>
-                        </>
-                      )}
-                      {test.chapter && (
-                        <>
-                          <span>•</span>
-                          <span className="text-purple-600 dark:text-purple-400 font-semibold">Ch: {test.chapter}</span>
-                        </>
+                  {/* Card Main Body */}
+                  <div className="p-4 sm:p-5 space-y-4">
+                    
+                    {/* Category & Difficulty Tag */}
+                    <div className="flex items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-wider">
+                      <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                        {test.category}
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-md font-extrabold ${
+                        test.difficulty.toLowerCase() === "easy"
+                          ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300"
+                          : test.difficulty.toLowerCase() === "hard"
+                          ? "bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300"
+                          : "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300"
+                      }`}>
+                        {test.difficulty}
+                      </span>
+                    </div>
+
+                    {/* Test Title & Description */}
+                    <div>
+                      <h3 className="font-bold text-sm sm:text-base text-[#111827] dark:text-[#F1F5F9] leading-snug line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                        {test.title}
+                      </h3>
+                      {test.description && (
+                        <p className="text-xs text-[#64748B] dark:text-[#A3B1C6] mt-1.5 line-clamp-2 leading-relaxed">
+                          {test.description}
+                        </p>
                       )}
                     </div>
 
-                    {/* PYQ Badge if applicable */}
-                    {(test.pyq_exam_name || test.pyq_year) && (
-                      <div className="mt-2">
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200/80">
-                          <ShieldCheck className="w-3 h-3 text-amber-600" />
-                          <span>Verified PYQ: {test.pyq_exam_name || 'Official'} {test.pyq_year || ''} {test.pyq_shift ? `(${test.pyq_shift})` : ''}</span>
+                    {/* Specifications Grid */}
+                    <div className="grid grid-cols-3 gap-2 py-2.5 px-3 rounded-xl bg-slate-50 dark:bg-[#15233D] border border-slate-100 dark:border-slate-800/80 text-[11px]">
+                      <div>
+                        <span className="text-slate-400 dark:text-slate-500 block text-[10px] font-medium flex items-center gap-1">
+                          <FileText className="w-3 h-3" />
+                          <span>Questions</span>
                         </span>
+                        <strong className="text-slate-800 dark:text-slate-200 font-bold block mt-0.5">
+                          {test.total_questions} Qs
+                        </strong>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 dark:text-slate-500 block text-[10px] font-medium flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          <span>Duration</span>
+                        </span>
+                        <strong className="text-slate-800 dark:text-slate-200 font-bold block mt-0.5">
+                          {test.duration_minutes} Mins
+                        </strong>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 dark:text-slate-500 block text-[10px] font-medium flex items-center gap-1">
+                          <Award className="w-3 h-3" />
+                          <span>Cutoff</span>
+                        </span>
+                        <strong className="text-slate-800 dark:text-slate-200 font-bold block mt-0.5">
+                          {test.pass_percentage || 40}%
+                        </strong>
+                      </div>
+                    </div>
+
+                    {/* Status Strip */}
+                    {isCompleted ? (
+                      <div className={`p-2.5 rounded-xl border flex items-center justify-between text-xs font-bold ${
+                        isPassed
+                          ? "bg-emerald-50/70 border-emerald-200 text-emerald-800 dark:bg-emerald-950/30 dark:border-emerald-800/60 dark:text-emerald-300"
+                          : "bg-amber-50/70 border-amber-200 text-amber-800 dark:bg-amber-950/30 dark:border-amber-800/60 dark:text-amber-300"
+                      }`}>
+                        <div className="flex items-center gap-1.5">
+                          <Award className="w-4 h-4 shrink-0" />
+                          <span>Last Score: {test.last_score} / {test.total_marks || test.total_questions} ({test.last_percentage}%)</span>
+                        </div>
+                        <span className="text-[10px] uppercase tracking-wide">
+                          {isPassed ? "✓ Passed" : "Needs Review"}
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                        <div className="flex items-center gap-1.5">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>Unlocked & Ready to Attempt</span>
+                        </div>
+                        <span className="text-[10px] text-slate-400">{test.attempts_count || 0} taken</span>
                       </div>
                     )}
                   </div>
-
-                  {/* Description / Syllabus */}
-                  {test.description && (
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
-                      {test.description}
-                    </p>
-                  )}
-
-                  {/* Specs Grid */}
-                  <div className="grid grid-cols-3 gap-2 py-2.5 px-3 rounded-xl bg-slate-50 dark:bg-[#15233D] text-[11px] border border-slate-100 dark:border-slate-800/80">
-                    <div>
-                      <div className="text-[9px] uppercase font-bold text-slate-400">Questions</div>
-                      <div className="font-bold text-slate-900 dark:text-white mt-0.5">
-                        {test.total_questions} Qs
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-[9px] uppercase font-bold text-slate-400">Total Marks</div>
-                      <div className="font-bold text-slate-900 dark:text-white mt-0.5">
-                        {test.total_marks} Marks
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-[9px] uppercase font-bold text-slate-400">Duration</div>
-                      <div className="font-bold text-slate-900 dark:text-white mt-0.5">
-                        {test.duration_minutes}m
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Marking Scheme Indicator */}
-                  <div className="flex items-center justify-between text-[10px] text-slate-500 px-1">
-                    <span>
-                      Scheme: <b>+{test.marks_per_question}</b> per correct
-                    </span>
-                    <span>
-                      {test.negative_marking > 0 ? (
-                        <b className="text-rose-600">-{test.negative_marking} Negative</b>
-                      ) : (
-                        <b className="text-emerald-600">No Negative Marking</b>
-                      )}
-                    </span>
-                  </div>
-
-                  {/* Last Attempt Score Display */}
-                  {isCompleted && test.last_score !== null && (
-                    <div className="p-2.5 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between text-xs">
-                      <div>
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-300">
-                          Your Last Score
-                        </span>
-                        <div className="text-sm font-black text-emerald-700 dark:text-emerald-300">
-                          {test.last_score} / {test.total_marks} ({test.last_percentage}%)
-                        </div>
-                      </div>
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
-                          isPassed
-                            ? "bg-emerald-200 text-emerald-900 dark:bg-emerald-900 dark:text-emerald-200"
-                            : "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300"
-                        }`}
-                      >
-                        {isPassed ? "PASSED" : "NEEDS PRACTICE"}
-                      </span>
-                    </div>
-                  )}
                 </div>
 
-                {/* Card Action Buttons */}
-                <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setSyllabusTest(test)}
-                    className="p-2 rounded-xl text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                    title="View Test Details & Instructions"
-                  >
-                    <Info className="w-4 h-4" />
-                  </button>
-
-                  {!test.is_free && test.price_inr > 0 && !test.is_unlocked ? (
+                {/* Card Action Button Section */}
+                <div className="p-4 sm:p-5 pt-0">
+                  {isCompleted ? (
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleStartTest(test)}
+                        className="flex-1 py-2.5 px-3 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        <span>Retake</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSyllabusTest(test)}
+                        className="flex-1 py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <span>Syllabus & Info</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ) : !test.is_free && (test.price_inr || 0) > 0 && !test.is_unlocked ? (
                     <a
                       href="/dashboard/student?tab=company-tests"
-                      className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer text-center"
+                      className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white text-xs font-extrabold transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer text-center"
                     >
-                      <span>Unlock in Placement Arena (₹{test.price_inr})</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
+                      <ShieldCheck className="w-4 h-4 text-amber-200" />
+                      <span>Unlock Placement Test for ₹{test.price_inr} →</span>
                     </a>
                   ) : (
                     <button
                       type="button"
-                      onClick={() => setSyllabusTest(test)}
                       disabled={startingTestId === test.id}
-                      className="flex-1 py-2.5 px-4 rounded-xl bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                      onClick={() => handleStartTest(test)}
+                      className="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
                     >
-                      {isCompleted ? (
-                        <>
-                          <RotateCcw className="w-3.5 h-3.5" />
-                          <span>Retake Mock Test</span>
-                        </>
-                      ) : (
-                        <>
-                          <Play className="w-3.5 h-3.5 fill-white" />
-                          <span>Start Mock Test</span>
-                        </>
-                      )}
+                      <Play className="w-3.5 h-3.5 fill-current" />
+                      <span>{startingTestId === test.id ? "Preparing Test..." : "Start Assessment Now →"}</span>
                     </button>
                   )}
                 </div>
