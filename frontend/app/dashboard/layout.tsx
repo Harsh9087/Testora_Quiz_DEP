@@ -337,7 +337,7 @@ export default function DashboardLayout({
         const tab = params.get("tab");
         if (tab) {
           setCurrentTab(tab);
-        } else if (pathname === "/dashboard/teacher") {
+        } else if (pathname === "/dashboard/teacher" || pathname === "/dashboard/student") {
           setCurrentTab("overview");
         }
       }
@@ -345,7 +345,7 @@ export default function DashboardLayout({
     handlePop();
     const handleSwitch = (e: any) => {
       if (e.detail) {
-        setCurrentTab(e.detail === "all" ? "overview" : e.detail);
+        setCurrentTab(e.detail === "all" || e.detail === "assigned" ? "overview" : e.detail);
       }
     };
     window.addEventListener("hashchange", handlePop);
@@ -1143,7 +1143,7 @@ export default function DashboardLayout({
                       sidebarCollapsed ? "md:justify-center md:px-0" : ""
                     } ${
                       pathname === "/dashboard/student" && currentTab === "company-tests"
-                        ? "bg-blue-50/90 text-[#2563EB] dark:bg-blue-950/60 dark:text-[#60A5FA] border border-blue-200/80 dark:border-blue-900/60 font-bold shadow-xs"
+                        ? "bg-emerald-50/90 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60 font-bold shadow-xs"
                         : "text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/60 border border-transparent"
                     }`}
                   >
