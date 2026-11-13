@@ -408,10 +408,10 @@ export default function StudentDashboard() {
             <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5 text-slate-500 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400" />
             <span>Back</span>
           </button>
-          <span className="text-[11.5px] font-semibold text-slate-500 dark:text-slate-400">
-            {activePortalTab === "mock-tests" && "Mock Test Library"}
-            {activePortalTab === "company-tests" && "Campus Placement Tests"}
-            {activePortalTab === "certificates" && "My Certificates"}
+          <span className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400">
+            {activePortalTab === "mock-tests" && "Mock Tests"}
+            {activePortalTab === "company-tests" && "Placement Arena"}
+            {activePortalTab === "certificates" && "Certificates"}
           </span>
         </div>
       )}

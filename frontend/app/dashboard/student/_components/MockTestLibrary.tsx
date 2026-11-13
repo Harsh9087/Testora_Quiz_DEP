@@ -202,6 +202,7 @@ export default function MockTestLibrary() {
   const [selectedSubject, setSelectedSubject] = useState("all");
   const [selectedDifficulty, setSelectedDifficulty] = useState("all");
   const [selectedDuration, setSelectedDuration] = useState("all");
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   // Active Test Runner Modal
   const [activeTest, setActiveTest] = useState<MockTestItem | null>(null);
@@ -277,6 +278,16 @@ export default function MockTestLibrary() {
     });
     return Array.from(s);
   }, [tests]);
+
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (selectedTestType !== "all") count++;
+    if (selectedMarksRange !== "all") count++;
+    if (selectedClass !== "all") count++;
+    if (selectedSubject !== "all") count++;
+    if (selectedDifficulty !== "all") count++;
+    return count;
+  }, [selectedTestType, selectedMarksRange, selectedClass, selectedSubject, selectedDifficulty]);
 
   // Dynamic Compact Statistics (Section 2)
   const stats = useMemo(() => {
@@ -581,55 +592,55 @@ export default function MockTestLibrary() {
       )}
 
       {/* ═══════ 1. MODERN EDUCATIONAL SAAS HEADER ═══════ */}
-      <div className="bg-white dark:bg-[#111C31] p-5 sm:p-6 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-2xs space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="bg-white dark:bg-[#111C31] p-3.5 sm:p-5 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-2xs space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <div className="p-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400">
-                <GraduationCap className="w-5 h-5" />
+                <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <h1 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">
+              <h1 className="text-base sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">
                 Mock Test Library
               </h1>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/70">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/70">
                 100% Free Practice
               </span>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-2xl leading-relaxed">
+            <p className="hidden sm:block text-xs text-slate-500 dark:text-slate-400 max-w-2xl leading-relaxed">
               Standardized examination question papers curated centrally by Super Admin across Class 11, Class 12, JEE Main, Engineering branches, and placement aptitude. Practice under exam timers with verified answer rationales.
             </p>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
-            <span className="text-xs text-slate-500 dark:text-slate-400">
+          <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
+            <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">
               Showing <strong>{filteredTests.length}</strong> of <strong>{tests.length}</strong> papers
             </span>
           </div>
         </div>
 
         {/* ═══════ COMPACT STATISTICS CARDS (SECTION 2) ═══════ */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1 border-t border-slate-100 dark:border-slate-800/80">
-          <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#15233D] border border-slate-200/70 dark:border-slate-800">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Available Tests</span>
-            <div className="text-lg sm:text-xl font-black text-slate-900 dark:text-white mt-0.5">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800/80">
+          <div className="p-2 sm:p-3 rounded-xl bg-slate-50 dark:bg-[#15233D] border border-slate-200/70 dark:border-slate-800">
+            <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-400 block truncate">Available Tests</span>
+            <div className="text-base sm:text-xl font-black text-slate-900 dark:text-white mt-0.5">
               {stats.available}
             </div>
           </div>
-          <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#15233D] border border-slate-200/70 dark:border-slate-800">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Attempted Tests</span>
-            <div className="text-lg sm:text-xl font-black text-blue-600 dark:text-blue-400 mt-0.5">
+          <div className="p-2 sm:p-3 rounded-xl bg-slate-50 dark:bg-[#15233D] border border-slate-200/70 dark:border-slate-800">
+            <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-400 block truncate">Attempted</span>
+            <div className="text-base sm:text-xl font-black text-blue-600 dark:text-blue-400 mt-0.5">
               {stats.attempted}
             </div>
           </div>
-          <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#15233D] border border-slate-200/70 dark:border-slate-800">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Completed / Passed</span>
-            <div className="text-lg sm:text-xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5">
+          <div className="p-2 sm:p-3 rounded-xl bg-slate-50 dark:bg-[#15233D] border border-slate-200/70 dark:border-slate-800">
+            <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-400 block truncate">Completed</span>
+            <div className="text-base sm:text-xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5">
               {stats.completed}
             </div>
           </div>
-          <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#15233D] border border-slate-200/70 dark:border-slate-800">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Average Score</span>
-            <div className="text-lg sm:text-xl font-black text-purple-600 dark:text-purple-400 mt-0.5">
+          <div className="p-2 sm:p-3 rounded-xl bg-slate-50 dark:bg-[#15233D] border border-slate-200/70 dark:border-slate-800">
+            <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-400 block truncate">Avg Score</span>
+            <div className="text-base sm:text-xl font-black text-purple-600 dark:text-purple-400 mt-0.5">
               {stats.avgScore !== null ? `${stats.avgScore}%` : "—"}
             </div>
           </div>
@@ -642,7 +653,7 @@ export default function MockTestLibrary() {
           <button
             key={pill.id}
             onClick={() => setActiveCategoryPill(pill.id)}
-            className={`px-3.5 py-2 rounded-xl font-bold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
               activeCategoryPill === pill.id
                 ? "bg-[#2563EB] text-white shadow-xs"
                 : "bg-white dark:bg-[#111C31] text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:border-blue-400"
@@ -663,25 +674,107 @@ export default function MockTestLibrary() {
       </div>
 
       {/* ═══════ SEARCH & ADVANCED FILTER TOOLBAR ═══════ */}
-      <div className="p-3.5 bg-white dark:bg-[#111C31] border border-slate-200 dark:border-slate-800 rounded-2xl space-y-3 shadow-2xs">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
-          {/* Search Field */}
-          <div className="relative sm:col-span-2">
+      <div className="p-2.5 sm:p-3.5 bg-white dark:bg-[#111C31] border border-slate-200 dark:border-slate-800 rounded-2xl space-y-2.5 shadow-2xs">
+        {/* Top Search Bar + Mobile Filter Toggle Button */}
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder="Search by test name, subject, or class..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 dark:bg-[#15233D] border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full pl-9 pr-8 py-2 text-xs bg-slate-50 dark:bg-[#15233D] border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5 cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
 
+          {/* Mobile Filter Toggle Button */}
+          <button
+            type="button"
+            onClick={() => setShowMobileFilters(!showMobileFilters)}
+            className={`sm:hidden flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all border shrink-0 cursor-pointer ${
+              showMobileFilters || activeFilterCount > 0
+                ? "bg-blue-600 text-white border-blue-600 shadow-xs"
+                : "bg-slate-50 dark:bg-[#15233D] text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-800 hover:border-slate-300"
+            }`}
+          >
+            <Filter className="w-3.5 h-3.5" />
+            <span>Filters</span>
+            {activeFilterCount > 0 && (
+              <span className={`w-4 h-4 rounded-full text-[10px] flex items-center justify-center font-black ${
+                showMobileFilters || activeFilterCount > 0 ? "bg-white text-blue-600" : "bg-blue-600 text-white"
+              }`}>
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
+        </div>
+
+        {/* Active Filter Badges Bar (Shows active filter chips so student can quickly clear individual filters) */}
+        {activeFilterCount > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5 pt-0.5 text-[11px]">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mr-0.5">Active:</span>
+            {selectedTestType !== "all" && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800 text-[11px] font-medium">
+                {selectedTestType}
+                <button onClick={() => setSelectedTestType("all")} className="hover:text-blue-900 cursor-pointer"><X className="w-2.5 h-2.5" /></button>
+              </span>
+            )}
+            {selectedMarksRange !== "all" && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800 text-[11px] font-medium">
+                {selectedMarksRange === "custom" ? "Custom Marks" : `${selectedMarksRange} Marks`}
+                <button onClick={() => setSelectedMarksRange("all")} className="hover:text-blue-900 cursor-pointer"><X className="w-2.5 h-2.5" /></button>
+              </span>
+            )}
+            {selectedClass !== "all" && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800 text-[11px] font-medium">
+                {selectedClass}
+                <button onClick={() => setSelectedClass("all")} className="hover:text-blue-900 cursor-pointer"><X className="w-2.5 h-2.5" /></button>
+              </span>
+            )}
+            {selectedSubject !== "all" && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800 text-[11px] font-medium">
+                {selectedSubject}
+                <button onClick={() => setSelectedSubject("all")} className="hover:text-blue-900 cursor-pointer"><X className="w-2.5 h-2.5" /></button>
+              </span>
+            )}
+            {selectedDifficulty !== "all" && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800 text-[11px] font-medium capitalize">
+                {selectedDifficulty}
+                <button onClick={() => setSelectedDifficulty("all")} className="hover:text-blue-900 cursor-pointer"><X className="w-2.5 h-2.5" /></button>
+              </span>
+            )}
+            <button
+              onClick={() => {
+                setSelectedTestType("all");
+                setSelectedMarksRange("all");
+                setSelectedClass("all");
+                setSelectedSubject("all");
+                setSelectedDifficulty("all");
+              }}
+              className="text-red-500 hover:text-red-600 dark:text-red-400 font-bold ml-1 cursor-pointer"
+            >
+              Clear All
+            </button>
+          </div>
+        )}
+
+        {/* Dropdowns: Hidden by default on mobile, revealed when showMobileFilters is true; always grid on sm+ */}
+        <div className={`${showMobileFilters ? "grid" : "hidden"} sm:grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800`}>
           {/* Test Type Filter */}
           <select
             value={selectedTestType}
             onChange={(e) => setSelectedTestType(e.target.value)}
-            className="px-3 py-2 text-xs bg-slate-50 dark:bg-[#15233D] border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white"
+            className="w-full px-2.5 py-1.5 sm:py-2 text-[11px] sm:text-xs bg-slate-50 dark:bg-[#15233D] border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white"
           >
             <option value="all">All Test Types</option>
             {testTypes.map((tt) => (
@@ -695,7 +788,7 @@ export default function MockTestLibrary() {
           <select
             value={selectedMarksRange}
             onChange={(e) => setSelectedMarksRange(e.target.value)}
-            className="px-3 py-2 text-xs bg-slate-50 dark:bg-[#15233D] border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white"
+            className="w-full px-2.5 py-1.5 sm:py-2 text-[11px] sm:text-xs bg-slate-50 dark:bg-[#15233D] border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white"
           >
             <option value="all">All Marks Schemes</option>
             <option value="25">25 Marks</option>
@@ -710,7 +803,7 @@ export default function MockTestLibrary() {
           <select
             value={selectedClass}
             onChange={(e) => setSelectedClass(e.target.value)}
-            className="px-3 py-2 text-xs bg-slate-50 dark:bg-[#15233D] border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white"
+            className="w-full px-2.5 py-1.5 sm:py-2 text-[11px] sm:text-xs bg-slate-50 dark:bg-[#15233D] border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white"
           >
             <option value="all">All Classes</option>
             {availableClasses.map((cls) => (
@@ -724,7 +817,7 @@ export default function MockTestLibrary() {
           <select
             value={selectedSubject}
             onChange={(e) => setSelectedSubject(e.target.value)}
-            className="px-3 py-2 text-xs bg-slate-50 dark:bg-[#15233D] border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white"
+            className="w-full px-2.5 py-1.5 sm:py-2 text-[11px] sm:text-xs bg-slate-50 dark:bg-[#15233D] border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white"
           >
             <option value="all">All Subjects</option>
             {availableSubjects.map((sub) => (
@@ -738,7 +831,7 @@ export default function MockTestLibrary() {
           <select
             value={selectedDifficulty}
             onChange={(e) => setSelectedDifficulty(e.target.value)}
-            className="px-3 py-2 text-xs bg-slate-50 dark:bg-[#15233D] border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white"
+            className="w-full px-2.5 py-1.5 sm:py-2 text-[11px] sm:text-xs bg-slate-50 dark:bg-[#15233D] border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white col-span-2 sm:col-span-1"
           >
             <option value="all">All Difficulties</option>
             <option value="easy">Easy</option>
