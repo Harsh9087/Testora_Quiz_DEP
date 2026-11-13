@@ -470,7 +470,7 @@ export default function DashboardLayout({
     }
 
     if (pathname === "/dashboard/student") {
-      items.push({ label: "Student Portal", href: "/dashboard/student" });
+      items.push({ label: "Dashboard", href: "/dashboard/student" });
       items.push({ label: "Assessments", isCurrent: true });
       return items;
     }
@@ -664,10 +664,10 @@ export default function DashboardLayout({
         
         {/* Navigation Links */}
         <nav className="flex-1 px-3 py-3 space-y-5 overflow-y-auto overflow-x-hidden">
-          {/* SECTION: CREATOR STUDIO OR STUDENT PORTAL */}
+          {/* SECTION: CREATOR STUDIO OR STUDENT DASHBOARD */}
           <div className="space-y-1">
             <div className={`text-[10px] font-bold text-slate-400 dark:text-slate-500 px-2 mb-1.5 uppercase tracking-wider ${sidebarCollapsed ? "md:hidden" : ""}`}>
-              {isTeacher ? "Creator Studio" : "Student Portal"}
+              {isTeacher ? "Creator Studio" : "Dashboard Navigation"}
             </div>
             {sidebarCollapsed && (
               <div className="hidden md:block w-6 h-0.5 bg-slate-200 dark:bg-slate-800 mx-auto mb-2 rounded" />
@@ -982,7 +982,8 @@ export default function DashboardLayout({
                   </button>
                 </>
               ) : (
-                <div className="space-y-1">
+                <div className="space-y-1.5">
+                  {/* Dashboard (Student) */}
                   <a
                     href="/dashboard/student"
                     onClick={(e) => {
@@ -993,22 +994,36 @@ export default function DashboardLayout({
                         setCurrentTab("overview");
                       }
                     }}
-                    className={`group relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                    className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-xs font-semibold transition-all cursor-pointer ${
                       sidebarCollapsed ? "md:justify-center md:px-0" : ""
                     } ${
                       pathname === "/dashboard/student" && currentTab !== "company-tests" && currentTab !== "mock-tests" && currentTab !== "certificates"
-                        ? "bg-blue-50/90 text-[#2563EB] dark:bg-blue-950/60 dark:text-[#60A5FA] border border-blue-200/60 dark:border-blue-900/60 font-bold shadow-2xs"
-                        : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                        ? "bg-blue-50/90 text-[#2563EB] dark:bg-blue-950/60 dark:text-[#60A5FA] border border-blue-200/80 dark:border-blue-900/60 font-bold shadow-xs"
+                        : "text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/60 border border-transparent"
                     }`}
                   >
-                    <div className="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105">
-                      <UserCheck className="h-4 w-4" />
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                      pathname === "/dashboard/student" && currentTab !== "company-tests" && currentTab !== "mock-tests" && currentTab !== "certificates"
+                        ? "bg-blue-600 text-white shadow-xs shadow-blue-500/25"
+                        : "bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400"
+                    }`}>
+                      <LayoutDashboard className="h-4.5 w-4.5" />
                     </div>
-                    <span className={`truncate text-left flex-1 ${sidebarCollapsed ? "md:hidden" : ""}`}>
-                      Student Portal
-                    </span>
+                    <div className={`flex flex-col text-left flex-1 min-w-0 ${sidebarCollapsed ? "md:hidden" : ""}`}>
+                      <span className="text-[13px] font-bold text-slate-800 dark:text-slate-100">
+                        Dashboard
+                      </span>
+                      <span className="text-[10.5px] text-slate-400 dark:text-slate-500 font-medium truncate">
+                        Active Tests &amp; Overview
+                      </span>
+                    </div>
                     {!sidebarCollapsed && (
                       <ChevronRight className="h-3.5 w-3.5 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 dark:group-hover:text-slate-400 shrink-0 transition-transform group-hover:translate-x-0.5" />
+                    )}
+                    {sidebarCollapsed && (
+                      <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
+                        Dashboard
+                      </span>
                     )}
                   </a>
 
@@ -1024,27 +1039,36 @@ export default function DashboardLayout({
                         setCurrentTab("company-tests");
                       }
                     }}
-                    className={`group relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                    className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-xs font-semibold transition-all cursor-pointer ${
                       sidebarCollapsed ? "md:justify-center md:px-0" : ""
                     } ${
                       pathname === "/dashboard/student" && (currentTab === "company-tests" || currentTab === "mock-tests")
-                        ? "bg-blue-50/90 text-[#2563EB] dark:bg-blue-950/60 dark:text-[#60A5FA] border border-blue-200/60 dark:border-blue-900/60 font-bold shadow-2xs"
-                        : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                        ? "bg-blue-50/90 text-[#2563EB] dark:bg-blue-950/60 dark:text-[#60A5FA] border border-blue-200/80 dark:border-blue-900/60 font-bold shadow-xs"
+                        : "text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/60 border border-transparent"
                     }`}
                   >
-                    <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105">
-                      <GraduationCap className="h-4 w-4" />
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                      pathname === "/dashboard/student" && (currentTab === "company-tests" || currentTab === "mock-tests")
+                        ? "bg-blue-600 text-white shadow-xs shadow-blue-500/25"
+                        : "bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400"
+                    }`}>
+                      <GraduationCap className="h-4.5 w-4.5" />
                     </div>
                     <div className={`flex flex-col text-left flex-1 min-w-0 ${sidebarCollapsed ? "md:hidden" : ""}`}>
-                      <span className="truncate">Mock Test Library</span>
-                      <span className="text-[10px] text-slate-400 dark:text-slate-500 font-normal truncate">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[13px] font-bold text-slate-800 dark:text-slate-100 truncate">
+                          Mock Test Library
+                        </span>
+                        <span className="px-1.5 py-0.5 rounded-full text-[9.5px] font-extrabold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60 shrink-0">
+                          100% Free
+                        </span>
+                      </div>
+                      <span className="text-[10.5px] text-slate-400 dark:text-slate-500 font-medium truncate">
                         JEE, NEET, Engineering, PYQs
                       </span>
                     </div>
                     {!sidebarCollapsed && (
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 shrink-0">
-                        100% Free
-                      </span>
+                      <ChevronRight className="h-3.5 w-3.5 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 dark:group-hover:text-slate-400 shrink-0 transition-transform group-hover:translate-x-0.5" />
                     )}
                     {sidebarCollapsed && (
                       <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
@@ -1065,27 +1089,36 @@ export default function DashboardLayout({
                         setCurrentTab("certificates");
                       }
                     }}
-                    className={`group relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                    className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-xs font-semibold transition-all cursor-pointer ${
                       sidebarCollapsed ? "md:justify-center md:px-0" : ""
                     } ${
                       pathname === "/dashboard/student" && currentTab === "certificates"
-                        ? "bg-blue-50/90 text-[#2563EB] dark:bg-blue-950/60 dark:text-[#60A5FA] border border-blue-200/60 dark:border-blue-900/60 font-bold shadow-2xs"
-                        : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                        ? "bg-blue-50/90 text-[#2563EB] dark:bg-blue-950/60 dark:text-[#60A5FA] border border-blue-200/80 dark:border-blue-900/60 font-bold shadow-xs"
+                        : "text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/60 border border-transparent"
                     }`}
                   >
-                    <div className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105">
-                      <Award className="h-4 w-4" />
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                      pathname === "/dashboard/student" && currentTab === "certificates"
+                        ? "bg-amber-500 text-white shadow-xs shadow-amber-500/25"
+                        : "bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400"
+                    }`}>
+                      <Award className="h-4.5 w-4.5" />
                     </div>
                     <div className={`flex flex-col text-left flex-1 min-w-0 ${sidebarCollapsed ? "md:hidden" : ""}`}>
-                      <span className="truncate">My Certificates</span>
-                      <span className="text-[10px] text-slate-400 dark:text-slate-500 font-normal truncate">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[13px] font-bold text-slate-800 dark:text-slate-100 truncate">
+                          My Certificates
+                        </span>
+                        <span className="px-1.5 py-0.5 rounded-full text-[9.5px] font-extrabold bg-amber-50 text-amber-700 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/60 shrink-0">
+                          Verified
+                        </span>
+                      </div>
+                      <span className="text-[10.5px] text-slate-400 dark:text-slate-500 font-medium truncate">
                         Passing &amp; Merit Credentials
                       </span>
                     </div>
                     {!sidebarCollapsed && (
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 shrink-0">
-                        Verified
-                      </span>
+                      <ChevronRight className="h-3.5 w-3.5 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 dark:group-hover:text-slate-400 shrink-0 transition-transform group-hover:translate-x-0.5" />
                     )}
                     {sidebarCollapsed && (
                       <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
@@ -1106,27 +1139,36 @@ export default function DashboardLayout({
                         setCurrentTab("company-tests");
                       }
                     }}
-                    className={`group relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                    className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-xs font-semibold transition-all cursor-pointer ${
                       sidebarCollapsed ? "md:justify-center md:px-0" : ""
                     } ${
                       pathname === "/dashboard/student" && currentTab === "company-tests"
-                        ? "bg-blue-50/90 text-[#2563EB] dark:bg-blue-950/60 dark:text-[#60A5FA] border border-blue-200/60 dark:border-blue-900/60 font-bold shadow-2xs"
-                        : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                        ? "bg-blue-50/90 text-[#2563EB] dark:bg-blue-950/60 dark:text-[#60A5FA] border border-blue-200/80 dark:border-blue-900/60 font-bold shadow-xs"
+                        : "text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/60 border border-transparent"
                     }`}
                   >
-                    <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105">
-                      <Building2 className="h-4 w-4" />
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                      pathname === "/dashboard/student" && currentTab === "company-tests"
+                        ? "bg-emerald-600 text-white shadow-xs shadow-emerald-500/25"
+                        : "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400"
+                    }`}>
+                      <Building2 className="h-4.5 w-4.5" />
                     </div>
                     <div className={`flex flex-col text-left flex-1 min-w-0 ${sidebarCollapsed ? "md:hidden" : ""}`}>
-                      <span className="truncate">Placement Tests</span>
-                      <span className="text-[10px] text-slate-400 dark:text-slate-500 font-normal truncate">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[13px] font-bold text-slate-800 dark:text-slate-100 truncate">
+                          Placement Tests
+                        </span>
+                        <span className="px-1.5 py-0.5 rounded-full text-[9.5px] font-extrabold bg-blue-50 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800/60 shrink-0">
+                          ₹9 / Free
+                        </span>
+                      </div>
+                      <span className="text-[10.5px] text-slate-400 dark:text-slate-500 font-medium truncate">
                         TCS, Infosys, HCL, Wipro
                       </span>
                     </div>
                     {!sidebarCollapsed && (
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 shrink-0">
-                        ₹9 / Free
-                      </span>
+                      <ChevronRight className="h-3.5 w-3.5 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 dark:group-hover:text-slate-400 shrink-0 transition-transform group-hover:translate-x-0.5" />
                     )}
                     {sidebarCollapsed && (
                       <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
@@ -1296,26 +1338,26 @@ export default function DashboardLayout({
               {/* Profile & Billing Summary */}
               <button 
                 onClick={() => { closeSidebarMobile(); router.push(profileUrl); }}
-                className={`group relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-xs font-semibold transition-all cursor-pointer ${
                   sidebarCollapsed ? "md:justify-center md:px-0" : ""
                 } ${
                   pathname === "/dashboard/teacher/profile" || pathname === "/dashboard/student/profile"
-                    ? "bg-blue-50/80 dark:bg-blue-950/40 text-[#2563EB] dark:text-[#60A5FA] font-bold border-l-4 border-[#2563EB] shadow-2xs"
-                    : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                    ? "bg-blue-50/90 text-[#2563EB] dark:bg-blue-950/60 dark:text-[#60A5FA] border border-blue-200/80 dark:border-blue-900/60 font-bold shadow-xs"
+                    : "text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/60 border border-transparent"
                 }`}
               >
-                <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105">
+                <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105">
                   <Sliders className="h-4 w-4" />
                 </div>
-                <span className={`truncate text-left flex-1 ${sidebarCollapsed ? "md:hidden" : ""}`}>
-                  Profile & Billing Summary
+                <span className={`text-[13px] font-semibold text-slate-800 dark:text-slate-200 truncate text-left flex-1 ${sidebarCollapsed ? "md:hidden" : ""}`}>
+                  Profile &amp; Billing Summary
                 </span>
                 {!sidebarCollapsed && (
                   <ChevronRight className="h-3.5 w-3.5 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 dark:group-hover:text-slate-400 shrink-0 transition-transform group-hover:translate-x-0.5" />
                 )}
                 {sidebarCollapsed && (
                   <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
-                    Profile & Billing Summary
+                    Profile &amp; Billing Summary
                   </span>
                 )}
               </button>
@@ -1323,18 +1365,18 @@ export default function DashboardLayout({
               {/* Settings */}
               <button 
                 onClick={() => { closeSidebarMobile(); router.push("/dashboard/settings"); }}
-                className={`group relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-xs font-semibold transition-all cursor-pointer ${
                   sidebarCollapsed ? "md:justify-center md:px-0" : ""
                 } ${
                   pathname === "/dashboard/settings"
-                    ? "bg-blue-50/80 dark:bg-blue-950/40 text-[#2563EB] dark:text-[#60A5FA] font-bold border-l-4 border-[#2563EB] shadow-2xs"
-                    : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                    ? "bg-blue-50/90 text-[#2563EB] dark:bg-blue-950/60 dark:text-[#60A5FA] border border-blue-200/80 dark:border-blue-900/60 font-bold shadow-xs"
+                    : "text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/60 border border-transparent"
                 }`}
               >
-                <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105">
+                <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105">
                   <Settings className="h-4 w-4" />
                 </div>
-                <span className={`truncate text-left flex-1 ${sidebarCollapsed ? "md:hidden" : ""}`}>
+                <span className={`text-[13px] font-semibold text-slate-800 dark:text-slate-200 truncate text-left flex-1 ${sidebarCollapsed ? "md:hidden" : ""}`}>
                   Settings
                 </span>
                 {!sidebarCollapsed && (
@@ -1342,7 +1384,7 @@ export default function DashboardLayout({
                 )}
                 {sidebarCollapsed && (
                   <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
-                    Settings & Personalization
+                    Settings &amp; Personalization
                   </span>
                 )}
               </button>
@@ -1350,28 +1392,28 @@ export default function DashboardLayout({
               {/* Help & Support */}
               <button 
                 onClick={() => { closeSidebarMobile(); router.push("/dashboard/support"); }}
-                className={`group relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all ${
+                className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-xs font-semibold cursor-pointer transition-all ${
                   pathname === "/dashboard/support"
-                    ? "bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 font-bold"
-                    : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                    ? "bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 font-bold border border-sky-200/80 dark:border-sky-900/60 shadow-xs"
+                    : "text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/60 border border-transparent"
                 } ${sidebarCollapsed ? "md:justify-center md:px-0" : ""}`}
               >
-                <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
                   pathname === "/dashboard/support"
-                    ? "bg-sky-600 text-white shadow-sm"
+                    ? "bg-sky-600 text-white shadow-xs"
                     : "bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400"
                 }`}>
                   <HelpCircle className="h-4 w-4" />
                 </div>
-                <span className={`truncate text-left flex-1 ${sidebarCollapsed ? "md:hidden" : ""}`}>
-                  Help & Support
+                <span className={`text-[13px] font-semibold text-slate-800 dark:text-slate-200 truncate text-left flex-1 ${sidebarCollapsed ? "md:hidden" : ""}`}>
+                  Help &amp; Support
                 </span>
                 {!sidebarCollapsed && (
                   <ChevronRight className="h-3.5 w-3.5 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 dark:group-hover:text-slate-400 shrink-0 transition-transform group-hover:translate-x-0.5" />
                 )}
                 {sidebarCollapsed && (
                   <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
-                    Help & Support Desk
+                    Help &amp; Support Desk
                   </span>
                 )}
               </button>
@@ -1382,11 +1424,11 @@ export default function DashboardLayout({
         {/* ══════════════════════════════════════════════════════
             BOTTOM PROFILE & LOGOUT CARD
            ══════════════════════════════════════════════════════ */}
-        <div className="p-3 border-t border-slate-200 dark:border-[#263449] bg-white dark:bg-[#0F172A] shrink-0">
+        <div className="p-3 border-t border-slate-200/90 dark:border-slate-800/80 bg-white dark:bg-[#0F172A] shrink-0">
           {/* User Profile Card */}
           <div 
             onClick={() => { closeSidebarMobile(); router.push(profileUrl); }}
-            className={`p-2 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-all cursor-pointer flex items-center gap-2.5 ${sidebarCollapsed ? "md:justify-center md:p-1.5" : "justify-between"}`}
+            className={`p-2.5 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-all cursor-pointer flex items-center gap-3 ${sidebarCollapsed ? "md:justify-center md:p-1.5" : "justify-between"}`}
             title="View Profile & Settings"
           >
             <div className="flex items-center gap-2.5 overflow-hidden min-w-0">
