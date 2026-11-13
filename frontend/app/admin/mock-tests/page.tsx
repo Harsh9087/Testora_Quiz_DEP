@@ -38,7 +38,8 @@ import {
   Bookmark,
   Link2,
   ExternalLink,
-  Zap
+  Zap,
+  RefreshCw
 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
@@ -194,6 +195,11 @@ export default function AdminMockTestsPage() {
   const [selectedSubject, setSelectedSubject] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedVisibility, setSelectedVisibility] = useState("all");
+  const [selectedPricing, setSelectedPricing] = useState("all"); // "all", "free", "paid"
+
+  // Sync Default Tests State
+  const [syncingTests, setSyncingTests] = useState(false);
+  const [syncSuccessMsg, setSyncSuccessMsg] = useState<string | null>(null);
 
   // Create / Edit Modal State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -812,9 +818,35 @@ export default function AdminMockTestsPage() {
     }
   };
 
+  const handleSyncDefaultTests = async () => {
+    try {
+      setSyncingTests(true);
+      const res = await apiFetch("/mock-tests/admin/seed", {
+        method: "POST",
+        token
+      });
+      if (res.ok) {
+        setSyncSuccessMsg("Catalogue synced! Default academic & corporate ₹9/₹12 placement mock tests have been verified & loaded.");
+        await Promise.all([fetchTests(), fetchStats()]);
+        setTimeout(() => setSyncSuccessMsg(null), 6000);
+      } else {
+        alert("Failed to sync catalogue default tests.");
+      }
+    } catch (e: any) {
+      alert("Sync error: " + (e.message || "Network error"));
+    } finally {
+      setSyncingTests(false);
+    }
+  };
+
+  const freeCount = useMemo(() => tests.filter((t) => t.is_free || (t.price_inr || 0) === 0).length, [tests]);
+  const paidCount = useMemo(() => tests.filter((t) => !t.is_free && (t.price_inr || 0) > 0).length, [tests]);
+
   // Filtered List & Pagination
   const filteredTests = useMemo(() => {
     return tests.filter((t) => {
+      if (selectedPricing === "free" && (!t.is_free && (t.price_inr || 0) > 0)) return false;
+      if (selectedPricing === "paid" && (t.is_free || (t.price_inr || 0) === 0)) return false;
       if (selectedCategory !== "all" && t.category !== selectedCategory) return false;
       if (selectedTestType !== "all" && t.test_type !== selectedTestType && t.test_type_id !== selectedTestType) return false;
       if (selectedMarksFilter !== "all") {
@@ -840,7 +872,7 @@ export default function AdminMockTestsPage() {
       }
       return true;
     });
-  }, [tests, selectedCategory, selectedTestType, selectedMarksFilter, selectedClass, selectedSubject, selectedStatus, selectedVisibility, searchQuery]);
+  }, [tests, selectedPricing, selectedCategory, selectedTestType, selectedMarksFilter, selectedClass, selectedSubject, selectedStatus, selectedVisibility, searchQuery]);
 
   const totalPages = Math.ceil(filteredTests.length / itemsPerPage) || 1;
   const paginatedTests = filteredTests.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -881,6 +913,16 @@ export default function AdminMockTestsPage() {
 
         <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
           <button
+            onClick={handleSyncDefaultTests}
+            disabled={syncingTests}
+            className="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border border-emerald-200/80 dark:border-emerald-800 disabled:opacity-50"
+            title="Seed & verify all default Academic and Corporate ₹9/₹12 Placement Tests"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 text-emerald-600 ${syncingTests ? "animate-spin" : ""}`} />
+            <span>{syncingTests ? "Syncing Tests..." : "Sync Default Tests"}</span>
+          </button>
+
+          <button
             onClick={() => setIsTypeModalOpen(true)}
             className="px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border border-indigo-200/80 dark:border-indigo-800"
           >
@@ -906,30 +948,51 @@ export default function AdminMockTestsPage() {
         </div>
       </div>
 
-      {/* KPI Overview Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        <div className="p-3.5 bg-white dark:bg-[#111C31] rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
-          <div className="text-[11px] text-slate-500 font-semibold">Total Tests</div>
-          <div className="text-xl font-black text-slate-900 dark:text-white mt-0.5">{stats.total_tests}</div>
+      {/* Sync Success Alert */}
+      {syncSuccessMsg && (
+        <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-xs font-semibold flex items-center justify-between shadow-xs animate-fadeIn">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>{syncSuccessMsg}</span>
+          </div>
+          <button onClick={() => setSyncSuccessMsg(null)} className="text-emerald-600 hover:text-emerald-800">
+            <X className="w-3.5 h-3.5" />
+          </button>
         </div>
-        <div className="p-3.5 bg-white dark:bg-[#111C31] rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
-          <div className="text-[11px] text-slate-500 font-semibold">Published</div>
+      )}
+
+      {/* KPI Overview Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5">
+        <div className="p-3 bg-white dark:bg-[#111C31] rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+          <div className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Total Tests</div>
+          <div className="text-xl font-black text-slate-900 dark:text-white mt-0.5">{stats.total_tests || tests.length}</div>
+        </div>
+        <div className="p-3 bg-white dark:bg-[#111C31] rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+          <div className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Published</div>
           <div className="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5">{stats.published_count}</div>
         </div>
-        <div className="p-3.5 bg-white dark:bg-[#111C31] rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
-          <div className="text-[11px] text-slate-500 font-semibold">Drafts</div>
+        <div className="p-3 bg-white dark:bg-[#111C31] rounded-xl border border-emerald-200/80 dark:border-emerald-800 shadow-2xs bg-emerald-50/20">
+          <div className="text-[10px] text-emerald-700 dark:text-emerald-300 font-bold uppercase tracking-wider">100% Free</div>
+          <div className="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5">{freeCount}</div>
+        </div>
+        <div className="p-3 bg-white dark:bg-[#111C31] rounded-xl border border-amber-200/80 dark:border-amber-800 shadow-2xs bg-amber-50/20">
+          <div className="text-[10px] text-amber-700 dark:text-amber-300 font-bold uppercase tracking-wider">Paid (₹9/₹12)</div>
+          <div className="text-xl font-black text-amber-600 dark:text-amber-400 mt-0.5">{paidCount}</div>
+        </div>
+        <div className="p-3 bg-white dark:bg-[#111C31] rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+          <div className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Drafts</div>
           <div className="text-xl font-black text-amber-600 dark:text-amber-400 mt-0.5">{stats.draft_count}</div>
         </div>
-        <div className="p-3.5 bg-white dark:bg-[#111C31] rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
-          <div className="text-[11px] text-slate-500 font-semibold">Hidden / Inactive</div>
+        <div className="p-3 bg-white dark:bg-[#111C31] rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+          <div className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Hidden</div>
           <div className="text-xl font-black text-slate-500 dark:text-slate-400 mt-0.5">{stats.hidden_count}</div>
         </div>
-        <div className="p-3.5 bg-white dark:bg-[#111C31] rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
-          <div className="text-[11px] text-slate-500 font-semibold">Total Questions</div>
+        <div className="p-3 bg-white dark:bg-[#111C31] rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+          <div className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Questions</div>
           <div className="text-xl font-black text-blue-600 dark:text-blue-400 mt-0.5">{stats.total_questions}</div>
         </div>
-        <div className="p-3.5 bg-white dark:bg-[#111C31] rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
-          <div className="text-[11px] text-slate-500 font-semibold">Student Attempts</div>
+        <div className="p-3 bg-white dark:bg-[#111C31] rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+          <div className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Attempts</div>
           <div className="text-xl font-black text-indigo-600 dark:text-indigo-400 mt-0.5">{stats.total_attempts}</div>
         </div>
       </div>
@@ -967,6 +1030,20 @@ export default function AdminMockTestsPage() {
                 {c.name}
               </option>
             ))}
+          </select>
+
+          {/* Pricing Tier Dropdown */}
+          <select
+            value={selectedPricing}
+            onChange={(e) => {
+              setSelectedPricing(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="px-3 py-2 text-xs bg-slate-50 dark:bg-[#15233D] border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white font-semibold"
+          >
+            <option value="all">All Pricing</option>
+            <option value="free">100% Free Only (₹0)</option>
+            <option value="paid">Paid Tests Only (₹9 / ₹12)</option>
           </select>
 
           {/* Test Type Dropdown */}
@@ -1077,6 +1154,7 @@ export default function AdminMockTestsPage() {
             <thead className="bg-slate-50 dark:bg-[#15233D] border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-bold">
               <tr>
                 <th className="py-3 px-4">Test Title</th>
+                <th className="py-3 px-4">Fee / Access</th>
                 <th className="py-3 px-4">Category & Subcategory</th>
                 <th className="py-3 px-4">Class / Exam</th>
                 <th className="py-3 px-4">Questions</th>
@@ -1090,13 +1168,13 @@ export default function AdminMockTestsPage() {
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
               {loading ? (
                 <tr>
-                  <td colSpan={9} className="py-12 text-center text-slate-500">
+                  <td colSpan={10} className="py-12 text-center text-slate-500">
                     Loading mock test catalogue...
                   </td>
                 </tr>
               ) : paginatedTests.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-12 text-center text-slate-500">
+                  <td colSpan={10} className="py-12 text-center text-slate-500">
                     No mock tests match the selected filters.
                   </td>
                 </tr>
@@ -1109,6 +1187,21 @@ export default function AdminMockTestsPage() {
                       <div className="text-[10px] font-normal text-slate-400 line-clamp-1 mt-0.5">
                         {t.subject || "General"} • {t.difficulty}
                       </div>
+                    </td>
+
+                    {/* Fee / Access */}
+                    <td className="py-3.5 px-4 whitespace-nowrap">
+                      {t.is_free || (t.price_inr || 0) === 0 ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-bold text-[10px] border border-emerald-200/80 dark:border-emerald-800">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                          <span>100% Free</span>
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 font-black text-[10px] border border-amber-200/80 dark:border-amber-800">
+                          <span className="text-amber-600 text-xs font-black">₹</span>
+                          <span>₹{t.price_inr} Paid</span>
+                        </span>
+                      )}
                     </td>
 
                     {/* Category */}
@@ -1727,7 +1820,7 @@ export default function AdminMockTestsPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
                       Duration (Minutes)
@@ -1754,20 +1847,78 @@ export default function AdminMockTestsPage() {
                       className="w-full px-3 py-1.5 text-xs bg-white dark:bg-[#111C31] border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white"
                     />
                   </div>
+                </div>
 
-                  <div>
-                    <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                      Student Access Fee (INR)
+                {/* Pricing & Monetization Tier Selection */}
+                <div className="p-3 bg-slate-50 dark:bg-[#15233D] border border-slate-200 dark:border-slate-800 rounded-xl space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[11px] font-bold text-slate-800 dark:text-slate-200">
+                      Pricing & Access Tier *
                     </label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={priceInr}
-                      onChange={(e) => setPriceInr(Number(e.target.value))}
-                      className="w-full px-3 py-1.5 text-xs bg-white dark:bg-[#111C31] border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white"
-                    />
-                    <span className="text-[10px] text-slate-400">0 for 100% Free Practice Mock.</span>
+                    <span className="text-[10px] font-bold text-slate-500">
+                      Current Fee: <b className={priceInr > 0 ? "text-amber-600" : "text-emerald-600"}>{priceInr > 0 ? `₹${priceInr} INR (Paid)` : "100% Free"}</b>
+                    </span>
                   </div>
+
+                  {/* Preset Pricing Buttons */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPriceInr(0)}
+                      className={`py-2 px-3 rounded-xl text-xs font-bold transition-all border cursor-pointer flex items-center justify-center gap-1.5 ${
+                        priceInr === 0
+                          ? "bg-emerald-600 text-white border-emerald-700 shadow-xs"
+                          : "bg-white dark:bg-[#111C31] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-emerald-300"
+                      }`}
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>Free Access (₹0)</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setPriceInr(9)}
+                      className={`py-2 px-3 rounded-xl text-xs font-bold transition-all border cursor-pointer flex items-center justify-center gap-1.5 ${
+                        priceInr === 9
+                          ? "bg-amber-600 text-white border-amber-700 shadow-xs"
+                          : "bg-white dark:bg-[#111C31] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-amber-300"
+                      }`}
+                    >
+                      <span className="font-black">₹9</span>
+                      <span>Placement Mock</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setPriceInr(12)}
+                      className={`py-2 px-3 rounded-xl text-xs font-bold transition-all border cursor-pointer flex items-center justify-center gap-1.5 ${
+                        priceInr === 12
+                          ? "bg-indigo-600 text-white border-indigo-700 shadow-xs"
+                          : "bg-white dark:bg-[#111C31] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-300"
+                      }`}
+                    >
+                      <span className="font-black">₹12</span>
+                      <span>Premium Mock</span>
+                    </button>
+
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-black text-slate-400">₹</span>
+                      <input
+                        type="number"
+                        min="0"
+                        placeholder="Custom ₹"
+                        value={priceInr === 0 || priceInr === 9 || priceInr === 12 ? "" : priceInr}
+                        onChange={(e) => setPriceInr(Math.max(0, Number(e.target.value)))}
+                        className="w-full pl-7 pr-3 py-2 text-xs bg-white dark:bg-[#111C31] border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-bold"
+                      />
+                    </div>
+                  </div>
+
+                  <p className="text-[10px] text-slate-500 leading-normal">
+                    {priceInr === 0
+                      ? "✨ 100% Free Practice Mock — Instant access for all students in Mock Test Library."
+                      : `⚡ Paid Assessment (₹${priceInr}) — Students unlock this corporate test through Razorpay in the Campus Placement Arena.`}
+                  </p>
                 </div>
               </div>
 

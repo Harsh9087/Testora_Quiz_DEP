@@ -578,7 +578,11 @@ def list_mock_tests(
     Enforces strict backend visibility filtering.
     """
     test_count = db.query(MockTest).filter(MockTest.is_deleted == False).count()
-    if test_count == 0:
+    corp_cnt = db.query(MockTest).filter(
+        MockTest.company_slug.in_(["tcs", "infosys", "hcl", "wipro", "accenture"]),
+        MockTest.is_deleted == False
+    ).count()
+    if test_count < 11 or corp_cnt < 6:
         seed_initial_mock_tests(db)
 
     query = db.query(MockTest).filter(
@@ -2551,7 +2555,11 @@ def admin_list_all_tests(
     Admin: lists all tests (including drafts, unpublished, hidden).
     """
     cnt = db.query(MockTest).filter(MockTest.is_deleted == False).count()
-    if cnt == 0:
+    corp_cnt = db.query(MockTest).filter(
+        MockTest.company_slug.in_(["tcs", "infosys", "hcl", "wipro", "accenture"]),
+        MockTest.is_deleted == False
+    ).count()
+    if cnt < 11 or corp_cnt < 6:
         seed_initial_mock_tests(db)
 
     query = db.query(MockTest).filter(MockTest.is_deleted == False)

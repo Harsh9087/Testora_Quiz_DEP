@@ -684,6 +684,16 @@ export default function MockTestLibrary() {
                           {test.test_type}
                         </span>
                       )}
+
+                      {test.is_free || test.price_inr === 0 ? (
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200/60">
+                          100% Free
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-50 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200/80">
+                          ₹{test.price_inr} Paid
+                        </span>
+                      )}
                     </div>
 
                     <span
@@ -809,24 +819,34 @@ export default function MockTestLibrary() {
                     <Info className="w-4 h-4" />
                   </button>
 
-                  <button
-                    type="button"
-                    onClick={() => setSyllabusTest(test)}
-                    disabled={startingTestId === test.id}
-                    className="flex-1 py-2.5 px-4 rounded-xl bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
-                  >
-                    {isCompleted ? (
-                      <>
-                        <RotateCcw className="w-3.5 h-3.5" />
-                        <span>Retake Free Mock</span>
-                      </>
-                    ) : (
-                      <>
-                        <Play className="w-3.5 h-3.5 fill-white" />
-                        <span>Start Free Mock Test</span>
-                      </>
-                    )}
-                  </button>
+                  {!test.is_free && test.price_inr > 0 && !test.is_unlocked ? (
+                    <a
+                      href="/dashboard/student?tab=company-tests"
+                      className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer text-center"
+                    >
+                      <span>Unlock in Placement Arena (₹{test.price_inr})</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </a>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setSyllabusTest(test)}
+                      disabled={startingTestId === test.id}
+                      className="flex-1 py-2.5 px-4 rounded-xl bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    >
+                      {isCompleted ? (
+                        <>
+                          <RotateCcw className="w-3.5 h-3.5" />
+                          <span>Retake Mock Test</span>
+                        </>
+                      ) : (
+                        <>
+                          <Play className="w-3.5 h-3.5 fill-white" />
+                          <span>Start Mock Test</span>
+                        </>
+                      )}
+                    </button>
+                  )}
                 </div>
               </div>
             );
