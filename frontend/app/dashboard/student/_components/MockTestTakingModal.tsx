@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   X,
   Clock,
@@ -113,6 +114,22 @@ export default function MockTestTakingModal({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [reviewFilter, setReviewFilter] = useState<"all" | "correct" | "incorrect" | "skipped">("all");
   const [zoomDiagramUrl, setZoomDiagramUrl] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Lock body scroll when test modal is open
+  useEffect(() => {
+    if (isOpen) {
+      const originalStyle = window.getComputedStyle(document.body).overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = originalStyle;
+      };
+    }
+  }, [isOpen]);
 
   // Load test details & questions
   useEffect(() => {
@@ -289,65 +306,68 @@ export default function MockTestTakingModal({
     return type.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) + " Diagram";
   };
 
-  return (
+  if (!isOpen || !mounted) return null;
+
+  const modalContent = (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 bg-slate-950/85 backdrop-blur-md animate-fadeIn"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-0 sm:p-4 bg-slate-950/90 backdrop-blur-md"
       onClick={handleSafeClose}
     >
       <div 
-        className="w-full h-full sm:h-auto sm:max-h-[94vh] max-w-6xl bg-white dark:bg-[#111C31] sm:border border-[#E2E8F0] dark:border-[#263449] rounded-none sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-scaleUp transition-colors"
+        className="w-full h-[100dvh] sm:h-auto sm:max-h-[94vh] max-w-6xl bg-white dark:bg-[#111C31] sm:border border-[#E2E8F0] dark:border-[#263449] rounded-none sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col transition-colors"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ═══════ TOP HEADER BAR ═══════ */}
-        <div className="px-4 sm:px-6 py-3.5 border-b border-[#E2E8F0] dark:border-[#263449] bg-slate-50/95 dark:bg-[#15233D] flex items-center justify-between gap-3 shrink-0">
-          <div className="flex items-center gap-3 min-w-0">
-            <span className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-xs">
+        <div className="px-3 sm:px-6 py-2.5 sm:py-3.5 border-b border-[#E2E8F0] dark:border-[#263449] bg-slate-50/95 dark:bg-[#15233D] flex items-center justify-between gap-2 sm:gap-3 shrink-0 pt-[max(env(safe-area-inset-top),0.65rem)]">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <span className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-xs">
               {companyName.slice(0, 3).toUpperCase()}
             </span>
             <div className="min-w-0">
-              <h3 className="font-extrabold text-sm sm:text-base text-[#111827] dark:text-[#F1F5F9] truncate">
+              <h3 className="font-extrabold text-xs sm:text-base text-[#111827] dark:text-[#F1F5F9] truncate max-w-[130px] xs:max-w-[220px] sm:max-w-none">
                 {testTitle}
               </h3>
-              <p className="text-[11px] text-[#64748B] dark:text-[#A3B1C6] flex items-center gap-1.5 truncate">
+              <p className="text-[10px] sm:text-[11px] text-[#64748B] dark:text-[#A3B1C6] flex items-center gap-1.5 truncate">
                 {result ? (
                   <>
-                    <span className="text-blue-600 dark:text-blue-400 font-bold">Solutions & Answer Explanations</span>
+                    <span className="text-blue-600 dark:text-blue-400 font-bold">Solutions Review</span>
                     <span>•</span>
-                    <span>{result.reviews?.length || questions.length} Questions Reviewed</span>
+                    <span>{result.reviews?.length || questions.length} Qs</span>
                   </>
                 ) : (
                   <>
-                    <span>{companyName} Practice Examination</span>
+                    <span className="truncate">{companyName} Exam</span>
                     <span>•</span>
-                    <span>{questions.length} Questions</span>
+                    <span>{questions.length} Qs</span>
                   </>
                 )}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             {!result && !loading && (
               <>
                 {/* Mobile Palette Toggle */}
                 <button
                   type="button"
                   onClick={() => setShowMobilePalette(true)}
-                  className="lg:hidden px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-300 bg-white dark:bg-[#111C31] flex items-center gap-1 cursor-pointer"
+                  className="lg:hidden px-2 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-[10px] sm:text-[11px] font-bold text-slate-700 dark:text-slate-300 bg-white dark:bg-[#111C31] flex items-center gap-1 cursor-pointer shadow-2xs"
                 >
                   <FileQuestion className="w-3.5 h-3.5 text-blue-600" />
-                  <span>Palette ({answeredCount}/{questions.length})</span>
+                  <span className="hidden xs:inline">Palette</span>
+                  <span>({answeredCount}/{questions.length})</span>
                 </button>
 
                 {/* Countdown Timer */}
-                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-mono font-extrabold border transition-all ${
+                <div className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-mono font-extrabold border transition-all ${
                   timeLeftSeconds < 120 
                     ? "bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border-rose-300 animate-pulse ring-2 ring-rose-400/30" 
                     : timeLeftSeconds < 300
                     ? "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border-amber-300"
                     : "bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border-blue-200 dark:border-blue-800"
                 }`}>
-                  <Clock className="w-3.5 h-3.5" />
+                  <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                   <span>{formatTimer(timeLeftSeconds)}</span>
                 </div>
               </>
@@ -356,10 +376,10 @@ export default function MockTestTakingModal({
             <button
               type="button"
               onClick={handleSafeClose}
-              className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              className="p-1 sm:p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               title="Close Test"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
         </div>
@@ -585,7 +605,7 @@ export default function MockTestTakingModal({
                 </div>
 
                 {/* Question Runner Control Toolbar (Sticky at bottom) */}
-                <div className="shrink-0 px-3.5 sm:px-6 py-2.5 sm:py-3 border-t border-[#E2E8F0] dark:border-[#263449] bg-white/95 dark:bg-[#111C31]/95 backdrop-blur-sm flex items-center justify-between gap-2 shadow-xs z-10">
+                <div className="shrink-0 px-3.5 sm:px-6 py-2.5 sm:py-3 border-t border-[#E2E8F0] dark:border-[#263449] bg-white/95 dark:bg-[#111C31]/95 backdrop-blur-sm flex items-center justify-between gap-2 shadow-xs z-10 pb-[max(env(safe-area-inset-bottom),0.75rem)]">
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
@@ -1027,7 +1047,7 @@ export default function MockTestTakingModal({
       {/* ═══════ MOBILE QUESTION PALETTE MODAL / DRAWER (SECTION 4) ═══════ */}
       {showMobilePalette && !result && (
         <div 
-          className="fixed inset-0 z-60 bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn"
+          className="fixed inset-0 z-[10000] bg-black/75 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn"
           onClick={() => setShowMobilePalette(false)}
         >
           <div
@@ -1108,7 +1128,7 @@ export default function MockTestTakingModal({
       {/* ═══════ SUBMISSION CONFIRMATION DIALOG (SECTION 4) ═══════ */}
       {showConfirmSubmit && (
         <div 
-          className="fixed inset-0 z-60 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn"
+          className="fixed inset-0 z-[10000] bg-black/75 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn"
           onClick={() => setShowConfirmSubmit(false)}
         >
           <div
@@ -1167,7 +1187,7 @@ export default function MockTestTakingModal({
       {/* ═══════ FULL-RESOLUTION DIAGRAM ZOOM MODAL ═══════ */}
       {zoomDiagramUrl && (
         <div
-          className="fixed inset-0 z-[120] bg-black/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-6"
+          className="fixed inset-0 z-[10010] bg-black/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-6"
           onClick={() => setZoomDiagramUrl(null)}
         >
           <div
@@ -1195,4 +1215,6 @@ export default function MockTestTakingModal({
       )}
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }
