@@ -228,7 +228,7 @@ export default function StudentDashboard() {
               <p className="text-[11.5px] text-[#64748B] dark:text-[#A3B1C6] mt-0.5 leading-snug">
                 {isTeacher 
                   ? "Instructor Preview: Inspect student assessments, passcodes & performance records."
-                  : "Access active assessment rooms, view security credentials, and review grading analytics."}
+                  : "Student Exams & Analytics Hub"}
               </p>
             </div>
           </div>
