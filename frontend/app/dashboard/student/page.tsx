@@ -197,21 +197,21 @@ export default function StudentDashboard() {
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
       
       {/* ═══════ TOP HEADER & SUMMARY BANNER ═══════ */}
-      <div className="bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-xl p-5 md:p-6 shadow-xs space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-start sm:items-center gap-3 sm:gap-3.5 min-w-0 flex-1">
-            <div className="w-12 h-12 rounded-xl bg-[#EFF6FF] text-[#1E3A8A] dark:bg-[#172B4D] dark:text-[#60A5FA] flex items-center justify-center font-bold text-lg border border-[#2563EB]/20 shrink-0">
-              <GraduationCap className="h-6 w-6" />
+      <div className="bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-2xl p-4 sm:p-5 shadow-xs space-y-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start sm:items-center gap-3 min-w-0 flex-1">
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-[#EFF6FF] text-[#1E3A8A] dark:bg-[#172B4D] dark:text-[#60A5FA] flex items-center justify-center font-bold text-lg border border-[#2563EB]/20 shrink-0">
+              <GraduationCap className="h-5 w-5" />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                <h1 className="text-lg sm:text-xl font-bold text-[#111827] dark:text-[#F1F5F9] break-all sm:break-words">
+                <h1 className="text-base sm:text-lg font-bold text-[#111827] dark:text-[#F1F5F9] truncate">
                   {mounted && fullName ? fullName : (isTeacher ? "Instructor Portal" : "Student Candidate")}
                 </h1>
                 {isTeacher ? (
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200 dark:border-blue-800 flex items-center gap-1 shrink-0">
                     <User className="h-3 w-3" />
-                    <span>Teacher / Staff View</span>
+                    <span>Teacher View</span>
                   </span>
                 ) : (
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center gap-1 shrink-0">
@@ -220,12 +220,12 @@ export default function StudentDashboard() {
                   </span>
                 )}
                 {liveExamsCount > 0 && (
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#EFF6FF] text-[#1E3A8A] dark:bg-[#172B4D] dark:text-[#60A5FA] border border-[#2563EB]/30 animate-pulse shrink-0">
-                    {liveExamsCount} Live Test{liveExamsCount > 1 ? "s" : ""} Ready
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#EFF6FF] text-[#1E3A8A] dark:bg-[#172B4D] dark:text-[#60A5FA] border border-[#2563EB]/30 animate-pulse shrink-0">
+                    {liveExamsCount} Live
                   </span>
                 )}
               </div>
-              <p className="text-xs text-[#64748B] dark:text-[#A3B1C6] mt-1 break-words">
+              <p className="text-[11.5px] text-[#64748B] dark:text-[#A3B1C6] mt-0.5 leading-snug">
                 {isTeacher 
                   ? "Instructor Preview: Inspect student assessments, passcodes & performance records."
                   : "Access active assessment rooms, view security credentials, and review grading analytics."}
@@ -233,19 +233,19 @@ export default function StudentDashboard() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5 self-start sm:self-auto shrink-0">
+          {/* Right Action Icons: Refresh icon positioned cleanly at top-right next to student name */}
+          <div className="flex items-center gap-1.5 shrink-0 pt-0.5">
             {isTeacher && studentsList.length > 0 && (
-              <div className="flex items-center gap-1.5 bg-[#F1F5F9] dark:bg-[#17243A] px-3 py-1.5 rounded-lg border border-[#E2E8F0] dark:border-[#263449] text-xs">
-                <span className="text-[#64748B] dark:text-[#A3B1C6] font-semibold">Filter:</span>
+              <div className="flex items-center gap-1 bg-[#F1F5F9] dark:bg-[#17243A] px-2 py-1 rounded-lg border border-[#E2E8F0] dark:border-[#263449] text-xs">
                 <select
                   value={selectedStudentFilter}
                   onChange={(e) => setSelectedStudentFilter(e.target.value)}
-                  className="bg-transparent text-xs font-semibold text-[#111827] dark:text-[#F1F5F9] focus:outline-none cursor-pointer max-w-[140px] truncate"
+                  className="bg-transparent text-xs font-semibold text-[#111827] dark:text-[#F1F5F9] focus:outline-none cursor-pointer max-w-[110px] truncate"
                 >
-                  <option value="">All Students Submissions</option>
+                  <option value="">All Students</option>
                   {studentsList.map((st) => (
                     <option key={st.id} value={st.id}>
-                      {st.full_name} ({st.roll_number})
+                      {st.full_name}
                     </option>
                   ))}
                 </select>
@@ -255,18 +255,10 @@ export default function StudentDashboard() {
             <button
               onClick={() => fetchData(true)}
               disabled={isRefreshing}
-              className="px-3.5 py-1.5 rounded-lg border border-[#E2E8F0] dark:border-[#263449] hover:bg-[#F1F5F9] dark:hover:bg-[#17243A] text-xs font-semibold text-[#64748B] dark:text-[#A3B1C6] flex items-center gap-1.5 transition-all shadow-xs shrink-0 cursor-pointer"
+              title="Refresh Portal Data"
+              className="w-8 h-8 rounded-xl border border-slate-200/90 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center transition-all cursor-pointer shadow-xs active:scale-95 disabled:opacity-50"
             >
-              <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin text-[#2563EB]" : ""}`} />
-              <span>{isRefreshing ? "Refreshing..." : "Refresh Portal"}</span>
-            </button>
-
-            <button
-              onClick={() => router.push("/dashboard/student/profile")}
-              className="px-3.5 py-1.5 rounded-lg border border-[#2563EB]/30 bg-[#EFF6FF] dark:bg-[#172B4D] hover:bg-[#DBEAFE] dark:hover:bg-[#1E3A8A]/50 text-[#1E3A8A] dark:text-[#60A5FA] text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs shrink-0 cursor-pointer"
-            >
-              <User className="h-3.5 w-3.5" />
-              <span>My Profile</span>
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin text-[#2563EB]" : ""}`} />
             </button>
           </div>
         </div>
