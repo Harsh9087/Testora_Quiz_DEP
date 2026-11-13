@@ -14,6 +14,7 @@ import {
 import MathText from "../../../components/MathText";
 import FeaturedHighYieldTests from "../../../components/FeaturedHighYieldTests";
 import CompanyPlacementTests from "./_components/CompanyPlacementTests";
+import MockTestLibrary from "./_components/MockTestLibrary";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, RadarChart, PolarGrid, PolarAngleAxis, Radar } from "recharts";
 import { useRouter } from "next/navigation";
 
@@ -31,7 +32,7 @@ export default function StudentDashboard() {
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   
   // UI States
-  const [activePortalTab, setActivePortalTab] = useState<"assigned" | "company-tests" | "submissions" | "progress">("assigned");
+  const [activePortalTab, setActivePortalTab] = useState<"assigned" | "company-tests" | "mock-tests" | "submissions" | "progress" | "certificates">("assigned");
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeViewTab, setActiveViewTab] = useState<"questions" | "topics" | "leaderboard">("questions");
@@ -39,6 +40,25 @@ export default function StudentDashboard() {
   const [selectedStudentFilter, setSelectedStudentFilter] = useState<string>("");
   const [progressData, setProgressData] = useState<any | null>(null);
   const [mobileViewingDetail, setMobileViewingDetail] = useState(false);
+
+  // Certificates State
+  const [certificates, setCertificates] = useState<any[]>([]);
+  const [loadingCertificates, setLoadingCertificates] = useState(false);
+  const [copiedCertId, setCopiedCertId] = useState<string | null>(null);
+
+  const fetchCertificates = async () => {
+    setLoadingCertificates(true);
+    try {
+      const res = await apiFetch("/certificates/my-certificates", { token });
+      if (res.ok) {
+        setCertificates(await res.json());
+      }
+    } catch {
+      // ignore
+    } finally {
+      setLoadingCertificates(false);
+    }
+  };
 
   const fetchProgressData = async () => {
     try {
@@ -92,6 +112,9 @@ export default function StudentDashboard() {
 
       // 4. Fetch Student Progress Analytics
       fetchProgressData();
+
+      // 5. Fetch Issued Certificates
+      fetchCertificates();
     } catch {
     } finally {
       if (isManual) setIsRefreshing(false);
@@ -108,13 +131,17 @@ export default function StudentDashboard() {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       const tabParam = params.get("tab");
-      if (tabParam === "company-tests") {
-        setActivePortalTab("company-tests");
+      if (tabParam === "certificates") {
+        setActivePortalTab("certificates");
+      } else if (tabParam === "company-tests" || tabParam === "mock-tests") {
+        setActivePortalTab("mock-tests");
       }
 
       const handleSwitchTab = (e: any) => {
-        if (e.detail === "company-tests") {
-          setActivePortalTab("company-tests");
+        if (e.detail === "company-tests" || e.detail === "mock-tests") {
+          setActivePortalTab("mock-tests");
+        } else if (e.detail === "certificates") {
+          setActivePortalTab("certificates");
         } else if (e.detail === "assigned") {
           setActivePortalTab("assigned");
         }
@@ -260,18 +287,18 @@ export default function StudentDashboard() {
           </button>
 
           <button
-            onClick={() => setActivePortalTab("company-tests")}
+            onClick={() => setActivePortalTab("mock-tests")}
             className={`px-3 sm:px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 sm:gap-2 shrink-0 cursor-pointer ${
-              activePortalTab === "company-tests"
+              activePortalTab === "company-tests" || activePortalTab === "mock-tests"
                 ? "bg-[#2563EB] text-white shadow-xs"
                 : "bg-[#F1F5F9] dark:bg-[#17243A] text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9]"
             }`}
           >
-            <Building2 className="h-3.5 w-3.5" />
-            <span className="sm:hidden">Placement Tests</span>
-            <span className="hidden sm:inline">Company Placement Tests (TCS, Infosys, HCL)</span>
-            <span className="px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-amber-400 text-amber-950 ml-0.5">
-              ₹9 / Free
+            <GraduationCap className="h-3.5 w-3.5" />
+            <span className="sm:hidden">Mock Tests</span>
+            <span className="hidden sm:inline">Mock Test Library & Practice</span>
+            <span className="px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-emerald-500 text-white ml-0.5">
+              100% Free
             </span>
           </button>
 
@@ -299,6 +326,27 @@ export default function StudentDashboard() {
             <TrendingUp className="h-3.5 w-3.5" />
             <span className="sm:hidden">Mastery</span>
             <span className="hidden sm:inline">Learning Trends & Mastery</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setActivePortalTab("certificates");
+              fetchCertificates();
+            }}
+            className={`px-3 sm:px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 sm:gap-2 shrink-0 cursor-pointer ${
+              activePortalTab === "certificates"
+                ? "bg-[#2563EB] text-white shadow-xs"
+                : "bg-[#F1F5F9] dark:bg-[#17243A] text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9]"
+            }`}
+          >
+            <Award className="h-3.5 w-3.5" />
+            <span className="sm:hidden">Certificates</span>
+            <span className="hidden sm:inline">My Certificates</span>
+            {certificates.length > 0 && (
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-extrabold bg-emerald-500 text-white ml-0.5">
+                {certificates.length}
+              </span>
+            )}
           </button>
         </div>
 
@@ -567,9 +615,9 @@ export default function StudentDashboard() {
         </div>
       )}
 
-      {/* ═══════ SECTION: COMPANY PLACEMENT & MOCK TESTS ═══════ */}
-      {activePortalTab === "company-tests" && (
-        <CompanyPlacementTests />
+      {/* ═══════ SECTION: MOCK TEST LIBRARY & PRACTICE ═══════ */}
+      {(activePortalTab === "company-tests" || activePortalTab === "mock-tests") && (
+        <MockTestLibrary />
       )}
 
       {/* ═══════ SECTION 2: SUBMISSIONS & PERFORMANCE BREAKDOWN ═══════ */}
@@ -1120,6 +1168,153 @@ export default function StudentDashboard() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ═══════ PORTAL TAB 4: MY CERTIFICATES ═══════ */}
+      {activePortalTab === "certificates" && (
+        <div className="space-y-6 animate-fadeIn">
+          {/* Header Banner */}
+          <div className="bg-[#FFFFFF] dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-2xl p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 rounded-2xl shrink-0">
+                <Award className="h-6 w-6" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-[#111827] dark:text-[#F1F5F9]">
+                  My Verified Passing Certificates
+                </h2>
+                <p className="text-xs text-[#64748B] dark:text-[#A3B1C6] mt-0.5">
+                  Official accredited certificates with permanent cryptographic QR verification.
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={fetchCertificates}
+              disabled={loadingCertificates}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer self-start sm:self-auto"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loadingCertificates ? "animate-spin" : ""}`} />
+              <span>Refresh</span>
+            </button>
+          </div>
+
+          {/* Certificate Cards Grid */}
+          {loadingCertificates ? (
+            <div className="p-12 text-center bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-2xl">
+              <RefreshCw className="w-6 h-6 mx-auto text-blue-600 animate-spin mb-2" />
+              <p className="text-xs text-slate-500">Loading your certificates...</p>
+            </div>
+          ) : certificates.length === 0 ? (
+            <div className="p-12 text-center bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-2xl space-y-3">
+              <div className="w-14 h-14 mx-auto rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-600 flex items-center justify-center">
+                <Award className="w-7 h-7" />
+              </div>
+              <h3 className="text-sm font-bold text-[#111827] dark:text-[#F1F5F9]">
+                No Certificates Earned Yet
+              </h3>
+              <p className="text-xs text-[#64748B] dark:text-[#A3B1C6] max-w-md mx-auto">
+                Passing certificates will automatically appear here once you successfully clear teacher assessments or competitive company placement tests with passing marks.
+              </p>
+              <button
+                onClick={() => setActivePortalTab("assigned")}
+                className="mt-2 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold shadow-xs hover:bg-blue-700 cursor-pointer"
+              >
+                <span>View Assigned Tests</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {certificates.map((cert) => (
+                <div
+                  key={cert.id}
+                  className="bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-2xl p-5 shadow-xs flex flex-col justify-between space-y-4 hover:shadow-md hover:border-blue-400 transition-all relative overflow-hidden group"
+                >
+                  <div className="space-y-3">
+                    {/* Top Badges */}
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                        {cert.certificate_code}
+                      </span>
+                      {cert.is_revoked ? (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300">
+                          Revoked
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3" />
+                          <span>Verified</span>
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Title & Institute */}
+                    <div>
+                      <h3 className="text-sm font-bold text-[#111827] dark:text-[#F1F5F9] line-clamp-2">
+                        {cert.exam_name_snapshot}
+                      </h3>
+                      <p className="text-xs text-[#64748B] dark:text-[#A3B1C6] mt-0.5 flex items-center gap-1 truncate">
+                        <Building2 className="w-3.5 h-3.5 shrink-0 text-slate-400" />
+                        <span className="truncate">{cert.institute_name_snapshot || "Testora Academy"}</span>
+                      </p>
+                    </div>
+
+                    {/* Score / Grade Snapshot */}
+                    <div className="flex items-center gap-2 pt-1">
+                      {cert.percentage_snapshot !== null && (
+                        <span className="px-2 py-1 rounded-lg text-xs font-extrabold bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-900/60">
+                          {cert.percentage_snapshot}%
+                        </span>
+                      )}
+                      {cert.grade_snapshot && (
+                        <span className="px-2 py-1 rounded-lg text-xs font-extrabold bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-900/60">
+                          Grade {cert.grade_snapshot}
+                        </span>
+                      )}
+                      {cert.issue_date && (
+                        <span className="text-[11px] text-slate-500 ml-auto">
+                          {formatLocalizedDate(cert.issue_date)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Actions Bar */}
+                  <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                    <a
+                      href={`${API_V1}/certificates/download/${cert.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs cursor-pointer transition-all"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Download PDF</span>
+                    </a>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const url = `${window.location.origin}/verify-certificate/${cert.verification_token}`;
+                        navigator.clipboard.writeText(url);
+                        setCopiedCertId(cert.id);
+                        setTimeout(() => setCopiedCertId(null), 2000);
+                      }}
+                      className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
+                      title="Copy Public Verification Link"
+                    >
+                      {copiedCertId === cert.id ? (
+                        <Check className="w-4 h-4 text-emerald-500" />
+                      ) : (
+                        <ExternalLink className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

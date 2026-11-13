@@ -15,7 +15,16 @@ import {
   ExternalLink, 
   KeyRound, 
   ShieldCheck, 
-  RefreshCw 
+  RefreshCw,
+  Award,
+  Layers,
+  Copy,
+  Check,
+  ChevronRight,
+  ArrowRight,
+  BookOpen,
+  HelpCircle,
+  MessageSquare
 } from "lucide-react";
 
 export interface GuideTopic {
@@ -35,12 +44,72 @@ export interface GuideTopic {
 
 export const GUIDE_TOPICS: GuideTopic[] = [
   {
+    id: "forms-registrations",
+    title: "Student Data Collection Forms",
+    shortTitle: "Student Forms",
+    badge: "0-Login Required",
+    icon: ClipboardList,
+    color: "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 border-amber-200/80 dark:border-amber-800/40",
+    summary: "Collect student roster information via shareable online forms without requiring students to create accounts, and import directly into Student Directories.",
+    steps: [
+      "Navigate to 'Forms & Registrations' from the faculty dashboard sidebar.",
+      "Click 'Create Registration Form' and enter the Form Name (e.g. 'CS Branch Batch 2026').",
+      "Copy the unique shareable link or present the QR code for students to scan on mobile.",
+      "Students fill in their Name, Email, Roll Number, and Phone without creating accounts or signing in.",
+      "Access submitted responses in the dashboard and export directly to CSV / Excel or import into student rosters."
+    ],
+    actionText: "Open Forms & Registrations →",
+    actionUrl: "/dashboard/teacher",
+    actionType: "link",
+    keywords: ["form", "registration", "student form", "collect", "qr", "link", "no login", "data", "excel", "roster", "student info"]
+  },
+  {
+    id: "mock-tests",
+    title: "Free Mock Test Library",
+    shortTitle: "Mock Tests",
+    badge: "100% Free Practice",
+    icon: Layers,
+    color: "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 border-blue-200/80 dark:border-blue-800/40",
+    summary: "Practice with full-length mock tests, subject-wise quizzes, and exam-oriented preparation resources with authentic PYQ tracking.",
+    steps: [
+      "Click 'Explore Mock Tests' from the home section or open Mock Tests in your student dashboard.",
+      "Browse standardized tests by category: JEE, NEET, SSC, Banking, or Engineering domains.",
+      "Review the exam specifications: total questions, duration, marking scheme (+3/-1), and PYQ origin.",
+      "Attempt the test in the realistic exam HUD with countdown timer, question palette, and autosaved answers.",
+      "Submit to view instant performance telemetry, topic mastery scorecards, and step-by-step solutions."
+    ],
+    actionText: "Explore Mock Tests Now →",
+    actionUrl: "/dashboard/student",
+    actionType: "link",
+    keywords: ["mock", "test", "practice", "jee", "neet", "ssc", "banking", "free", "pyq", "exam library", "speed test", "questions"]
+  },
+  {
+    id: "certificates",
+    title: "Automated Verifiable Certificates",
+    shortTitle: "Certificates",
+    badge: "Tamper-Proof QR",
+    icon: Award,
+    color: "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 border-amber-200/80 dark:border-amber-800/40",
+    summary: "Design professional certificates, automatically issue credentials to eligible students, and verify achievements via public QR codes.",
+    steps: [
+      "Access 'Certificate Management' in the faculty dashboard or verify any issued credential.",
+      "Select an official template style: Classic Academic, Modern Navy & Gold, or Minimal Azure.",
+      "Co-brand certificates with your institute logo, accredited examination center title, and director signature.",
+      "Set automated issuance thresholds: minimum score percentage or attendance criteria.",
+      "Deliver credentials automatically via email with 300-DPI A4 vector PDF download and instant QR verification."
+    ],
+    actionText: "Explore Certificate Features →",
+    actionUrl: "/dashboard/teacher",
+    actionType: "link",
+    keywords: ["certificate", "award", "degree", "verify", "qr", "pdf", "template", "gold", "seal", "credentials", "excellence"]
+  },
+  {
     id: "create-quiz",
     title: "Create Smart Tests with AI",
     shortTitle: "Create Tests",
-    badge: "Faculty Account Required",
+    badge: "Faculty Studio",
     icon: FileEdit,
-    color: "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 border-blue-200/80 dark:border-blue-800/40",
+    color: "text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/50 border-indigo-200/80 dark:border-indigo-800/40",
     summary: "Synthesize calibrated assessments from syllabus blueprints, textbook chapters, or custom question banks with Gemini Pro AI.",
     steps: [
       "Open 'Teacher Assessment Studio' from the home card or faculty dashboard.",
@@ -58,7 +127,7 @@ export const GUIDE_TOPICS: GuideTopic[] = [
     id: "student-portal",
     title: "Take Your Test (Exam Code Access)",
     shortTitle: "Take Test",
-    badge: "Exam Code Required",
+    badge: "Exam Code Access",
     icon: KeyRound,
     color: "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 border-emerald-200/80 dark:border-emerald-800/40",
     summary: "Students can access scheduled exams using a unique 6-digit access code without complicated account setups.",
@@ -75,30 +144,10 @@ export const GUIDE_TOPICS: GuideTopic[] = [
     keywords: ["take", "student", "code", "enter", "access", "exam code", "portal", "candidate", "start", "attempt"]
   },
   {
-    id: "forms-registrations",
-    title: "Student Data Collection Forms",
-    shortTitle: "Student Forms",
-    badge: "No Login Needed",
-    icon: ClipboardList,
-    color: "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 border-amber-200/80 dark:border-amber-800/40",
-    summary: "Collect verified student information via shareable mobile-friendly online forms and import directly to student rosters.",
-    steps: [
-      "Navigate to 'Forms & Registrations' from the faculty dashboard sidebar.",
-      "Click 'Create Registration Form' and enter the Form Name (e.g. 'CS Branch Batch 2026').",
-      "Copy the unique shareable link or present the QR code for students to scan on mobile.",
-      "Students fill in their Name, Email, Roll Number, and Phone without creating accounts or signing in.",
-      "Access submitted responses in the dashboard and export directly to CSV / Excel or import into student rosters."
-    ],
-    actionText: "Open Forms & Registrations →",
-    actionUrl: "/dashboard/teacher",
-    actionType: "link",
-    keywords: ["form", "registration", "student form", "collect", "qr", "link", "no login", "data", "excel", "roster"]
-  },
-  {
     id: "custom-forms",
     title: "AI-Powered Custom Form Builder",
     shortTitle: "AI Form Builder",
-    badge: "Faculty / Admin Studio",
+    badge: "Prompt-to-Form",
     icon: Wand2,
     color: "text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/50 border-purple-200/80 dark:border-purple-800/40",
     summary: "Describe any workshop evaluation, feedback survey, or event registration in plain English, and AI synthesizes the form instantly.",
@@ -154,6 +203,15 @@ export const GUIDE_TOPICS: GuideTopic[] = [
   }
 ];
 
+// Suggested quick prompts displayed above search input
+const QUICK_PROMPTS = [
+  { label: "📝 Student Forms", query: "how do student registration forms work" },
+  { label: "⚡ Mock Tests", query: "how to practice free mock tests" },
+  { label: "🎓 Certificates", query: "how to issue and verify certificates" },
+  { label: "🔑 Enter Exam Code", query: "how to enter exam code as student" },
+  { label: "🛡️ Anti-Cheat", query: "what are the proctoring and tab switch rules" }
+];
+
 interface AIAgentGuideWidgetProps {
   isOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -174,9 +232,13 @@ export default function AIAgentGuideWidget({
     onOpenChange?.(val);
   };
 
-  const [selectedTopicId, setSelectedTopicId] = useState<string>("student-forms");
+  const [selectedTopicId, setSelectedTopicId] = useState<string>("forms-registrations");
   const [userQuestion, setUserQuestion] = useState("");
   const [answeredQuery, setAnsweredQuery] = useState<string | null>(null);
+  const [copiedStepIdx, setCopiedStepIdx] = useState<number | null>(null);
+
+  // Content scroll ref to ensure step 1 is never cut off
+  const contentRef = useRef<HTMLDivElement>(null);
 
   // Movable / Draggable icon state
   const [position, setPosition] = useState<{ x: number; y: number } | null>(null);
@@ -198,8 +260,15 @@ export default function AIAgentGuideWidget({
   const widgetRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
-  const BTN_SIZE = 52;
-  const PADDING = 12;
+  const BTN_SIZE = 54;
+  const PADDING = 14;
+
+  // Whenever selected topic changes, scroll to top smoothly so step 1 is fully visible
+  useEffect(() => {
+    if (contentRef.current) {
+      contentRef.current.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [selectedTopicId, answeredQuery]);
 
   // Initialize position on client mount
   useEffect(() => {
@@ -219,13 +288,13 @@ export default function AIAgentGuideWidget({
           }
         }
       } catch {
-        // Fallback to default position
+        // Fallback to default
       }
 
       // Default: bottom-right corner
       setPosition({
         x: Math.max(PADDING, window.innerWidth - BTN_SIZE - 20),
-        y: Math.max(PADDING, window.innerHeight - BTN_SIZE - 20),
+        y: Math.max(PADDING, window.innerHeight - BTN_SIZE - 24),
       });
     };
 
@@ -261,7 +330,7 @@ export default function AIAgentGuideWidget({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen]);
 
-  // Click outside listener to close widget gently
+  // Click outside listener
   useEffect(() => {
     if (!isOpen) return;
 
@@ -277,10 +346,9 @@ export default function AIAgentGuideWidget({
       }
     };
 
-    // Attach after slight timeout to avoid immediate close on toggle click
     const timer = setTimeout(() => {
       document.addEventListener("mousedown", handleClickOutside);
-    }, 100);
+    }, 120);
 
     return () => {
       clearTimeout(timer);
@@ -289,10 +357,10 @@ export default function AIAgentGuideWidget({
   }, [isOpen]);
 
   const handlePointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
-    if (e.button !== 0) return; // Only primary mouse button
+    if (e.button !== 0) return;
 
     const currentX = position?.x ?? Math.max(PADDING, window.innerWidth - BTN_SIZE - 20);
-    const currentY = position?.y ?? Math.max(PADDING, window.innerHeight - BTN_SIZE - 20);
+    const currentY = position?.y ?? Math.max(PADDING, window.innerHeight - BTN_SIZE - 24);
 
     dragRef.current = {
       startX: e.clientX,
@@ -342,7 +410,6 @@ export default function AIAgentGuideWidget({
     setIsDragging(false);
 
     if (dragRef.current.hasMoved) {
-      // Drag action: persist position to localStorage
       const dx = e.clientX - dragRef.current.startX;
       const dy = e.clientY - dragRef.current.startY;
       const maxX = Math.max(PADDING, window.innerWidth - BTN_SIZE - PADDING);
@@ -355,7 +422,6 @@ export default function AIAgentGuideWidget({
         // ignore
       }
     } else {
-      // Click without drag: toggle assistant
       setIsOpen(!isOpen);
     }
   };
@@ -386,10 +452,11 @@ export default function AIAgentGuideWidget({
     for (const topic of GUIDE_TOPICS) {
       let score = 0;
       for (const kw of topic.keywords) {
-        if (query.includes(kw)) score += 5;
+        if (query.includes(kw)) score += 6;
       }
-      if (topic.title.toLowerCase().includes(query)) score += 10;
-      if (topic.summary.toLowerCase().includes(query)) score += 3;
+      if (topic.title.toLowerCase().includes(query)) score += 12;
+      if (topic.shortTitle.toLowerCase().includes(query)) score += 10;
+      if (topic.summary.toLowerCase().includes(query)) score += 4;
       for (const step of topic.steps) {
         if (step.toLowerCase().includes(query)) score += 2;
       }
@@ -423,7 +490,15 @@ export default function AIAgentGuideWidget({
     }
   };
 
-  // Find active topic (fallback to student-forms or first item)
+  const handleCopyStep = (text: string, idx: number) => {
+    navigator.clipboard.writeText(text);
+    setCopiedStepIdx(idx);
+    setTimeout(() => {
+      setCopiedStepIdx(null);
+    }, 1500);
+  };
+
+  // Find active topic (fallback to forms-registrations or first item)
   const selectedTopic = GUIDE_TOPICS.find((t) => t.id === selectedTopicId) || 
     GUIDE_TOPICS.find((t) => t.id === "forms-registrations") || 
     GUIDE_TOPICS[0];
@@ -432,39 +507,37 @@ export default function AIAgentGuideWidget({
   // Dynamic positioning for the assistant card near the floating agent button
   const getWidgetPositionStyles = (): React.CSSProperties => {
     if (typeof window === "undefined") {
-      return { bottom: "80px", right: "20px" };
+      return { bottom: "84px", right: "20px" };
     }
 
     const isMobile = window.innerWidth < 640;
     if (isMobile) {
       return {
-        bottom: "80px",
+        bottom: "84px",
         left: "12px",
         right: "12px",
-        maxHeight: "calc(100vh - 95px)",
+        maxHeight: "calc(100vh - 100px)",
       };
     }
 
     if (!position) {
-      return { bottom: "80px", right: "24px" };
+      return { bottom: "84px", right: "24px" };
     }
 
     const style: React.CSSProperties = {};
     const winW = window.innerWidth;
     const winH = window.innerHeight;
 
-    // Horizontal placement: anchor near button X
     if (position.x > winW / 2) {
       style.right = `${Math.max(16, winW - position.x - BTN_SIZE)}px`;
     } else {
       style.left = `${Math.max(16, position.x)}px`;
     }
 
-    // Vertical placement: open above the button if in bottom half, below if in top half
     if (position.y > winH / 2) {
-      style.bottom = `${Math.max(16, winH - position.y + 12)}px`;
+      style.bottom = `${Math.max(16, winH - position.y + 14)}px`;
     } else {
-      style.top = `${Math.max(16, position.y + BTN_SIZE + 12)}px`;
+      style.top = `${Math.max(16, position.y + BTN_SIZE + 14)}px`;
     }
 
     return style;
@@ -478,7 +551,7 @@ export default function AIAgentGuideWidget({
         style={
           position
             ? { left: `${position.x}px`, top: `${position.y}px` }
-            : { right: "20px", bottom: "20px" }
+            : { right: "20px", bottom: "24px" }
         }
       >
         <button
@@ -495,13 +568,13 @@ export default function AIAgentGuideWidget({
               setIsOpen(!isOpen);
             }
           }}
-          className={`group relative w-[52px] h-[52px] rounded-full bg-gradient-to-tr from-[#9C3810] via-[#C84B18] to-[#EA580C] text-white shadow-xl hover:shadow-2xl hover:shadow-[#C84B18]/40 border-2 border-white/30 flex items-center justify-center transition-all duration-200 cursor-pointer ${
+          className={`group relative w-[54px] h-[54px] rounded-full bg-gradient-to-tr from-[#EA580C] via-[#F97316] to-[#FB923C] text-white shadow-xl hover:shadow-2xl hover:shadow-orange-500/40 border-2 border-white/40 dark:border-slate-700/60 flex items-center justify-center transition-all duration-200 cursor-pointer ${
             isDragging
               ? "cursor-grabbing scale-105"
               : "cursor-grab hover:scale-105 active:scale-95"
           }`}
-          title="Ask AI Guide (Click to open, Drag anywhere)"
-          aria-label="Ask AI Platform Assistant"
+          title="Ask Testora AI Guide (Click to open, Drag anywhere)"
+          aria-label="Ask Testora AI Platform Assistant"
         >
           {/* Inner Bot Icon */}
           <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-xs flex items-center justify-center pointer-events-none">
@@ -509,22 +582,22 @@ export default function AIAgentGuideWidget({
           </div>
 
           {/* Active Status Pulse */}
-          <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#C84B18] shadow-xs animate-pulse pointer-events-none" />
+          <span className="absolute top-1 right-1 w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#EA580C] shadow-xs animate-pulse pointer-events-none" />
         </button>
       </div>
 
-      {/* ═══════ FLOATING AI AGENT POPUP WINDOW (OPEN NEAR AGENT ICON) ═══════ */}
+      {/* ═══════ UPGRADED FLOATING AI AGENT POPUP WINDOW ═══════ */}
       {isOpen && (
         <div
           ref={widgetRef}
           style={getWidgetPositionStyles()}
-          className="fixed z-50 w-[calc(100vw-24px)] sm:w-[420px] md:w-[440px] h-[580px] max-h-[calc(100vh-95px)] rounded-3xl bg-white dark:bg-[#0D1527] border border-slate-200/90 dark:border-slate-800 shadow-2xl shadow-slate-900/25 dark:shadow-black/70 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-3 duration-200 ring-1 ring-slate-900/5 dark:ring-white/10 select-none"
+          className="fixed z-50 w-[calc(100vw-24px)] sm:w-[440px] md:w-[460px] h-[610px] max-h-[calc(100vh-100px)] rounded-3xl bg-[#090F1E] text-slate-100 border border-slate-700/70 shadow-2xl shadow-black/80 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-3 duration-200 ring-1 ring-white/10 select-none backdrop-blur-xl"
         >
-          {/* ── 1. HEADER (Dark Navy Background + Orange Bot + LIVE + Close) ── */}
-          <div className="px-4 py-3 bg-[#0A1128] dark:bg-[#070D1B] text-white flex items-center justify-between border-b border-slate-800/80 shrink-0">
+          {/* ── 1. HEADER (Deep Sapphire Navy + Orange AI Bot + LIVE + Close) ── */}
+          <div className="px-4 py-3 bg-[#070D1B] text-white flex items-center justify-between border-b border-slate-800/90 shrink-0">
             <div className="flex items-center gap-2.5 min-w-0">
-              {/* Orange Square Bot Icon */}
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#9C3810] via-[#C84B18] to-[#EA580C] flex items-center justify-center text-white shadow-sm ring-1 ring-white/20 shrink-0">
+              {/* Vibrant Orange AI Avatar */}
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#EA580C] via-[#F97316] to-[#FB923C] flex items-center justify-center text-white shadow-md shadow-orange-600/30 ring-1 ring-white/20 shrink-0">
                 <Bot className="w-4 h-4" />
               </div>
               <div className="min-w-0">
@@ -532,11 +605,12 @@ export default function AIAgentGuideWidget({
                   <h3 className="text-xs sm:text-sm font-bold text-white tracking-tight truncate">
                     Testora AI Assistant
                   </h3>
-                  <span className="px-1.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 tracking-wider shrink-0">
-                    LIVE
+                  <span className="px-1.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 tracking-wider shrink-0 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span>LIVE</span>
                   </span>
                 </div>
-                <p className="text-[10.5px] sm:text-[11px] text-slate-300 font-normal leading-tight truncate">
+                <p className="text-[10px] sm:text-[11px] text-slate-400 font-normal leading-tight truncate">
                   Instant step-by-step guidance &amp; quick actions
                 </p>
               </div>
@@ -569,17 +643,15 @@ export default function AIAgentGuideWidget({
             </div>
           </div>
 
-          {/* ── 2. TOPIC NAVIGATION (Pill-Shaped Tabs with Blue Active Accent) ── */}
+          {/* ── 2. UPGRADED TOPIC NAVIGATION PILLS (Horizontal Scroll with All 8 Modules) ── */}
           <div 
             role="tablist" 
             aria-label="Assistant Topics"
-            className="px-4 py-2 bg-white dark:bg-[#0D1527] border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth shrink-0"
+            className="px-3.5 py-2.5 bg-[#0B1326] border-b border-slate-800/80 flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth shrink-0"
           >
-            <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider shrink-0 mr-0.5">
-              TOPICS:
-            </span>
-            {GUIDE_TOPICS.slice(0, 4).map((topic) => {
+            {GUIDE_TOPICS.map((topic) => {
               const active = selectedTopic.id === topic.id;
+              const IconComp = topic.icon;
               return (
                 <button
                   key={topic.id}
@@ -590,54 +662,63 @@ export default function AIAgentGuideWidget({
                     setSelectedTopicId(topic.id);
                     setAnsweredQuery(null);
                   }}
-                  className={`px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all shrink-0 cursor-pointer ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all shrink-0 cursor-pointer ${
                     active
-                      ? "bg-[#1765F5] hover:bg-[#1558D6] text-white font-bold shadow-xs ring-1 ring-blue-600/30"
-                      : "bg-slate-50 dark:bg-[#111A30] text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#162240] border border-slate-200 dark:border-slate-700/80"
+                      ? "bg-[#1765F5] hover:bg-blue-600 text-white font-bold shadow-md shadow-blue-600/30 ring-1 ring-blue-400/40"
+                      : "bg-[#101B34] text-slate-300 hover:bg-[#162548] hover:text-white border border-slate-700/80"
                   }`}
                 >
+                  <IconComp className="w-3.5 h-3.5 opacity-80" />
                   <span>{topic.shortTitle}</span>
                 </button>
               );
             })}
           </div>
 
-          {/* ── 3. MAIN CONTENT (Scrollable Instructions & Action) ── */}
-          <div className="flex-1 overflow-y-auto px-4 py-3.5 space-y-3.5 bg-white dark:bg-[#0D1527]">
-
-            {/* If user asked a question, show prompt pill */}
+          {/* ── 3. MAIN CONTENT (Scrollable Instructions & Action, Auto-Reset to Top) ── */}
+          <div 
+            ref={contentRef}
+            className="flex-1 overflow-y-auto px-4 py-4 space-y-3.5 bg-[#090F1E] scroll-smooth"
+          >
+            {/* If user asked a question, show AI Prompt Confirmation Banner */}
             {answeredQuery && (
-              <div className="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/50 text-xs text-blue-900 dark:text-blue-200 flex items-center gap-2">
-                <Sparkles className="w-3.5 h-3.5 text-[#1765F5] shrink-0" />
-                <span className="font-semibold truncate">Q: &ldquo;{answeredQuery}&rdquo;</span>
+              <div className="p-3 rounded-2xl bg-blue-950/60 border border-blue-500/30 text-xs text-blue-200 flex items-start gap-2.5 shadow-sm">
+                <Sparkles className="w-4 h-4 text-[#1765F5] shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-white truncate">Query: &ldquo;{answeredQuery}&rdquo;</div>
+                  <div className="text-[11px] text-blue-300/90 mt-0.5">Matched best platform guide below:</div>
+                </div>
               </div>
             )}
 
             {/* Topic Overview Card */}
-            <div className="flex items-start gap-3 p-3 rounded-2xl bg-slate-50/70 dark:bg-[#111A30]/50 border border-slate-100 dark:border-slate-800">
-              <div className={`w-11 h-11 rounded-2xl border flex items-center justify-center shrink-0 ${selectedTopic.color}`}>
+            <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-[#0F1A34] border border-slate-700/60 shadow-xs">
+              <div className={`w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 ${selectedTopic.color}`}>
                 <TopicIcon className="w-5 h-5" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white leading-tight">
+                  <h4 className="text-xs sm:text-sm font-bold text-white leading-tight">
                     {selectedTopic.title}
                   </h4>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shrink-0">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-800 text-slate-300 border border-slate-700 shrink-0">
                     {selectedTopic.badge}
                   </span>
                 </div>
-                <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 leading-relaxed mt-1">
+                <p className="text-[11px] sm:text-xs text-slate-400 leading-relaxed mt-1">
                   {selectedTopic.summary}
                 </p>
               </div>
             </div>
 
-            {/* Step-by-Step Instructions Block */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-[11px] font-bold tracking-wider uppercase text-slate-700 dark:text-slate-300 px-0.5">
-                <span>STEP-BY-STEP INSTRUCTIONS</span>
-                <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono font-semibold">
+            {/* Step-by-Step Instructions Block (Never cut off) */}
+            <div className="space-y-2 pt-1">
+              <div className="flex items-center justify-between text-[11px] font-bold tracking-wider uppercase text-slate-300 px-0.5">
+                <span className="flex items-center gap-1.5">
+                  <BookOpen className="w-3.5 h-3.5 text-blue-400" />
+                  <span>STEP-BY-STEP INSTRUCTIONS</span>
+                </span>
+                <span className="text-[10px] text-slate-400 font-mono font-semibold">
                   {selectedTopic.steps.length} STEPS
                 </span>
               </div>
@@ -647,33 +728,70 @@ export default function AIAgentGuideWidget({
                 {selectedTopic.steps.map((step, idx) => (
                   <div
                     key={idx}
-                    className="flex items-start gap-3 p-3 rounded-2xl bg-white dark:bg-[#111A30] border border-blue-100/90 dark:border-slate-800 text-xs sm:text-[13px] text-slate-700 dark:text-slate-200 leading-relaxed shadow-2xs hover:border-blue-300/60 dark:hover:border-blue-500/40 transition-colors"
+                    className="group relative flex items-start gap-3 p-3.5 rounded-2xl bg-[#0D182E] border border-slate-700/70 text-xs sm:text-[13px] text-slate-200 leading-relaxed shadow-sm hover:border-blue-500/50 hover:bg-[#101E39] transition-all"
                   >
-                    <span className="w-6 h-6 rounded-full bg-[#C84B18] text-white font-extrabold text-xs flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                    {/* Royal Blue Step Badge matching reference */}
+                    <span className="w-6 h-6 rounded-full bg-[#1765F5] text-white font-extrabold text-xs flex items-center justify-center shrink-0 mt-0.5 shadow-md shadow-blue-600/30">
                       {idx + 1}
                     </span>
-                    <span className="flex-1 pt-0.5 font-normal">{step}</span>
+                    <span className="flex-1 pt-0.5 font-normal leading-relaxed text-slate-200">
+                      {step}
+                    </span>
+                    
+                    {/* Copy step button */}
+                    <button
+                      type="button"
+                      onClick={() => handleCopyStep(step, idx)}
+                      className="opacity-0 group-hover:opacity-100 p-1 rounded-md text-slate-400 hover:text-white hover:bg-slate-700/50 transition-opacity cursor-pointer shrink-0"
+                      title="Copy step instruction"
+                    >
+                      {copiedStepIdx === idx ? (
+                        <Check className="w-3.5 h-3.5 text-emerald-400" />
+                      ) : (
+                        <Copy className="w-3.5 h-3.5" />
+                      )}
+                    </button>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Clickable Action Button */}
-            <div className="pt-1">
+            <div className="pt-2">
               <button
                 type="button"
                 onClick={() => handleActionClick(selectedTopic)}
-                className="w-full py-2.5 px-4 rounded-xl bg-[#1765F5] hover:bg-[#1558D6] active:scale-[0.99] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm hover:shadow transition-all cursor-pointer"
+                className="w-full py-3 px-4 rounded-xl bg-[#1765F5] hover:bg-[#1253CE] active:scale-[0.99] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-blue-600/30 hover:shadow-blue-600/40 transition-all cursor-pointer"
               >
                 <span>{selectedTopic.actionText}</span>
-                <ExternalLink className="w-3.5 h-3.5" />
+                <ExternalLink className="w-4 h-4" />
               </button>
             </div>
 
           </div>
 
-          {/* ── 4. BOTTOM QUESTION INPUT BAR ── */}
-          <div className="p-3 bg-slate-50 dark:bg-[#0B1120] border-t border-slate-200/90 dark:border-slate-800 shrink-0">
+          {/* ── 4. QUICK PROMPT CHIPS & SEARCH INPUT ── */}
+          <div className="p-3 bg-[#070D1B] border-t border-slate-800/90 shrink-0 space-y-2">
+            
+            {/* Quick Prompt Chips */}
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
+              <span className="text-[10px] uppercase font-bold text-slate-400 shrink-0 flex items-center gap-1">
+                <Sparkles className="w-3 h-3 text-amber-400" />
+                <span>Ask:</span>
+              </span>
+              {QUICK_PROMPTS.map((p, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => handleAskQuestion(p.query)}
+                  className="px-2.5 py-1 rounded-lg text-[10.5px] font-medium bg-[#101A33] hover:bg-[#162548] text-slate-300 hover:text-white border border-slate-700/70 whitespace-nowrap transition-colors cursor-pointer shrink-0"
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Search / Question Input Bar */}
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -688,13 +806,13 @@ export default function AIAgentGuideWidget({
                   value={userQuestion}
                   onChange={(e) => setUserQuestion(e.target.value)}
                   placeholder="Ask a question (e.g. how to create quiz, proctoring)..."
-                  className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-blue-400"
+                  className="w-full pl-8 pr-3 py-2 text-xs rounded-xl bg-[#0F182F] border border-slate-700 text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                 />
               </div>
               <button
                 type="submit"
                 disabled={!userQuestion.trim()}
-                className="p-2 rounded-xl bg-[#C84B18] hover:bg-[#B33F10] disabled:opacity-40 text-white text-xs font-bold flex items-center justify-center shadow-xs transition-all cursor-pointer disabled:cursor-not-allowed shrink-0"
+                className="p-2.5 rounded-xl bg-[#1765F5] hover:bg-blue-600 disabled:opacity-40 text-white text-xs font-bold flex items-center justify-center shadow-md shadow-blue-600/30 transition-all cursor-pointer disabled:cursor-not-allowed shrink-0"
                 title="Send Question"
                 aria-label="Send Question"
               >

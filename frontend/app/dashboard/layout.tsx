@@ -43,6 +43,7 @@ import {
   ShieldAlert,
   ChevronRight,
   Coins,
+  Award,
   ClipboardList,
   Wand2,
   LayoutDashboard
@@ -307,7 +308,12 @@ export default function DashboardLayout({
 
   useEffect(() => {
     if (mounted) {
-      const activeToken = token || (typeof window !== "undefined" ? localStorage.getItem("token") : null);
+      const getStoredCookie = (name: string) => {
+        if (typeof document === "undefined") return null;
+        const match = document.cookie.match(new RegExp("(^|;\\s*)(" + name + ")=([^;]*)"));
+        return match ? decodeURIComponent(match[3]) : null;
+      };
+      const activeToken = token || (typeof window !== "undefined" ? (localStorage.getItem("token") || getStoredCookie("token")) : null);
       if (!activeToken) {
         router.replace("/login");
       }
@@ -545,6 +551,8 @@ export default function DashboardLayout({
       else if (currentTab === "students") leafLabel = "Student Directory";
       else if (currentTab === "forms") leafLabel = "Forms & Registrations";
       else if (currentTab === "custom-forms") leafLabel = "AI Form Builder";
+      else if (currentTab === "mock-tests") leafLabel = "Mock Test Library";
+      else if (currentTab === "certificates") leafLabel = "Certificates & Awards";
 
       if (subviewTitle && !isOverview) {
         items.push({
@@ -908,6 +916,70 @@ export default function DashboardLayout({
                       </span>
                     )}
                   </button>
+
+                  {/* Mock Test Library */}
+                  <button 
+                    onClick={() => navToTab("mock-tests")}
+                    className={`group relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                      sidebarCollapsed ? "md:justify-center md:px-0" : ""
+                    } ${
+                      isTabActive("mock-tests")
+                        ? "bg-blue-50/80 dark:bg-blue-950/40 text-[#2563EB] dark:text-[#60A5FA] font-bold border-l-4 border-[#2563EB] shadow-2xs"
+                        : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                    }`}
+                  >
+                    <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105">
+                      <GraduationCap className="h-4 w-4" />
+                    </div>
+                    <span className={`truncate text-left flex-1 ${sidebarCollapsed ? "md:hidden" : ""}`}>
+                      Mock Test Library
+                    </span>
+                    {!sidebarCollapsed && (
+                      <span className="px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 shrink-0">
+                        FREE
+                      </span>
+                    )}
+                    {!sidebarCollapsed && (
+                      <ChevronRight className="h-3.5 w-3.5 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 dark:group-hover:text-slate-400 shrink-0 transition-transform group-hover:translate-x-0.5" />
+                    )}
+                    {sidebarCollapsed && (
+                      <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
+                        Mock Test Library (Free)
+                      </span>
+                    )}
+                  </button>
+
+                  {/* Certificates & Awards */}
+                  <button 
+                    onClick={() => navToTab("certificates")}
+                    className={`group relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                      sidebarCollapsed ? "md:justify-center md:px-0" : ""
+                    } ${
+                      isTabActive("certificates")
+                        ? "bg-blue-50/80 dark:bg-blue-950/40 text-[#2563EB] dark:text-[#60A5FA] font-bold border-l-4 border-[#2563EB] shadow-2xs"
+                        : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                    }`}
+                  >
+                    <div className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105">
+                      <Award className="h-4 w-4" />
+                    </div>
+                    <span className={`truncate text-left flex-1 ${sidebarCollapsed ? "md:hidden" : ""}`}>
+                      Certificates
+                    </span>
+                    {!sidebarCollapsed && (
+                      <span className="px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 shrink-0">
+                        NEW
+                      </span>
+                    )}
+                    {!sidebarCollapsed && (
+                      <ChevronRight className="h-3.5 w-3.5 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 dark:group-hover:text-slate-400 shrink-0 transition-transform group-hover:translate-x-0.5" />
+                    )}
+                    {sidebarCollapsed && (
+                      <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
+                        Certificate Management
+                      </span>
+                    )}
+                  </button>
                 </>
               ) : (
                 <div className="space-y-1">
@@ -924,7 +996,7 @@ export default function DashboardLayout({
                     className={`group relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                       sidebarCollapsed ? "md:justify-center md:px-0" : ""
                     } ${
-                      pathname === "/dashboard/student" && currentTab !== "company-tests"
+                      pathname === "/dashboard/student" && currentTab !== "company-tests" && currentTab !== "mock-tests" && currentTab !== "certificates"
                         ? "bg-blue-50/90 text-[#2563EB] dark:bg-blue-950/60 dark:text-[#60A5FA] border border-blue-200/60 dark:border-blue-900/60 font-bold shadow-2xs"
                         : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60"
                     }`}
@@ -937,6 +1009,88 @@ export default function DashboardLayout({
                     </span>
                     {!sidebarCollapsed && (
                       <ChevronRight className="h-3.5 w-3.5 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 dark:group-hover:text-slate-400 shrink-0 transition-transform group-hover:translate-x-0.5" />
+                    )}
+                  </a>
+
+                  {/* Mock Test Library (Student) */}
+                  <a
+                    href="/dashboard/student?tab=company-tests"
+                    onClick={(e) => {
+                      closeSidebarMobile();
+                      if (pathname === "/dashboard/student") {
+                        e.preventDefault();
+                        window.dispatchEvent(new CustomEvent("switch-tab", { detail: "company-tests" }));
+                        window.history.pushState(null, "", "/dashboard/student?tab=company-tests");
+                        setCurrentTab("company-tests");
+                      }
+                    }}
+                    className={`group relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                      sidebarCollapsed ? "md:justify-center md:px-0" : ""
+                    } ${
+                      pathname === "/dashboard/student" && (currentTab === "company-tests" || currentTab === "mock-tests")
+                        ? "bg-blue-50/90 text-[#2563EB] dark:bg-blue-950/60 dark:text-[#60A5FA] border border-blue-200/60 dark:border-blue-900/60 font-bold shadow-2xs"
+                        : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                    }`}
+                  >
+                    <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105">
+                      <GraduationCap className="h-4 w-4" />
+                    </div>
+                    <div className={`flex flex-col text-left flex-1 min-w-0 ${sidebarCollapsed ? "md:hidden" : ""}`}>
+                      <span className="truncate">Mock Test Library</span>
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500 font-normal truncate">
+                        JEE, NEET, Engineering, PYQs
+                      </span>
+                    </div>
+                    {!sidebarCollapsed && (
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 shrink-0">
+                        100% Free
+                      </span>
+                    )}
+                    {sidebarCollapsed && (
+                      <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
+                        Mock Test Library (100% Free)
+                      </span>
+                    )}
+                  </a>
+
+                  {/* My Verified Certificates (Student) */}
+                  <a
+                    href="/dashboard/student?tab=certificates"
+                    onClick={(e) => {
+                      closeSidebarMobile();
+                      if (pathname === "/dashboard/student") {
+                        e.preventDefault();
+                        window.dispatchEvent(new CustomEvent("switch-tab", { detail: "certificates" }));
+                        window.history.pushState(null, "", "/dashboard/student?tab=certificates");
+                        setCurrentTab("certificates");
+                      }
+                    }}
+                    className={`group relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                      sidebarCollapsed ? "md:justify-center md:px-0" : ""
+                    } ${
+                      pathname === "/dashboard/student" && currentTab === "certificates"
+                        ? "bg-blue-50/90 text-[#2563EB] dark:bg-blue-950/60 dark:text-[#60A5FA] border border-blue-200/60 dark:border-blue-900/60 font-bold shadow-2xs"
+                        : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                    }`}
+                  >
+                    <div className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105">
+                      <Award className="h-4 w-4" />
+                    </div>
+                    <div className={`flex flex-col text-left flex-1 min-w-0 ${sidebarCollapsed ? "md:hidden" : ""}`}>
+                      <span className="truncate">My Certificates</span>
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500 font-normal truncate">
+                        Passing &amp; Merit Credentials
+                      </span>
+                    </div>
+                    {!sidebarCollapsed && (
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 shrink-0">
+                        Verified
+                      </span>
+                    )}
+                    {sidebarCollapsed && (
+                      <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
+                        My Verified Certificates
+                      </span>
                     )}
                   </a>
 
@@ -1425,7 +1579,7 @@ export default function DashboardLayout({
             <Link 
               href="/dashboard/support"
               className="hidden sm:flex p-1.5 sm:p-2 rounded-xl text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9] hover:bg-[#F1F5F9] dark:hover:bg-[#17243A] transition-colors"
-              title="DPRAMP Tech Solutions Help & Support"
+              title="Testora Quiz Help & Support"
             >
               <HelpCircle className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
             </Link>

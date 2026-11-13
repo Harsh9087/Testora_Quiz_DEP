@@ -18,7 +18,15 @@ import {
   Check,
   RotateCcw,
   Tag,
-  Coins
+  Coins,
+  ChevronRight,
+  X,
+  FileText,
+  Flame,
+  Star,
+  Compass,
+  Layers,
+  GraduationCap
 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
@@ -54,32 +62,65 @@ interface CompanyFilter {
   count: number;
 }
 
-const COMPANY_THEMES: Record<string, { bgGradient: string; badgeColor: string; accentColor: string }> = {
+interface CompanyTheme {
+  bgGradient: string;
+  badgeBg: string;
+  badgeText: string;
+  accentColor: string;
+  tagline: string;
+  patternType: string;
+}
+
+const COMPANY_THEMES: Record<string, CompanyTheme> = {
   tcs: {
-    bgGradient: "from-blue-900 to-indigo-950",
-    badgeColor: "bg-blue-100 text-blue-900 dark:bg-blue-950/70 dark:text-blue-300 border-blue-300",
-    accentColor: "#1E3A8A"
+    bgGradient: "from-[#0F172A] via-[#1E293B] to-[#1E3A8A]",
+    badgeBg: "bg-blue-500/20 border-blue-400/40",
+    badgeText: "text-blue-300",
+    accentColor: "#2563EB",
+    tagline: "NQT Aptitude & Cognitive Pattern",
+    patternType: "TCS National Qualifier"
   },
   infosys: {
-    bgGradient: "from-sky-800 to-blue-900",
-    badgeColor: "bg-sky-100 text-sky-900 dark:bg-sky-950/70 dark:text-sky-300 border-sky-300",
-    accentColor: "#0284C7"
+    bgGradient: "from-[#0A192F] via-[#0D2447] to-[#0284C7]",
+    badgeBg: "bg-sky-500/20 border-sky-400/40",
+    badgeText: "text-sky-300",
+    accentColor: "#0284C7",
+    tagline: "DSE & Systems Engineer Qualifier",
+    patternType: "Infosys Campus Qualifier"
   },
   hcl: {
-    bgGradient: "from-orange-800 to-amber-950",
-    badgeColor: "bg-orange-100 text-orange-900 dark:bg-orange-950/70 dark:text-orange-300 border-orange-300",
-    accentColor: "#EA580C"
+    bgGradient: "from-[#1C1917] via-[#292524] to-[#C2410C]",
+    badgeBg: "bg-orange-500/20 border-orange-400/40",
+    badgeText: "text-orange-300",
+    accentColor: "#EA580C",
+    tagline: "First Careers & Tech Evaluation",
+    patternType: "HCLTech Placement Drive"
   },
   wipro: {
-    bgGradient: "from-purple-900 to-indigo-950",
-    badgeColor: "bg-purple-100 text-purple-900 dark:bg-purple-950/70 dark:text-purple-300 border-purple-300",
-    accentColor: "#7E22CE"
+    bgGradient: "from-[#18181B] via-[#27272A] to-[#7E22CE]",
+    badgeBg: "bg-purple-500/20 border-purple-400/40",
+    badgeText: "text-purple-300",
+    accentColor: "#9333EA",
+    tagline: "Elite NTH Candidate Pattern",
+    patternType: "Wipro Elite National"
   },
   accenture: {
-    bgGradient: "from-violet-900 to-slate-900",
-    badgeColor: "bg-violet-100 text-violet-900 dark:bg-violet-950/70 dark:text-violet-300 border-violet-300",
-    accentColor: "#6D28D9"
+    bgGradient: "from-[#0F172A] via-[#1E1B4B] to-[#6D28D9]",
+    badgeBg: "bg-violet-500/20 border-violet-400/40",
+    badgeText: "text-violet-300",
+    accentColor: "#7C3AED",
+    tagline: "Critical Reasoning & Technical MCQ",
+    patternType: "Accenture Digital Qualifier"
   }
+};
+
+const DEFAULT_THEME: CompanyTheme = {
+  bgGradient: "from-[#0F172A] via-[#1E293B] to-[#334155]",
+  badgeBg: "bg-slate-500/20 border-slate-400/40",
+  badgeText: "text-slate-300",
+  accentColor: "#2563EB",
+  tagline: "Corporate Recruitment Pattern",
+  patternType: "Placement Assessment"
 };
 
 export default function CompanyPlacementTests() {
@@ -89,6 +130,7 @@ export default function CompanyPlacementTests() {
   const [loading, setLoading] = useState(true);
   const [selectedCompany, setSelectedCompany] = useState<string>("all");
   const [priceFilter, setPriceFilter] = useState<"all" | "free" | "paid">("all");
+  const [difficultyFilter, setDifficultyFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [processingId, setProcessingId] = useState<string | null>(null);
 
@@ -121,11 +163,11 @@ export default function CompanyPlacementTests() {
 
       if (testsRes.ok) {
         const testsData = await testsRes.json();
-        setTests(testsData);
+        setTests(Array.isArray(testsData) ? testsData : []);
       }
       if (compsRes.ok) {
         const compsData = await compsRes.json();
-        setCompanies(compsData);
+        setCompanies(Array.isArray(compsData) ? compsData : []);
       }
     } catch {
     } finally {
@@ -147,7 +189,6 @@ export default function CompanyPlacementTests() {
         token
       });
       if (res.ok) {
-        // Mark unlocked locally and open modal
         setTests((prev) =>
           prev.map((t) => (t.id === test.id ? { ...t, is_unlocked: true } : t))
         );
@@ -186,11 +227,12 @@ export default function CompanyPlacementTests() {
 
       if (isSimulation || !scriptLoaded) {
         const confirmed = window.confirm(
-          `[Razorpay Mock Checkout Simulation]\n\n` +
+          `[Testora Secure Payment Checkout]\n\n` +
           `Test: ${test.title}\n` +
+          `Company: ${test.company_name}\n` +
           `Amount: ₹${test.price_inr}\n` +
           `Order ID: ${orderData.order_id}\n\n` +
-          `Click OK to simulate successful payment and unlock this placement test.`
+          `Click OK to confirm mock test unlock.`
         );
 
         if (confirmed) {
@@ -273,267 +315,444 @@ export default function CompanyPlacementTests() {
       priceFilter === "all" ||
       (priceFilter === "free" && t.is_free) ||
       (priceFilter === "paid" && !t.is_free);
+    const matchesDifficulty =
+      difficultyFilter === "all" ||
+      t.difficulty.toLowerCase() === difficultyFilter.toLowerCase();
     const matchesSearch =
       !searchQuery ||
       t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       t.company_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      t.category.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCompany && matchesPrice && matchesSearch;
+      t.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      t.difficulty.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCompany && matchesPrice && matchesDifficulty && matchesSearch;
   });
 
+  // Aggregate stats
+  const freeCount = tests.filter((t) => t.is_free).length;
+  const paidCount = tests.filter((t) => !t.is_free).length;
+  const attemptedCount = tests.filter((t) => t.has_attempted).length;
+
   return (
-    <div className="space-y-6 animate-fadeIn">
-      {/* Hero Placement Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white p-6 sm:p-8 shadow-md">
-        <div className="relative z-10 max-w-2xl space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-200 text-xs font-bold">
+    <div className="space-y-6 sm:space-y-8 animate-fadeIn">
+      {/* ═══════ HERO BANNER ═══════ */}
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#0A2540] text-white p-5 sm:p-8 lg:p-10 shadow-xl border border-slate-700/50">
+        
+        {/* Glow ambient spheres */}
+        <div className="absolute -right-16 -top-16 w-80 h-80 bg-blue-500/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute right-32 -bottom-20 w-72 h-72 bg-purple-500/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute left-1/3 -bottom-10 w-48 h-48 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
+
+        <div className="relative z-10 max-w-3xl space-y-4 sm:space-y-5">
+          {/* Top Pill */}
+          <div className="inline-flex items-center gap-2 px-3 sm:px-3.5 py-1 rounded-full bg-blue-500/15 border border-blue-400/30 text-blue-200 text-[11px] sm:text-xs font-bold backdrop-blur-md shadow-xs">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-            <span>Corporate Placement & Mock Test Section</span>
+            <span className="tracking-wide uppercase text-[10px] sm:text-[11px]">Corporate Campus Placement Arena</span>
           </div>
 
-          <h2 className="text-xl sm:text-2xl font-black tracking-tight">
-            Top Tech Companies Placement Mock Tests
-          </h2>
+          {/* Heading */}
+          <div className="space-y-2">
+            <h1 className="text-xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight leading-tight text-white">
+              Campus Placement <span className="bg-gradient-to-r from-blue-400 via-sky-300 to-indigo-300 bg-clip-text text-transparent">Mock Tests & Qualifiers</span>
+            </h1>
+            <p className="text-xs sm:text-sm lg:text-base text-slate-300 leading-relaxed max-w-2xl">
+              Sharpen your speed and accuracy with real hiring test patterns from top recruiters. Experience actual aptitude, logical reasoning, verbal ability, and technical screening questions.
+            </p>
+          </div>
 
-          <p className="text-xs sm:text-sm text-blue-100/90 leading-relaxed">
-            Practice actual aptitude, reasoning, and technical qualifiers for <strong>TCS</strong>, <strong>Infosys</strong>, <strong>HCLTech</strong>, <strong>Wipro</strong>, and <strong>Accenture</strong>. Affordable practice tests from just ₹9 or ₹12 per test, plus free access mocks!
-          </p>
+          {/* Key Value Highlights */}
+          <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 pt-1 text-[11px] sm:text-xs font-semibold text-slate-200">
+            <div className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 backdrop-blur-md border border-white/10 flex items-center gap-2 transition-all">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <span>Free Access Mocks</span>
+            </div>
+            <div className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 backdrop-blur-md border border-white/10 flex items-center gap-2 transition-all">
+              <Coins className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+              <span>Premium Tests at ₹9 & ₹12</span>
+            </div>
+            <div className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 backdrop-blur-md border border-white/10 flex items-center gap-2 transition-all">
+              <Zap className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+              <span>Instant Score & Explanations</span>
+            </div>
+            <div className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 backdrop-blur-md border border-white/10 flex items-center gap-2 transition-all">
+              <ShieldCheck className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+              <span>Standard Hiring Patterns</span>
+            </div>
+          </div>
 
-          <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px] font-semibold text-blue-200">
-            <span className="px-2.5 py-1 rounded-lg bg-white/10 backdrop-blur-xs flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-              100% Free Access Tests Available
-            </span>
-            <span className="px-2.5 py-1 rounded-lg bg-white/10 backdrop-blur-xs flex items-center gap-1.5">
-              <Tag className="w-3 h-3 text-amber-300" />
-              Per Test Fees ₹9 or ₹12
-            </span>
-            <span className="px-2.5 py-1 rounded-lg bg-white/10 backdrop-blur-xs flex items-center gap-1.5">
-              <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-              Instant Grading & Full Solutions
-            </span>
+          {/* Quick Metrics Bar */}
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 pt-2 max-w-xl text-left">
+            <div className="p-2.5 rounded-xl bg-slate-900/60 border border-slate-700/60 backdrop-blur-sm">
+              <div className="text-[10px] sm:text-[11px] text-slate-400 uppercase font-bold tracking-wider">Available Tests</div>
+              <div className="text-base sm:text-xl font-black text-white mt-0.5">{tests.length} Mocks</div>
+            </div>
+            <div className="p-2.5 rounded-xl bg-slate-900/60 border border-slate-700/60 backdrop-blur-sm">
+              <div className="text-[10px] sm:text-[11px] text-emerald-400 uppercase font-bold tracking-wider">Free Mocks</div>
+              <div className="text-base sm:text-xl font-black text-emerald-300 mt-0.5">{freeCount} Free</div>
+            </div>
+            <div className="p-2.5 rounded-xl bg-slate-900/60 border border-slate-700/60 backdrop-blur-sm">
+              <div className="text-[10px] sm:text-[11px] text-amber-400 uppercase font-bold tracking-wider">Starting At</div>
+              <div className="text-base sm:text-xl font-black text-amber-300 mt-0.5">₹9 Only</div>
+            </div>
+            <div className="hidden sm:block p-2.5 rounded-xl bg-slate-900/60 border border-slate-700/60 backdrop-blur-sm">
+              <div className="text-[10px] sm:text-[11px] text-blue-400 uppercase font-bold tracking-wider">Completed</div>
+              <div className="text-base sm:text-xl font-black text-blue-300 mt-0.5">{attemptedCount} Taken</div>
+            </div>
           </div>
         </div>
-
-        {/* Subtle decorative circles */}
-        <div className="absolute -right-12 -bottom-12 w-64 h-64 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
-        <div className="absolute right-24 -top-12 w-48 h-48 bg-purple-500/10 rounded-full blur-2xl pointer-events-none" />
       </div>
 
-      {/* Filter & Search Bar */}
-      <div className="bg-white dark:bg-[#111C31] p-4 rounded-xl border border-[#E2E8F0] dark:border-[#263449] space-y-3.5 shadow-2xs">
-        {/* Company Filter Tabs */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none touch-pan-x">
-          <button
-            onClick={() => setSelectedCompany("all")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer ${
-              selectedCompany === "all"
-                ? "bg-[#2563EB] text-white shadow-xs"
-                : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
-            }`}
-          >
-            All Companies ({tests.length})
-          </button>
+      {/* ═══════ FILTER & SEARCH COMMAND CENTER ═══════ */}
+      <div className="bg-white dark:bg-[#111C31] p-4 sm:p-5 rounded-2xl border border-[#E2E8F0] dark:border-[#263449] space-y-4 shadow-sm">
+        
+        {/* Company Pills Selector with Monograms */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
+            <div className="flex items-center gap-1.5">
+              <Building2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+              <span>Select Recruiting Company</span>
+            </div>
+            <span className="text-[11px] font-normal text-slate-500">
+              {selectedCompany === "all" ? "Showing all companies" : `Filtered by ${selectedCompany.toUpperCase()}`}
+            </span>
+          </div>
 
-          {companies
-            .filter((c) => c.slug !== "all")
-            .map((comp) => (
-              <button
-                key={comp.slug}
-                onClick={() => setSelectedCompany(comp.slug)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${
-                  selectedCompany === comp.slug
-                    ? "bg-[#2563EB] text-white shadow-xs"
-                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
-                }`}
-              >
-                <span>{comp.name}</span>
-                <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-                  selectedCompany === comp.slug
-                    ? "bg-white/20 text-white"
-                    : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300"
-                }`}>
-                  {comp.count}
-                </span>
-              </button>
-            ))}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none touch-pan-x">
+            <button
+              onClick={() => setSelectedCompany("all")}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-2 border ${
+                selectedCompany === "all"
+                  ? "bg-blue-600 border-blue-600 text-white shadow-sm ring-2 ring-blue-500/20"
+                  : "bg-slate-50 dark:bg-[#17243A] border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-blue-400/50"
+              }`}
+            >
+              <Compass className="w-3.5 h-3.5" />
+              <span>All Companies</span>
+              <span className={`px-1.5 py-0.2 rounded-md text-[10px] ${
+                selectedCompany === "all" ? "bg-white/20 text-white" : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300"
+              }`}>
+                {tests.length}
+              </span>
+            </button>
+
+            {companies
+              .filter((c) => c.slug !== "all")
+              .map((comp) => {
+                const isSelected = selectedCompany === comp.slug;
+                return (
+                  <button
+                    key={comp.slug}
+                    onClick={() => setSelectedCompany(comp.slug)}
+                    className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 cursor-pointer border ${
+                      isSelected
+                        ? "bg-blue-600 border-blue-600 text-white shadow-sm ring-2 ring-blue-500/20"
+                        : "bg-slate-50 dark:bg-[#17243A] border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-blue-400/50"
+                    }`}
+                  >
+                    <span className={`w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-black uppercase ${
+                      isSelected ? "bg-white/20 text-white" : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300"
+                    }`}>
+                      {comp.name.slice(0, 2)}
+                    </span>
+                    <span>{comp.name}</span>
+                    <span className={`px-1.5 py-0.2 rounded-md text-[10px] ${
+                      isSelected ? "bg-white/20 text-white" : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300"
+                    }`}>
+                      {comp.count}
+                    </span>
+                  </button>
+                );
+              })}
+          </div>
         </div>
 
-        {/* Secondary Search & Price Filters */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1 border-t border-slate-100 dark:border-slate-800/80">
-          <div className="relative flex-1 max-w-md">
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+        {/* Secondary Search & Price & Difficulty Filters */}
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 pt-3 border-t border-slate-100 dark:border-slate-800/80">
+          
+          {/* Search Box */}
+          <div className="relative flex-1 max-w-lg">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Search tests, companies, or topics (e.g. TCS NQT, Aptitude)..."
+              placeholder="Search by title, topic, or company (e.g. TCS NQT, Quantitative, Infosys)..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-[#15233D] border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full pl-10 pr-9 py-2 text-xs bg-slate-50 dark:bg-[#15233D] border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all"
             />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-full"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
 
-          <div className="flex items-center gap-1.5 self-end sm:self-auto">
-            <span className="text-[11px] font-semibold text-slate-400">Price:</span>
-            <button
-              onClick={() => setPriceFilter("all")}
-              className={`px-2.5 py-1 rounded text-xs font-semibold cursor-pointer ${
-                priceFilter === "all"
-                  ? "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 font-bold"
-                  : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
-              }`}
+          {/* Filter Toggles Row */}
+          <div className="flex flex-wrap items-center gap-2">
+            
+            {/* Price Filter Segmented Pill */}
+            <div className="p-1 rounded-xl bg-slate-100 dark:bg-[#15233D] border border-slate-200 dark:border-slate-800 flex items-center gap-0.5 text-xs">
+              <button
+                type="button"
+                onClick={() => setPriceFilter("all")}
+                className={`px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer ${
+                  priceFilter === "all"
+                    ? "bg-white dark:bg-[#1E293B] text-slate-900 dark:text-white shadow-2xs"
+                    : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+                }`}
+              >
+                All
+              </button>
+              <button
+                type="button"
+                onClick={() => setPriceFilter("free")}
+                className={`px-2.5 py-1 rounded-lg font-bold transition-all flex items-center gap-1 cursor-pointer ${
+                  priceFilter === "free"
+                    ? "bg-emerald-600 text-white shadow-2xs"
+                    : "text-emerald-700 dark:text-emerald-400 hover:text-emerald-800"
+                }`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                <span>Free Mocks</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setPriceFilter("paid")}
+                className={`px-2.5 py-1 rounded-lg font-bold transition-all flex items-center gap-1 cursor-pointer ${
+                  priceFilter === "paid"
+                    ? "bg-amber-500 text-slate-950 shadow-2xs"
+                    : "text-amber-700 dark:text-amber-400 hover:text-amber-800"
+                }`}
+              >
+                <Tag className="w-3 h-3" />
+                <span>₹9 / ₹12</span>
+              </button>
+            </div>
+
+            {/* Difficulty Filter */}
+            <select
+              value={difficultyFilter}
+              onChange={(e) => setDifficultyFilter(e.target.value)}
+              className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-[#15233D] border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/30 cursor-pointer"
             >
-              All
-            </button>
-            <button
-              onClick={() => setPriceFilter("free")}
-              className={`px-2.5 py-1 rounded text-xs font-semibold cursor-pointer ${
-                priceFilter === "free"
-                  ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-bold"
-                  : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
-              }`}
-            >
-              Free Access
-            </button>
-            <button
-              onClick={() => setPriceFilter("paid")}
-              className={`px-2.5 py-1 rounded text-xs font-semibold cursor-pointer ${
-                priceFilter === "paid"
-                  ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 font-bold"
-                  : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
-              }`}
-            >
-              Paid (₹9 - ₹12)
-            </button>
+              <option value="all">All Levels</option>
+              <option value="easy">Easy Level</option>
+              <option value="medium">Medium Level</option>
+              <option value="hard">Hard / Advanced</option>
+            </select>
           </div>
+        </div>
+
+        {/* Search Results Summary */}
+        <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 pt-1">
+          <div>
+            Showing <strong className="text-slate-800 dark:text-slate-200">{filteredTests.length}</strong> of {tests.length} mock tests
+          </div>
+          {(selectedCompany !== "all" || priceFilter !== "all" || difficultyFilter !== "all" || searchQuery) && (
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedCompany("all");
+                setPriceFilter("all");
+                setDifficultyFilter("all");
+                setSearchQuery("");
+              }}
+              className="text-blue-600 dark:text-blue-400 hover:underline font-semibold flex items-center gap-1 cursor-pointer"
+            >
+              <RotateCcw className="w-3 h-3" />
+              <span>Reset All Filters</span>
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Tests Grid */}
+      {/* ═══════ MOCK TESTS CATALOG GRID ═══════ */}
       {loading ? (
-        <div className="py-20 text-center space-y-3">
-          <div className="w-9 h-9 border-3 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-xs font-semibold text-slate-500">Loading placement tests catalog...</p>
+        <div className="py-24 text-center space-y-4">
+          <div className="w-10 h-10 border-3 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-xs font-bold text-slate-600 dark:text-slate-400">Loading placement tests catalog...</p>
         </div>
       ) : filteredTests.length === 0 ? (
-        <div className="bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-xl p-12 text-center space-y-3">
-          <Building2 className="w-10 h-10 text-slate-400 mx-auto opacity-50" />
-          <h4 className="font-bold text-base text-slate-900 dark:text-white">No Placement Tests Found</h4>
-          <p className="text-xs text-slate-500 max-w-sm mx-auto">
-            No tests matching your current filter criteria. Try resetting the filters or searching for another company.
+        <div className="bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-2xl p-12 sm:p-16 text-center space-y-3.5 shadow-xs">
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center">
+            <Building2 className="w-7 h-7" />
+          </div>
+          <h3 className="font-bold text-base text-slate-900 dark:text-white">No Placement Tests Found</h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+            No mock tests match your current search or filter parameters. Try clearing your search keyword or switching companies.
           </p>
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedCompany("all");
+              setPriceFilter("all");
+              setDifficultyFilter("all");
+              setSearchQuery("");
+            }}
+            className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs cursor-pointer inline-flex items-center gap-1.5"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>Show All Tests</span>
+          </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
           {filteredTests.map((test) => {
-            const theme = COMPANY_THEMES[test.company_slug.toLowerCase()] || {
-              bgGradient: "from-slate-800 to-slate-900",
-              badgeColor: "bg-slate-100 text-slate-800 border-slate-300",
-              accentColor: "#2563EB"
-            };
-
+            const theme = COMPANY_THEMES[test.company_slug.toLowerCase()] || DEFAULT_THEME;
             const isProcessing = processingId === test.id;
 
             return (
               <div
                 key={test.id}
-                className="bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-2xl overflow-hidden shadow-2xs hover:shadow-md hover:border-[#2563EB]/40 transition-all flex flex-col justify-between"
+                className="group bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-2xl sm:rounded-3xl overflow-hidden shadow-xs hover:shadow-xl hover:border-blue-500/50 dark:hover:border-blue-500/50 transition-all duration-300 flex flex-col justify-between"
               >
-                {/* Card Header with Company Band */}
                 <div>
-                  <div className={`p-4 bg-gradient-to-r ${theme.bgGradient} text-white flex items-center justify-between gap-2`}>
-                    <div className="flex items-center gap-2">
-                      <span className="w-7 h-7 rounded-lg bg-white/20 backdrop-blur-xs flex items-center justify-center font-black text-xs">
-                        {test.company_name.slice(0, 3).toUpperCase()}
-                      </span>
-                      <span className="font-bold text-xs tracking-wide">
-                        {test.company_name}
-                      </span>
-                    </div>
+                  {/* Top Header Ribbon with Company Theme */}
+                  <div className={`p-4 sm:p-5 bg-gradient-to-r ${theme.bgGradient} text-white relative overflow-hidden`}>
+                    
+                    {/* Decorative shimmer line */}
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-xl pointer-events-none" />
 
-                    {/* Price Tag Badge */}
-                    <div>
-                      {test.is_free ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500 text-white shadow-2xs">
-                          <Check className="w-3 h-3" />
-                          <span>FREE ACCESS</span>
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-amber-400 text-amber-950 shadow-2xs">
-                          <Tag className="w-3 h-3" />
-                          <span>₹{test.price_inr} ONLY</span>
-                        </span>
-                      )}
+                    <div className="relative z-10 flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-9 h-9 rounded-xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center font-black text-xs shrink-0 shadow-xs">
+                          {test.company_name.slice(0, 3).toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="font-extrabold text-sm tracking-wide truncate">
+                            {test.company_name}
+                          </div>
+                          <div className="text-[10px] text-white/70 font-medium truncate">
+                            {theme.patternType}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Price Badge */}
+                      <div className="shrink-0">
+                        {test.is_free ? (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black bg-emerald-500 text-white shadow-xs">
+                            <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                            <span>FREE MOCK</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-xs">
+                            <Tag className="w-3 h-3 text-slate-900" />
+                            <span>₹{test.price_inr} ONLY</span>
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
 
-                  {/* Card Content */}
-                  <div className="p-4 space-y-3">
+                  {/* Card Main Body */}
+                  <div className="p-4 sm:p-5 space-y-4">
+                    
+                    {/* Category & Difficulty Tag */}
+                    <div className="flex items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-wider">
+                      <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                        {test.category}
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-md font-extrabold ${
+                        test.difficulty.toLowerCase() === "easy"
+                          ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300"
+                          : test.difficulty.toLowerCase() === "hard"
+                          ? "bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300"
+                          : "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300"
+                      }`}>
+                        {test.difficulty}
+                      </span>
+                    </div>
+
+                    {/* Test Title & Description */}
                     <div>
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-                        {test.category} • {test.difficulty}
-                      </div>
-                      <h4 className="font-bold text-sm text-[#111827] dark:text-[#F1F5F9] leading-snug line-clamp-2">
+                      <h3 className="font-bold text-sm sm:text-base text-[#111827] dark:text-[#F1F5F9] leading-snug line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                         {test.title}
-                      </h4>
+                      </h3>
                       {test.description && (
-                        <p className="text-xs text-[#64748B] dark:text-[#A3B1C6] mt-1 line-clamp-2 leading-relaxed">
+                        <p className="text-xs text-[#64748B] dark:text-[#A3B1C6] mt-1.5 line-clamp-2 leading-relaxed">
                           {test.description}
                         </p>
                       )}
                     </div>
 
-                    {/* Meta Specs */}
-                    <div className="grid grid-cols-3 gap-2 py-2 px-3 rounded-xl bg-slate-50 dark:bg-[#15233D] text-[11px]">
+                    {/* Specifications Grid */}
+                    <div className="grid grid-cols-3 gap-2 py-2.5 px-3 rounded-xl bg-slate-50 dark:bg-[#15233D] border border-slate-100 dark:border-slate-800/80 text-[11px]">
                       <div>
-                        <span className="text-slate-400 block text-[10px]">Questions</span>
-                        <strong className="text-slate-800 dark:text-slate-200">{test.total_questions} Qs</strong>
+                        <span className="text-slate-400 dark:text-slate-500 block text-[10px] font-medium flex items-center gap-1">
+                          <FileText className="w-3 h-3" />
+                          <span>Questions</span>
+                        </span>
+                        <strong className="text-slate-800 dark:text-slate-200 font-bold block mt-0.5">
+                          {test.total_questions} Qs
+                        </strong>
                       </div>
                       <div>
-                        <span className="text-slate-400 block text-[10px]">Duration</span>
-                        <strong className="text-slate-800 dark:text-slate-200">{test.duration_minutes} Mins</strong>
+                        <span className="text-slate-400 dark:text-slate-500 block text-[10px] font-medium flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          <span>Duration</span>
+                        </span>
+                        <strong className="text-slate-800 dark:text-slate-200 font-bold block mt-0.5">
+                          {test.duration_minutes} Mins
+                        </strong>
                       </div>
                       <div>
-                        <span className="text-slate-400 block text-[10px]">Pass Mark</span>
-                        <strong className="text-slate-800 dark:text-slate-200">{test.pass_percentage}%</strong>
+                        <span className="text-slate-400 dark:text-slate-500 block text-[10px] font-medium flex items-center gap-1">
+                          <Award className="w-3 h-3" />
+                          <span>Cutoff</span>
+                        </span>
+                        <strong className="text-slate-800 dark:text-slate-200 font-bold block mt-0.5">
+                          {test.pass_percentage}%
+                        </strong>
                       </div>
                     </div>
 
-                    {/* Status Pill if Attempted / Unlocked */}
-                    <div className="flex items-center justify-between text-[11px]">
-                      {test.has_attempted ? (
-                        <span className={`inline-flex items-center gap-1 font-bold ${
-                          test.last_passed ? "text-emerald-600" : "text-amber-600"
-                        }`}>
-                          <Award className="w-3.5 h-3.5" />
-                          <span>Last Score: {test.last_score} ({test.last_percentage}%)</span>
+                    {/* Status Strip if previously attempted */}
+                    {test.has_attempted ? (
+                      <div className={`p-2.5 rounded-xl border flex items-center justify-between text-xs font-bold ${
+                        test.last_passed
+                          ? "bg-emerald-50/70 border-emerald-200 text-emerald-800 dark:bg-emerald-950/30 dark:border-emerald-800/60 dark:text-emerald-300"
+                          : "bg-amber-50/70 border-amber-200 text-amber-800 dark:bg-amber-950/30 dark:border-amber-800/60 dark:text-amber-300"
+                      }`}>
+                        <div className="flex items-center gap-1.5">
+                          <Award className="w-4 h-4 shrink-0" />
+                          <span>Last Score: {test.last_score} / {test.total_questions} ({test.last_percentage}%)</span>
+                        </div>
+                        <span className="text-[10px] uppercase tracking-wide">
+                          {test.last_passed ? "✓ Passed" : "Needs Review"}
                         </span>
-                      ) : test.is_unlocked ? (
-                        <span className="inline-flex items-center gap-1 text-emerald-600 font-bold">
+                      </div>
+                    ) : test.is_unlocked ? (
+                      <div className="flex items-center justify-between text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                        <div className="flex items-center gap-1.5">
                           <CheckCircle2 className="w-3.5 h-3.5" />
-                          <span>Unlocked & Ready</span>
-                        </span>
-                      ) : (
-                        <span className="text-slate-400 flex items-center gap-1">
+                          <span>Unlocked & Ready to Attempt</span>
+                        </div>
+                        <span className="text-[10px] text-slate-400">{test.attempts_count} taken</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                        <div className="flex items-center gap-1.5">
                           <Lock className="w-3 h-3" />
-                          <span>Locked</span>
-                        </span>
-                      )}
-
-                      <span className="text-slate-400">
-                        {test.attempts_count} taken
-                      </span>
-                    </div>
+                          <span>Practice Test Locked</span>
+                        </div>
+                        <span className="text-[10px]">{test.attempts_count} candidates enrolled</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                {/* Card Action Button */}
-                <div className="p-4 pt-0">
+                {/* Card Action Button Section */}
+                <div className="p-4 sm:p-5 pt-0">
                   {test.has_attempted ? (
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
                         onClick={() => setActiveTest(test)}
-                        className="flex-1 py-2 px-3 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                        className="flex-1 py-2.5 px-3 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
                       >
                         <RotateCcw className="w-3.5 h-3.5" />
                         <span>Retake</span>
@@ -541,7 +760,7 @@ export default function CompanyPlacementTests() {
                       <button
                         type="button"
                         onClick={() => setActiveTest(test)}
-                        className="flex-1 py-2 px-3 rounded-xl bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1 cursor-pointer"
+                        className="flex-1 py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
                       >
                         <span>Solutions</span>
                         <ArrowRight className="w-3.5 h-3.5" />
@@ -551,30 +770,30 @@ export default function CompanyPlacementTests() {
                     <button
                       type="button"
                       onClick={() => setActiveTest(test)}
-                      className="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
                     >
-                      <Play className="w-3.5 h-3.5" />
-                      <span>Take Test Now →</span>
+                      <Play className="w-3.5 h-3.5 fill-current" />
+                      <span>Start Assessment Now →</span>
                     </button>
                   ) : test.is_free ? (
                     <button
                       type="button"
                       disabled={isProcessing}
                       onClick={() => handleStartFree(test)}
-                      className="w-full py-2.5 px-4 rounded-xl bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60"
+                      className="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
                     >
-                      <Play className="w-3.5 h-3.5" />
-                      <span>{isProcessing ? "Unlocking..." : "Start Free Test →"}</span>
+                      <Play className="w-3.5 h-3.5 fill-current" />
+                      <span>{isProcessing ? "Preparing Test..." : "Start Free Mock Test →"}</span>
                     </button>
                   ) : (
                     <button
                       type="button"
                       disabled={isProcessing}
                       onClick={() => handleUnlockPaid(test)}
-                      className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60"
+                      className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white text-xs font-extrabold transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
                     >
-                      <Coins className="w-3.5 h-3.5" />
-                      <span>{isProcessing ? "Processing..." : `Unlock Test for ₹${test.price_inr} →`}</span>
+                      <ShieldCheck className="w-4 h-4 text-amber-200" />
+                      <span>{isProcessing ? "Initializing Checkout..." : `Unlock Placement Test for ₹${test.price_inr} →`}</span>
                     </button>
                   )}
                 </div>
@@ -584,7 +803,7 @@ export default function CompanyPlacementTests() {
         </div>
       )}
 
-      {/* Interactive In-Browser Test Modal */}
+      {/* ═══════ INTERACTIVE IN-BROWSER TEST MODAL ═══════ */}
       {activeTest && (
         <MockTestTakingModal
           testId={activeTest.id}

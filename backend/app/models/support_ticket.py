@@ -18,7 +18,7 @@ class SupportTicket(TimeStampedModel):
     status = Column(String(50), default="New", index=True)  # "New", "Open", "In Progress", "Waiting for User", "Resolved", "Closed"
     message = Column(Text, nullable=False)
     reference_code = Column(String(100), nullable=True)
-    company_recipient = Column(String(255), default="support@dpramp.com")
+    company_recipient = Column(String(255), default="support@testoraquiz.com")
     
     # Admin Assignment & Resolution
     assigned_to_id = Column(String(36), ForeignKey("users.id"), nullable=True)

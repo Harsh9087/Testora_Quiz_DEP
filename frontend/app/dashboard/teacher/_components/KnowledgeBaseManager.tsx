@@ -34,14 +34,14 @@ export default function KnowledgeBaseManager({ documents, token, onRefresh }: Kn
   const [deletingDocId, setDeletingDocId] = useState<string | null>(null);
   const [availableSubjects, setAvailableSubjects] = useState<string[]>([]);
 
+  const docList = Array.isArray(documents) ? documents.filter(Boolean) : [];
+
   // Extract unique subjects from documents
   useEffect(() => {
-    if (Array.isArray(documents)) {
-      const subs = Array.from(new Set(documents.map((d) => d.subject_id).filter(Boolean)));
-      setAvailableSubjects(subs as string[]);
-      if (subs.length > 0 && !kbSubjectId) {
-        setKbSubjectId(subs[0] as string);
-      }
+    const subs = Array.from(new Set(docList.map((d) => d?.subject_id).filter(Boolean)));
+    setAvailableSubjects(subs as string[]);
+    if (subs.length > 0 && !kbSubjectId) {
+      setKbSubjectId(subs[0] as string);
     }
   }, [documents]);
 
@@ -168,20 +168,24 @@ export default function KnowledgeBaseManager({ documents, token, onRefresh }: Kn
               {availableSubjects.length > 0 && (
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <span className="text-[10px] text-[#64748B] dark:text-[#A3B1C6]">Existing:</span>
-                  {availableSubjects.map((sub) => (
-                    <button
-                      key={sub}
-                      type="button"
-                      onClick={() => setKbSubjectId(sub)}
-                      className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-all cursor-pointer ${
-                        kbSubjectId.toLowerCase() === sub.toLowerCase()
-                          ? "bg-blue-600 text-white"
-                          : "bg-[#F1F5F9] dark:bg-[#17243A] text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9]"
-                      }`}
-                    >
-                      {sub}
-                    </button>
-                  ))}
+                  {availableSubjects.map((sub, idx) => {
+                    const str = typeof sub === "string" ? sub : ((sub as any)?.subject_id || (sub as any)?.name || String(sub || ""));
+                    if (!str) return null;
+                    return (
+                      <button
+                        key={`sub-tag-${str}-${idx}`}
+                        type="button"
+                        onClick={() => setKbSubjectId(str)}
+                        className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-all cursor-pointer ${
+                          kbSubjectId.toLowerCase() === str.toLowerCase()
+                            ? "bg-blue-600 text-white"
+                            : "bg-[#F1F5F9] dark:bg-[#17243A] text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9]"
+                        }`}
+                      >
+                        {str}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -269,12 +273,12 @@ export default function KnowledgeBaseManager({ documents, token, onRefresh }: Kn
             <h2 className="text-sm font-bold text-[#111827] dark:text-[#F1F5F9]">Indexed Knowledge Sources</h2>
           </div>
           <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
-            {documents.length} sources active
+            {docList.length} sources active
           </span>
         </div>
 
         <div className="divide-y divide-[#E2E8F0] dark:divide-[#263449] border border-[#E2E8F0] dark:border-[#263449] rounded-xl overflow-hidden max-h-[460px] overflow-y-auto">
-          {documents.length === 0 ? (
+          {docList.length === 0 ? (
             <div className="p-10 text-center space-y-2">
               <BookOpen className="h-8 w-8 mx-auto text-[#64748B]/40" />
               <div className="text-xs font-semibold text-[#64748B] dark:text-[#A3B1C6]">
@@ -285,7 +289,7 @@ export default function KnowledgeBaseManager({ documents, token, onRefresh }: Kn
               </p>
             </div>
           ) : (
-            documents.map((doc) => (
+            docList.map((doc) => (
               <div 
                 key={doc.id} 
                 className="p-3 sm:p-3.5 flex items-center justify-between text-xs hover:bg-[#F8FAFC] dark:hover:bg-[#17243A] transition-colors gap-2.5 sm:gap-3"

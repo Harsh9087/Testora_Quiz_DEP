@@ -328,6 +328,67 @@ class EmailService:
         logger.info(f"📧 [EMAIL DISPATCHED] Exam credentials email dispatched for candidate {student_name} (email={email}, exam_code={exam_code}, username={username})")
         self._send_smtp_email(email, subject, html_content)
 
+    def send_mock_test_assignment_email(
+        self,
+        student_name: str,
+        email: str,
+        test_title: str,
+        teacher_name: str,
+        duration_minutes: int,
+        share_url: str,
+        start_time: Optional[Union[datetime, str]] = None,
+        end_time: Optional[Union[datetime, str]] = None
+    ) -> bool:
+        """Dispatches an email to student containing mock test link and assignment briefing."""
+        subject = f"[Testora] Mock Test Assigned: {test_title}"
+
+        schedule_html = ""
+        if end_time:
+            end_str = format_ist_datetime(end_time)
+            schedule_html = f"""
+            <div style="background-color: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 8px; padding: 12px 16px; margin: 15px 0; font-size: 13px;">
+                <p style="margin: 3px 0; color: #1E40AF; font-weight: bold;">Assignment Timeline (IST):</p>
+                <p style="margin: 3px 0; color: #1E3A8A;"><b>Deadline / Closes:</b> {end_str}</p>
+            </div>
+            """
+
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <body style="font-family: Arial, sans-serif; background-color: #F8FAFC; padding: 20px; color: #0F172A;">
+            <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; padding: 30px; border: 1px solid #E2E8F0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                <div style="display: flex; align-items: center; margin-bottom: 20px;">
+                    <div style="background: #2563EB; color: #ffffff; font-weight: 900; font-size: 18px; width: 36px; height: 36px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; text-align: center; line-height: 36px; margin-right: 10px;">T</div>
+                    <span style="font-size: 18px; font-weight: 800; color: #0F172A;">Testora <span style="color: #2563EB;">Quiz</span></span>
+                </div>
+                <h2 style="color: #1E3A8A; margin-top: 0;">Your Mock Test is Ready</h2>
+                <p>Hello <b>{student_name}</b>,</p>
+                <p>Your instructor <b>{teacher_name}</b> has assigned you a mock test on Testora:</p>
+                
+                <div style="background-color: #F1F5F9; border: 1px solid #CBD5E1; border-radius: 12px; padding: 20px; margin: 20px 0;">
+                    <p style="margin: 5px 0; font-size: 16px; font-weight: bold; color: #0F172A;">{test_title}</p>
+                    <p style="margin: 5px 0; font-size: 13px; color: #475569;"><b>Duration:</b> {duration_minutes} Minutes</p>
+                </div>
+                
+                {schedule_html}
+
+                <p>Click the secure link below to start your mock examination:</p>
+                <p style="margin: 25px 0;">
+                    <a href="{share_url}" style="display: inline-block; background: #2563EB; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 12px; font-weight: bold; font-size: 14px; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);">Start Mock Test Now &rarr;</a>
+                </p>
+                
+                <p style="font-size: 12px; color: #64748B;">Or copy and paste this link in your browser:<br/><a href="{share_url}" style="color: #2563EB; word-break: break-all;">{share_url}</a></p>
+                
+                <hr style="border: none; border-top: 1px solid #E2E8F0; margin-top: 30px;" />
+                <p style="font-size: 11px; color: #94A3B8;">Testora Education &amp; Examination Portal • Direct Student Assessment</p>
+            </div>
+        </body>
+        </html>
+        """
+
+        logger.info(f"📧 [MOCK TEST EMAIL DISPATCHED] Mock test assignment email sent to {student_name} ({email}) for '{test_title}'")
+        return self._send_smtp_email(email, subject, html_content)
+
     def send_exam_reminder_15min_email(
         self, 
         student_name: str, 
@@ -386,8 +447,8 @@ class EmailService:
         message: str,
         reference_code: str = ""
     ):
-        """Dispatches support ticket confirmation to the user and alert to DPRAMP Tech Solutions support desk."""
-        user_subject = f"[DPRAMP Support] Ticket Received: {ticket_code} — {subject}"
+        """Dispatches support ticket confirmation to the user and alert to Testora Quiz support desk."""
+        user_subject = f"[Testora Support] Ticket Received: {ticket_code} — {subject}"
         ref_row = f'<tr><td style="padding: 6px 0; color: #64748B; font-weight: 600;">Exam / Reference:</td><td style="padding: 6px 0; color: #1E293B;">{reference_code}</td></tr>' if reference_code else ''
         
         user_html = f"""<!DOCTYPE html>
@@ -396,7 +457,7 @@ class EmailService:
   <div style="max-width: 620px; margin: 0 auto; background: #ffffff; border-radius: 16px; border: 1px solid #E2E8F0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
     <div style="background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%); padding: 28px; text-align: left;">
       <div style="display: inline-block; background: rgba(255,255,255,0.15); color: #FFFFFF; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 10px; border-radius: 9999px; margin-bottom: 8px;">
-        DPRAMP Tech Solutions • Official Support Desk
+        Testora Quiz • Official Support Desk
       </div>
       <h1 style="color: #FFFFFF; margin: 0 0 6px 0; font-size: 22px; font-weight: 700;">We Have Received Your Ticket</h1>
       <p style="color: #DBEAFE; margin: 0; font-size: 14px;">Ticket Reference: <strong style="color: #FFFFFF;">{ticket_code}</strong></p>
@@ -405,7 +466,7 @@ class EmailService:
     <div style="padding: 28px;">
       <p style="font-size: 15px; line-height: 1.6; margin-top: 0;">Dear <strong>{name}</strong>,</p>
       <p style="font-size: 14px; line-height: 1.6; color: #334155;">
-        Thank you for contacting <strong>DPRAMP Tech Solutions</strong>. We have logged your request into our customer support queue. Our dedicated technical support specialists will review your issue and respond directly to this email shortly.
+        Thank you for contacting <strong>Testora Quiz Support</strong>. We have logged your request into our customer support queue. Our dedicated technical support specialists will review your issue and respond directly to this email shortly.
       </p>
 
       <div style="background: #F1F5F9; border-radius: 12px; border: 1px solid #E2E8F0; padding: 18px 20px; margin: 20px 0;">
@@ -440,22 +501,22 @@ class EmailService:
       </div>
 
       <p style="font-size: 13px; color: #64748B; line-height: 1.6;">
-        If you have any urgent attachments or updates, you can reply directly to this email or reach our support helpline at <a href="mailto:support@dpramp.com" style="color: #2563EB; text-decoration: none; font-weight: 600;">support@dpramp.com</a>.
+        If you have any urgent attachments or updates, you can reply directly to this email or reach our support helpline at <a href="mailto:support@testoraquiz.com" style="color: #2563EB; text-decoration: none; font-weight: 600;">support@testoraquiz.com</a>.
       </p>
 
       <hr style="border: none; border-top: 1px solid #E2E8F0; margin: 24px 0;" />
 
       <div>
-        <div style="font-weight: 700; color: #0F172A; font-size: 13px;">DPRAMP Tech Solutions</div>
+        <div style="font-weight: 700; color: #0F172A; font-size: 13px;">Testora Quiz Support</div>
         <div style="color: #64748B; font-size: 11px; margin-top: 2px;">AI-Powered Assessment & Educational Infrastructure</div>
-        <div style="color: #64748B; font-size: 11px;">Support Desk: support@dpramp.com • Hours: Mon–Sat, 9:00 AM – 8:00 PM IST</div>
+        <div style="color: #64748B; font-size: 11px;">Support Desk: support@testoraquiz.com • Hours: Mon–Sat, 9:00 AM – 8:00 PM IST</div>
       </div>
     </div>
   </div>
 </body>
 </html>"""
 
-        admin_subject = f"🚨 [DPRAMP TICKET {ticket_code}] {name} ({user_email}) — {subject}"
+        admin_subject = f"🚨 [TESTORA TICKET {ticket_code}] {name} ({user_email}) — {subject}"
         ref_admin_p = f"<p><strong>Exam/Ref Code:</strong> {reference_code}</p>" if reference_code else ""
         
         admin_html = f"""<!DOCTYPE html>
@@ -465,7 +526,7 @@ class EmailService:
     <div style="border-bottom: 2px solid #E2E8F0; padding-bottom: 12px; margin-bottom: 16px;">
       <span style="background: #DC2626; color: #ffffff; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">NEW SUPPORT TICKET</span>
       <h2 style="margin: 8px 0 0 0; color: #0F172A;">Ticket: {ticket_code}</h2>
-      <p style="margin: 4px 0 0 0; color: #64748B; font-size: 13px;">DPRAMP Tech Solutions Customer Support Dispatch</p>
+      <p style="margin: 4px 0 0 0; color: #64748B; font-size: 13px;">Testora Quiz Customer Support Dispatch</p>
     </div>
     
     <p><strong>Customer Name:</strong> {name}</p>
@@ -490,7 +551,7 @@ class EmailService:
         self._send_smtp_email(user_email, user_subject, user_html)
 
         # 2. Send dispatch alert to company support
-        company_recipients = ["support@dpramp.com"]
+        company_recipients = ["support@testoraquiz.com"]
         if user_email and "shaharerohit47@gmail.com" not in company_recipients and user_email != "shaharerohit47@gmail.com":
             company_recipients.append("shaharerohit47@gmail.com")
 

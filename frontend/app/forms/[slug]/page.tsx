@@ -421,7 +421,7 @@ export default function StudentRegistrationPublicPage() {
       </div>
 
       {/* Pinned Bottom Footer */}
-      <footer className="w-full text-center text-[11px] text-[#64748B] dark:text-[#A3B1C6] py-3 mt-auto shrink-0 border-t border-[#E2E8F0]/40 dark:border-[#263449]/40">
+      <footer className="w-full text-center text-[11px] text-[#64748B] dark:text-[#A3B1C6] pt-4 pb-8 sm:pb-4 mt-auto shrink-0 border-t border-[#E2E8F0]/40 dark:border-[#263449]/40">
         <p>Powered by <span className="font-semibold text-[#111827] dark:text-[#F1F5F9]">TestoraQuiz</span> — Automated Examination & Student Management</p>
       </footer>
     </div>

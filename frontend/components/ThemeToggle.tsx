@@ -74,24 +74,20 @@ export default function ThemeToggle({ className = "" }: ThemeToggleProps) {
     applyThemePreference(nextMode);
   };
 
-  if (!mounted) {
-    return (
-      <div className={`w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 animate-pulse ${className}`} />
-    );
-  }
+  const isDark = mounted ? currentMode === "dark" : false;
 
   return (
     <button
       type="button"
       onClick={handleDirectToggle}
-      className={`flex items-center justify-center w-8 h-8 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C31] text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#17243A] hover:border-blue-400 dark:hover:border-blue-500 transition-all cursor-pointer shadow-xs focus:outline-none focus:ring-2 focus:ring-blue-500/30 ${className}`}
-      title={`Current: ${currentMode === "dark" ? "Dark Mode" : "Light Mode"}. Click to switch to ${currentMode === "dark" ? "Light Mode" : "Dark Mode"}.`}
+      className={`flex items-center justify-center w-9 h-9 rounded-xl border border-slate-200/90 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all cursor-pointer shadow-xs focus:outline-none ${className}`}
+      title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
       aria-label="Toggle Dark / Light Mode"
     >
-      {currentMode === "dark" ? (
+      {isDark ? (
         <Sun className="w-4 h-4 text-amber-400 transition-transform duration-200 hover:rotate-45" />
       ) : (
-        <Moon className="w-4 h-4 text-blue-500 transition-transform duration-200 hover:-rotate-12" />
+        <Moon className="w-4 h-4 text-blue-500 dark:text-blue-400 transition-transform duration-200 hover:-rotate-12" />
       )}
     </button>
   );

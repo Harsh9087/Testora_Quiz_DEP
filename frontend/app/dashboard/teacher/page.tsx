@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuthStore } from "../../../store/authStore";
 import { useToast } from "../../../components/Toast";
 import { apiFetch, API_V1, getWebSocketUrl } from "../../../lib/api";
@@ -18,7 +19,7 @@ import {
   Lightbulb, HelpCircle, Sliders, Scale, Layers, Calculator,
   ClipboardList, Wand2, ArrowUpRight, Database,
   UserCheck, Contact, Settings, Play, AlertCircle, ShieldCheck, Eye, Key,
-  Camera, Bot, Sparkles as SparklesIcon
+  Camera, Bot, Sparkles as SparklesIcon, Award, ExternalLink, Coins
 } from "lucide-react";
 
 import StudentDirectoryManager from "./_components/StudentDirectoryManager";
@@ -35,6 +36,9 @@ import UploadKBModal from "./_components/UploadKBModal";
 import FormsRegistrationManager from "./_components/FormsRegistrationManager";
 import CustomFormsManager from "./_components/CustomFormsManager";
 import CSVImportModal from "./_components/CSVImportModal";
+import CertificateStudioModal from "./_components/CertificateStudioModal";
+import CertificateManagementDrawer from "./_components/CertificateManagementDrawer";
+import TeacherMockTestLibrary from "./_components/TeacherMockTestLibrary";
 import { fetchStudentDirectories } from "@/lib/api/studentDirectories";
 import { StudentDirectory } from "@/types/studentDirectory";
 
@@ -191,6 +195,20 @@ export default function TeacherDashboard() {
   const [paymentModalExam, setPaymentModalExam] = useState<any | null>(null);
   const [isRechargeOpen, setIsRechargeOpen] = useState(false);
   const [isCsvImportModalOpen, setIsCsvImportModalOpen] = useState(false);
+
+  // Certificate Settings State
+  const [enableCertificate, setEnableCertificate] = useState(false);
+  const [isCertStudioOpen, setIsCertStudioOpen] = useState(false);
+  const [certDrawerExam, setCertDrawerExam] = useState<{ id: string; name: string } | null>(null);
+  const [certificateConfig, setCertificateConfig] = useState<any>({
+    template_id: "testora_default",
+    passing_criteria_type: "percentage",
+    passing_criteria_value: 40,
+    institute_name: "",
+    display_marks: true,
+    display_percentage: true,
+    display_grade: true,
+  });
 
   // Form: Exam Generator
   const [examName, setExamName] = useState("");
@@ -862,6 +880,40 @@ export default function TeacherDashboard() {
 
       if (res.ok) {
         const newExam = await res.json();
+
+        // Save passing certificate configuration if enabled
+        if (enableCertificate) {
+          try {
+            await apiFetch(`/certificates/exam/${newExam.id}/config`, {
+              token,
+              method: "POST",
+              body: JSON.stringify({
+                is_enabled: true,
+                template_id: certificateConfig.template_id || "testora_default",
+                passing_criteria_type: certificateConfig.passing_criteria_type || "percentage",
+                passing_criteria_value: certificateConfig.passing_criteria_value ?? (parseFloat(examPass) || 40),
+                custom_title: certificateConfig.custom_title || null,
+                statement_template: certificateConfig.statement_template || null,
+                institute_name: certificateConfig.institute_name || workspaceName || "Testora Academy",
+                institute_logo_url: certificateConfig.institute_logo_url || null,
+                signatory_1_name: certificateConfig.signatory_1_name || null,
+                signatory_1_title: certificateConfig.signatory_1_title || null,
+                signatory_1_signature_url: certificateConfig.signatory_1_signature_url || null,
+                signatory_2_name: certificateConfig.signatory_2_name || null,
+                signatory_2_title: certificateConfig.signatory_2_title || null,
+                signatory_2_signature_url: certificateConfig.signatory_2_signature_url || null,
+                stamp_url: certificateConfig.stamp_url || null,
+                display_marks: certificateConfig.display_marks ?? true,
+                display_percentage: certificateConfig.display_percentage ?? true,
+                display_grade: certificateConfig.display_grade ?? true,
+                display_qr: true,
+              }),
+            });
+          } catch (certErr) {
+            console.warn("Notice: could not save certificate settings", certErr);
+          }
+        }
+
         showToast(`Assessment "${newExam.name}" successfully created and published!`, "success");
         if (typeof window !== "undefined") {
           localStorage.removeItem("testora_create_assessment_draft");
@@ -1063,152 +1115,180 @@ export default function TeacherDashboard() {
               </div>
             </div>
 
-            {/* Horizontal Quick-Action Toolbar (12 Core Shortcuts) - Compact & Elegant */}
-            <div className="relative bg-white dark:bg-[#111C31] border border-slate-200/90 dark:border-[#263449] rounded-2xl py-2 sm:py-3 px-1.5 xs:px-2.5 sm:px-4 shadow-xs flex items-center gap-1.5 xs:gap-2 sm:gap-3">
+            {/* Horizontal Quick-Action Toolbar (14 Core Shortcuts) - Refined, Sleek & Compact */}
+            <div className="relative bg-white dark:bg-[#111C31] border border-slate-200/90 dark:border-[#263449] rounded-xl sm:rounded-2xl py-1.5 sm:py-2.5 px-1 xs:px-2 sm:px-3 shadow-xs flex items-center gap-1 sm:gap-2">
             <button
               type="button"
               onClick={() => {
                 const el = document.getElementById("quick-toolbar-scroll");
-                if (el) el.scrollBy({ left: -200, behavior: "smooth" });
+                if (el) el.scrollBy({ left: -220, behavior: "smooth" });
               }}
-              className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-slate-200/90 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 shrink-0 shadow-2xs cursor-pointer transition-all hover:scale-105 active:scale-95"
+              className="w-6 h-6 sm:w-7 sm:h-7 rounded-full border border-slate-200/90 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 shrink-0 shadow-2xs cursor-pointer transition-all hover:scale-105 active:scale-95"
               title="Scroll Left"
               aria-label="Scroll Left"
             >
-              <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.2]" />
+              <ChevronLeft className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[2.2]" />
             </button>
 
             <div 
               id="quick-toolbar-scroll" 
-              className="flex items-start flex-1 overflow-x-auto no-scrollbar scroll-smooth gap-2 xs:gap-3 sm:gap-6 md:gap-7 py-1 px-0.5 xs:px-1"
+              className="flex items-start flex-1 overflow-x-auto no-scrollbar scroll-smooth gap-1.5 xs:gap-2 sm:gap-4 md:gap-5 py-0.5 px-0.5"
             >
               {/* 1. Create Assessment */}
               <button
                 type="button"
                 onClick={() => switchSectionTab("create")}
-                className="flex flex-col items-center gap-1.5 sm:gap-2.5 shrink-0 group cursor-pointer focus:outline-none min-w-[58px] xs:min-w-[66px] sm:min-w-[84px] text-center"
+                className="flex flex-col items-center gap-1 sm:gap-1.5 shrink-0 group cursor-pointer focus:outline-none min-w-[50px] xs:min-w-[58px] sm:min-w-[68px] text-center"
               >
-                <div className="w-8 h-8 xs:w-9 xs:h-9 sm:w-[46px] sm:h-[46px] rounded-full bg-[#1877F2] flex items-center justify-center shadow-xs group-hover:scale-110 group-hover:shadow-md active:scale-95 transition-all duration-200">
-                  <FilePlus className="w-4 h-4 xs:w-4.5 xs:h-4.5 sm:w-5 sm:h-5 text-white stroke-[2.2]" />
+                <div className="w-7 h-7 xs:w-8 xs:h-8 sm:w-[36px] sm:h-[36px] rounded-full bg-[#1877F2] flex items-center justify-center shadow-xs group-hover:scale-105 group-hover:shadow-md active:scale-95 transition-all duration-200">
+                  <FilePlus className="w-3.5 h-3.5 xs:w-4 xs:h-4 sm:w-[17px] sm:h-[17px] text-white stroke-[2.2]" />
                 </div>
-                <span className="text-[10px] xs:text-[11px] sm:text-[12px] font-medium text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 text-center leading-[1.2] max-w-[58px] xs:max-w-[68px] sm:max-w-[80px]">
+                <span className="text-[9px] xs:text-[10px] sm:text-[11px] font-medium text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 text-center leading-[1.15] max-w-[52px] xs:max-w-[60px] sm:max-w-[70px]">
                   Create<br />Assessment
                 </span>
               </button>
 
-              {/* 2. AI Question Generator */}
+              {/* 2. Mock Test Library (NEW) */}
+              <button
+                type="button"
+                onClick={() => switchSectionTab("mock-tests")}
+                className="flex flex-col items-center gap-1 sm:gap-1.5 shrink-0 group cursor-pointer focus:outline-none min-w-[50px] xs:min-w-[58px] sm:min-w-[68px] text-center"
+              >
+                <div className="w-7 h-7 xs:w-8 xs:h-8 sm:w-[36px] sm:h-[36px] rounded-full bg-[#4F46E5] flex items-center justify-center shadow-xs group-hover:scale-105 group-hover:shadow-md active:scale-95 transition-all duration-200">
+                  <GraduationCap className="w-3.5 h-3.5 xs:w-4 xs:h-4 sm:w-[17px] sm:h-[17px] text-white stroke-[2.2]" />
+                </div>
+                <span className="text-[9px] xs:text-[10px] sm:text-[11px] font-medium text-slate-800 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 text-center leading-[1.15] max-w-[52px] xs:max-w-[60px] sm:max-w-[70px]">
+                  Mock Test<br />Library
+                </span>
+              </button>
+
+              {/* 3. Certificates & Awards (NEW) */}
+              <button
+                type="button"
+                onClick={() => switchSectionTab("certificates")}
+                className="flex flex-col items-center gap-1 sm:gap-1.5 shrink-0 group cursor-pointer focus:outline-none min-w-[50px] xs:min-w-[58px] sm:min-w-[68px] text-center"
+              >
+                <div className="w-7 h-7 xs:w-8 xs:h-8 sm:w-[36px] sm:h-[36px] rounded-full bg-[#D97706] flex items-center justify-center shadow-xs group-hover:scale-105 group-hover:shadow-md active:scale-95 transition-all duration-200">
+                  <Award className="w-3.5 h-3.5 xs:w-4 xs:h-4 sm:w-[17px] sm:h-[17px] text-white stroke-[2.2]" />
+                </div>
+                <span className="text-[9px] xs:text-[10px] sm:text-[11px] font-medium text-slate-800 dark:text-slate-200 group-hover:text-amber-600 dark:group-hover:text-amber-400 text-center leading-[1.15] max-w-[52px] xs:max-w-[60px] sm:max-w-[70px]">
+                  Certificates<br />&amp; Awards
+                </span>
+              </button>
+
+              {/* 4. AI Question Generator */}
               <button
                 type="button"
                 onClick={() => switchSectionTab("create")}
-                className="flex flex-col items-center gap-1.5 sm:gap-2.5 shrink-0 group cursor-pointer focus:outline-none min-w-[58px] xs:min-w-[66px] sm:min-w-[84px] text-center"
+                className="flex flex-col items-center gap-1 sm:gap-1.5 shrink-0 group cursor-pointer focus:outline-none min-w-[50px] xs:min-w-[58px] sm:min-w-[68px] text-center"
               >
-                <div className="w-8 h-8 xs:w-9 xs:h-9 sm:w-[46px] sm:h-[46px] rounded-full bg-[#00B5B8] flex items-center justify-center shadow-xs group-hover:scale-110 group-hover:shadow-md active:scale-95 transition-all duration-200">
-                  <Wand2 className="w-4 h-4 xs:w-4.5 xs:h-4.5 sm:w-5 sm:h-5 text-white stroke-[2.2]" />
+                <div className="w-7 h-7 xs:w-8 xs:h-8 sm:w-[36px] sm:h-[36px] rounded-full bg-[#00B5B8] flex items-center justify-center shadow-xs group-hover:scale-105 group-hover:shadow-md active:scale-95 transition-all duration-200">
+                  <Wand2 className="w-3.5 h-3.5 xs:w-4 xs:h-4 sm:w-[17px] sm:h-[17px] text-white stroke-[2.2]" />
                 </div>
-                <span className="text-[10px] xs:text-[11px] sm:text-[12px] font-medium text-slate-800 dark:text-slate-200 group-hover:text-teal-600 dark:group-hover:text-teal-400 text-center leading-[1.2] max-w-[58px] xs:max-w-[68px] sm:max-w-[80px]">
+                <span className="text-[9px] xs:text-[10px] sm:text-[11px] font-medium text-slate-800 dark:text-slate-200 group-hover:text-teal-600 dark:group-hover:text-teal-400 text-center leading-[1.15] max-w-[52px] xs:max-w-[60px] sm:max-w-[70px]">
                   AI Question<br />Generator
                 </span>
               </button>
 
-              {/* 3. Upload PDF / Document */}
+              {/* 5. Upload PDF / Document */}
               <button
                 type="button"
                 onClick={() => setIsStep1KbModalOpen(true)}
-                className="flex flex-col items-center gap-1.5 sm:gap-2.5 shrink-0 group cursor-pointer focus:outline-none min-w-[58px] xs:min-w-[66px] sm:min-w-[84px] text-center"
+                className="flex flex-col items-center gap-1 sm:gap-1.5 shrink-0 group cursor-pointer focus:outline-none min-w-[50px] xs:min-w-[58px] sm:min-w-[68px] text-center"
               >
-                <div className="w-8 h-8 xs:w-9 xs:h-9 sm:w-[46px] sm:h-[46px] rounded-full bg-[#16A34A] flex items-center justify-center shadow-xs group-hover:scale-110 group-hover:shadow-md active:scale-95 transition-all duration-200">
-                  <CloudUpload className="w-4 h-4 xs:w-4.5 xs:h-4.5 sm:w-5 sm:h-5 text-white stroke-[2.2]" />
+                <div className="w-7 h-7 xs:w-8 xs:h-8 sm:w-[36px] sm:h-[36px] rounded-full bg-[#16A34A] flex items-center justify-center shadow-xs group-hover:scale-105 group-hover:shadow-md active:scale-95 transition-all duration-200">
+                  <CloudUpload className="w-3.5 h-3.5 xs:w-4 xs:h-4 sm:w-[17px] sm:h-[17px] text-white stroke-[2.2]" />
                 </div>
-                <span className="text-[10px] xs:text-[11px] sm:text-[12px] font-medium text-slate-800 dark:text-slate-200 group-hover:text-green-600 dark:group-hover:text-green-400 text-center leading-[1.2] max-w-[58px] xs:max-w-[68px] sm:max-w-[80px]">
+                <span className="text-[9px] xs:text-[10px] sm:text-[11px] font-medium text-slate-800 dark:text-slate-200 group-hover:text-green-600 dark:group-hover:text-green-400 text-center leading-[1.15] max-w-[52px] xs:max-w-[60px] sm:max-w-[70px]">
                   Upload PDF /<br />Document
                 </span>
               </button>
 
-              {/* 4. AI Form Studio */}
+              {/* 6. AI Form Studio */}
               <button
                 type="button"
                 onClick={() => switchSectionTab("custom-forms")}
-                className="flex flex-col items-center gap-1.5 sm:gap-2.5 shrink-0 group cursor-pointer focus:outline-none min-w-[58px] xs:min-w-[66px] sm:min-w-[84px] text-center"
+                className="flex flex-col items-center gap-1 sm:gap-1.5 shrink-0 group cursor-pointer focus:outline-none min-w-[50px] xs:min-w-[58px] sm:min-w-[68px] text-center"
               >
-                <div className="w-8 h-8 xs:w-9 xs:h-9 sm:w-[46px] sm:h-[46px] rounded-full bg-[#F97316] flex items-center justify-center shadow-xs group-hover:scale-110 group-hover:shadow-md active:scale-95 transition-all duration-200">
-                  <FileEdit className="w-4 h-4 xs:w-4.5 xs:h-4.5 sm:w-5 sm:h-5 text-white stroke-[2.2]" />
+                <div className="w-7 h-7 xs:w-8 xs:h-8 sm:w-[36px] sm:h-[36px] rounded-full bg-[#F97316] flex items-center justify-center shadow-xs group-hover:scale-105 group-hover:shadow-md active:scale-95 transition-all duration-200">
+                  <FileEdit className="w-3.5 h-3.5 xs:w-4 xs:h-4 sm:w-[17px] sm:h-[17px] text-white stroke-[2.2]" />
                 </div>
-                <span className="text-[10px] xs:text-[11px] sm:text-[12px] font-medium text-slate-800 dark:text-slate-200 group-hover:text-orange-600 dark:group-hover:text-orange-400 text-center leading-[1.2] max-w-[58px] xs:max-w-[68px] sm:max-w-[80px]">
+                <span className="text-[9px] xs:text-[10px] sm:text-[11px] font-medium text-slate-800 dark:text-slate-200 group-hover:text-orange-600 dark:group-hover:text-orange-400 text-center leading-[1.15] max-w-[52px] xs:max-w-[60px] sm:max-w-[70px]">
                   AI Form<br />Studio
                 </span>
               </button>
 
-              {/* 5. Question Bank */}
+              {/* 7. Question Bank */}
               <button
                 type="button"
                 onClick={() => switchSectionTab("bank")}
-                className="flex flex-col items-center gap-1.5 sm:gap-2.5 shrink-0 group cursor-pointer focus:outline-none min-w-[58px] xs:min-w-[66px] sm:min-w-[84px] text-center"
+                className="flex flex-col items-center gap-1 sm:gap-1.5 shrink-0 group cursor-pointer focus:outline-none min-w-[50px] xs:min-w-[58px] sm:min-w-[68px] text-center"
               >
-                <div className="w-8 h-8 xs:w-9 xs:h-9 sm:w-[46px] sm:h-[46px] rounded-full bg-[#EF4444] flex items-center justify-center shadow-xs group-hover:scale-110 group-hover:shadow-md active:scale-95 transition-all duration-200">
-                  <Database className="w-4 h-4 xs:w-4.5 xs:h-4.5 sm:w-5 sm:h-5 text-white stroke-[2.2]" />
+                <div className="w-7 h-7 xs:w-8 xs:h-8 sm:w-[36px] sm:h-[36px] rounded-full bg-[#EF4444] flex items-center justify-center shadow-xs group-hover:scale-105 group-hover:shadow-md active:scale-95 transition-all duration-200">
+                  <Database className="w-3.5 h-3.5 xs:w-4 xs:h-4 sm:w-[17px] sm:h-[17px] text-white stroke-[2.2]" />
                 </div>
-                <span className="text-[10px] xs:text-[11px] sm:text-[12px] font-medium text-slate-800 dark:text-slate-200 group-hover:text-red-600 dark:group-hover:text-red-400 text-center leading-[1.2] max-w-[58px] xs:max-w-[68px] sm:max-w-[80px]">
+                <span className="text-[9px] xs:text-[10px] sm:text-[11px] font-medium text-slate-800 dark:text-slate-200 group-hover:text-red-600 dark:group-hover:text-red-400 text-center leading-[1.15] max-w-[52px] xs:max-w-[60px] sm:max-w-[70px]">
                   Question<br />Bank
                 </span>
               </button>
 
-              {/* 6. Knowledge Base */}
+              {/* 8. Knowledge Base */}
               <button
                 type="button"
                 onClick={() => switchSectionTab("kb")}
-                className="flex flex-col items-center gap-1.5 sm:gap-2.5 shrink-0 group cursor-pointer focus:outline-none min-w-[58px] xs:min-w-[66px] sm:min-w-[84px] text-center"
+                className="flex flex-col items-center gap-1 sm:gap-1.5 shrink-0 group cursor-pointer focus:outline-none min-w-[50px] xs:min-w-[58px] sm:min-w-[68px] text-center"
               >
-                <div className="w-8 h-8 xs:w-9 xs:h-9 sm:w-[46px] sm:h-[46px] rounded-full bg-[#8B5CF6] flex items-center justify-center shadow-xs group-hover:scale-110 group-hover:shadow-md active:scale-95 transition-all duration-200">
-                  <BookOpen className="w-4 h-4 xs:w-4.5 xs:h-4.5 sm:w-5 sm:h-5 text-white stroke-[2.2]" />
+                <div className="w-7 h-7 xs:w-8 xs:h-8 sm:w-[36px] sm:h-[36px] rounded-full bg-[#8B5CF6] flex items-center justify-center shadow-xs group-hover:scale-105 group-hover:shadow-md active:scale-95 transition-all duration-200">
+                  <BookOpen className="w-3.5 h-3.5 xs:w-4 xs:h-4 sm:w-[17px] sm:h-[17px] text-white stroke-[2.2]" />
                 </div>
-                <span className="text-[10px] xs:text-[11px] sm:text-[12px] font-medium text-slate-800 dark:text-slate-200 group-hover:text-purple-600 dark:group-hover:text-purple-400 text-center leading-[1.2] max-w-[58px] xs:max-w-[68px] sm:max-w-[80px]">
+                <span className="text-[9px] xs:text-[10px] sm:text-[11px] font-medium text-slate-800 dark:text-slate-200 group-hover:text-purple-600 dark:group-hover:text-purple-400 text-center leading-[1.15] max-w-[52px] xs:max-w-[60px] sm:max-w-[70px]">
                   Knowledge<br />Base
                 </span>
               </button>
 
-              {/* 7. Student Rosters */}
+              {/* 9. Student Rosters */}
               <button
                 type="button"
                 onClick={() => switchSectionTab("students")}
-                className="flex flex-col items-center gap-1.5 sm:gap-2.5 shrink-0 group cursor-pointer focus:outline-none min-w-[58px] xs:min-w-[66px] sm:min-w-[84px] text-center"
+                className="flex flex-col items-center gap-1 sm:gap-1.5 shrink-0 group cursor-pointer focus:outline-none min-w-[50px] xs:min-w-[58px] sm:min-w-[68px] text-center"
               >
-                <div className="w-8 h-8 xs:w-9 xs:h-9 sm:w-[46px] sm:h-[46px] rounded-full bg-[#10B981] flex items-center justify-center shadow-xs group-hover:scale-110 group-hover:shadow-md active:scale-95 transition-all duration-200">
-                  <Users className="w-4 h-4 xs:w-4.5 xs:h-4.5 sm:w-5 sm:h-5 text-white stroke-[2.2]" />
+                <div className="w-7 h-7 xs:w-8 xs:h-8 sm:w-[36px] sm:h-[36px] rounded-full bg-[#10B981] flex items-center justify-center shadow-xs group-hover:scale-105 group-hover:shadow-md active:scale-95 transition-all duration-200">
+                  <Users className="w-3.5 h-3.5 xs:w-4 xs:h-4 sm:w-[17px] sm:h-[17px] text-white stroke-[2.2]" />
                 </div>
-                <span className="text-[10px] xs:text-[11px] sm:text-[12px] font-medium text-slate-800 dark:text-slate-200 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 text-center leading-[1.2] max-w-[58px] xs:max-w-[68px] sm:max-w-[80px]">
+                <span className="text-[9px] xs:text-[10px] sm:text-[11px] font-medium text-slate-800 dark:text-slate-200 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 text-center leading-[1.15] max-w-[52px] xs:max-w-[60px] sm:max-w-[70px]">
                   Student<br />Rosters
                 </span>
               </button>
 
-              {/* 8. Student Directory */}
+              {/* 10. Student Directory */}
               <button
                 type="button"
                 onClick={() => switchSectionTab("students")}
-                className="flex flex-col items-center gap-1.5 sm:gap-2.5 shrink-0 group cursor-pointer focus:outline-none min-w-[58px] xs:min-w-[66px] sm:min-w-[84px] text-center"
+                className="flex flex-col items-center gap-1 sm:gap-1.5 shrink-0 group cursor-pointer focus:outline-none min-w-[50px] xs:min-w-[58px] sm:min-w-[68px] text-center"
               >
-                <div className="w-8 h-8 xs:w-9 xs:h-9 sm:w-[46px] sm:h-[46px] rounded-full bg-[#0284C7] flex items-center justify-center shadow-xs group-hover:scale-110 group-hover:shadow-md active:scale-95 transition-all duration-200">
-                  <Contact className="w-4 h-4 xs:w-4.5 xs:h-4.5 sm:w-5 sm:h-5 text-white stroke-[2.2]" />
+                <div className="w-7 h-7 xs:w-8 xs:h-8 sm:w-[36px] sm:h-[36px] rounded-full bg-[#0284C7] flex items-center justify-center shadow-xs group-hover:scale-105 group-hover:shadow-md active:scale-95 transition-all duration-200">
+                  <Contact className="w-3.5 h-3.5 xs:w-4 xs:h-4 sm:w-[17px] sm:h-[17px] text-white stroke-[2.2]" />
                 </div>
-                <span className="text-[10px] xs:text-[11px] sm:text-[12px] font-medium text-slate-800 dark:text-slate-200 group-hover:text-sky-600 dark:group-hover:text-sky-400 text-center leading-[1.2] max-w-[58px] xs:max-w-[68px] sm:max-w-[80px]">
+                <span className="text-[9px] xs:text-[10px] sm:text-[11px] font-medium text-slate-800 dark:text-slate-200 group-hover:text-sky-600 dark:group-hover:text-sky-400 text-center leading-[1.15] max-w-[52px] xs:max-w-[60px] sm:max-w-[70px]">
                   Student<br />Directory
                 </span>
               </button>
 
-              {/* 9. Results & Analytics */}
+              {/* 11. Results & Analytics */}
               <button
                 type="button"
                 onClick={() => switchSectionTab("reports")}
-                className="flex flex-col items-center gap-1.5 sm:gap-2.5 shrink-0 group cursor-pointer focus:outline-none min-w-[58px] xs:min-w-[66px] sm:min-w-[84px] text-center"
+                className="flex flex-col items-center gap-1 sm:gap-1.5 shrink-0 group cursor-pointer focus:outline-none min-w-[50px] xs:min-w-[58px] sm:min-w-[68px] text-center"
               >
-                <div className="w-8 h-8 xs:w-9 xs:h-9 sm:w-[46px] sm:h-[46px] rounded-full bg-[#14B8A6] flex items-center justify-center shadow-xs group-hover:scale-110 group-hover:shadow-md active:scale-95 transition-all duration-200">
-                  <BarChart3 className="w-4 h-4 xs:w-4.5 xs:h-4.5 sm:w-5 sm:h-5 text-white stroke-[2.2]" />
+                <div className="w-7 h-7 xs:w-8 xs:h-8 sm:w-[36px] sm:h-[36px] rounded-full bg-[#14B8A6] flex items-center justify-center shadow-xs group-hover:scale-105 group-hover:shadow-md active:scale-95 transition-all duration-200">
+                  <BarChart3 className="w-3.5 h-3.5 xs:w-4 xs:h-4 sm:w-[17px] sm:h-[17px] text-white stroke-[2.2]" />
                 </div>
-                <span className="text-[10px] xs:text-[11px] sm:text-[12px] font-medium text-slate-800 dark:text-slate-200 group-hover:text-teal-600 dark:group-hover:text-teal-400 text-center leading-[1.2] max-w-[58px] xs:max-w-[68px] sm:max-w-[80px]">
-                  Results &<br />Analytics
+                <span className="text-[9px] xs:text-[10px] sm:text-[11px] font-medium text-slate-800 dark:text-slate-200 group-hover:text-teal-600 dark:group-hover:text-teal-400 text-center leading-[1.15] max-w-[52px] xs:max-w-[60px] sm:max-w-[70px]">
+                  Results &amp;<br />Analytics
                 </span>
               </button>
 
-              {/* 10. Live Proctoring */}
+              {/* 12. Live Proctoring */}
               <button
                 type="button"
                 onClick={() => {
@@ -1218,40 +1298,40 @@ export default function TeacherDashboard() {
                     setLiveProctorExam(active);
                   }
                 }}
-                className="flex flex-col items-center gap-1.5 sm:gap-2.5 shrink-0 group cursor-pointer focus:outline-none min-w-[58px] xs:min-w-[66px] sm:min-w-[84px] text-center"
+                className="flex flex-col items-center gap-1 sm:gap-1.5 shrink-0 group cursor-pointer focus:outline-none min-w-[50px] xs:min-w-[58px] sm:min-w-[68px] text-center"
               >
-                <div className="w-8 h-8 xs:w-9 xs:h-9 sm:w-[46px] sm:h-[46px] rounded-full bg-[#EC4899] flex items-center justify-center shadow-xs group-hover:scale-110 group-hover:shadow-md active:scale-95 transition-all duration-200">
-                  <Radio className="w-4 h-4 xs:w-4.5 xs:h-4.5 sm:w-5 sm:h-5 text-white stroke-[2.2]" />
+                <div className="w-7 h-7 xs:w-8 xs:h-8 sm:w-[36px] sm:h-[36px] rounded-full bg-[#EC4899] flex items-center justify-center shadow-xs group-hover:scale-105 group-hover:shadow-md active:scale-95 transition-all duration-200">
+                  <Radio className="w-3.5 h-3.5 xs:w-4 xs:h-4 sm:w-[17px] sm:h-[17px] text-white stroke-[2.2]" />
                 </div>
-                <span className="text-[10px] xs:text-[11px] sm:text-[12px] font-medium text-slate-800 dark:text-slate-200 group-hover:text-pink-600 dark:group-hover:text-pink-400 text-center leading-[1.2] max-w-[58px] xs:max-w-[68px] sm:max-w-[80px]">
+                <span className="text-[9px] xs:text-[10px] sm:text-[11px] font-medium text-slate-800 dark:text-slate-200 group-hover:text-pink-600 dark:group-hover:text-pink-400 text-center leading-[1.15] max-w-[52px] xs:max-w-[60px] sm:max-w-[70px]">
                   Live<br />Proctoring
                 </span>
               </button>
 
-              {/* 11. Import Questions */}
+              {/* 13. Import Questions */}
               <button
                 type="button"
                 onClick={() => setIsCsvImportModalOpen(true)}
-                className="flex flex-col items-center gap-1.5 sm:gap-2.5 shrink-0 group cursor-pointer focus:outline-none min-w-[58px] xs:min-w-[66px] sm:min-w-[84px] text-center"
+                className="flex flex-col items-center gap-1 sm:gap-1.5 shrink-0 group cursor-pointer focus:outline-none min-w-[50px] xs:min-w-[58px] sm:min-w-[68px] text-center"
               >
-                <div className="w-8 h-8 xs:w-9 xs:h-9 sm:w-[46px] sm:h-[46px] rounded-full bg-[#8B5CF6] flex items-center justify-center shadow-xs group-hover:scale-110 group-hover:shadow-md active:scale-95 transition-all duration-200">
-                  <FileDown className="w-4 h-4 xs:w-4.5 xs:h-4.5 sm:w-5 sm:h-5 text-white stroke-[2.2]" />
+                <div className="w-7 h-7 xs:w-8 xs:h-8 sm:w-[36px] sm:h-[36px] rounded-full bg-[#8B5CF6] flex items-center justify-center shadow-xs group-hover:scale-105 group-hover:shadow-md active:scale-95 transition-all duration-200">
+                  <FileDown className="w-3.5 h-3.5 xs:w-4 xs:h-4 sm:w-[17px] sm:h-[17px] text-white stroke-[2.2]" />
                 </div>
-                <span className="text-[10px] xs:text-[11px] sm:text-[12px] font-medium text-slate-800 dark:text-slate-200 group-hover:text-purple-600 dark:group-hover:text-purple-400 text-center leading-[1.2] max-w-[58px] xs:max-w-[68px] sm:max-w-[80px]">
+                <span className="text-[9px] xs:text-[10px] sm:text-[11px] font-medium text-slate-800 dark:text-slate-200 group-hover:text-purple-600 dark:group-hover:text-purple-400 text-center leading-[1.15] max-w-[52px] xs:max-w-[60px] sm:max-w-[70px]">
                   Import<br />Questions
                 </span>
               </button>
 
-              {/* 12. Platform Settings */}
+              {/* 14. Platform Settings */}
               <button
                 type="button"
                 onClick={() => router.push("/dashboard/settings")}
-                className="flex flex-col items-center gap-1.5 sm:gap-2.5 shrink-0 group cursor-pointer focus:outline-none min-w-[58px] xs:min-w-[66px] sm:min-w-[84px] text-center"
+                className="flex flex-col items-center gap-1 sm:gap-1.5 shrink-0 group cursor-pointer focus:outline-none min-w-[50px] xs:min-w-[58px] sm:min-w-[68px] text-center"
               >
-                <div className="w-8 h-8 xs:w-9 xs:h-9 sm:w-[46px] sm:h-[46px] rounded-full bg-[#3B82F6] flex items-center justify-center shadow-xs group-hover:scale-110 group-hover:shadow-md active:scale-95 transition-all duration-200">
-                  <Settings className="w-4 h-4 xs:w-4.5 xs:h-4.5 sm:w-5 sm:h-5 text-white stroke-[2.2]" />
+                <div className="w-7 h-7 xs:w-8 xs:h-8 sm:w-[36px] sm:h-[36px] rounded-full bg-[#3B82F6] flex items-center justify-center shadow-xs group-hover:scale-105 group-hover:shadow-md active:scale-95 transition-all duration-200">
+                  <Settings className="w-3.5 h-3.5 xs:w-4 xs:h-4 sm:w-[17px] sm:h-[17px] text-white stroke-[2.2]" />
                 </div>
-                <span className="text-[10px] xs:text-[11px] sm:text-[12px] font-medium text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 text-center leading-[1.2] max-w-[58px] xs:max-w-[68px] sm:max-w-[80px]">
+                <span className="text-[9px] xs:text-[10px] sm:text-[11px] font-medium text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 text-center leading-[1.15] max-w-[52px] xs:max-w-[60px] sm:max-w-[70px]">
                   Platform<br />Settings
                 </span>
               </button>
@@ -1261,13 +1341,13 @@ export default function TeacherDashboard() {
               type="button"
               onClick={() => {
                 const el = document.getElementById("quick-toolbar-scroll");
-                if (el) el.scrollBy({ left: 200, behavior: "smooth" });
+                if (el) el.scrollBy({ left: 220, behavior: "smooth" });
               }}
-              className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-slate-200/90 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 shrink-0 shadow-2xs cursor-pointer transition-all hover:scale-105 active:scale-95"
+              className="w-6 h-6 sm:w-7 sm:h-7 rounded-full border border-slate-200/90 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 shrink-0 shadow-2xs cursor-pointer transition-all hover:scale-105 active:scale-95"
               title="Scroll Right"
               aria-label="Scroll Right"
             >
-              <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.2]" />
+              <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[2.2]" />
             </button>
           </div>
           </div>
@@ -1763,6 +1843,7 @@ export default function TeacherDashboard() {
               description="Manage active examination sessions, live anti-cheat monitoring, and candidate credentials."
               onOpenCreate={() => switchSectionTab("create")}
               onViewAll={() => switchSectionTab("exams")}
+              onOpenCertificates={(exam) => setCertDrawerExam(exam)}
               onPreviewExam={(exam) => setPreviewExam(exam)}
               onOpenLiveProctor={(exam) => {
                 setLiveProctorExam(exam);
@@ -1779,31 +1860,16 @@ export default function TeacherDashboard() {
         </>
       ) : (
         /* Top Navigation Bar when in single module view */
-        <div className="flex items-center justify-between gap-2.5 pb-3 border-b border-[#E2E8F0] dark:border-[#263449]">
+        <div className="flex items-center justify-start gap-2 pb-1 mb-1">
           <button
             onClick={() => switchSectionTab("overview")}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-[#2563EB] dark:text-[#60A5FA] bg-[#EFF6FF] dark:bg-[#172B4D] hover:bg-blue-100 dark:hover:bg-[#1e3a66] border border-[#2563EB]/20 transition-all cursor-pointer shadow-2xs shrink-0 whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold text-[#2563EB] dark:text-[#60A5FA] bg-[#EFF6FF] dark:bg-[#172B4D] hover:bg-blue-100 dark:hover:bg-[#1e3a66] border border-[#2563EB]/25 transition-all cursor-pointer shadow-2xs shrink-0 whitespace-nowrap"
             title="Return to Main Dashboard"
           >
             <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
             <span className="hidden xs:inline">Back to Dashboard</span>
             <span className="xs:hidden">Dashboard</span>
           </button>
-          <div className="flex items-center gap-2 min-w-0 justify-end">
-            <span className="hidden md:inline text-xs text-slate-500 dark:text-slate-400 font-medium whitespace-nowrap">
-              Viewing Module:
-            </span>
-            <span className="px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-bold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-900/60 uppercase tracking-wide truncate max-w-[170px] xs:max-w-[210px] sm:max-w-none shadow-2xs">
-              {activeSectionTab === "create" && "Create Assessment"}
-              {activeSectionTab === "exams" && "Assessments Management"}
-              {activeSectionTab === "bank" && "Question Bank Studio"}
-              {activeSectionTab === "kb" && "Knowledge Base (RAG)"}
-              {activeSectionTab === "students" && "Student Directories"}
-              {activeSectionTab === "forms" && "Forms & Registrations"}
-              {activeSectionTab === "custom-forms" && "AI Form Builder"}
-              {activeSectionTab === "reports" && "Results & Gradebook"}
-            </span>
-          </div>
         </div>
       )}
 
@@ -1817,6 +1883,7 @@ export default function TeacherDashboard() {
           exams={exams}
           showCreateButton={true}
           onOpenCreate={() => switchSectionTab("create")}
+          onOpenCertificates={(exam) => setCertDrawerExam(exam)}
           onPreviewExam={(exam) => setPreviewExam(exam)}
           onOpenLiveProctor={(exam) => {
             setLiveProctorExam(exam);
@@ -3320,6 +3387,64 @@ export default function TeacherDashboard() {
                     </div>
                   </div>
 
+                  {/* ═══════ PASSING CERTIFICATE SETTINGS ═══════ */}
+                  <div className="pt-2 border-t border-[#E2E8F0] dark:border-[#263449] space-y-3">
+                    <div className="flex items-center justify-between p-3.5 rounded-xl bg-[#F8FAFC] dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449]">
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5">
+                          <Award className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h4 className="text-xs font-bold text-slate-900 dark:text-white">
+                              Enable Passing Certificates
+                            </h4>
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                              Optional
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                            Automatically issue verified digital certificates with QR codes to students who pass.
+                          </p>
+                        </div>
+                      </div>
+
+                      <label className="relative inline-flex items-center cursor-pointer shrink-0 ml-3">
+                        <input
+                          type="checkbox"
+                          checked={enableCertificate}
+                          onChange={(e) => setEnableCertificate(e.target.checked)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      </label>
+                    </div>
+
+                    {enableCertificate && (
+                      <div className="p-3.5 rounded-xl bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/80 dark:border-blue-900/40 space-y-3 animate-fadeIn">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                          <div>
+                            <div className="text-xs font-bold text-blue-900 dark:text-blue-200 flex items-center gap-1.5">
+                              <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                              <span>Template: {certificateConfig.template_id === "testora_default" ? "Testora Navy & Gold (Official)" : certificateConfig.template_id}</span>
+                            </div>
+                            <div className="text-[11px] text-blue-700 dark:text-blue-300 mt-0.5">
+                              Passing Benchmark: {examPass ? `${examPass} passing marks` : "40% threshold"} • 1 Credit per issued certificate
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setIsCertStudioOpen(true)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-xs cursor-pointer shrink-0"
+                          >
+                            <Sparkles className="w-3.5 h-3.5" />
+                            <span>Customize Certificate</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
                   <div className="pt-3 flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-2.5">
                     <button
                       type="button"
@@ -3663,6 +3788,190 @@ export default function TeacherDashboard() {
       </section>
       )}
 
+      {/* ═══════ SECTION: CENTRAL MOCK TEST LIBRARY ═══════ */}
+      {activeSectionTab === "mock-tests" && (
+      <section id="mock-tests" className="scroll-mt-16 space-y-4">
+        <TeacherMockTestLibrary />
+      </section>
+      )}
+
+      {/* ═══════ SECTION: CERTIFICATE MANAGEMENT & STUDIO ═══════ */}
+      {activeSectionTab === "certificates" && (
+      <section id="certificates" className="scroll-mt-16 space-y-6 animate-fadeIn">
+        {/* ══════════════════════════════════════════════════════════════════════
+            HERO BANNER: PREMIUM WHITE-THEME 300-320PX 16:5 BANNER
+           ══════════════════════════════════════════════════════════════════════ */}
+        <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-200/90 dark:border-amber-900/40 bg-white dark:bg-[#071328] text-slate-900 dark:text-white shadow-xl min-h-[290px] lg:min-h-[300px] lg:max-h-[320px] flex items-center">
+          {/* 16:5 Wide Landscape White-Themed Background Image with Responsive Positioning */}
+          <div className="absolute inset-0 z-0 pointer-events-none">
+            <img
+              src="/images/certificates_white_banner_bg.jpg"
+              alt="Certificate Management Background"
+              className="w-full h-full object-cover object-right opacity-95"
+            />
+            {/* Clean White / Warm Ivory Gradient Overlay on the Left for pure legibility */}
+            <div className="absolute inset-0 bg-gradient-to-r from-white via-white/95 sm:via-white/85 md:via-white/70 to-transparent dark:from-[#071124] dark:via-[#071124]/95 dark:sm:via-[#071124]/85 dark:md:via-[#071124]/70 dark:to-transparent" />
+            {/* Additional Mobile Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-white/50 to-transparent dark:from-[#050C1B]/95 dark:via-[#050C1B]/50 dark:to-transparent sm:hidden" />
+          </div>
+
+          <div className="relative z-10 w-full p-4 sm:p-5 lg:px-7 lg:py-4 flex flex-col justify-center">
+            {/* Left Column: Sharp Pure HTML Typography & Bottom-Left CTAs */}
+            <div className="space-y-2.5 max-w-xl">
+              {/* Small Badge */}
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/70 border border-amber-200/80 dark:border-amber-800 text-amber-800 dark:text-amber-200 text-[10.5px] font-bold tracking-wide shadow-2xs backdrop-blur-xs">
+                <Sparkles className="w-3 h-3 text-amber-600 dark:text-amber-300 animate-pulse" />
+                <span>SMART CERTIFICATE MANAGEMENT</span>
+              </div>
+
+              {/* Main Heading & Description */}
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="w-1.5 h-5 sm:h-6 rounded-full bg-amber-500 dark:bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.5)] shrink-0" />
+                  <h2 className="text-lg sm:text-xl lg:text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
+                    Celebrate Achievement. <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 via-yellow-600 to-amber-700 dark:from-amber-400 dark:to-yellow-300">Recognize Success.</span>
+                  </h2>
+                </div>
+
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-xl pl-3.5 font-medium">
+                  Design professional certificates, automatically issue certificates to eligible students and verify achievements through secure QR codes.
+                </p>
+              </div>
+
+              {/* Feature Chips */}
+              <div className="flex flex-wrap items-center gap-1.5 pt-0.5 text-[10.5px]">
+                <span className="px-2.5 py-0.5 rounded-lg bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-semibold flex items-center gap-1.5 shadow-2xs">
+                  <Award className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                  <span>Custom Certificate Templates</span>
+                </span>
+                <span className="px-2.5 py-0.5 rounded-lg bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-semibold flex items-center gap-1.5 shadow-2xs">
+                  <Sparkles className="w-3 h-3 text-yellow-600 dark:text-yellow-300" />
+                  <span>Automated Certificate Issuance</span>
+                </span>
+                <span className="px-2.5 py-0.5 rounded-lg bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-semibold flex items-center gap-1.5 shadow-2xs">
+                  <ShieldCheck className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                  <span>QR Code Verification</span>
+                </span>
+              </div>
+
+              {/* Bottom Left Action Buttons */}
+              <div className="flex flex-wrap items-center gap-2.5 pt-1.5">
+                <button
+                  type="button"
+                  onClick={() => setIsCertStudioOpen(true)}
+                  className="px-5 py-2.5 bg-gradient-to-r from-amber-500 via-amber-600 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white text-xs font-extrabold rounded-xl flex items-center gap-2 shadow-lg shadow-amber-500/35 transition-all hover:scale-105 active:scale-95 cursor-pointer whitespace-nowrap"
+                >
+                  <Sparkles className="h-4 w-4 stroke-[2.5]" />
+                  <span>Design Certificate</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const el = document.getElementById("certificates-table");
+                    if (el) el.scrollIntoView({ behavior: "smooth" });
+                  }}
+                  className="px-4 py-2.5 rounded-xl bg-white/90 dark:bg-slate-900/80 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/90 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold shadow-xs backdrop-blur-xs transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+                >
+                  <Award className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                  <span>Manage Certificates</span>
+                </button>
+                <Link
+                  href="/verify-certificate/demo"
+                  target="_blank"
+                  className="px-3.5 py-2.5 rounded-xl bg-white/90 dark:bg-slate-900/80 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/90 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold shadow-xs backdrop-blur-xs transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+                  title="Verify Certificate Demo"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                  <span>Verify Demo</span>
+                  <ExternalLink className="w-3 h-3 text-slate-400" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 4 Feature Overview KPI Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+          <div className="p-4 rounded-xl bg-white dark:bg-[#111C31] border border-slate-200 dark:border-slate-800 space-y-1">
+            <span className="text-[10px] uppercase font-bold text-slate-400">Standard Templates</span>
+            <div className="text-sm font-black text-slate-900 dark:text-white">4 Available Styles</div>
+            <p className="text-[11px] text-slate-500">Classic, Modern, Minimal, Achievement</p>
+          </div>
+          <div className="p-4 rounded-xl bg-white dark:bg-[#111C31] border border-slate-200 dark:border-slate-800 space-y-1">
+            <span className="text-[10px] uppercase font-bold text-slate-400">Delivery Format</span>
+            <div className="text-sm font-black text-slate-900 dark:text-white">A4 Vector PDF (300 DPI)</div>
+            <p className="text-[11px] text-slate-500">Print-ready + Email attachment</p>
+          </div>
+          <div className="p-4 rounded-xl bg-white dark:bg-[#111C31] border border-slate-200 dark:border-slate-800 space-y-1">
+            <span className="text-[10px] uppercase font-bold text-slate-400">Authenticity Check</span>
+            <div className="text-sm font-black text-emerald-600 dark:text-emerald-400">QR Code Embedded</div>
+            <p className="text-[11px] text-slate-500">Instant scan to verify status</p>
+          </div>
+          <div className="p-4 rounded-xl bg-white dark:bg-[#111C31] border border-slate-200 dark:border-slate-800 space-y-1">
+            <span className="text-[10px] uppercase font-bold text-slate-400">Cost Structure</span>
+            <div className="text-sm font-black text-blue-600 dark:text-blue-400">1 Credit / Qualified Student</div>
+            <p className="text-[11px] text-slate-500">Only charged for qualified students</p>
+          </div>
+        </div>
+
+        {/* Assessment Certificates Table */}
+        <div id="certificates-table" className="bg-white dark:bg-[#111C31] border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xs">
+          <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between flex-wrap gap-2">
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">Examination Certificate Status</h3>
+              <p className="text-xs text-slate-500">Select an assessment to view or issue student certificates</p>
+            </div>
+            <span className="text-xs font-semibold text-slate-500">{exams.length} Total Assessments</span>
+          </div>
+
+          {exams.length === 0 ? (
+            <div className="p-8 text-center text-xs text-slate-500">No assessments created yet. Create a quiz first to enable certificates for qualified students.</div>
+          ) : (
+            <div className="divide-y divide-slate-100 dark:divide-slate-800/80">
+              {exams.map((ex) => (
+                <div key={ex.id} className="p-4 flex items-center justify-between gap-4 flex-wrap hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
+                  <div className="space-y-1 min-w-[200px]">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-slate-900 dark:text-white">{ex.name}</span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300">
+                        {ex.subject || "General"}
+                      </span>
+                    </div>
+                    <div className="text-xs text-slate-500 flex items-center gap-2">
+                      <span>Code: <b className="font-mono">{ex.code}</b></span>
+                      <span>•</span>
+                      <span>Pass Criteria: <b>{ex.passing_marks || 40}%</b></span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setCertDrawerExam(ex)}
+                      className="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/50 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-200 text-xs font-bold border border-amber-200 dark:border-amber-800 flex items-center gap-1.5 transition-all cursor-pointer"
+                    >
+                      <Award className="w-3.5 h-3.5 text-amber-600" />
+                      <span>Manage Certificates</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setExamName(ex.name);
+                        setIsCertStudioOpen(true);
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
+                    >
+                      <span>Customize Template</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+      )}
+
       {/* ═══════ GLOBAL PAPER STUDIO PREVIEW MODAL ═══════ */}
       {previewExam && (
         <PaperStudioModal
@@ -3721,6 +4030,37 @@ export default function TeacherDashboard() {
           onSuccess={() => {
             setIsCsvImportModalOpen(false);
             fetchData();
+          }}
+        />
+      )}
+
+      {/* ═══════ CERTIFICATE STUDIO MODAL ═══════ */}
+      <CertificateStudioModal
+        isOpen={isCertStudioOpen}
+        onClose={() => setIsCertStudioOpen(false)}
+        examName={examName || "Assessment"}
+        instituteName={workspaceName}
+        passingMarks={parseFloat(examPass) || 20}
+        totalMarks={parseFloat(examMarks) || 50}
+        token={token}
+        onSaved={(cfg) => {
+          setCertificateConfig(cfg);
+          setEnableCertificate(true);
+          showToast("Certificate design updated!", "success");
+        }}
+      />
+
+      {/* ═══════ CERTIFICATE MANAGEMENT DRAWER ═══════ */}
+      {certDrawerExam && (
+        <CertificateManagementDrawer
+          isOpen={!!certDrawerExam}
+          onClose={() => setCertDrawerExam(null)}
+          examId={certDrawerExam.id}
+          examName={certDrawerExam.name}
+          token={token}
+          onOpenDesigner={() => {
+            setCertDrawerExam(null);
+            setIsCertStudioOpen(true);
           }}
         />
       )}

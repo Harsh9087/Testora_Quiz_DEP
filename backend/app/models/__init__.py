@@ -21,13 +21,19 @@ from app.models.credit_request import CreditRequest
 from app.models.institutional_request import InstitutionalRequest
 from app.models.pricing_plan import PricingPlan
 from app.models.feedback import FeedbackSubmission
-from app.models.mock_test import MockTest, MockTestPurchase
+from app.models.mock_test import MockTest, MockTestPurchase, MockTestCategory, MockTestType
+from app.models.certificate import CertificateConfig, SavedCertificateTemplate, IssuedCertificate
 
 __all__ = [
     "Base",
     "TimeStampedModel",
+    "CertificateConfig",
+    "SavedCertificateTemplate",
+    "IssuedCertificate",
     "MockTest",
     "MockTestPurchase",
+    "MockTestCategory",
+    "MockTestType",
     "SupportTicket",
     "SupportTicketReply",
     "CreditRequest",

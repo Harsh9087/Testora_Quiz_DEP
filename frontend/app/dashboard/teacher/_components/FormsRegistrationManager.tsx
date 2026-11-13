@@ -482,9 +482,17 @@ export default function FormsRegistrationManager({ token }: FormsRegistrationMan
                     </span>
                   </div>
                   {selectedForm.description && (
-                    <p className="text-xs text-[#716D67] dark:text-[#A8A29E] mt-0.5">
-                      {selectedForm.description}
-                    </p>
+                    <div className="mt-1 flex items-center gap-1.5 flex-wrap">
+                      {selectedForm.description.includes("[dir_id:") && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200/60">
+                          <FolderPlus className="w-3 h-3" />
+                          <span>Linked Directory</span>
+                        </span>
+                      )}
+                      <p className="text-xs text-[#716D67] dark:text-[#A8A29E]">
+                        {selectedForm.description.replace(/\[dir_id:[^\]]+\]\s*-\s*/, "").trim() || "Registration Form"}
+                      </p>
+                    </div>
                   )}
                 </div>
               </div>
@@ -730,38 +738,84 @@ export default function FormsRegistrationManager({ token }: FormsRegistrationMan
            ══════════════════════════════════════════════════════════════════════ */
         <div className="space-y-5 animate-in fade-in duration-200">
           
-          {/* Header Card */}
-          <div className="bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="p-1.5 rounded-lg bg-[#C84B18]/10 text-[#C84B18] dark:text-[#EA580C]">
-                  <ClipboardList className="h-5 w-5" />
-                </span>
-                <h2 className="text-base sm:text-lg font-bold text-[#242321] dark:text-[#F5F5F4]">
-                  Student Data Collection Forms
-                </h2>
-              </div>
-              <p className="text-xs text-[#716D67] dark:text-[#A8A29E] mt-1">
-                Collect student roster information via shareable online forms without requiring students to create accounts, and import directly into Student Directories.
-              </p>
+          {/* ══════════════════════════════════════════════════════════════════════
+              HERO BANNER: COMPACT PROFESSIONAL 300-320PX 16:5 BANNER
+             ══════════════════════════════════════════════════════════════════════ */}
+          <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-blue-500/25 dark:border-blue-500/35 bg-[#071328] text-white shadow-xl min-h-[290px] lg:min-h-[300px] lg:max-h-[320px] flex items-center">
+            {/* 16:5 Wide Landscape Background Image with Responsive Positioning */}
+            <div className="absolute inset-0 z-0 pointer-events-none">
+              <img
+                src="/images/forms_registration_banner_bg.jpg"
+                alt="Student Registration Background"
+                className="w-full h-full object-cover object-right opacity-90 dark:opacity-85"
+              />
+              {/* Dark Navy / Deep Blue Gradient Overlay: Solid on Left 55% for crisp HTML text readability, subtle on Right so the laptop/QR code/paper plane are crisp and visible */}
+              <div className="absolute inset-0 bg-gradient-to-r from-[#07142A] via-[#07142A]/95 sm:via-[#07142A]/85 md:via-[#07142A]/65 to-transparent" />
+              {/* Additional Mobile Bottom/Top Gradient so text never clashes with graphic on small screens */}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#050E1D]/90 via-[#050E1D]/40 to-transparent sm:hidden" />
             </div>
 
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                onClick={fetchForms}
-                disabled={refreshing}
-                className="p-2 rounded-xl border border-[#E5E0D8] dark:border-[#292524] hover:bg-[#F7F4EF] dark:hover:bg-[#201D1A] text-[#716D67] transition-colors cursor-pointer"
-                title="Refresh Forms"
-              >
-                <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
-              </button>
-              <button
-                onClick={() => setIsCreateModalOpen(true)}
-                className="px-4 py-2 bg-[#C84B18] hover:bg-[#B33F10] text-white text-xs font-bold rounded-xl flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
-              >
-                <Plus className="h-4 w-4" />
-                <span>Create Registration Form</span>
-              </button>
+            <div className="relative z-10 w-full p-4 sm:p-5 lg:px-7 lg:py-4 flex flex-col justify-center">
+              {/* Left Column: Sharp Pure HTML Typography & Bottom-Left CTAs */}
+              <div className="space-y-2.5 max-w-xl">
+                {/* Small Badge */}
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-500/20 border border-cyan-400/40 text-cyan-200 text-[10.5px] font-bold tracking-wide backdrop-blur-md shadow-2xs">
+                  <Sparkles className="w-3 h-3 text-cyan-300 animate-pulse" />
+                  <span>Automated Directory Sync</span>
+                </div>
+
+                {/* Main Heading & Description */}
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="w-1.5 h-5 sm:h-6 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)] shrink-0" />
+                    <h2 className="text-lg sm:text-xl lg:text-2xl font-black text-white tracking-tight leading-tight">
+                      Student Data Collection Forms
+                    </h2>
+                  </div>
+
+                  <p className="text-xs text-slate-200/90 leading-relaxed max-w-lg pl-3.5">
+                    Collect student roster data via online forms and sync directly into directories.
+                  </p>
+                </div>
+
+                {/* Feature Chips */}
+                <div className="flex flex-wrap items-center gap-1.5 pt-0.5 text-[10.5px]">
+                  <span className="px-2.5 py-0.5 rounded-lg bg-slate-900/70 backdrop-blur-md border border-cyan-500/30 text-cyan-100 font-semibold flex items-center gap-1.5 shadow-2xs">
+                    <ClipboardList className="w-3 h-3 text-cyan-400" />
+                    <span>Instant Sync</span>
+                  </span>
+                  <span className="px-2.5 py-0.5 rounded-lg bg-slate-900/70 backdrop-blur-md border border-cyan-500/30 text-cyan-100 font-semibold flex items-center gap-1.5 shadow-2xs">
+                    <Sparkles className="w-3 h-3 text-amber-300" />
+                    <span>Directory Import</span>
+                  </span>
+                  <span className="px-2.5 py-0.5 rounded-lg bg-slate-900/70 backdrop-blur-md border border-cyan-500/30 text-cyan-100 font-semibold flex items-center gap-1.5 shadow-2xs">
+                    <QrCode className="w-3 h-3 text-emerald-300" />
+                    <span>QR Links</span>
+                  </span>
+                </div>
+
+                {/* Bottom Left Action Buttons */}
+                <div className="flex flex-wrap items-center gap-2.5 pt-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setIsCreateModalOpen(true)}
+                    className="px-5 py-2.5 bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white text-xs font-extrabold rounded-xl flex items-center gap-2 shadow-lg shadow-blue-500/35 transition-all hover:scale-105 active:scale-95 cursor-pointer whitespace-nowrap"
+                  >
+                    <Plus className="h-4 w-4 stroke-[2.5]" />
+                    <span>Create Registration Form</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={fetchForms}
+                    disabled={refreshing}
+                    className="px-3.5 py-2.5 rounded-xl bg-slate-900/80 hover:bg-slate-800/90 border border-slate-700/70 text-slate-200 text-xs font-semibold shadow-md backdrop-blur-md transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+                    title="Refresh Forms"
+                  >
+                    <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? "animate-spin text-cyan-400" : ""}`} />
+                    <span>Refresh</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -772,23 +826,23 @@ export default function FormsRegistrationManager({ token }: FormsRegistrationMan
               <p className="text-xs font-semibold text-[#716D67]">Loading student registration forms...</p>
             </div>
           ) : forms.length === 0 ? (
-            <div className="bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl p-8 sm:p-12 text-center space-y-4">
-              <div className="w-14 h-14 rounded-2xl bg-[#C84B18]/10 text-[#C84B18] flex items-center justify-center mx-auto">
+            <div className="bg-white dark:bg-[#111C31] border border-slate-200 dark:border-slate-800 rounded-2xl p-8 sm:p-12 text-center space-y-4 shadow-xs">
+              <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-cyan-400 border border-blue-100 dark:border-blue-900/50 flex items-center justify-center mx-auto shadow-inner">
                 <ClipboardList className="w-7 h-7" />
               </div>
-              <div className="space-y-1">
-                <h3 className="text-base font-bold text-[#242321] dark:text-[#F5F5F4]">
+              <div className="space-y-1.5">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
                   No Student Data Collection Forms Created Yet
                 </h3>
-                <p className="text-xs text-[#716D67] max-w-md mx-auto">
-                  Create a form with a single click by entering just the name (e.g. "Section C AIML"). A shareable link and QR code will be generated instantly with the 6 mandatory student fields.
+                <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
+                  Create a form with a single click by entering just the name (e.g. &quot;Section C AIML&quot;). A shareable link and QR code will be generated instantly with the 6 mandatory student fields.
                 </p>
               </div>
               <button
                 onClick={() => setIsCreateModalOpen(true)}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#C84B18] hover:bg-[#B33F10] text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-500/25 transition-all hover:scale-105 active:scale-95 cursor-pointer"
               >
-                <Plus className="h-4 w-4" />
+                <Plus className="h-4 w-4 stroke-[2.5]" />
                 <span>Create Your First Registration Form</span>
               </button>
             </div>
@@ -814,9 +868,24 @@ export default function FormsRegistrationManager({ token }: FormsRegistrationMan
                       </span>
                     </div>
 
-                    <p className="text-xs text-[#716D67] dark:text-[#A8A29E] line-clamp-2 min-h-[32px]">
-                      {form.description || "6-field student directory registration form"}
-                    </p>
+                    {(() => {
+                      const desc = form.description || "";
+                      const isLinkedDir = desc.includes("[dir_id:");
+                      const cleanDesc = desc.replace(/\[dir_id:[^\]]+\]\s*-\s*/, "").trim();
+                      return (
+                        <div className="space-y-1 min-h-[32px]">
+                          {isLinkedDir && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200/60">
+                              <FolderPlus className="w-3 h-3" />
+                              <span>Linked Directory</span>
+                            </span>
+                          )}
+                          <p className="text-xs text-[#716D67] dark:text-[#A8A29E] line-clamp-2">
+                            {cleanDesc || "6-field student directory registration form"}
+                          </p>
+                        </div>
+                      );
+                    })()}
 
                     <div className="flex items-center gap-3 pt-1 text-[11px] text-[#716D67]">
                       <span className="flex items-center gap-1 font-semibold text-[#242321] dark:text-[#F5F5F4]">
@@ -868,7 +937,7 @@ export default function FormsRegistrationManager({ token }: FormsRegistrationMan
                       <button
                         type="button"
                         onClick={(e) => handleToggleFormActive(form, e)}
-                        className="text-[11px] font-semibold text-[#716D67] hover:text-[#242321] transition-colors cursor-pointer"
+                        className="px-2.5 py-1 rounded-lg text-xs font-semibold text-[#716D67] hover:text-[#242321] hover:bg-[#F7F4EF] dark:hover:bg-[#201D1A] border border-transparent hover:border-[#E5E0D8] dark:hover:border-[#292524] transition-colors cursor-pointer"
                         title={form.is_active ? "Close Submissions" : "Open Submissions"}
                       >
                         {form.is_active ? "Pause" : "Resume"}

@@ -138,16 +138,16 @@ export default function SupportPage() {
       })
       .catch(() => {
         setSupportInfo({
-          company_name: "DPRAMP Tech Solutions",
+          company_name: "Testora Quiz",
           tagline: "AI-Powered Assessment & Educational Infrastructure",
-          support_email: "support@dpramp.com",
-          admin_email: "shaharerohit47@gmail.com",
+          support_email: "support@testoraquiz.com",
+          admin_email: "support@testoraquiz.com",
           phone_helpline: "+91 91722 00000",
           whatsapp_helpline: "+91 91722 00000",
           office_hours: "Monday to Saturday, 9:00 AM – 8:00 PM IST",
           sla_response_time: "Average response within 2–4 hours",
           emergency_desk: "24/7 dedicated support for live proctoring & examination disruptions",
-          headquarters: "Nagpur & Pune, Maharashtra, India"
+          headquarters: "Maharashtra, India"
         });
       });
   }, []);
@@ -207,10 +207,10 @@ export default function SupportPage() {
         // Reload tickets list
         if (token) loadMyTickets(token);
       } else {
-        setErrorMessage(data?.detail || "Could not submit ticket. Please try again or email support@dpramp.com directly.");
+        setErrorMessage(data?.detail || "Could not submit ticket. Please try again or email support@testoraquiz.com directly.");
       }
     } catch (err: any) {
-      setErrorMessage(err?.message || "Connection error. Please verify your internet or contact support@dpramp.com.");
+      setErrorMessage(err?.message || "Connection error. Please verify your internet or contact support@testoraquiz.com.");
     } finally {
       setSubmitting(false);
     }
@@ -227,10 +227,10 @@ export default function SupportPage() {
   const faqs = [
     {
       q: "Where will I receive updates on my support ticket?",
-      a: "A receipt confirmation is automatically dispatched to your registered email address (e.g. shaharerohit47@gmail.com) immediately after submission. All replies and engineering updates from DPRAMP Tech Solutions will be sent directly to that inbox."
+      a: "A receipt confirmation is automatically dispatched to your registered email address immediately after submission. All replies and engineering updates from Testora Quiz will be sent directly to that inbox."
     },
     {
-      q: "How fast does DPRAMP Tech Solutions respond?",
+      q: "How fast does Testora Quiz Support respond?",
       a: "Our standard response SLA is between 2 to 4 business hours (Monday – Saturday, 9:00 AM – 8:00 PM IST). For urgent proctoring disruptions during scheduled active examinations, our incident escalation desk responds with highest priority."
     },
     {
@@ -242,8 +242,8 @@ export default function SupportPage() {
       a: "Select 'Credits & Billing' and include any payment reference or order ID. Credits are credited instantly upon payment confirmation, and tax invoices are emailed to your registered address."
     },
     {
-      q: "Can I directly email or chat with DPRAMP Tech Solutions?",
-      a: "Yes! You can email us anytime at support@dpramp.com or contact our WhatsApp helpline at +91 91722 00000 for direct technical assistance."
+      q: "Can I directly email or chat with Testora Quiz Support?",
+      a: "Yes! You can email us anytime at support@testoraquiz.com or contact our WhatsApp helpline at +91 91722 00000 for direct technical assistance."
     }
   ];
 
@@ -256,7 +256,7 @@ export default function SupportPage() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0B1120] text-[#0F172A] dark:text-[#F1F5F9] transition-colors pb-16">
       
-      {/* 1. HERO BRANDING BANNER (DPRAMP TECH SOLUTIONS) */}
+      {/* 1. HERO BRANDING BANNER (TESTORA QUIZ SUPPORT) */}
       <div className="relative overflow-hidden bg-gradient-to-r from-[#0F172A] via-[#1E3A8A] to-[#1E293B] text-white border-b border-blue-900/30">
         <div className="absolute inset-0 bg-[radial-gradient(#3B82F6_1px,transparent_1px)] [background-size:20px_20px] opacity-15 pointer-events-none" />
         
@@ -265,13 +265,13 @@ export default function SupportPage() {
             <div className="space-y-2">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-200 text-xs font-semibold uppercase tracking-wider">
                 <Building2 className="w-3.5 h-3.5" />
-                DPRAMP Tech Solutions • Customer Care & Support
+                Testora Quiz • Customer Care & Support
               </div>
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight">
                 Help & Technical Support Desk
               </h1>
               <p className="text-sm sm:text-base text-blue-100/90 max-w-2xl leading-relaxed">
-                Need help with assessments, AI synthesis, student rosters, or live proctoring? Submit a ticket and get direct assistance from DPRAMP Tech Solutions engineers.
+                Need help with assessments, AI synthesis, student rosters, or live proctoring? Submit a ticket and get direct assistance from Testora Quiz support team.
               </p>
             </div>
 
@@ -296,8 +296,8 @@ export default function SupportPage() {
               </div>
               <div>
                 <span className="text-blue-200 block">Official Support Email:</span>
-                <a href="mailto:support@dpramp.com" className="font-semibold text-white hover:underline">
-                  support@dpramp.com
+                <a href="mailto:support@testoraquiz.com" className="font-semibold text-white hover:underline">
+                  support@testoraquiz.com
                 </a>
               </div>
             </div>
@@ -387,7 +387,7 @@ export default function SupportPage() {
                     <strong className="font-semibold block text-blue-950 dark:text-blue-100 mb-0.5">
                       Direct Email Confirmation Delivered to You:
                     </strong>
-                    When you submit this ticket, an automated confirmation receipt with your unique ticket reference code will be dispatched to your registered email (<strong className="font-semibold">{formData.email || "shaharerohit47@gmail.com"}</strong>) and copied to DPRAMP Tech Solutions customer engineering desk.
+                    When you submit this ticket, an automated confirmation receipt with your unique ticket reference code will be dispatched to your registered email (<strong className="font-semibold">{formData.email || "your registered email"}</strong>) and copied to Testora Quiz support desk.
                   </div>
                 </div>
 
@@ -563,7 +563,7 @@ export default function SupportPage() {
                   {/* Submit Button */}
                   <div className="pt-2 flex items-center justify-between">
                     <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                      Powered by <strong>DPRAMP Tech Solutions</strong> support gateway
+                      Powered by <strong>Testora Quiz</strong> support gateway
                     </div>
 
                     <button
@@ -598,7 +598,7 @@ export default function SupportPage() {
                     <Building2 className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">DPRAMP Tech Solutions</h3>
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">Testora Quiz Support Desk</h3>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400">Enterprise EdTech Operations</p>
                   </div>
                 </div>
@@ -608,8 +608,8 @@ export default function SupportPage() {
                     <Mail className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
                     <div>
                       <span className="block text-slate-400 text-[10px] uppercase font-bold">Desk Email</span>
-                      <a href="mailto:support@dpramp.com" className="font-semibold text-blue-600 dark:text-blue-400 hover:underline">
-                        support@dpramp.com
+                      <a href="mailto:support@testoraquiz.com" className="font-semibold text-blue-600 dark:text-blue-400 hover:underline">
+                        support@testoraquiz.com
                       </a>
                     </div>
                   </div>
@@ -634,7 +634,7 @@ export default function SupportPage() {
                 <hr className="my-5 border-slate-100 dark:border-slate-800" />
 
                 <a
-                  href="mailto:support@dpramp.com?subject=Inquiry%20from%20TestoraQuiz%20User"
+                  href="mailto:support@testoraquiz.com?subject=Inquiry%20from%20TestoraQuiz%20User"
                   className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 transition"
                 >
                   <Mail className="w-3.5 h-3.5 text-blue-500" />
@@ -694,7 +694,7 @@ export default function SupportPage() {
                 <LifeBuoy className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
                 <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">No Support Tickets Yet</h4>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
-                  When you submit a support ticket to DPRAMP Tech Solutions, it will be listed here with live status updates.
+                  When you submit a support ticket to Testora Quiz, it will be listed here with live status updates.
                 </p>
                 <button
                   onClick={() => setActiveTab("new-ticket")}
@@ -767,7 +767,7 @@ export default function SupportPage() {
                 Frequently Asked Questions
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                Find quick answers to common questions about DPRAMP Tech Solutions and Testora Quiz operations.
+                Find quick answers to common questions about Testora Quiz operations and support.
               </p>
 
               {/* Search input */}

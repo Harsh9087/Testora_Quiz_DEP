@@ -5,7 +5,7 @@ import os
 from sqlalchemy.orm import Session
 from app.config import settings
 from app.database import engine, Base, get_db
-from app.api import auth, students, kb, exams, attempts, reports, notifications, institutions, academic, assessment_groups, workspaces, student_directories, payments, registration_forms, custom_forms, admin, preferences, support, institutional_requests, pricing_plans, feedback, mock_tests
+from app.api import auth, students, kb, exams, attempts, reports, notifications, institutions, academic, assessment_groups, workspaces, student_directories, payments, registration_forms, custom_forms, admin, preferences, support, institutional_requests, pricing_plans, feedback, mock_tests, certificates
 
 import app.models
 
@@ -208,6 +208,11 @@ def seed_initial_data():
                 cohort_id=cohort.id,
                 is_current=True
             )
+
+        # Seed Mock Test Categories & Initial Mock Tests
+        from app.services.mock_test_seed import seed_initial_mock_tests, seed_mock_test_categories
+        seed_mock_test_categories(db)
+        seed_initial_mock_tests(db)
     except Exception as e:
         print(f"Initial seed notice: {e}")
     finally:
@@ -267,6 +272,17 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print(f"Schema sync notice: {e}")
 
+    try:
+        from app.services.mock_test_seed import seed_initial_mock_tests, seed_mock_test_categories
+        _seed_db = SessionLocal()
+        try:
+            seed_mock_test_categories(_seed_db)
+            seed_initial_mock_tests(_seed_db)
+        finally:
+            _seed_db.close()
+    except Exception as e:
+        print(f"[Lifespan] Mock test seed notice: {e}")
+
     if settings.ENVIRONMENT != "production":
         try:
             seed_initial_data()
@@ -283,31 +299,37 @@ app = FastAPI(
 )
 
 # Set up CORS middleware with safe credential handling
+default_local_origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3001",
+    "http://localhost:3002",
+    "http://127.0.0.1:3002",
+]
+
 raw_origins = [o.strip() for o in settings.ALLOWED_ORIGINS.split(",") if o.strip()]
 frontend_origin = settings.FRONTEND_URL.rstrip("/")
-if frontend_origin and frontend_origin not in raw_origins and "*" not in raw_origins:
+if frontend_origin and frontend_origin not in raw_origins:
     raw_origins.append(frontend_origin)
 
+for loc in default_local_origins:
+    if loc not in raw_origins:
+        raw_origins.append(loc)
+
+# Ensure credentials work by stripping bare wildcard when specific origins are present
 if "*" in raw_origins:
-    # If wildcard is explicitly chosen, disable credentials to adhere to W3C CORS security specifications
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=False,
-        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-        allow_headers=["*"],
-        expose_headers=["*"]
-    )
-else:
-    # Whitelisted explicit origins allow credentials securely
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=raw_origins,
-        allow_credentials=True,
-        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-        allow_headers=["*"],
-        expose_headers=["*"]
-    )
+    raw_origins.remove("*")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=raw_origins,
+    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$",
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allow_headers=["*"],
+    expose_headers=["*"]
+)
 
 @app.middleware("http")
 async def add_correlation_id_middleware(request: Request, call_next):
@@ -367,6 +389,8 @@ app.include_router(feedback.router, prefix=settings.API_V1_STR)
 app.include_router(feedback.router, prefix="/api")
 app.include_router(mock_tests.router, prefix=settings.API_V1_STR)
 app.include_router(mock_tests.router, prefix="/api")
+app.include_router(certificates.router, prefix=settings.API_V1_STR)
+app.include_router(certificates.router, prefix="/api")
 
 # Static files for avatars and uploads
 from fastapi.staticfiles import StaticFiles

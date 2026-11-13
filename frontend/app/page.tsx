@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -14,6 +14,7 @@ import {
   KeyRound,
   Award,
   ChevronRight,
+  ChevronDown,
   Printer,
   Image as ImageIcon,
   Columns,
@@ -43,6 +44,14 @@ import {
   Smartphone,
   Headphones,
   User,
+  LogOut,
+  LayoutDashboard,
+  FileCheck,
+  TrendingUp,
+  Target,
+  Wand2,
+  ListChecks,
+  Share2,
 } from "lucide-react";
 import { useAuthStore } from "../store/authStore";
 import { apiFetch } from "../lib/api";
@@ -56,6 +65,9 @@ import FdpSolutionsSection from "../components/FdpSolutionsSection";
 import WorkflowStepsSection from "../components/WorkflowStepsSection";
 import WebsiteFooter from "../components/WebsiteFooter";
 import FeedbackSection from "../components/FeedbackSection";
+import MockTestLibraryHighlight from "../components/MockTestLibraryHighlight";
+import CertificateManagementHighlight from "../components/CertificateManagementHighlight";
+import AIFormBuilderHighlight from "../components/AIFormBuilderHighlight";
 
 export default function UnifiedHomePage() {
   const router = useRouter();
@@ -98,6 +110,24 @@ export default function UnifiedHomePage() {
   // Mobile navbar open state
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // User profile dropdown menu in navbar
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    }
+    if (userMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [userMenuOpen]);
+
   // Platform Capabilities Active Tab
   const [capabilitiesTab, setCapabilitiesTab] = useState<"studio" | "student" | "proctor" | "gradebook">("studio");
 
@@ -113,6 +143,9 @@ export default function UnifiedHomePage() {
   } | null>(null);
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      useAuthStore.getState().syncFromStorage();
+    }
     setMounted(true);
     apiFetch("/public/platform-stats")
       .then((res) => (res.ok ? res.json() : null))
@@ -248,7 +281,7 @@ export default function UnifiedHomePage() {
           </Link>
 
           {/* Navigation Links (Center) */}
-          <nav className="hidden lg:flex items-center justify-center gap-5 xl:gap-7 text-xs font-semibold text-slate-600 dark:text-slate-300">
+          <nav className="hidden lg:flex items-center justify-center gap-4 xl:gap-6 text-xs font-semibold text-slate-600 dark:text-slate-300">
             <button
               type="button"
               onClick={() => scrollTo("portals")}
@@ -262,6 +295,33 @@ export default function UnifiedHomePage() {
               className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer py-1"
             >
               Capabilities
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollTo("mock-tests")}
+              className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer py-1 flex items-center gap-1"
+            >
+              <span>Mock Tests</span>
+              <span className="px-1.5 py-0.2 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[10px] font-extrabold">
+                Free
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollTo("certificates")}
+              className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer py-1"
+            >
+              Certificates
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollTo("form-builder")}
+              className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer flex items-center gap-1 py-1"
+            >
+              <span>AI Forms</span>
+              <span className="px-1.5 py-0.2 rounded-full bg-orange-100 dark:bg-orange-950 text-orange-700 dark:text-orange-300 text-[9px] font-bold">
+                AI
+              </span>
             </button>
             <button
               type="button"
@@ -322,67 +382,119 @@ export default function UnifiedHomePage() {
               <span>Install App</span>
             </button>
 
-            {/* Theme Toggle - Hidden on mobile viewports (< sm) as requested */}
-            <div className="hidden sm:inline-flex shrink-0">
-              <ThemeToggle className="h-9 w-9 rounded-xl border border-slate-200/80 dark:border-slate-800" />
-            </div>
-
-            {/* Auth Buttons */}
+            {/* Auth Area:
+                1. If LOGGED IN: show ONLY the User Profile avatar button with interactive profile menu.
+                2. If NOT LOGGED IN: show ONLY the "Get Started Free" button (no redundant "Sign In" link).
+            */}
             {mounted && token ? (
-              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                {/* Profile Photo / Avatar - Clean, perfect & always visible */}
-                <Link
-                  href={profileHref}
-                  className="relative flex items-center shrink-0 group cursor-pointer"
-                  title={`View Profile (${fullName || "User"})`}
-                >
-                  {getDisplayAvatarUrl(avatarUrl) && !avatarImgError ? (
-                    <div className="relative">
-                      <img
-                        src={getDisplayAvatarUrl(avatarUrl)!}
-                        alt={fullName || "User Avatar"}
-                        onError={() => setAvatarImgError(true)}
-                        className="h-9 w-9 rounded-full object-cover border-2 border-blue-500/80 shadow-xs group-hover:scale-105 group-hover:ring-2 group-hover:ring-blue-500/40 transition-all"
-                      />
-                      <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-[#071126]" />
-                    </div>
-                  ) : (
-                    <div className="relative h-9 w-9 rounded-full bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 text-white font-extrabold text-xs flex items-center justify-center shadow-xs border-2 border-white dark:border-[#071126] group-hover:scale-105 group-hover:ring-2 group-hover:ring-blue-500/40 transition-all">
-                      <span>{fullName ? fullName.trim().charAt(0).toUpperCase() : "U"}</span>
-                      <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-[#071126]" />
+              <div className="flex items-center shrink-0">
+                {/* Single Profile Icon with Interactive Account Dropdown */}
+                <div className="relative" ref={userMenuRef}>
+                  <button
+                    type="button"
+                    onClick={() => setUserMenuOpen(!userMenuOpen)}
+                    className="relative flex items-center p-0.5 rounded-full hover:ring-2 hover:ring-blue-500/40 transition-all cursor-pointer group shrink-0"
+                    title={`Account: ${fullName || "User"}`}
+                    aria-label="User Account Menu"
+                    aria-expanded={userMenuOpen}
+                  >
+                    {getDisplayAvatarUrl(avatarUrl) && !avatarImgError ? (
+                      <div className="relative">
+                        <img
+                          src={getDisplayAvatarUrl(avatarUrl)!}
+                          alt={fullName || "User Avatar"}
+                          onError={() => setAvatarImgError(true)}
+                          className="h-9 w-9 rounded-full object-cover border-2 border-blue-500/80 shadow-xs group-hover:scale-105 transition-all"
+                        />
+                        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-[#071126]" />
+                      </div>
+                    ) : (
+                      <div className="relative h-9 w-9 rounded-full bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 text-white font-extrabold text-xs flex items-center justify-center shadow-xs border-2 border-white dark:border-[#071126] group-hover:scale-105 transition-all">
+                        <span>{fullName ? fullName.trim().charAt(0).toUpperCase() : "U"}</span>
+                        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-[#071126]" />
+                      </div>
+                    )}
+                  </button>
+
+                  {/* Profile Dropdown Menu */}
+                  {userMenuOpen && (
+                    <div className="absolute right-0 top-full mt-2 w-64 p-2.5 bg-white dark:bg-[#0D182E] border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl z-50 animate-in fade-in zoom-in-95 duration-150">
+                      <div className="p-2.5 bg-slate-50 dark:bg-slate-900/80 rounded-xl mb-2 flex items-center gap-2.5">
+                        <div className="h-9 w-9 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-extrabold text-xs flex items-center justify-center shrink-0">
+                          {fullName ? fullName.trim().charAt(0).toUpperCase() : "U"}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="font-bold text-xs text-slate-900 dark:text-white truncate">
+                            {fullName || "User Account"}
+                          </div>
+                          <div className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold capitalize">
+                            {role === "super_admin" ? "Administrator" : role === "teacher" ? "Teacher / Faculty" : role === "student" ? "Candidate / Student" : role || "Member"}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1 text-xs font-semibold">
+                        <Link
+                          href={dashboardHref}
+                          onClick={() => setUserMenuOpen(false)}
+                          className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-950/40 dark:hover:text-blue-400 transition-colors"
+                        >
+                          <LayoutDashboard className="w-4 h-4 text-blue-600" />
+                          <span>Go to Dashboard</span>
+                        </Link>
+                        <Link
+                          href={profileHref}
+                          onClick={() => setUserMenuOpen(false)}
+                          className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        >
+                          <User className="w-4 h-4 text-slate-500" />
+                          <span>Profile &amp; Settings</span>
+                        </Link>
+                        {role === "student" && (
+                          <Link
+                            href="/dashboard/student"
+                            onClick={() => setUserMenuOpen(false)}
+                            className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                          >
+                            <GraduationCap className="w-4 h-4 text-indigo-500" />
+                            <span>Mock Test Library</span>
+                          </Link>
+                        )}
+                        {role === "teacher" && (
+                          <Link
+                            href="/dashboard/teacher"
+                            onClick={() => setUserMenuOpen(false)}
+                            className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                          >
+                            <BookOpen className="w-4 h-4 text-emerald-500" />
+                            <span>Creator Studio</span>
+                          </Link>
+                        )}
+                      </div>
+
+                      <div className="pt-2 mt-2 border-t border-slate-100 dark:border-slate-800">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setUserMenuOpen(false);
+                            logout();
+                            router.push("/login");
+                          }}
+                          className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-xs font-bold transition-colors cursor-pointer"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          <span>Sign Out</span>
+                        </button>
+                      </div>
                     </div>
                   )}
-                </Link>
-
-                {/* Dashboard Button (Hidden on narrow mobile to keep navbar compact and leave room for 3-line menu) */}
-                <Link
-                  href={dashboardHref}
-                  className="hidden sm:inline-flex h-9 px-3.5 items-center justify-center rounded-xl bg-[#2563EB] hover:bg-[#1d4ed8] text-white text-xs font-bold transition-all shadow-xs"
-                >
-                  Dashboard
-                </Link>
-
-                {/* Sign Out Button (Hidden on narrow mobile, available in mobile menu) */}
-                <button
-                  type="button"
-                  onClick={() => logout()}
-                  className="hidden sm:inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors cursor-pointer"
-                  title="Sign Out"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+                </div>
               </div>
             ) : (
-              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              <div className="flex items-center shrink-0">
                 <Link
                   href="/login"
-                  className="h-9 px-3 sm:px-3.5 inline-flex items-center justify-center rounded-xl text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold transition-all"
-                >
-                  Sign In
-                </Link>
-                <Link
-                  href="/login?mode=signup"
-                  className="hidden sm:inline-flex h-9 px-4 items-center justify-center gap-1.5 rounded-xl bg-[#2563EB] hover:bg-[#1d4ed8] text-white text-xs font-extrabold shadow-sm shadow-blue-600/25 active:scale-[0.99] transition-all cursor-pointer"
+                  className="h-9 px-4 inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#2563EB] hover:bg-[#1d4ed8] text-white text-xs font-extrabold shadow-sm shadow-blue-600/25 active:scale-[0.99] transition-all cursor-pointer"
                 >
                   <span>Get Started Free</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -390,15 +502,17 @@ export default function UnifiedHomePage() {
               </div>
             )}
 
-            {/* Mobile Menu Toggle (3 Horizontal Lines) - Always visible and perfectly sized on mobile (< lg) */}
-            <button
-              type="button"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden h-9 w-9 inline-flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700/80 transition-colors cursor-pointer shrink-0"
-              aria-label="Toggle navigation menu"
-            >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5 stroke-[2.2]" />}
-            </button>
+            {/* Mobile Menu Toggle (3 Horizontal Lines) - STRICTLY hidden when logged in or on desktop (>= lg) */}
+            {(!mounted || !token) && (
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="inline-flex lg:hidden h-9 w-9 items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700/80 transition-colors cursor-pointer shrink-0"
+                aria-label="Toggle navigation menu"
+              >
+                {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5 stroke-[2.2]" />}
+              </button>
+            )}
           </div>
         </div>
 
@@ -479,28 +593,66 @@ export default function UnifiedHomePage() {
 
             <button
               type="button"
-              onClick={() => scrollTo("portals")}
+              onClick={() => {
+                setMobileMenuOpen(false);
+                scrollTo("portals");
+              }}
               className="block w-full text-left px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
             >
               Portals (Teacher &amp; Student)
             </button>
             <button
               type="button"
-              onClick={() => scrollTo("capabilities")}
+              onClick={() => {
+                setMobileMenuOpen(false);
+                scrollTo("capabilities");
+              }}
               className="block w-full text-left px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
             >
               Platform Capabilities
             </button>
             <button
               type="button"
-              onClick={() => scrollTo("features")}
-              className="block w-full text-left px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                scrollTo("mock-tests");
+              }}
+              className="block w-full text-left px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer flex items-center justify-between"
             >
-              Architecture &amp; Features
+              <span>Mock Test Library</span>
+              <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold">
+                100% Free
+              </span>
             </button>
             <button
               type="button"
-              onClick={() => scrollTo("how-it-works")}
+              onClick={() => {
+                setMobileMenuOpen(false);
+                scrollTo("certificates");
+              }}
+              className="block w-full text-left px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+            >
+              Certificate Management
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                scrollTo("form-builder");
+              }}
+              className="block w-full text-left px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer flex items-center justify-between"
+            >
+              <span>AI Form Studio</span>
+              <span className="px-2 py-0.5 rounded-full bg-orange-100 dark:bg-orange-950 text-orange-700 dark:text-orange-300 text-[10px] font-bold">
+                New
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                scrollTo("how-it-works");
+              }}
               className="block w-full text-left px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
             >
               How It Works
@@ -726,55 +878,54 @@ export default function UnifiedHomePage() {
           4. SECTION 1: TEACHER AND STUDENT ENTRY CARDS (Reference Inspired)
       ══════════════════════════════════════════════════════════════════════ */}
       <section id="portals" className="py-6 sm:py-9 md:py-12 lg:py-16 bg-[#F8FAFC] dark:bg-[#080E1E] border-b border-slate-200/80 dark:border-slate-800/80 scroll-mt-20">
-        <div className="w-full max-w-[1240px] mx-auto px-3.5 sm:px-6 lg:px-8 space-y-4 sm:space-y-7 md:space-y-8">
+        <div className="w-full max-w-[1440px] mx-auto px-2.5 sm:px-6 lg:px-8 space-y-4 sm:space-y-6 md:space-y-8">
 
-          <div className="text-center max-w-2xl mx-auto space-y-2.5">
+          <div className="text-center max-w-2xl mx-auto space-y-2 sm:space-y-2.5">
             <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-50 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
               Role-Based Portals
             </span>
-            <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
               Select Your Workspace to Get Started
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-[#A9B9D3]">
-              Dedicated interfaces tailored specifically for exam creators and student test takers.
+              Dedicated interfaces tailored specifically for exam creators, student test takers, and practice prep.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 sm:gap-4 md:gap-5 lg:gap-6 items-stretch max-w-5xl mx-auto">
+          {/* ══════ ALL 4 WORKSPACE CARDS: SINGLE ROW ON DESKTOP (lg:grid-cols-4), 2 PER ROW ON MOBILE (grid-cols-2) ══════ */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5 md:gap-4 lg:gap-4.5 xl:gap-5 items-stretch w-full mx-auto">
 
-            {/* Left Card: Teacher / Instructor Studio */}
+            {/* 1. Teacher / Instructor Studio */}
             <Link 
               href={mounted && token && role === "teacher" ? "/dashboard/teacher" : "/login?role=teacher"}
               data-fast-nav="true"
-              className="relative rounded-2xl sm:rounded-[32px] bg-white dark:bg-[#0D1830] border-2 border-blue-500/80 dark:border-[#2563EB]/70 shadow-xl shadow-blue-500/5 dark:shadow-[0_0_35px_rgba(37,99,235,0.22)] hover:shadow-2xl hover:border-blue-500 hover:-translate-y-1.5 active:scale-[0.99] transition-all duration-300 overflow-hidden flex flex-col justify-between group cursor-pointer block"
+              className="relative rounded-2xl sm:rounded-[28px] lg:rounded-[32px] bg-white dark:bg-[#0D1830] border-2 border-blue-500/80 dark:border-[#2563EB]/70 shadow-xl shadow-blue-500/5 dark:shadow-[0_0_35px_rgba(37,99,235,0.22)] hover:shadow-2xl hover:border-blue-500 hover:-translate-y-1.5 active:scale-[0.99] transition-all duration-300 overflow-hidden flex flex-col justify-between group cursor-pointer block"
             >
-
-              <div className="p-2.5 sm:p-5 lg:p-6 flex flex-col flex-1 justify-between space-y-2.5 sm:space-y-5">
-
+              <div className="p-2.5 sm:p-4 lg:p-4.5 xl:p-5 flex flex-col flex-1 justify-between space-y-2 sm:space-y-3.5">
                 {/* Header: Role Pill & Access Level */}
-                <div className="space-y-1.5 sm:space-y-3">
-                  <div className="flex items-center justify-between gap-1 sm:gap-2">
-                    <div className="inline-flex items-center gap-1.5 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full bg-blue-50 dark:bg-blue-950/70 border border-blue-200/80 dark:border-blue-500/40 text-blue-600 dark:text-blue-300 text-[10px] sm:text-xs font-bold shadow-xs whitespace-nowrap">
+                <div className="space-y-1 sm:space-y-2">
+                  <div className="flex items-center justify-between gap-1">
+                    <div className="inline-flex items-center gap-1 sm:gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full bg-blue-50 dark:bg-blue-950/70 border border-blue-200/80 dark:border-blue-500/40 text-blue-600 dark:text-blue-300 text-[9.5px] xs:text-[10.5px] sm:text-xs font-bold shadow-xs whitespace-nowrap">
                       <BookOpen className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-blue-600 dark:fill-blue-400 text-blue-600 dark:text-blue-400 shrink-0" />
                       <span>Instructor Studio</span>
                     </div>
-                    <span className="hidden sm:inline-block text-[9px] sm:text-[11px] font-mono text-slate-400 dark:text-blue-300/70 font-bold uppercase tracking-wider whitespace-nowrap">
+                    <span className="hidden sm:inline-block text-[8.5px] sm:text-[10px] font-mono text-slate-400 dark:text-blue-300/70 font-bold uppercase tracking-wider whitespace-nowrap">
                       FACULTY ACCESS
                     </span>
                   </div>
 
                   <div>
-                    <h3 className="text-sm xs:text-base sm:text-2xl md:text-3xl lg:text-4xl font-black text-slate-900 dark:text-[#F8FAFC] tracking-tight leading-tight">
+                    <h3 className="text-xs xs:text-sm sm:text-lg lg:text-base xl:text-xl font-black text-slate-900 dark:text-[#F8FAFC] tracking-tight leading-tight">
                       Create <span className="text-blue-600 dark:text-[#38BDF8]">Smart Tests</span>
                     </h3>
-                    <p className="hidden sm:block text-xs md:text-sm text-slate-500 dark:text-[#A9B9D3] mt-1 sm:mt-1.5 leading-snug">
-                      Create assessments, organize questions, and prepare exams for your students with AI.
+                    <p className="text-[10px] xs:text-[11px] sm:text-xs text-slate-500 dark:text-[#A9B9D3] mt-1 leading-snug line-clamp-2">
+                      Create assessments, organize questions, and prepare exams with AI.
                     </p>
                   </div>
                 </div>
 
-                {/* 3D Illustration Stage (Dual Theme Support) */}
-                <div className="relative w-full overflow-hidden rounded-xl sm:rounded-2xl select-none my-0.5 sm:my-1">
+                {/* 3D Illustration Stage */}
+                <div className="relative w-full overflow-hidden rounded-xl select-none my-0.5 sm:my-1 flex items-center justify-center">
                   <img
                     src="/images/card_teacher_light.png"
                     alt="Instructor Studio Dashboard"
@@ -790,99 +941,90 @@ export default function UnifiedHomePage() {
                 </div>
 
                 {/* Bottom Section: Feature Badges & Action CTA */}
-                <div className="space-y-2 sm:space-y-3 pt-1">
-                  {/* 3 Unified Feature Tiles - In 1 Single Row on Desktop to Save Vertical Space */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-1 sm:gap-2">
+                <div className="space-y-1.5 sm:space-y-2.5 pt-1">
+                  <div className="grid grid-cols-3 sm:grid-cols-1 gap-1 sm:gap-1.5">
                     {/* Tile 1: AI Questions */}
-                    <div className="bg-slate-50/90 dark:bg-[#111D35] border border-slate-200/90 dark:border-[#263957] shadow-xs dark:shadow-none rounded-lg sm:rounded-xl p-1.5 sm:p-2.5 flex items-center gap-1.5 sm:gap-2 transition-all min-w-0 hover:border-blue-300 dark:hover:border-blue-700">
-                      <div className="w-6 h-6 sm:w-7.5 sm:h-7.5 rounded-md sm:rounded-lg bg-blue-100/80 dark:bg-blue-950/70 flex items-center justify-center text-blue-600 dark:text-[#38BDF8] shrink-0">
-                        <Sparkles className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <div 
+                      title="AI Questions: Generate with AI"
+                      className="bg-slate-50/90 dark:bg-[#111D35] border border-slate-200/90 dark:border-[#263957] shadow-xs rounded-lg p-1.5 sm:p-2 flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 transition-all min-w-0"
+                    >
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-blue-100/80 dark:bg-blue-950/70 flex items-center justify-center text-blue-600 dark:text-[#38BDF8] shrink-0">
+                        <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="text-[10px] sm:text-xs font-bold text-slate-900 dark:text-[#F8FAFC] truncate">AI Questions</div>
-                        <div className="text-[8.5px] sm:text-[10px] text-slate-500 dark:text-[#A9B9D3] font-medium truncate">Generate with AI</div>
+                      <div className="hidden sm:block min-w-0 flex-1">
+                        <div className="text-[9.5px] xs:text-[10.5px] sm:text-xs font-bold text-slate-900 dark:text-[#F8FAFC] truncate">AI Questions</div>
+                        <div className="text-[8px] xs:text-[9px] sm:text-[10px] text-slate-500 dark:text-[#A9B9D3] font-medium truncate hidden xs:block">Generate with AI</div>
                       </div>
                     </div>
                     {/* Tile 2: PDF & Docs */}
-                    <div className="bg-slate-50/90 dark:bg-[#111D35] border border-slate-200/90 dark:border-[#263957] shadow-xs dark:shadow-none rounded-lg sm:rounded-xl p-1.5 sm:p-2.5 flex items-center gap-1.5 sm:gap-2 transition-all min-w-0 hover:border-purple-300 dark:hover:border-purple-700">
-                      <div className="w-6 h-6 sm:w-7.5 sm:h-7.5 rounded-md sm:rounded-lg bg-purple-100/80 dark:bg-purple-950/70 flex items-center justify-center text-purple-600 dark:text-[#C084FC] shrink-0">
-                        <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <div 
+                      title="PDF & Docs: Upload & Convert"
+                      className="bg-slate-50/90 dark:bg-[#111D35] border border-slate-200/90 dark:border-[#263957] shadow-xs rounded-lg p-1.5 sm:p-2 flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 transition-all min-w-0"
+                    >
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-purple-100/80 dark:bg-purple-950/70 flex items-center justify-center text-purple-600 dark:text-[#C084FC] shrink-0">
+                        <FileText className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="text-[10px] sm:text-xs font-bold text-slate-900 dark:text-[#F8FAFC] truncate">PDF &amp; Docs</div>
-                        <div className="text-[8.5px] sm:text-[10px] text-slate-500 dark:text-[#A9B9D3] font-medium truncate">Upload &amp; Convert</div>
+                      <div className="hidden sm:block min-w-0 flex-1">
+                        <div className="text-[9.5px] xs:text-[10.5px] sm:text-xs font-bold text-slate-900 dark:text-[#F8FAFC] truncate">PDF &amp; Docs</div>
+                        <div className="text-[8px] xs:text-[9px] sm:text-[10px] text-slate-500 dark:text-[#A9B9D3] font-medium truncate hidden xs:block">Upload &amp; Convert</div>
                       </div>
                     </div>
                     {/* Tile 3: Auto Grade */}
-                    <div className="bg-slate-50/90 dark:bg-[#111D35] border border-slate-200/90 dark:border-[#263957] shadow-xs dark:shadow-none rounded-lg sm:rounded-xl p-1.5 sm:p-2.5 flex items-center gap-1.5 sm:gap-2 transition-all min-w-0 hover:border-teal-300 dark:hover:border-teal-700">
-                      <div className="w-6 h-6 sm:w-7.5 sm:h-7.5 rounded-md sm:rounded-lg bg-teal-100/80 dark:bg-teal-950/70 flex items-center justify-center text-teal-600 dark:text-[#2DD4BF] shrink-0">
-                        <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <div 
+                      title="Auto Grade: Save Time"
+                      className="bg-slate-50/90 dark:bg-[#111D35] border border-slate-200/90 dark:border-[#263957] shadow-xs rounded-lg p-1.5 sm:p-2 flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 transition-all min-w-0"
+                    >
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-teal-100/80 dark:bg-teal-950/70 flex items-center justify-center text-teal-600 dark:text-[#2DD4BF] shrink-0">
+                        <BarChart3 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="text-[10px] sm:text-xs font-bold text-slate-900 dark:text-[#F8FAFC] truncate">Auto Grade</div>
-                        <div className="text-[8.5px] sm:text-[10px] text-slate-500 dark:text-[#A9B9D3] font-medium truncate">Save Time</div>
+                      <div className="hidden sm:block min-w-0 flex-1">
+                        <div className="text-[9.5px] xs:text-[10.5px] sm:text-xs font-bold text-slate-900 dark:text-[#F8FAFC] truncate">Auto Grade</div>
+                        <div className="text-[8px] xs:text-[9px] sm:text-[10px] text-slate-500 dark:text-[#A9B9D3] font-medium truncate hidden xs:block">Save Time</div>
                       </div>
                     </div>
                   </div>
 
                   {/* Primary Action Button */}
-                  <div
-                    className="w-full py-2.5 sm:py-3.5 px-3 sm:px-6 rounded-xl sm:rounded-2xl bg-blue-600 group-hover:bg-blue-700 text-white font-extrabold text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 shadow-md shadow-blue-600/30 group-hover:shadow-blue-600/50 transition-all"
-                  >
+                  <div className="w-full py-2 xs:py-2.5 sm:py-3 px-2 sm:px-4 rounded-xl sm:rounded-2xl bg-blue-600 group-hover:bg-blue-700 text-white font-extrabold text-[11px] xs:text-xs sm:text-sm flex items-center justify-center gap-1 sm:gap-1.5 shadow-md shadow-blue-600/30 group-hover:shadow-blue-600/50 transition-all">
                     <span>Open Studio</span>
                     <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                   </div>
                 </div>
-
               </div>
             </Link>
 
-            {/* Right Card: Student Portal */}
+            {/* 2. Candidate Portal */}
             <button
               type="button"
               onClick={() => setShowCodeModal(true)}
-              className="relative text-left w-full rounded-2xl sm:rounded-[32px] bg-white dark:bg-[#0D1830] border-2 border-emerald-500/80 dark:border-[#10B981]/70 shadow-xl shadow-emerald-500/5 dark:shadow-[0_0_35px_rgba(16,185,129,0.22)] hover:shadow-2xl hover:border-emerald-500 hover:-translate-y-1.5 active:scale-[0.99] transition-all duration-300 overflow-hidden flex flex-col justify-between group cursor-pointer"
+              className="relative text-left w-full rounded-2xl sm:rounded-[28px] lg:rounded-[32px] bg-white dark:bg-[#0D1830] border-2 border-emerald-500/80 dark:border-[#10B981]/70 shadow-xl shadow-emerald-500/5 dark:shadow-[0_0_35px_rgba(16,185,129,0.22)] hover:shadow-2xl hover:border-emerald-500 hover:-translate-y-1.5 active:scale-[0.99] transition-all duration-300 overflow-hidden flex flex-col justify-between group cursor-pointer"
             >
-
-              <div className="p-2.5 sm:p-5 lg:p-6 flex flex-col flex-1 justify-between space-y-2.5 sm:space-y-5">
-
+              <div className="p-2.5 sm:p-4 lg:p-4.5 xl:p-5 flex flex-col flex-1 justify-between space-y-2 sm:space-y-3.5">
                 {/* Header: Role Pill & Access Level */}
-                <div className="space-y-1.5 sm:space-y-3">
-                  <div className="flex items-center justify-between gap-1 sm:gap-2">
-                    <div className="inline-flex items-center gap-1.5 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200/80 dark:border-emerald-500/40 text-emerald-600 dark:text-emerald-300 text-[10px] sm:text-xs font-bold shadow-xs whitespace-nowrap">
+                <div className="space-y-1 sm:space-y-2">
+                  <div className="flex items-center justify-between gap-1">
+                    <div className="inline-flex items-center gap-1 sm:gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200/80 dark:border-emerald-500/40 text-emerald-600 dark:text-emerald-300 text-[9.5px] xs:text-[10.5px] sm:text-xs font-bold shadow-xs whitespace-nowrap">
                       <GraduationCap className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-emerald-600 dark:fill-emerald-400 text-emerald-600 dark:text-emerald-400 shrink-0" />
                       <span>Candidate Portal</span>
                     </div>
-                    <div className="hidden sm:inline-flex items-center gap-1 px-1.5 sm:px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200/70 dark:border-emerald-500/40 text-emerald-600 dark:text-[#34D399] text-[8.5px] sm:text-[11px] font-bold tracking-wider uppercase whitespace-nowrap">
+                    <div className="hidden sm:inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200/70 dark:border-emerald-500/40 text-emerald-600 dark:text-[#34D399] text-[8.5px] sm:text-[10px] font-bold tracking-wider uppercase whitespace-nowrap">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                       <span>EXAM ACTIVE</span>
                     </div>
                   </div>
 
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-sm xs:text-base sm:text-2xl md:text-3xl lg:text-4xl font-black text-slate-900 dark:text-[#F8FAFC] tracking-tight leading-tight">
-                        Take <span className="text-emerald-600 dark:text-[#34D399]">Your Test</span>
-                      </h3>
-                      <p className="hidden sm:block text-xs md:text-sm text-slate-500 dark:text-[#A9B9D3] mt-1 sm:mt-1.5 leading-snug">
-                        Access assigned assessments using your exam code and complete your test.
-                      </p>
-                    </div>
-                    {/* Handwritten note style callout */}
-                    <div className="hidden md:flex flex-col items-center pt-0.5 text-emerald-600 dark:text-[#34D399] select-none pointer-events-none shrink-0 -rotate-2">
-                      <span className="italic text-[11px] font-bold tracking-tight text-right leading-tight font-serif">
-                        Simple,<br />Secure &amp; Smooth
-                      </span>
-                      <svg className="w-4 h-5 text-emerald-500 dark:text-[#34D399] mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M18 4c-4 0-8 6-6 14" />
-                        <path d="M8 15l4 4 4-4" />
-                      </svg>
-                    </div>
+                  <div>
+                    <h3 className="text-xs xs:text-sm sm:text-lg lg:text-base xl:text-xl font-black text-slate-900 dark:text-[#F8FAFC] tracking-tight leading-tight">
+                      Take <span className="text-emerald-600 dark:text-[#34D399]">Your Test</span>
+                    </h3>
+                    <p className="text-[10px] xs:text-[11px] sm:text-xs text-slate-500 dark:text-[#A9B9D3] mt-1 leading-snug line-clamp-2">
+                      Access assigned assessments using your exam code and complete your test.
+                    </p>
                   </div>
                 </div>
 
-                {/* 3D Illustration Stage (Dual Theme Support) */}
-                <div className="relative w-full overflow-hidden rounded-xl sm:rounded-2xl select-none my-0.5 sm:my-1">
+                {/* 3D Illustration Stage */}
+                <div className="relative w-full overflow-hidden rounded-xl select-none my-0.5 sm:my-1 flex items-center justify-center">
                   <img
                     src="/images/card_student_light.png"
                     alt="Candidate Portal Exam HUD"
@@ -898,52 +1040,303 @@ export default function UnifiedHomePage() {
                 </div>
 
                 {/* Bottom Section: Feature Badges & Action CTA */}
-                <div className="space-y-2 sm:space-y-3 pt-1">
-                  {/* 3 Unified Feature Tiles - In 1 Single Row on Desktop to Save Vertical Space */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-1 sm:gap-2">
+                <div className="space-y-1.5 sm:space-y-2.5 pt-1">
+                  <div className="grid grid-cols-3 sm:grid-cols-1 gap-1 sm:gap-1.5">
                     {/* Tile 1: Exam Code */}
-                    <div className="bg-slate-50/90 dark:bg-[#111D35] border border-slate-200/90 dark:border-[#263957] shadow-xs dark:shadow-none rounded-lg sm:rounded-xl p-1.5 sm:p-2.5 flex items-center gap-1.5 sm:gap-2 transition-all min-w-0 hover:border-emerald-300 dark:hover:border-emerald-700">
-                      <div className="w-6 h-6 sm:w-7.5 sm:h-7.5 rounded-md sm:rounded-lg bg-emerald-100/80 dark:bg-emerald-950/70 flex items-center justify-center text-emerald-600 dark:text-[#34D399] shrink-0">
-                        <KeyRound className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <div 
+                      title="Exam Code: Quick Access"
+                      className="bg-slate-50/90 dark:bg-[#111D35] border border-slate-200/90 dark:border-[#263957] shadow-xs rounded-lg p-1.5 sm:p-2 flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 transition-all min-w-0"
+                    >
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-emerald-100/80 dark:bg-emerald-950/70 flex items-center justify-center text-emerald-600 dark:text-[#34D399] shrink-0">
+                        <KeyRound className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="text-[10px] sm:text-xs font-bold text-slate-900 dark:text-[#F8FAFC] truncate">Exam Code</div>
-                        <div className="text-[8.5px] sm:text-[10px] text-slate-500 dark:text-[#A9B9D3] font-medium truncate">Quick Access</div>
+                      <div className="hidden sm:block min-w-0 flex-1">
+                        <div className="text-[9.5px] xs:text-[10.5px] sm:text-xs font-bold text-slate-900 dark:text-[#F8FAFC] truncate">Exam Code</div>
+                        <div className="text-[8px] xs:text-[9px] sm:text-[10px] text-slate-500 dark:text-[#A9B9D3] font-medium truncate hidden xs:block">Quick Access</div>
                       </div>
                     </div>
                     {/* Tile 2: Autosave */}
-                    <div className="bg-slate-50/90 dark:bg-[#111D35] border border-slate-200/90 dark:border-[#263957] shadow-xs dark:shadow-none rounded-lg sm:rounded-xl p-1.5 sm:p-2.5 flex items-center gap-1.5 sm:gap-2 transition-all min-w-0 hover:border-teal-300 dark:hover:border-teal-700">
-                      <div className="w-6 h-6 sm:w-7.5 sm:h-7.5 rounded-md sm:rounded-lg bg-teal-100/80 dark:bg-teal-950/70 flex items-center justify-center text-teal-600 dark:text-[#2DD4BF] shrink-0">
-                        <CheckSquare className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <div 
+                      title="Autosave: Never Lose"
+                      className="bg-slate-50/90 dark:bg-[#111D35] border border-slate-200/90 dark:border-[#263957] shadow-xs rounded-lg p-1.5 sm:p-2 flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 transition-all min-w-0"
+                    >
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-teal-100/80 dark:bg-teal-950/70 flex items-center justify-center text-teal-600 dark:text-[#2DD4BF] shrink-0">
+                        <CheckSquare className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="text-[10px] sm:text-xs font-bold text-slate-900 dark:text-[#F8FAFC] truncate">Autosave</div>
-                        <div className="text-[8.5px] sm:text-[10px] text-slate-500 dark:text-[#A9B9D3] font-medium truncate">Never Lose</div>
+                      <div className="hidden sm:block min-w-0 flex-1">
+                        <div className="text-[9.5px] xs:text-[10.5px] sm:text-xs font-bold text-slate-900 dark:text-[#F8FAFC] truncate">Autosave</div>
+                        <div className="text-[8px] xs:text-[9px] sm:text-[10px] text-slate-500 dark:text-[#A9B9D3] font-medium truncate hidden xs:block">Never Lose</div>
                       </div>
                     </div>
                     {/* Tile 3: Proctoring */}
-                    <div className="bg-slate-50/90 dark:bg-[#111D35] border border-slate-200/90 dark:border-[#263957] shadow-xs dark:shadow-none rounded-lg sm:rounded-xl p-1.5 sm:p-2.5 flex items-center gap-1.5 sm:gap-2 transition-all min-w-0 hover:border-amber-300 dark:hover:border-amber-700">
-                      <div className="w-6 h-6 sm:w-7.5 sm:h-7.5 rounded-md sm:rounded-lg bg-amber-100/80 dark:bg-amber-950/70 flex items-center justify-center text-amber-500 dark:text-[#FBBF24] shrink-0">
-                        <ShieldCheck className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <div 
+                      title="Proctoring: Secure Exams"
+                      className="bg-slate-50/90 dark:bg-[#111D35] border border-slate-200/90 dark:border-[#263957] shadow-xs rounded-lg p-1.5 sm:p-2 flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 transition-all min-w-0"
+                    >
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-amber-100/80 dark:bg-amber-950/70 flex items-center justify-center text-amber-500 dark:text-[#FBBF24] shrink-0">
+                        <ShieldCheck className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="text-[10px] sm:text-xs font-bold text-slate-900 dark:text-[#F8FAFC] truncate">Proctoring</div>
-                        <div className="text-[8.5px] sm:text-[10px] text-slate-500 dark:text-[#A9B9D3] font-medium truncate">Secure Exams</div>
+                      <div className="hidden sm:block min-w-0 flex-1">
+                        <div className="text-[9.5px] xs:text-[10.5px] sm:text-xs font-bold text-slate-900 dark:text-[#F8FAFC] truncate">Proctoring</div>
+                        <div className="text-[8px] xs:text-[9px] sm:text-[10px] text-slate-500 dark:text-[#A9B9D3] font-medium truncate hidden xs:block">Secure Exams</div>
                       </div>
                     </div>
                   </div>
 
                   {/* Primary Action Button */}
-                  <div
-                    className="w-full py-2.5 sm:py-3.5 px-3 sm:px-6 rounded-xl sm:rounded-2xl bg-[#059669] group-hover:bg-emerald-600 text-white font-extrabold text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 shadow-md shadow-emerald-600/30 group-hover:shadow-emerald-600/50 transition-all"
-                  >
+                  <div className="w-full py-2 xs:py-2.5 sm:py-3 px-2 sm:px-4 rounded-xl sm:rounded-2xl bg-[#059669] group-hover:bg-emerald-600 text-white font-extrabold text-[11px] xs:text-xs sm:text-sm flex items-center justify-center gap-1 sm:gap-1.5 shadow-md shadow-emerald-600/30 group-hover:shadow-emerald-600/50 transition-all">
                     <span>Open Portal</span>
                     <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                   </div>
                 </div>
-
               </div>
             </button>
+
+            {/* 3. Mock Test Library */}
+            <Link
+              href={mounted && token ? (role === "teacher" ? "/dashboard/teacher#mock-tests" : "/dashboard/student?tab=mock-tests") : "/dashboard/student?tab=mock-tests"}
+              data-fast-nav="true"
+              className="relative rounded-2xl sm:rounded-[28px] lg:rounded-[32px] bg-white dark:bg-[#0D1830] border-2 border-blue-300/80 dark:border-blue-500/60 shadow-xl shadow-blue-500/5 dark:shadow-[0_0_35px_rgba(59,130,246,0.18)] hover:shadow-2xl hover:border-blue-500 hover:-translate-y-1.5 active:scale-[0.99] transition-all duration-300 overflow-hidden flex flex-col justify-between group cursor-pointer block"
+            >
+              {/* Bottom-Right Curved Decorative Blue Wave */}
+              <div className="absolute -bottom-10 -right-10 w-44 h-44 rounded-full bg-blue-100/60 dark:bg-blue-900/30 blur-2xl pointer-events-none" />
+              <svg 
+                className="absolute bottom-0 right-0 w-32 h-24 pointer-events-none text-blue-100/70 dark:text-blue-950/60 transition-transform duration-500 group-hover:scale-105" 
+                viewBox="0 0 160 120" 
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path d="M0 120 C50 110 80 80 100 50 C120 20 140 10 160 0 L160 120 Z" />
+              </svg>
+
+              <div className="p-2.5 sm:p-4 lg:p-4.5 xl:p-5 flex flex-col flex-1 justify-between space-y-2 sm:space-y-3.5 relative z-10">
+                {/* Header: Role Pill & Badges */}
+                <div className="space-y-1 sm:space-y-2">
+                  <div className="flex items-center justify-between gap-1">
+                    <div className="inline-flex items-center gap-1 sm:gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full bg-[#EBF5FF] dark:bg-blue-950/80 border border-blue-200/90 dark:border-blue-500/40 text-[#0066FF] dark:text-[#38BDF8] text-[9.5px] xs:text-[10.5px] sm:text-xs font-bold shadow-xs whitespace-nowrap">
+                      <Layers className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#0066FF] dark:text-[#38BDF8] shrink-0" />
+                      <span>Mock Test</span>
+                    </div>
+                    <div className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-[#FEF3C7]/90 dark:bg-amber-950/70 border border-amber-200/90 dark:border-amber-500/40 text-amber-700 dark:text-amber-400 text-[8.5px] sm:text-[10px] font-bold shadow-xs whitespace-nowrap">
+                      <Zap className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-500 dark:text-amber-400 fill-amber-500 shrink-0" />
+                      <span className="hidden sm:inline">Practice &amp; Prepare</span>
+                      <span className="sm:hidden">Prepare</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-xs xs:text-sm sm:text-lg lg:text-base xl:text-xl font-black text-slate-900 dark:text-[#F8FAFC] tracking-tight leading-tight">
+                      Master Your Exam with{" "}
+                      <span className="text-[#0066FF] dark:text-[#38BDF8] relative inline-block whitespace-nowrap">
+                        Mock Tests
+                        <svg className="absolute -bottom-1 left-0 w-full h-2 text-[#0066FF] dark:text-[#38BDF8]" viewBox="0 0 160 12" fill="none" preserveAspectRatio="none">
+                          <path d="M2 9 C40 2 120 2 158 9" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" />
+                        </svg>
+                      </span>
+                    </h3>
+                    <p className="text-[10px] xs:text-[11px] sm:text-xs text-slate-500 dark:text-[#A9B9D3] mt-1 leading-snug line-clamp-2">
+                      Attempt exam-like mock tests, track your performance, and boost your preparation.
+                    </p>
+                  </div>
+                </div>
+
+                {/* 3D Illustration Stage */}
+                <div className="relative w-full overflow-hidden rounded-xl select-none my-0.5 sm:my-1 flex items-center justify-center">
+                  <img
+                    src="/images/stage_mocktest_light.png"
+                    alt="Online Mock Examination Interface"
+                    className="w-full h-auto object-contain block dark:hidden pointer-events-none transition-transform duration-300 group-hover:scale-[1.02]"
+                    draggable={false}
+                  />
+                  <img
+                    src="/images/stage_mocktest_dark.png"
+                    alt="Online Mock Examination Interface"
+                    className="w-full h-auto object-contain hidden dark:block pointer-events-none transition-transform duration-300 group-hover:scale-[1.02]"
+                    draggable={false}
+                  />
+                </div>
+
+                {/* Feature Chips & Action CTA */}
+                <div className="space-y-1.5 sm:space-y-2.5 pt-1">
+                  <div className="grid grid-cols-3 sm:grid-cols-1 gap-1 sm:gap-1.5">
+                    {/* Chip 1 */}
+                    <div 
+                      title="Full-Length Tests: Complete Exam Simulation"
+                      className="bg-slate-50/90 dark:bg-[#111D35] border border-slate-200/90 dark:border-[#263957] shadow-xs rounded-lg p-1.5 sm:p-2 flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 transition-all min-w-0"
+                    >
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-blue-100/80 dark:bg-blue-950/70 flex items-center justify-center text-blue-600 dark:text-[#38BDF8] shrink-0">
+                        <Target className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[2.2]" />
+                      </div>
+                      <div className="hidden sm:block min-w-0 flex-1">
+                        <span className="text-[9.5px] xs:text-[10.5px] sm:text-xs font-bold text-slate-800 dark:text-[#F8FAFC] truncate block">
+                          Full-Length Tests
+                        </span>
+                        <span className="text-[8px] xs:text-[9px] sm:text-[10px] text-slate-500 dark:text-[#A9B9D3] font-medium truncate hidden xs:block">Complete Exam Simulation</span>
+                      </div>
+                    </div>
+                    {/* Chip 2 */}
+                    <div 
+                      title="Subject-Wise Practice: Topic & Chapter Focus"
+                      className="bg-slate-50/90 dark:bg-[#111D35] border border-slate-200/90 dark:border-[#263957] shadow-xs rounded-lg p-1.5 sm:p-2 flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 transition-all min-w-0"
+                    >
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-blue-100/80 dark:bg-blue-950/70 flex items-center justify-center text-blue-600 dark:text-[#38BDF8] shrink-0">
+                        <Layers className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[2.2]" />
+                      </div>
+                      <div className="hidden sm:block min-w-0 flex-1">
+                        <span className="text-[9.5px] xs:text-[10.5px] sm:text-xs font-bold text-slate-800 dark:text-[#F8FAFC] truncate block">
+                          Subject-Wise Practice
+                        </span>
+                        <span className="text-[8px] xs:text-[9px] sm:text-[10px] text-slate-500 dark:text-[#A9B9D3] font-medium truncate hidden xs:block">Topic &amp; Chapter Focus</span>
+                      </div>
+                    </div>
+                    {/* Chip 3 */}
+                    <div 
+                      title="Performance Analysis: Rank & Score Metrics"
+                      className="bg-slate-50/90 dark:bg-[#111D35] border border-slate-200/90 dark:border-[#263957] shadow-xs rounded-lg p-1.5 sm:p-2 flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 transition-all min-w-0"
+                    >
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-blue-100/80 dark:bg-blue-950/70 flex items-center justify-center text-blue-600 dark:text-[#38BDF8] shrink-0">
+                        <BarChart3 className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[2.2]" />
+                      </div>
+                      <div className="hidden sm:block min-w-0 flex-1">
+                        <span className="text-[9.5px] xs:text-[10.5px] sm:text-xs font-bold text-slate-800 dark:text-[#F8FAFC] truncate block">
+                          Performance Analysis
+                        </span>
+                        <span className="text-[8px] xs:text-[9px] sm:text-[10px] text-slate-500 dark:text-[#A9B9D3] font-medium truncate hidden xs:block">Rank &amp; Score Metrics</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Primary Action Button */}
+                  <div className="w-full py-2 xs:py-2.5 sm:py-3 px-2 sm:px-4 rounded-xl sm:rounded-2xl bg-[#0066FF] group-hover:bg-[#0052CC] text-white font-extrabold text-[11px] xs:text-xs sm:text-sm flex items-center justify-center gap-1 sm:gap-1.5 shadow-md shadow-blue-600/30 group-hover:shadow-blue-600/50 transition-all">
+                    <span>Explore Mock Tests</span>
+                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </div>
+              </div>
+            </Link>
+
+            {/* 4. AI Form Builder */}
+            <Link
+              href={mounted && token && role === "teacher" ? "/dashboard/teacher#custom-forms" : "/login?role=teacher&redirect=/dashboard/teacher#custom-forms"}
+              data-fast-nav="true"
+              className="relative rounded-2xl sm:rounded-[28px] lg:rounded-[32px] bg-white dark:bg-[#0D1830] border-2 border-purple-300/80 dark:border-purple-500/60 shadow-xl shadow-purple-500/5 dark:shadow-[0_0_35px_rgba(147,51,234,0.18)] hover:shadow-2xl hover:border-purple-500 hover:-translate-y-1.5 active:scale-[0.99] transition-all duration-300 overflow-hidden flex flex-col justify-between group cursor-pointer block"
+            >
+              {/* Bottom-Right Curved Decorative Purple Wave */}
+              <div className="absolute -bottom-10 -right-10 w-44 h-44 rounded-full bg-purple-100/60 dark:bg-purple-900/30 blur-2xl pointer-events-none" />
+              <svg 
+                className="absolute bottom-0 right-0 w-32 h-24 pointer-events-none text-purple-100/70 dark:text-purple-950/60 transition-transform duration-500 group-hover:scale-105" 
+                viewBox="0 0 160 120" 
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path d="M0 120 C50 110 80 80 100 50 C120 20 140 10 160 0 L160 120 Z" />
+              </svg>
+
+              <div className="p-2.5 sm:p-4 lg:p-4.5 xl:p-5 flex flex-col flex-1 justify-between space-y-2 sm:space-y-3.5 relative z-10">
+                {/* Header: Role Pill & Badges */}
+                <div className="space-y-1 sm:space-y-2">
+                  <div className="flex items-center justify-between gap-1">
+                    <div className="inline-flex items-center gap-1 sm:gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full bg-[#F3E8FF] dark:bg-purple-950/80 border border-purple-200/90 dark:border-purple-500/40 text-[#7C3AED] dark:text-[#C084FC] text-[9.5px] xs:text-[10.5px] sm:text-xs font-bold shadow-xs whitespace-nowrap">
+                      <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#7C3AED] dark:text-[#C084FC] shrink-0" />
+                      <span>AI Form Builder</span>
+                    </div>
+                    <div className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-[#FAF5FF] dark:bg-violet-950/70 border border-violet-200/90 dark:border-violet-500/40 text-[#9333EA] dark:text-[#D8B4FE] text-[8.5px] sm:text-[10px] font-bold shadow-xs whitespace-nowrap">
+                      <Wand2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#9333EA] dark:text-[#D8B4FE] shrink-0" />
+                      <span className="hidden sm:inline">Create &amp; Collect</span>
+                      <span className="sm:hidden">Collect</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-xs xs:text-sm sm:text-lg lg:text-base xl:text-xl font-black text-slate-900 dark:text-[#F8FAFC] tracking-tight leading-tight">
+                      Build Smart Forms with{" "}
+                      <span className="text-[#6D28D9] dark:text-[#C084FC] relative inline-block whitespace-nowrap">
+                        AI
+                        <svg className="absolute -bottom-1 left-0 w-full h-2 text-[#6D28D9] dark:text-[#C084FC]" viewBox="0 0 60 12" fill="none" preserveAspectRatio="none">
+                          <path d="M2 9 C15 2 45 2 58 9" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" />
+                        </svg>
+                      </span>
+                    </h3>
+                    <p className="text-[10px] xs:text-[11px] sm:text-xs text-slate-500 dark:text-[#A9B9D3] mt-1 leading-snug line-clamp-2">
+                      Create professional forms in seconds using AI. Customize, share, and collect responses effortlessly.
+                    </p>
+                  </div>
+                </div>
+
+                {/* 3D Illustration Stage */}
+                <div className="relative w-full overflow-hidden rounded-xl select-none my-0.5 sm:my-1 flex items-center justify-center">
+                  <img
+                    src="/images/stage_formbuilder_light.png"
+                    alt="AI Form Builder Visual Interface"
+                    className="w-full h-auto object-contain block dark:hidden pointer-events-none transition-transform duration-300 group-hover:scale-[1.02]"
+                    draggable={false}
+                  />
+                  <img
+                    src="/images/stage_formbuilder_dark.png"
+                    alt="AI Form Builder Visual Interface"
+                    className="w-full h-auto object-contain hidden dark:block pointer-events-none transition-transform duration-300 group-hover:scale-[1.02]"
+                    draggable={false}
+                  />
+                </div>
+
+                {/* Feature Chips & Action CTA */}
+                <div className="space-y-1.5 sm:space-y-2.5 pt-1">
+                  <div className="grid grid-cols-3 sm:grid-cols-1 gap-1 sm:gap-1.5">
+                    {/* Chip 1 */}
+                    <div 
+                      title="AI Form Generation: Prompt to Live Form"
+                      className="bg-slate-50/90 dark:bg-[#111D35] border border-slate-200/90 dark:border-[#263957] shadow-xs rounded-lg p-1.5 sm:p-2 flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 transition-all min-w-0"
+                    >
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-purple-100/80 dark:bg-purple-950/70 flex items-center justify-center text-purple-600 dark:text-[#C084FC] shrink-0">
+                        <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[2.2]" />
+                      </div>
+                      <div className="hidden sm:block min-w-0 flex-1">
+                        <span className="text-[9.5px] xs:text-[10.5px] sm:text-xs font-bold text-slate-800 dark:text-[#F8FAFC] truncate block">
+                          AI Form Generation
+                        </span>
+                        <span className="text-[8px] xs:text-[9px] sm:text-[10px] text-slate-500 dark:text-[#A9B9D3] font-medium truncate hidden xs:block">Prompt to Live Form</span>
+                      </div>
+                    </div>
+                    {/* Chip 2 */}
+                    <div 
+                      title="Smart Questions: Adaptive Field Logic"
+                      className="bg-slate-50/90 dark:bg-[#111D35] border border-slate-200/90 dark:border-[#263957] shadow-xs rounded-lg p-1.5 sm:p-2 flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 transition-all min-w-0"
+                    >
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-purple-100/80 dark:bg-purple-950/70 flex items-center justify-center text-purple-600 dark:text-[#C084FC] shrink-0">
+                        <ListChecks className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[2.2]" />
+                      </div>
+                      <div className="hidden sm:block min-w-0 flex-1">
+                        <span className="text-[9.5px] xs:text-[10.5px] sm:text-xs font-bold text-slate-800 dark:text-[#F8FAFC] truncate block">
+                          Smart Questions
+                        </span>
+                        <span className="text-[8px] xs:text-[9px] sm:text-[10px] text-slate-500 dark:text-[#A9B9D3] font-medium truncate hidden xs:block">Adaptive Field Logic</span>
+                      </div>
+                    </div>
+                    {/* Chip 3 */}
+                    <div 
+                      title="Easy Sharing: Share Links & QR Codes"
+                      className="bg-slate-50/90 dark:bg-[#111D35] border border-slate-200/90 dark:border-[#263957] shadow-xs rounded-lg p-1.5 sm:p-2 flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 transition-all min-w-0"
+                    >
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-purple-100/80 dark:bg-purple-950/70 flex items-center justify-center text-purple-600 dark:text-[#C084FC] shrink-0">
+                        <Share2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[2.2]" />
+                      </div>
+                      <div className="hidden sm:block min-w-0 flex-1">
+                        <span className="text-[9.5px] xs:text-[10.5px] sm:text-xs font-bold text-slate-800 dark:text-[#F8FAFC] truncate block">
+                          Easy Sharing
+                        </span>
+                        <span className="text-[8px] xs:text-[9px] sm:text-[10px] text-slate-500 dark:text-[#A9B9D3] font-medium truncate hidden xs:block">Share Links &amp; QR Codes</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Primary Action Button */}
+                  <div className="w-full py-2 xs:py-2.5 sm:py-3 px-2 sm:px-4 rounded-xl sm:rounded-2xl bg-[#5B21B6] group-hover:bg-[#4C1D95] text-white font-extrabold text-[11px] xs:text-xs sm:text-sm flex items-center justify-center gap-1 sm:gap-1.5 shadow-md shadow-purple-600/30 group-hover:shadow-purple-600/50 transition-all">
+                    <span>Open Form Builder</span>
+                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </div>
+              </div>
+            </Link>
 
           </div>
         </div>
@@ -1754,7 +2147,44 @@ export default function UnifiedHomePage() {
         </div>
       </section>
 
+      {/* ══════════════════════════════════════════════════════════════════════
+          7A. MOCK TEST LIBRARY HIGHLIGHT (PRACTICE SMARTER. PREPARE BETTER.)
+      ══════════════════════════════════════════════════════════════════════ */}
+      <MockTestLibraryHighlight
+        isLoggedIn={!!(mounted && token)}
+        userRole={role}
+        onLearnMore={() => {
+          setCapabilitiesTab("student");
+          const el = document.getElementById("capabilities");
+          if (el) el.scrollIntoView({ behavior: "smooth" });
+        }}
+      />
 
+      {/* ══════════════════════════════════════════════════════════════════════
+          7B. CERTIFICATE MANAGEMENT HIGHLIGHT (RECOGNIZE ACHIEVEMENT. CELEBRATE SUCCESS.)
+      ══════════════════════════════════════════════════════════════════════ */}
+      <CertificateManagementHighlight
+        isLoggedIn={!!(mounted && token)}
+        userRole={role}
+        onLearnMore={() => {
+          setCapabilitiesTab("studio");
+          const el = document.getElementById("capabilities");
+          if (el) el.scrollIntoView({ behavior: "smooth" });
+        }}
+      />
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          7C. AI FORM BUILDER HIGHLIGHT (BUILD ANY FORM IN SECONDS. JUST DESCRIBE IT.)
+      ══════════════════════════════════════════════════════════════════════ */}
+      <AIFormBuilderHighlight
+        isLoggedIn={!!(mounted && token)}
+        userRole={role}
+        onLearnMore={() => {
+          setCapabilitiesTab("studio");
+          const el = document.getElementById("capabilities");
+          if (el) el.scrollIntoView({ behavior: "smooth" });
+        }}
+      />
 
       {/* ══════════════════════════════════════════════════════════════════════
           8. HOW IT WORKS (Streamlined 4-Step User Workflow)

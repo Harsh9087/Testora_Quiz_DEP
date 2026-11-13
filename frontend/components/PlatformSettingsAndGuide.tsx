@@ -262,7 +262,7 @@ export default function PlatformSettingsAndGuide({
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-1 mb-0.5">
-                          <span className={`text-xs font-bold truncate ${
+                          <span className={`text-xs font-bold line-clamp-2 leading-snug ${
                             isSelected ? "text-[#1E3A8A] dark:text-[#60A5FA]" : "text-[#111827] dark:text-[#F1F5F9]"
                           }`}>
                             {topic.title}

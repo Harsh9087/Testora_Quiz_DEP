@@ -53,7 +53,8 @@ const navItems: NavItem[] = [
   { name: "User Directory", href: "/admin/users", icon: Users },
   { name: "Institutions", href: "/admin/institutions", icon: Building2 },
   { name: "Assessments", href: "/admin/exams", icon: FileSpreadsheet },
-  { name: "Placement Tests", href: "/admin/mock-tests", icon: Award },
+  { name: "Mock Tests Library", href: "/admin/mock-tests", icon: Award },
+  { name: "Certificates", href: "/admin/certificates", icon: Award },
   { name: "Credit Ledger", href: "/admin/credits", icon: Coins },
   { name: "Coupons & Vouchers", href: "/admin/coupons", icon: Ticket },
   { name: "Pricing Plans", href: "/admin/pricing-plans", icon: Tag },
@@ -205,7 +206,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     required
                     value={adminEmail}
                     onChange={(e) => setAdminEmail(e.target.value)}
-                    placeholder="dpramptech"
+                    placeholder="squid@11898"
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-3 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
                   />
                 </div>

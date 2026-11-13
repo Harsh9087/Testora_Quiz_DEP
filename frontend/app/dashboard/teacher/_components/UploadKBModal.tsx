@@ -28,6 +28,17 @@ export default function UploadKBModal({
   const [isUploading, setIsUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
+  // Normalize subjects safely whether they are passed as strings or objects
+  const normalizedSubjects = Array.isArray(availableSubjects)
+    ? Array.from(
+        new Set(
+          availableSubjects
+            .map((s: any) => (typeof s === "string" ? s.trim() : (s?.subject_id || s?.name || "").toString().trim()))
+            .filter(Boolean)
+        )
+      )
+    : [];
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape" && !isUploading) {
@@ -106,7 +117,7 @@ export default function UploadKBModal({
   };
 
   const formatFileSize = (bytes?: number) => {
-    if (!bytes) return "";
+    if (!bytes || typeof bytes !== "number" || isNaN(bytes)) return "";
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
@@ -158,10 +169,10 @@ export default function UploadKBModal({
               list="existing-subjects-datalist"
               className="w-full bg-[#F8FAFC] dark:bg-[#17243A] border border-[#E2E8F0] dark:border-[#263449] rounded-xl px-3.5 py-2.5 text-xs text-[#111827] dark:text-[#F1F5F9] placeholder-[#A3B1C6] focus:outline-none focus:ring-2 focus:ring-blue-600/30 focus:border-blue-600"
             />
-            {availableSubjects.length > 0 && (
+            {normalizedSubjects.length > 0 && (
               <datalist id="existing-subjects-datalist">
-                {availableSubjects.map((s: any) => (
-                  <option key={s.subject_id || s.name} value={s.subject_id || s.name} />
+                {normalizedSubjects.map((sub, idx) => (
+                  <option key={`opt-sub-${sub}-${idx}`} value={sub} />
                 ))}
               </datalist>
             )}

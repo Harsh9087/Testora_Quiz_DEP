@@ -850,6 +850,7 @@ def update_exam_details(
 @router.post("/{exam_id}/publish-results")
 def publish_results(
     exam_id: str,
+    background_tasks: BackgroundTasks,
     current_workspace: Workspace = Depends(get_current_workspace),
     current_user: User = Depends(teacher_required),
     db: Session = Depends(get_db)
@@ -877,6 +878,13 @@ def publish_results(
                 notification_type="grade",
                 link="/dashboard/student"
             )
+
+    # Automated Passing Certificate Generation if enabled
+    try:
+        from app.services.certificate_service import certificate_service
+        certificate_service.process_exam_certificates(exam_id=exam_id, db=db, background_tasks=background_tasks)
+    except Exception as e:
+        logger.error(f"Error during automated certificate generation for exam {exam_id}: {e}")
             
     return {"message": "Grades and response sheets published successfully."}
 

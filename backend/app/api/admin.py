@@ -1586,7 +1586,7 @@ def update_support_ticket(
                 id=str(uuid.uuid4()),
                 user_id=target_user_id,
                 title=f"Support Ticket Updated: {ticket.ticket_code}",
-                message=f"Status changed to '{ticket.status}' by DPRAMP Support Team.",
+                message=f"Status changed to '{ticket.status}' by Testora Support Team.",
                 type="info",
                 link="/dashboard/support"
             )
@@ -1619,7 +1619,7 @@ def reply_to_support_ticket(
         id=str(uuid.uuid4()),
         ticket_id=ticket.id,
         sender_id=current_user.id,
-        sender_name=current_user.full_name or "DPRAMP Admin Desk",
+        sender_name=current_user.full_name or "Testora Admin Desk",
         sender_email=current_user.email,
         sender_role="admin",
         message=payload.message.strip(),
@@ -1655,7 +1655,7 @@ def reply_to_support_ticket(
                     id=str(uuid.uuid4()),
                     user_id=target_user_id,
                     title=f"New Response on Ticket: {ticket.ticket_code}",
-                    message=f"DPRAMP Support replied: '{payload.message[:80]}...'",
+                    message=f"Testora Support replied: '{payload.message[:80]}...'",
                     type="info",
                     link="/dashboard/support"
                 )

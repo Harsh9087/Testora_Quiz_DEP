@@ -36,6 +36,7 @@ import {
   Mic,
   MicOff,
   Volume2,
+  Download,
   X
 } from "lucide-react";
 import { apiFetch, getFrontendBaseUrl } from "../../../../lib/api";
@@ -97,8 +98,8 @@ const FIELD_TYPES = [
   { value: "phone", label: "Phone Number" },
   { value: "number", label: "Number" },
   { value: "select", label: "Dropdown Select" },
-  { value: "radio", label: "Single Choice (Radio with Images)" },
-  { value: "checkbox", label: "Multiple Choice (Checkbox with Images)" },
+  { value: "radio", label: "Single Choice (Radio)" },
+  { value: "checkbox", label: "Multiple Choice" },
   { value: "rating", label: "Rating Scale (1-5)" },
 ];
 
@@ -887,74 +888,76 @@ export default function CustomFormsManager({ token }: CustomFormsManagerProps) {
               )}
 
               {/* Tab Selector */}
-              <div className="flex items-center bg-[#FAF8F5] dark:bg-[#201D1A] p-1 rounded-2xl border border-[#E5E0D8] dark:border-[#292524]">
+              <div className="flex items-center gap-1 bg-[#FAF8F5] dark:bg-[#201D1A] p-1 rounded-2xl border border-[#E5E0D8] dark:border-[#292524] overflow-x-auto scrollbar-none w-full sm:w-auto shrink-0 max-w-full touch-pan-x">
                 <button
                   type="button"
                   onClick={() => setBuilderTab("fields")}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
                     builderTab === "fields"
                       ? "bg-white dark:bg-[#2B2724] text-blue-600 shadow-xs"
                       : "text-[#716D67] hover:text-[#242321]"
                   }`}
                 >
-                  <Layers className="h-3.5 w-3.5" />
+                  <Layers className="h-3.5 w-3.5 shrink-0" />
                   <span>Questions ({builderFields.length})</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setBuilderTab("theme")}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
                     builderTab === "theme"
                       ? "bg-white dark:bg-[#2B2724] text-blue-600 shadow-xs"
                       : "text-[#716D67] hover:text-[#242321]"
                   }`}
                 >
-                  <Palette className="h-3.5 w-3.5" />
+                  <Palette className="h-3.5 w-3.5 shrink-0" />
                   <span>Themes ({FORM_THEMES.length})</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setBuilderTab("hero")}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
                     builderTab === "hero"
                       ? "bg-white dark:bg-[#2B2724] text-blue-600 shadow-xs"
                       : "text-[#716D67] hover:text-[#242321]"
                   }`}
                 >
-                  <ImageIcon className="h-3.5 w-3.5" />
+                  <ImageIcon className="h-3.5 w-3.5 shrink-0" />
                   <span>Hero Cover</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setBuilderTab("preview")}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
                     builderTab === "preview"
                       ? "bg-white dark:bg-[#2B2724] text-blue-600 shadow-xs"
                       : "text-[#716D67] hover:text-[#242321]"
                   }`}
                 >
-                  <Eye className="h-3.5 w-3.5" />
+                  <Eye className="h-3.5 w-3.5 shrink-0" />
                   <span>Live Preview</span>
                 </button>
               </div>
 
-              <button
-                type="button"
-                onClick={() => handleSaveForm(false)}
-                disabled={isSaving}
-                className="px-3.5 py-2 text-xs font-semibold rounded-xl border border-[#E5E0D8] dark:border-[#292524] hover:bg-[#F7F4EF] text-[#716D67] transition-colors cursor-pointer"
-              >
-                Save Draft
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSaveForm(true)}
-                disabled={isSaving}
-                className="px-4 py-2 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 shadow-xs transition-colors cursor-pointer disabled:opacity-50"
-              >
-                <Sparkles className="h-3.5 w-3.5" />
-                <span>{isSaving ? "Saving..." : editingFormId ? "Save Changes" : "Publish Form"}</span>
-              </button>
+              <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={() => handleSaveForm(false)}
+                  disabled={isSaving}
+                  className="px-3.5 py-2 text-xs font-semibold rounded-xl border border-[#E5E0D8] dark:border-[#292524] hover:bg-[#F7F4EF] text-[#716D67] transition-colors cursor-pointer text-center"
+                >
+                  Save Draft
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSaveForm(true)}
+                  disabled={isSaving}
+                  className="px-4 py-2 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center gap-2 shadow-xs transition-colors cursor-pointer disabled:opacity-50 text-center"
+                >
+                  <Sparkles className="h-3.5 w-3.5" />
+                  <span>{isSaving ? "Saving..." : editingFormId ? "Save Changes" : "Publish Form"}</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -1169,11 +1172,13 @@ export default function CustomFormsManager({ token }: CustomFormsManagerProps) {
                   {builderFields.map((field, idx) => (
                     <div
                       key={field.id}
-                      className="bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-3xl p-5 shadow-xs space-y-3 transition-all hover:border-slate-300"
+                      className="bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-xs space-y-3 transition-all hover:border-slate-300 overflow-hidden max-w-full"
                     >
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div className="flex items-center gap-2.5 flex-1">
-                          <span className="w-6 h-6 rounded-full bg-[#FAF8F5] dark:bg-[#201D1A] border border-[#E5E0D8] text-xs font-bold flex items-center justify-center text-[#716D67] shrink-0">
+                      {/* Mobile Layout (< sm) */}
+                      <div className="flex flex-col gap-2.5 sm:hidden w-full">
+                        {/* Row 1: Number + Question Label */}
+                        <div className="flex items-center gap-2 w-full">
+                          <span className="w-6 h-6 rounded-full bg-[#FAF8F5] dark:bg-[#201D1A] border border-[#E5E0D8] dark:border-[#292524] text-xs font-bold flex items-center justify-center text-[#716D67] shrink-0">
                             {idx + 1}
                           </span>
                           <input
@@ -1181,31 +1186,120 @@ export default function CustomFormsManager({ token }: CustomFormsManagerProps) {
                             value={field.label}
                             onChange={(e) => handleFieldChange(idx, { label: e.target.value })}
                             placeholder="Question or Field Label"
-                            className="px-2.5 py-1 text-xs sm:text-sm font-bold rounded-lg border border-transparent hover:border-[#E5E0D8] focus:border-blue-600 bg-transparent text-[#242321] dark:text-[#F5F5F4] outline-none flex-1"
+                            className="px-2.5 py-1.5 text-xs font-bold rounded-lg border border-slate-200 dark:border-[#292524] focus:border-blue-600 bg-[#FAF8F5]/50 dark:bg-[#201D1A]/50 text-[#242321] dark:text-[#F5F5F4] outline-none flex-1 min-w-0"
                           />
                         </div>
 
-                        <div className="flex items-center gap-2 flex-wrap">
+                        {/* Row 2: Image toggle + Field Type dropdown (strictly constrained to screen width) */}
+                        <div className="flex items-center gap-2 w-full min-w-0">
+                          <button
+                            type="button"
+                            onClick={() => setExpandedImageFieldIdx(expandedImageFieldIdx === idx ? null : idx)}
+                            className={`px-2.5 py-1.5 text-xs font-semibold rounded-xl border flex items-center gap-1 transition-colors cursor-pointer shrink-0 ${
+                              field.image_url 
+                                ? "bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300" 
+                                : "border-[#E5E0D8] dark:border-[#292524] text-[#716D67] hover:bg-[#FAF8F5] dark:hover:bg-[#201D1A]"
+                            }`}
+                            title="Add photo to question stem"
+                          >
+                            <ImageIcon className="h-3.5 w-3.5 shrink-0" />
+                            <span>{field.image_url ? "Image" : "+ Image"}</span>
+                          </button>
+
+                          <div className="flex-1 min-w-0 max-w-full overflow-hidden">
+                            <select
+                              value={field.field_type}
+                              onChange={(e) => handleFieldChange(idx, { field_type: e.target.value })}
+                              className="w-full min-w-0 max-w-full px-2.5 py-1.5 text-xs rounded-xl border border-[#E5E0D8] dark:border-[#292524] bg-[#FAF8F5] dark:bg-[#201D1A] text-[#242321] dark:text-[#F5F5F4] cursor-pointer outline-none font-medium truncate block"
+                            >
+                              {FIELD_TYPES.map((t) => (
+                                <option key={t.value} value={t.value}>
+                                  {t.label}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* Row 3: Required toggle + Reorder + Delete */}
+                        <div className="flex items-center justify-between pt-1.5 border-t border-slate-100 dark:border-slate-800 text-xs">
+                          <label className="flex items-center gap-1.5 text-[#716D67] cursor-pointer select-none">
+                            <input
+                              type="checkbox"
+                              checked={field.required}
+                              onChange={(e) => handleFieldChange(idx, { required: e.target.checked })}
+                              className="rounded text-blue-600 focus:ring-blue-600 cursor-pointer w-4 h-4"
+                            />
+                            <span className="font-semibold text-xs">Required</span>
+                          </label>
+
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => handleMoveField(idx, "up")}
+                              disabled={idx === 0}
+                              className="p-1.5 rounded-lg text-[#716D67] hover:bg-[#FAF8F5] dark:hover:bg-[#201D1A] disabled:opacity-30 cursor-pointer"
+                              title="Move Up"
+                            >
+                              <MoveUp className="h-4 w-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleMoveField(idx, "down")}
+                              disabled={idx === builderFields.length - 1}
+                              className="p-1.5 rounded-lg text-[#716D67] hover:bg-[#FAF8F5] dark:hover:bg-[#201D1A] disabled:opacity-30 cursor-pointer"
+                              title="Move Down"
+                            >
+                              <MoveDown className="h-4 w-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveField(idx)}
+                              className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer"
+                              title="Remove Question"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Desktop / Tablet Single-Row Layout (sm:) */}
+                      <div className="hidden sm:flex sm:items-center justify-between gap-2.5 w-full min-w-0">
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <span className="w-6 h-6 rounded-full bg-[#FAF8F5] dark:bg-[#201D1A] border border-[#E5E0D8] dark:border-[#292524] text-xs font-bold flex items-center justify-center text-[#716D67] shrink-0">
+                            {idx + 1}
+                          </span>
+                          <input
+                            type="text"
+                            value={field.label}
+                            onChange={(e) => handleFieldChange(idx, { label: e.target.value })}
+                            placeholder="Question or Field Label"
+                            className="px-2.5 py-1 text-xs sm:text-sm font-bold rounded-lg border border-transparent hover:border-[#E5E0D8] dark:hover:border-[#292524] focus:border-blue-600 bg-transparent text-[#242321] dark:text-[#F5F5F4] outline-none flex-1 min-w-0"
+                          />
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
                           {/* Add/Edit Question Image Toggle */}
                           <button
                             type="button"
                             onClick={() => setExpandedImageFieldIdx(expandedImageFieldIdx === idx ? null : idx)}
-                            className={`px-2.5 py-1 text-xs font-semibold rounded-xl border flex items-center gap-1 transition-colors cursor-pointer ${
+                            className={`px-2 py-1 text-xs font-semibold rounded-xl border flex items-center gap-1 transition-colors cursor-pointer shrink-0 ${
                               field.image_url 
                                 ? "bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300" 
-                                : "border-[#E5E0D8] dark:border-[#292524] text-[#716D67] hover:bg-[#FAF8F5]"
+                                : "border-[#E5E0D8] dark:border-[#292524] text-[#716D67] hover:bg-[#FAF8F5] dark:hover:bg-[#201D1A]"
                             }`}
                             title="Add photo to question stem (like Google Forms)"
                           >
-                            <ImageIcon className="h-3.5 w-3.5" />
-                            <span>{field.image_url ? "Has Image" : "+ Image"}</span>
+                            <ImageIcon className="h-3.5 w-3.5 shrink-0" />
+                            <span className="truncate">{field.image_url ? "Image" : "+ Image"}</span>
                           </button>
 
                           {/* Field Type Selector */}
                           <select
                             value={field.field_type}
                             onChange={(e) => handleFieldChange(idx, { field_type: e.target.value })}
-                            className="px-2.5 py-1 text-xs rounded-xl border border-[#E5E0D8] dark:border-[#292524] bg-[#FAF8F5] dark:bg-[#201D1A] text-[#242321] dark:text-[#F5F5F4] cursor-pointer outline-none font-medium"
+                            className="px-2 py-1 text-xs rounded-xl border border-[#E5E0D8] dark:border-[#292524] bg-[#FAF8F5] dark:bg-[#201D1A] text-[#242321] dark:text-[#F5F5F4] cursor-pointer outline-none font-medium max-w-[190px] truncate"
                           >
                             {FIELD_TYPES.map((t) => (
                               <option key={t.value} value={t.value}>
@@ -1214,46 +1308,46 @@ export default function CustomFormsManager({ token }: CustomFormsManagerProps) {
                             ))}
                           </select>
 
-                          {/* Required Toggle */}
-                          <label className="flex items-center gap-1.5 text-xs text-[#716D67] cursor-pointer select-none">
-                            <input
-                              type="checkbox"
-                              checked={field.required}
-                              onChange={(e) => handleFieldChange(idx, { required: e.target.checked })}
-                              className="rounded text-blue-600 focus:ring-blue-600 cursor-pointer"
-                            />
-                            <span>Required</span>
-                          </label>
+                          {/* Controls: Required, Reorder, Delete */}
+                          <div className="flex items-center gap-1 shrink-0 pl-1 border-l border-slate-200 dark:border-slate-800">
+                            <label className="flex items-center gap-1 text-xs text-[#716D67] cursor-pointer select-none shrink-0 mr-1">
+                              <input
+                                type="checkbox"
+                                checked={field.required}
+                                onChange={(e) => handleFieldChange(idx, { required: e.target.checked })}
+                                className="rounded text-blue-600 focus:ring-blue-600 cursor-pointer w-3.5 h-3.5"
+                              />
+                              <span>Req</span>
+                            </label>
 
-                          {/* Reorder Buttons */}
-                          <button
-                            type="button"
-                            onClick={() => handleMoveField(idx, "up")}
-                            disabled={idx === 0}
-                            className="p-1 rounded text-[#716D67] hover:bg-[#FAF8F5] disabled:opacity-30 cursor-pointer"
-                            title="Move Up"
-                          >
-                            <MoveUp className="h-3.5 w-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleMoveField(idx, "down")}
-                            disabled={idx === builderFields.length - 1}
-                            className="p-1 rounded text-[#716D67] hover:bg-[#FAF8F5] disabled:opacity-30 cursor-pointer"
-                            title="Move Down"
-                          >
-                            <MoveDown className="h-3.5 w-3.5" />
-                          </button>
+                            <button
+                              type="button"
+                              onClick={() => handleMoveField(idx, "up")}
+                              disabled={idx === 0}
+                              className="p-1 rounded text-[#716D67] hover:bg-[#FAF8F5] dark:hover:bg-[#201D1A] disabled:opacity-30 cursor-pointer"
+                              title="Move Up"
+                            >
+                              <MoveUp className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleMoveField(idx, "down")}
+                              disabled={idx === builderFields.length - 1}
+                              className="p-1 rounded text-[#716D67] hover:bg-[#FAF8F5] dark:hover:bg-[#201D1A] disabled:opacity-30 cursor-pointer"
+                              title="Move Down"
+                            >
+                              <MoveDown className="h-3.5 w-3.5" />
+                            </button>
 
-                          {/* Delete */}
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveField(idx)}
-                            className="p-1 rounded text-rose-600 hover:bg-rose-50 cursor-pointer"
-                            title="Remove Question"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveField(idx)}
+                              className="p-1 rounded text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer"
+                              title="Remove Question"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
                         </div>
                       </div>
 
@@ -2017,37 +2111,83 @@ export default function CustomFormsManager({ token }: CustomFormsManagerProps) {
            ══════════════════════════════════════════════════════════════════════ */
         <div className="space-y-5 animate-in fade-in duration-200">
           
-          <div className="bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-3xl p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="p-2 rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400">
-                  <Wand2 className="h-5 w-5" />
-                </span>
-                <h2 className="text-base sm:text-lg font-bold text-[#242321] dark:text-[#F5F5F4]">
-                  AI-Powered Custom Form Builder
-                </h2>
-              </div>
-              <p className="text-xs text-[#716D67] dark:text-[#A8A29E] mt-1">
-                20 Curated Themes, Hero Cover Photos, Google Forms-Style Question Images, and instant Excel exports.
-              </p>
+          {/* ══════════════════════════════════════════════════════════════════════
+              HERO BANNER: UNIQUE WHITE-THEME 16:5 PANORAMA WITH PURE HTML TYPOGRAPHY
+             ══════════════════════════════════════════════════════════════════════ */}
+          <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-200/90 dark:border-blue-900/40 bg-white dark:bg-[#0B1528] text-slate-900 shadow-md min-h-[220px] md:min-h-[250px] flex flex-col justify-center">
+            {/* 16:5 Wide Landscape White-Themed Background Image with Responsive Positioning */}
+            <div className="absolute inset-0 z-0 pointer-events-none">
+              <img
+                src="/images/custom_forms_white_banner_bg.jpg"
+                alt="AI Form Builder Background"
+                className="w-full h-full object-cover object-right md:object-right opacity-95"
+              />
+              {/* Clean White / Ice-Blue Gradient Overlay on the Left for pure legibility */}
+              <div className="absolute inset-0 bg-gradient-to-r from-white via-white/95 sm:via-white/85 md:via-white/70 to-transparent dark:from-[#0B1528] dark:via-[#0B1528]/95 dark:sm:via-[#0B1528]/85 dark:md:via-[#0B1528]/70 dark:to-transparent" />
+              {/* Additional Mobile Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-white/50 to-transparent dark:from-[#0B1528]/95 dark:via-[#0B1528]/60 dark:to-transparent sm:hidden" />
             </div>
 
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                onClick={fetchForms}
-                disabled={refreshing}
-                className="p-2.5 rounded-xl border border-[#E5E0D8] dark:border-[#292524] hover:bg-[#F7F4EF] text-[#716D67] transition-colors cursor-pointer"
-                title="Refresh Forms"
-              >
-                <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
-              </button>
-              <button
-                onClick={handleStartNewForm}
-                className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
-              >
-                <Plus className="h-4 w-4" />
-                <span>Create Custom Form</span>
-              </button>
+            <div className="relative z-10 p-5 sm:p-6 lg:p-7 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-5 sm:gap-6">
+              {/* Left Column: Sharp Pure HTML Typography */}
+              <div className="space-y-3 max-w-2xl">
+                {/* Small Badge */}
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/70 border border-blue-200/80 dark:border-blue-800 text-blue-700 dark:text-cyan-300 text-[11px] font-bold tracking-wide shadow-2xs backdrop-blur-xs">
+                  <Sparkles className="w-3.5 h-3.5 text-blue-600 dark:text-cyan-300 animate-pulse" />
+                  <span>Interactive Full-Customization Form Studio</span>
+                </div>
+
+                {/* Main Heading & Description */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-1.5 h-6 sm:h-7 rounded-full bg-blue-600 dark:bg-cyan-400 shadow-[0_0_10px_rgba(37,99,235,0.4)] shrink-0" />
+                    <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
+                      AI-Powered Custom <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-cyan-400 dark:to-blue-400">Form Builder</span>
+                    </h2>
+                  </div>
+
+                  <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-xl pl-4 font-medium">
+                    20 Curated Themes, Hero Cover Photos, Google Forms-Style Question Images, and instant Excel exports.
+                  </p>
+                </div>
+
+                {/* Feature Labels */}
+                <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px]">
+                  <span className="px-2.5 py-1 rounded-lg bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-semibold flex items-center gap-1.5 shadow-2xs">
+                    <Palette className="w-3.5 h-3.5 text-blue-600 dark:text-cyan-400" />
+                    <span>20 Curated Themes</span>
+                  </span>
+                  <span className="px-2.5 py-1 rounded-lg bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-semibold flex items-center gap-1.5 shadow-2xs">
+                    <ImageIcon className="w-3.5 h-3.5 text-indigo-600 dark:text-amber-300" />
+                    <span>Hero Cover Photos</span>
+                  </span>
+                  <span className="px-2.5 py-1 rounded-lg bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-semibold flex items-center gap-1.5 shadow-2xs">
+                    <Download className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                    <span>Instant Excel Exports</span>
+                  </span>
+                </div>
+              </div>
+
+              {/* Right Column: Refresh & Primary CTA Action */}
+              <div className="flex items-center gap-2.5 shrink-0 w-full lg:w-auto justify-between lg:justify-end border-t lg:border-t-0 pt-3 lg:pt-0 border-slate-200/60 dark:border-white/10">
+                <button
+                  type="button"
+                  onClick={fetchForms}
+                  disabled={refreshing}
+                  className="p-2.5 rounded-xl bg-white/90 dark:bg-slate-900/80 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/90 dark:border-slate-700 text-slate-700 dark:text-slate-200 shadow-xs backdrop-blur-xs transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                  title="Refresh Forms"
+                >
+                  <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin text-blue-600 dark:text-cyan-400" : ""}`} />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleStartNewForm}
+                  className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-extrabold rounded-xl flex items-center gap-2 shadow-lg shadow-blue-600/30 transition-all hover:scale-105 active:scale-95 cursor-pointer whitespace-nowrap"
+                >
+                  <Plus className="h-4 w-4 stroke-[2.5]" />
+                  <span>Create Custom Form</span>
+                </button>
+              </div>
             </div>
           </div>
 

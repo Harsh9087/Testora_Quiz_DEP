@@ -563,16 +563,16 @@ export default function StudentDirectoryManager({ token: propToken }: StudentDir
           </p>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap w-full sm:w-auto">
           <button
             onClick={() => {
               setCreateModalMethod('form');
               setIsCreateModalOpen(true);
             }}
-            className="flex items-center gap-2 px-4 py-2.5 bg-[#25D366] hover:bg-[#20BD5A] text-white text-xs font-semibold rounded-xl shadow-sm transition-all cursor-pointer"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-[#25D366] hover:bg-[#20BD5A] text-white text-xs font-semibold rounded-xl shadow-sm transition-all cursor-pointer whitespace-nowrap text-center"
             title="Create directory & collect students via WhatsApp Form"
           >
-            <Share2 className="w-4 h-4" />
+            <Share2 className="w-4 h-4 shrink-0" />
             <span>Collect via WhatsApp</span>
           </button>
           <button
@@ -580,9 +580,9 @@ export default function StudentDirectoryManager({ token: propToken }: StudentDir
               setCreateModalMethod('csv');
               setIsCreateModalOpen(true);
             }}
-            className="flex items-center gap-2 px-4 py-2.5 bg-[#C84B18] hover:bg-[#B33F12] text-white text-xs font-semibold rounded-xl shadow-sm transition-all cursor-pointer"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-[#C84B18] hover:bg-[#B33F12] text-white text-xs font-semibold rounded-xl shadow-sm transition-all cursor-pointer whitespace-nowrap text-center"
           >
-            <FolderPlus className="w-4 h-4" />
+            <FolderPlus className="w-4 h-4 shrink-0" />
             <span>New Student Directory</span>
           </button>
         </div>
@@ -597,30 +597,30 @@ export default function StudentDirectoryManager({ token: propToken }: StudentDir
 
       {/* Main Mode Switcher: Directories vs AI Forms (visible when no directory is open) */}
       {!selectedDirectory && (
-        <div className="flex items-center gap-2 p-1 bg-[#F5F2EB] dark:bg-[#1E1C1A] rounded-2xl border border-[#E5E0D8] dark:border-[#292524] w-fit">
+        <div className="flex items-center gap-1.5 p-1 bg-[#F5F2EB] dark:bg-[#1E1C1A] rounded-2xl border border-[#E5E0D8] dark:border-[#292524] w-full sm:w-fit overflow-x-auto scrollbar-none">
           <button
             type="button"
             onClick={() => setActiveMainTab('directories')}
-            className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
+            className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3 sm:px-4 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer whitespace-nowrap shrink-0 ${
               activeMainTab === 'directories'
                 ? 'bg-[#FFFFFF] dark:bg-[#292524] text-[#C84B18] dark:text-[#EA580C] shadow-sm'
                 : 'text-[#716D67] hover:text-[#242321] dark:hover:text-[#F5F5F4]'
             }`}
           >
-            <Users className="w-4 h-4" />
+            <Users className="w-4 h-4 shrink-0" />
             <span>Student Directories ({directories.length})</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveMainTab('forms')}
-            className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
+            className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3 sm:px-4 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer whitespace-nowrap shrink-0 ${
               activeMainTab === 'forms'
                 ? 'bg-[#FFFFFF] dark:bg-[#292524] text-emerald-600 dark:text-emerald-400 shadow-sm'
                 : 'text-[#716D67] hover:text-[#242321] dark:hover:text-[#F5F5F4]'
             }`}
           >
-            <Sparkles className="w-4 h-4 text-emerald-500" />
+            <Sparkles className="w-4 h-4 shrink-0" />
             <span>AI Registration Forms ({registrationForms.length})</span>
           </button>
         </div>

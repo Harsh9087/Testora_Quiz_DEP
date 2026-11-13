@@ -122,6 +122,25 @@ export default function WebsiteFooter({
           targetId: "capabilities",
         },
         {
+          label: "Mock Test Library (Free)",
+          action: "scroll",
+          targetId: "mock-tests",
+        },
+        {
+          label: "Certificate Management",
+          action: "scroll",
+          targetId: "certificates",
+        },
+        {
+          label: "Verify Certificate",
+          href: "/verify-certificate/demo",
+        },
+        {
+          label: "AI Form Builder",
+          action: "scroll",
+          targetId: "form-builder",
+        },
+        {
           label: "AI Question Generator",
           action: "scroll",
           targetId: "how-it-works",

@@ -54,11 +54,11 @@ def get_optional_current_user(request: Request, db: Session = Depends(get_db)) -
 
 @router.get("/info")
 def get_support_info():
-    """Returns official DPRAMP Tech Solutions customer support contact information."""
+    """Returns official Testora Quiz customer support contact information."""
     return {
-        "company_name": "DPRAMP Tech Solutions",
+        "company_name": "Testora Quiz",
         "tagline": "AI-Powered Assessment & Educational Infrastructure",
-        "support_email": "support@dpramp.com",
+        "support_email": "support@testoraquiz.com",
         "admin_email": "shaharerohit47@gmail.com",
         "phone_helpline": "+91 91722 00000",
         "whatsapp_helpline": "+91 91722 00000",
@@ -75,17 +75,17 @@ def create_support_ticket(
     db: Session = Depends(get_db),
 ):
     """
-    Submits a support ticket to DPRAMP Tech Solutions.
+    Submits a support ticket to Testora Quiz Support Desk.
     - Persists ticket in database.
     - Sends a professional confirmation email to the user's registered email.
-    - Sends an instant dispatch notification to the DPRAMP Tech Solutions support desk.
+    - Sends an instant dispatch notification to the Testora Quiz support desk.
     - Generates an in-app notification for the logged-in user.
     """
     current_user = get_optional_current_user(request, db)
     user_id = current_user.id if current_user else None
 
-    # Generate a professional DPRAMP ticket code: DPR-TKT-XXXXXX
-    ticket_code = f"DPR-TKT-{uuid.uuid4().hex[:6].upper()}"
+    # Generate a professional Testora ticket code: TST-TKT-XXXXXX
+    ticket_code = f"TST-TKT-{uuid.uuid4().hex[:6].upper()}"
 
     new_ticket = SupportTicket(
         ticket_code=ticket_code,
@@ -98,7 +98,7 @@ def create_support_ticket(
         status="Open",
         message=payload.message.strip(),
         reference_code=payload.reference_code.strip() if payload.reference_code else None,
-        company_recipient="support@dpramp.com"
+        company_recipient="support@testoraquiz.com"
     )
 
     db.add(new_ticket)
@@ -111,7 +111,7 @@ def create_support_ticket(
             notif = Notification(
                 user_id=user_id,
                 title=f"Support Ticket Created: {ticket_code}",
-                message=f"DPRAMP Tech Solutions received your ticket '{payload.subject}'. Confirmation sent to {payload.email}.",
+                message=f"Testora Quiz received your ticket '{payload.subject}'. Confirmation sent to {payload.email}.",
                 type="info",
                 link="/dashboard/support"
             )
@@ -138,7 +138,7 @@ def create_support_ticket(
     return {
         "success": True,
         "ticket_code": ticket_code,
-        "message": f"Your ticket ({ticket_code}) has been received by DPRAMP Tech Solutions. A confirmation email has been dispatched to {payload.email}.",
+        "message": f"Your ticket ({ticket_code}) has been received by Testora Quiz. A confirmation email has been dispatched to {payload.email}.",
         "ticket": {
             "id": new_ticket.id,
             "ticket_code": new_ticket.ticket_code,

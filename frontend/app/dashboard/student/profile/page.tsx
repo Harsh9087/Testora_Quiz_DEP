@@ -336,8 +336,8 @@ export default function StudentProfilePage() {
 
             {/* Profile Identity Details */}
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-base sm:text-lg font-black text-[#111827] dark:text-[#F1F5F9] whitespace-nowrap truncate max-w-[200px] xs:max-w-[260px] sm:max-w-none">
+              <div className="flex items-center gap-2 min-w-0">
+                <h1 className="text-sm xs:text-base sm:text-lg font-black text-[#111827] dark:text-[#F1F5F9] truncate leading-tight">
                   {profile?.full_name || fullName || "Student Candidate"}
                 </h1>
                 <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
@@ -490,7 +490,7 @@ export default function StudentProfilePage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 self-center">
             <span className="inline-flex items-center gap-1 text-xs font-black text-amber-600 dark:text-amber-400 px-2.5 py-1 rounded-xl bg-amber-500/10 border border-amber-500/20 whitespace-nowrap shrink-0 shadow-xs">
               <span>{(profile?.credits_balance || 0).toLocaleString()}</span>
               <span>Credits</span>

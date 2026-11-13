@@ -4,7 +4,7 @@
    Strictly bypasses /api/ requests to preserve dynamic integrity and proctoring.
    ========================================================================== */
 
-const CACHE_NAME = 'testora-pwa-v1.5.0';
+const CACHE_NAME = 'testora-pwa-v1.6.0';
 
 const PRECACHE_ASSETS = [
   '/',
@@ -54,6 +54,11 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const request = event.request;
   const url = new URL(request.url);
+
+  // In development (localhost / 127.0.0.1), bypass service worker cache completely
+  if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') {
+    return;
+  }
 
   // 1. Only handle HTTP/HTTPS GET requests
   if (request.method !== 'GET' || !url.protocol.startsWith('http')) {

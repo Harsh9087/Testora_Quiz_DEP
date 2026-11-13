@@ -48,6 +48,14 @@ export default function ExamPortal() {
   const [loading, setLoading] = useState(false);
   const [submittedResult, setSubmittedResult] = useState<any | null>(null);
 
+  // Auto-prefill credentials if provided in URL query (e.g. from WhatsApp/direct share link ?user=...&pin=...)
+  useEffect(() => {
+    const qUser = searchParams.get("username") || searchParams.get("user") || "";
+    const qPass = searchParams.get("password") || searchParams.get("passcode") || searchParams.get("pin") || "";
+    if (qUser) setUsername(qUser);
+    if (qPass) setPassword(qPass);
+  }, [searchParams]);
+
   // Quiz layout states
   const [currentIndex, setCurrentIndex] = useState(0);
   const [flagged, setFlagged] = useState<Record<string, boolean>>({});
