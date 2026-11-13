@@ -133,12 +133,16 @@ export default function StudentDashboard() {
       const tabParam = params.get("tab");
       if (tabParam === "certificates") {
         setActivePortalTab("certificates");
-      } else if (tabParam === "company-tests" || tabParam === "mock-tests") {
+      } else if (tabParam === "company-tests") {
+        setActivePortalTab("company-tests");
+      } else if (tabParam === "mock-tests") {
         setActivePortalTab("mock-tests");
       }
 
       const handleSwitchTab = (e: any) => {
-        if (e.detail === "company-tests" || e.detail === "mock-tests") {
+        if (e.detail === "company-tests") {
+          setActivePortalTab("company-tests");
+        } else if (e.detail === "mock-tests") {
           setActivePortalTab("mock-tests");
         } else if (e.detail === "certificates") {
           setActivePortalTab("certificates");
@@ -196,7 +200,8 @@ export default function StudentDashboard() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
       
-      {/* ═══════ TOP HEADER & SUMMARY BANNER ═══════ */}
+      {/* ═══════ TOP HEADER & SUMMARY BANNER (DASHBOARD ONLY) ═══════ */}
+      {activePortalTab !== "mock-tests" && activePortalTab !== "company-tests" && activePortalTab !== "certificates" && (
       <div className="bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-2xl p-4 sm:p-5 shadow-xs space-y-3">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start sm:items-center gap-3 min-w-0 flex-1">
@@ -283,7 +288,7 @@ export default function StudentDashboard() {
           <button
             onClick={() => setActivePortalTab("mock-tests")}
             className={`px-3 sm:px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 sm:gap-2 shrink-0 cursor-pointer ${
-              activePortalTab === "company-tests" || activePortalTab === "mock-tests"
+              (activePortalTab as string) === "mock-tests"
                 ? "bg-[#2563EB] text-white shadow-xs"
                 : "bg-[#F1F5F9] dark:bg-[#17243A] text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9]"
             }`}
@@ -293,6 +298,22 @@ export default function StudentDashboard() {
             <span className="hidden sm:inline">Mock Test Library & Practice</span>
             <span className="px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-emerald-500 text-white ml-0.5">
               100% Free
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActivePortalTab("company-tests")}
+            className={`px-3 sm:px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 sm:gap-2 shrink-0 cursor-pointer ${
+              (activePortalTab as string) === "company-tests"
+                ? "bg-[#2563EB] text-white shadow-xs"
+                : "bg-[#F1F5F9] dark:bg-[#17243A] text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9]"
+            }`}
+          >
+            <Building2 className="h-3.5 w-3.5" />
+            <span className="sm:hidden">Placement Tests</span>
+            <span className="hidden sm:inline">Placement Tests (TCS, Infosys)</span>
+            <span className="px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-blue-500 text-white ml-0.5">
+              ₹9 / Free
             </span>
           </button>
 
@@ -328,7 +349,7 @@ export default function StudentDashboard() {
               fetchCertificates();
             }}
             className={`px-3 sm:px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 sm:gap-2 shrink-0 cursor-pointer ${
-              activePortalTab === "certificates"
+              (activePortalTab as string) === "certificates"
                 ? "bg-[#2563EB] text-white shadow-xs"
                 : "bg-[#F1F5F9] dark:bg-[#17243A] text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9]"
             }`}
@@ -371,6 +392,29 @@ export default function StudentDashboard() {
           </div>
         </div>
       </div>
+      )}
+
+      {/* ═══════ COMPACT RETURN BAR FOR FEATURE PAGES ═══════ */}
+      {(activePortalTab === "mock-tests" || activePortalTab === "company-tests" || activePortalTab === "certificates") && (
+        <div className="flex items-center justify-between gap-3 pt-1">
+          <button
+            onClick={() => {
+              setActivePortalTab("assigned");
+              window.history.pushState(null, "", "/dashboard/student");
+              window.dispatchEvent(new CustomEvent("switch-tab", { detail: "assigned" }));
+            }}
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white dark:bg-[#111C31] border border-slate-200/90 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-300 dark:hover:border-blue-700 shadow-2xs transition-all cursor-pointer group active:scale-95"
+          >
+            <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5 text-slate-500 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400" />
+            <span>Back to Dashboard</span>
+          </button>
+          <span className="text-[11.5px] font-semibold text-slate-500 dark:text-slate-400">
+            {activePortalTab === "mock-tests" && "Mock Test Library"}
+            {activePortalTab === "company-tests" && "Campus Placement Tests"}
+            {activePortalTab === "certificates" && "My Certificates"}
+          </span>
+        </div>
+      )}
 
       {/* ═══════ SECTION 1: ASSIGNED & LIVE EXAMS VIEW ═══════ */}
       {activePortalTab === "assigned" && (
@@ -610,8 +654,13 @@ export default function StudentDashboard() {
       )}
 
       {/* ═══════ SECTION: MOCK TEST LIBRARY & PRACTICE ═══════ */}
-      {(activePortalTab === "company-tests" || activePortalTab === "mock-tests") && (
+      {activePortalTab === "mock-tests" && (
         <MockTestLibrary />
+      )}
+
+      {/* ═══════ SECTION: CAMPUS PLACEMENT TESTS ═══════ */}
+      {activePortalTab === "company-tests" && (
+        <CompanyPlacementTests />
       )}
 
       {/* ═══════ SECTION 2: SUBMISSIONS & PERFORMANCE BREAKDOWN ═══════ */}

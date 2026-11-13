@@ -1029,26 +1029,26 @@ export default function DashboardLayout({
 
                   {/* Mock Test Library (Student) */}
                   <a
-                    href="/dashboard/student?tab=company-tests"
+                    href="/dashboard/student?tab=mock-tests"
                     onClick={(e) => {
                       closeSidebarMobile();
                       if (pathname === "/dashboard/student") {
                         e.preventDefault();
-                        window.dispatchEvent(new CustomEvent("switch-tab", { detail: "company-tests" }));
-                        window.history.pushState(null, "", "/dashboard/student?tab=company-tests");
-                        setCurrentTab("company-tests");
+                        window.dispatchEvent(new CustomEvent("switch-tab", { detail: "mock-tests" }));
+                        window.history.pushState(null, "", "/dashboard/student?tab=mock-tests");
+                        setCurrentTab("mock-tests");
                       }
                     }}
                     className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-xs font-semibold transition-all cursor-pointer ${
                       sidebarCollapsed ? "md:justify-center md:px-0" : ""
                     } ${
-                      pathname === "/dashboard/student" && (currentTab === "company-tests" || currentTab === "mock-tests")
+                      pathname === "/dashboard/student" && currentTab === "mock-tests"
                         ? "bg-blue-50/90 text-[#2563EB] dark:bg-blue-950/60 dark:text-[#60A5FA] border border-blue-200/80 dark:border-blue-900/60 font-bold shadow-xs"
                         : "text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/60 border border-transparent"
                     }`}
                   >
                     <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
-                      pathname === "/dashboard/student" && (currentTab === "company-tests" || currentTab === "mock-tests")
+                      pathname === "/dashboard/student" && currentTab === "mock-tests"
                         ? "bg-blue-600 text-white shadow-xs shadow-blue-500/25"
                         : "bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400"
                     }`}>
