@@ -85,6 +85,7 @@ interface MockTestTakingModalProps {
   isOpen: boolean;
   onClose: () => void;
   onCompleted?: () => void;
+  initialMode?: "exam" | "solutions";
 }
 
 export default function MockTestTakingModal({
@@ -95,6 +96,7 @@ export default function MockTestTakingModal({
   isOpen,
   onClose,
   onCompleted,
+  initialMode = "exam",
 }: MockTestTakingModalProps) {
   const { token } = useAuthStore();
   const [loading, setLoading] = useState(true);
@@ -138,6 +140,17 @@ export default function MockTestTakingModal({
         } else {
           setErrorMsg("Could not load test questions. Please ensure access is unlocked.");
         }
+
+        if (initialMode === "solutions") {
+          const solRes = await apiFetch(`/mock-tests/${testId}/solution-review`, { token });
+          if (solRes.ok) {
+            const solData = await solRes.json();
+            setResult(solData);
+          } else {
+            const errData = await solRes.json().catch(() => ({}));
+            setErrorMsg(errData.detail || "Could not load test solutions. You may need to take and submit the test first.");
+          }
+        }
       } catch (err: any) {
         setErrorMsg(err.message || "Network error loading test.");
       } finally {
@@ -146,7 +159,7 @@ export default function MockTestTakingModal({
     };
 
     loadTest();
-  }, [isOpen, testId, token, durationMinutes]);
+  }, [isOpen, testId, token, durationMinutes, initialMode]);
 
   // Countdown timer
   useEffect(() => {
@@ -197,7 +210,7 @@ export default function MockTestTakingModal({
   };
 
   const handleSafeClose = () => {
-    if (!result && questions.length > 0 && Object.keys(answers).length > 0) {
+    if (!result && initialMode !== "solutions" && questions.length > 0 && Object.keys(answers).length > 0) {
       const confirmExit = window.confirm(
         "You have an assessment in progress. Are you sure you want to exit? Your answers will not be scored until submitted."
       );
@@ -281,9 +294,19 @@ export default function MockTestTakingModal({
                 {testTitle}
               </h3>
               <p className="text-[11px] text-[#64748B] dark:text-[#A3B1C6] flex items-center gap-1.5 truncate">
-                <span>{companyName} Practice Examination</span>
-                <span>•</span>
-                <span>{questions.length} Questions</span>
+                {result ? (
+                  <>
+                    <span className="text-blue-600 dark:text-blue-400 font-bold">Solutions & Answer Explanations</span>
+                    <span>•</span>
+                    <span>{result.reviews?.length || questions.length} Questions Reviewed</span>
+                  </>
+                ) : (
+                  <>
+                    <span>{companyName} Practice Examination</span>
+                    <span>•</span>
+                    <span>{questions.length} Questions</span>
+                  </>
+                )}
               </p>
             </div>
           </div>

@@ -2509,6 +2509,147 @@ def submit_mock_test_answers(
     )
 
 
+@router.get("/{test_id}/solution-review", response_model=MockTestSubmitResult)
+def get_mock_test_solution_review(
+    test_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Retrieves the authenticated student's completed scorecard, answers, and full question-by-question solution review.
+    """
+    test = db.query(MockTest).filter(
+        MockTest.id == test_id,
+        MockTest.is_deleted == False
+    ).first()
+
+    if not test:
+        raise HTTPException(status_code=404, detail="Mock test not found.")
+
+    purchase = db.query(MockTestPurchase).filter(
+        MockTestPurchase.mock_test_id == test.id,
+        MockTestPurchase.student_id == current_user.id,
+        MockTestPurchase.is_deleted == False
+    ).first()
+
+    if not purchase or purchase.status != "completed":
+        raise HTTPException(
+            status_code=400,
+            detail="You have not submitted this assessment yet. Please start and submit the test first."
+        )
+
+    answers: Dict[str, Any] = {}
+    if purchase.answers_json:
+        try:
+            answers = json.loads(purchase.answers_json)
+        except Exception:
+            answers = {}
+
+    raw_qs = []
+    if test.questions_json:
+        try:
+            raw_qs = json.loads(test.questions_json)
+        except Exception:
+            raw_qs = []
+
+    default_marks_per_q = float(test.marks_per_question or 1.0)
+    default_neg_per_q = float(test.negative_marking or 0.0)
+
+    calculated_max_score = 0.0
+    for q in raw_qs:
+        calculated_max_score += float(q.get("marks", default_marks_per_q))
+
+    max_score = float(test.total_marks) if test.total_marks and test.total_marks > 0 else calculated_max_score
+    if max_score <= 0:
+        max_score = float(len(raw_qs)) or 1.0
+
+    score = 0.0
+    correct_count = 0
+    incorrect_count = 0
+    unanswered_count = 0
+    total_negative_marks = 0.0
+    reviews: List[QuestionReview] = []
+
+    for idx, q in enumerate(raw_qs):
+        q_id = str(q.get("id") or f"q_{idx+1}")
+        correct_ans = str(q.get("correct_answer", "")).strip().upper()
+        student_ans = str(
+            answers.get(q_id) or
+            answers.get(str(q.get("id"))) or
+            answers.get(str(idx + 1)) or
+            ""
+        ).strip().upper()
+
+        q_marks = float(q.get("marks", default_marks_per_q))
+        q_neg = float(q.get("negative_marks", default_neg_per_q))
+
+        is_correct = False
+        marks_obtained = 0.0
+        neg_deducted = 0.0
+
+        if not student_ans:
+            unanswered_count += 1
+        elif student_ans == correct_ans:
+            is_correct = True
+            correct_count += 1
+            marks_obtained = q_marks
+            score += q_marks
+        else:
+            incorrect_count += 1
+            neg_deducted = q_neg
+            total_negative_marks += q_neg
+            score -= q_neg
+
+        q_type = q.get("question_type") or "multiple_choice"
+        if q_type not in ["multiple_choice", "true_false", "numerical", "assertion_reason"]:
+            q_type = "multiple_choice"
+
+        reviews.append(QuestionReview(
+            question_id=q_id,
+            question=q.get("question", ""),
+            options=q.get("options", []),
+            question_type=q_type,
+            image_url=q.get("image_url"),
+            image_caption=q.get("image_caption"),
+            source_details=q.get("source_details"),
+            selected_answer=student_ans if student_ans else None,
+            correct_answer=correct_ans,
+            is_correct=is_correct,
+            explanation=q.get("explanation") or "Standard educational benchmark solution.",
+            marks_obtained=marks_obtained,
+            negative_marks_deducted=neg_deducted
+        ))
+
+    final_score = float(purchase.score) if purchase.score is not None else max(0.0, round(score, 2))
+    percentage = float(purchase.percentage) if purchase.percentage is not None else (
+        round((final_score / max_score * 100.0), 1) if max_score > 0 else 0.0
+    )
+
+    passing_marks = float(test.passing_marks or 0.0)
+    pass_percentage = test.pass_percentage or 40
+    if purchase.passed is not None:
+        passed = bool(purchase.passed)
+    elif passing_marks > 0:
+        passed = final_score >= passing_marks
+    else:
+        passed = percentage >= pass_percentage
+
+    return MockTestSubmitResult(
+        score=final_score,
+        max_score=max_score,
+        percentage=percentage,
+        passed=passed,
+        correct_count=correct_count,
+        incorrect_count=incorrect_count,
+        unanswered_count=unanswered_count,
+        total_negative_marks=round(total_negative_marks, 2),
+        passing_marks=passing_marks,
+        pass_percentage=pass_percentage,
+        completed_at=purchase.completed_at or "Completed",
+        reviews=reviews
+    )
+
+
 # =============================================================================
 # 4. SUPER ADMIN MANAGEMENT ENDPOINTS
 # =============================================================================

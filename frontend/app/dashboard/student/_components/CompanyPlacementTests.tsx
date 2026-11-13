@@ -138,6 +138,7 @@ export default function CompanyPlacementTests() {
 
   // Active Test Runner Modal
   const [activeTest, setActiveTest] = useState<MockTestItem | null>(null);
+  const [testMode, setTestMode] = useState<"exam" | "solutions">("exam");
 
   // Load Razorpay checkout script
   const loadRazorpayScript = (): Promise<boolean> => {
@@ -764,7 +765,10 @@ export default function CompanyPlacementTests() {
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
-                        onClick={() => setActiveTest(test)}
+                        onClick={() => {
+                          setTestMode("exam");
+                          setActiveTest(test);
+                        }}
                         className="flex-1 py-2.5 px-3 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
                       >
                         <RotateCcw className="w-3.5 h-3.5" />
@@ -772,7 +776,10 @@ export default function CompanyPlacementTests() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => setActiveTest(test)}
+                        onClick={() => {
+                          setTestMode("solutions");
+                          setActiveTest(test);
+                        }}
                         className="flex-1 py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
                       >
                         <span>Solutions</span>
@@ -782,7 +789,10 @@ export default function CompanyPlacementTests() {
                   ) : test.is_unlocked ? (
                     <button
                       type="button"
-                      onClick={() => setActiveTest(test)}
+                      onClick={() => {
+                        setTestMode("exam");
+                        setActiveTest(test);
+                      }}
                       className="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <Play className="w-3.5 h-3.5 fill-current" />
@@ -824,6 +834,7 @@ export default function CompanyPlacementTests() {
           companyName={activeTest.company_name}
           durationMinutes={activeTest.duration_minutes}
           isOpen={Boolean(activeTest)}
+          initialMode={testMode}
           onClose={() => {
             setActiveTest(null);
             fetchTests();
