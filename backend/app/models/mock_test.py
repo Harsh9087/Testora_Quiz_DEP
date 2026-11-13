@@ -86,6 +86,7 @@ class MockTest(TimeStampedModel):
     # "students_only", "teachers_only", "all", "specific_class"
     visibility_target = Column(String(50), default="students_only", nullable=False, index=True)
     target_class = Column(String(50), nullable=True) # For specific_class e.g. "Class 11"
+    target_section = Column(String(50), default="mock_test_library", nullable=True, index=True) # "mock_test_library", "placement_tests", "both"
 
     # Publication status: "draft", "published", "unpublished"
     status = Column(String(50), default="published", nullable=False, index=True)

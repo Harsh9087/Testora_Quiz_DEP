@@ -80,6 +80,7 @@ interface MockTestItem {
   last_score?: number | null;
   last_percentage?: number | null;
   last_passed?: boolean | null;
+  target_section?: string;
   creator_name?: string;
   share_token?: string;
   end_time?: string;
@@ -289,37 +290,50 @@ export default function MockTestLibrary() {
     return count;
   }, [selectedTestType, selectedMarksRange, selectedClass, selectedSubject, selectedDifficulty]);
 
+  // Pure Mock Test Library papers (strictly excluding corporate placement tests)
+  const libraryTests = useMemo(() => {
+    return tests.filter((t) => {
+      if (t.target_section === "mock_test_library" || t.target_section === "both") return true;
+      if (t.target_section === "placement_tests") return false;
+      const isPlacement =
+        t.exam_type === "Corporate Placement" ||
+        (t.category && t.category.toLowerCase().includes("corporate")) ||
+        ["tcs", "infosys", "hcl", "wipro", "accenture"].includes(t.company_slug?.toLowerCase());
+      return !isPlacement;
+    });
+  }, [tests]);
+
   // Dynamic Compact Statistics (Section 2)
   const stats = useMemo(() => {
-    const available = tests.length;
-    const attempted = tests.filter((t) => t.has_attempted).length;
-    const completed = tests.filter((t) => t.last_passed).length;
-    const scores = tests
+    const available = libraryTests.length;
+    const attempted = libraryTests.filter((t) => t.has_attempted).length;
+    const completed = libraryTests.filter((t) => t.last_passed).length;
+    const scores = libraryTests
       .filter((t) => t.has_attempted && typeof t.last_percentage === "number")
       .map((t) => t.last_percentage as number);
     const avgScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null;
     return { available, attempted, completed, avgScore };
-  }, [tests]);
+  }, [libraryTests]);
 
   // Dynamic Category Navigation Pills (Section 2: Class 11, Class 12, JEE, Engineering, General Aptitude, Competitive)
   // Empty categories are automatically hidden
   const categoryPills = useMemo(() => {
     const list = [
-      { id: "all", label: "All Tests", count: tests.length },
+      { id: "all", label: "All Tests", count: libraryTests.length },
       {
         id: "class-11",
         label: "Class 11",
-        count: tests.filter((t) => t.class_level?.includes("11") || t.title.toLowerCase().includes("class 11")).length,
+        count: libraryTests.filter((t) => t.class_level?.includes("11") || t.title.toLowerCase().includes("class 11")).length,
       },
       {
         id: "class-12",
         label: "Class 12",
-        count: tests.filter((t) => t.class_level?.includes("12") || t.title.toLowerCase().includes("class 12")).length,
+        count: libraryTests.filter((t) => t.class_level?.includes("12") || t.title.toLowerCase().includes("class 12")).length,
       },
       {
         id: "jee",
         label: "JEE",
-        count: tests.filter(
+        count: libraryTests.filter(
           (t) =>
             t.exam_type?.toLowerCase().includes("jee") ||
             t.title.toLowerCase().includes("jee") ||
@@ -330,7 +344,7 @@ export default function MockTestLibrary() {
       {
         id: "engineering",
         label: "Engineering",
-        count: tests.filter(
+        count: libraryTests.filter(
           (t) =>
             t.category?.toLowerCase().includes("engineering") ||
             t.class_level?.toLowerCase().includes("engineering")
@@ -339,7 +353,7 @@ export default function MockTestLibrary() {
       {
         id: "general-aptitude",
         label: "General Aptitude",
-        count: tests.filter(
+        count: libraryTests.filter(
           (t) =>
             t.category?.toLowerCase().includes("aptitude") ||
             t.subject?.toLowerCase().includes("aptitude") ||
@@ -348,21 +362,19 @@ export default function MockTestLibrary() {
       },
       {
         id: "competitive",
-        label: "Other Competitive Exams",
-        count: tests.filter(
+        label: "Competitive Exams",
+        count: libraryTests.filter(
           (t) =>
-            t.category?.toLowerCase().includes("competitive") ||
-            t.category?.toLowerCase().includes("corporate") ||
-            ["tcs", "infosys", "hcl", "wipro", "accenture"].includes(t.company_slug?.toLowerCase())
+            t.category?.toLowerCase().includes("competitive")
         ).length,
       },
     ];
     return list.filter((c) => c.id === "all" || c.count > 0);
-  }, [tests]);
+  }, [libraryTests]);
 
   // Filtered Tests
   const filteredTests = useMemo(() => {
-    return tests.filter((t) => {
+    return libraryTests.filter((t) => {
       // Category Navigation Shortcut Pills
       if (activeCategoryPill === "class-11") {
         if (!t.class_level?.includes("11") && !t.title.toLowerCase().includes("class 11")) return false;
@@ -613,7 +625,7 @@ export default function MockTestLibrary() {
 
           <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
             <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">
-              Showing <strong>{filteredTests.length}</strong> of <strong>{tests.length}</strong> papers
+              Showing <strong>{filteredTests.length}</strong> of <strong>{libraryTests.length}</strong> papers
             </span>
           </div>
         </div>

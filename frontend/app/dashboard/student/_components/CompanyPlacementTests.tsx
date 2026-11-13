@@ -54,6 +54,8 @@ interface MockTestItem {
   last_score?: number | null;
   last_percentage?: number | null;
   last_passed?: boolean | null;
+  target_section?: string;
+  exam_type?: string;
 }
 
 interface CompanyFilter {
@@ -308,8 +310,19 @@ export default function CompanyPlacementTests() {
     }
   };
 
+  // Placement Arena specific tests (excluding pure academic mock library tests)
+  const placementTests = tests.filter((t) => {
+    if (t.target_section === "placement_tests" || t.target_section === "both") return true;
+    if (t.target_section === "mock_test_library") return false;
+    return (
+      t.exam_type === "Corporate Placement" ||
+      (t.category && t.category.toLowerCase().includes("placement")) ||
+      (t.company_slug && !["testora", "testora_national"].includes(t.company_slug.toLowerCase()))
+    );
+  });
+
   // Filtered Tests
-  const filteredTests = tests.filter((t) => {
+  const filteredTests = placementTests.filter((t) => {
     const matchesCompany = selectedCompany === "all" || t.company_slug.toLowerCase() === selectedCompany.toLowerCase();
     const matchesPrice =
       priceFilter === "all" ||
@@ -328,9 +341,9 @@ export default function CompanyPlacementTests() {
   });
 
   // Aggregate stats
-  const freeCount = tests.filter((t) => t.is_free).length;
-  const paidCount = tests.filter((t) => !t.is_free).length;
-  const attemptedCount = tests.filter((t) => t.has_attempted).length;
+  const freeCount = placementTests.filter((t) => t.is_free).length;
+  const paidCount = placementTests.filter((t) => !t.is_free).length;
+  const attemptedCount = placementTests.filter((t) => t.has_attempted).length;
 
   return (
     <div className="space-y-6 sm:space-y-8 animate-fadeIn">
@@ -384,7 +397,7 @@ export default function CompanyPlacementTests() {
           <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 pt-2 max-w-xl text-left">
             <div className="p-2.5 rounded-xl bg-slate-900/60 border border-slate-700/60 backdrop-blur-sm">
               <div className="text-[10px] sm:text-[11px] text-slate-400 uppercase font-bold tracking-wider">Available Tests</div>
-              <div className="text-base sm:text-xl font-black text-white mt-0.5">{tests.length} Mocks</div>
+              <div className="text-base sm:text-xl font-black text-white mt-0.5">{placementTests.length} Mocks</div>
             </div>
             <div className="p-2.5 rounded-xl bg-slate-900/60 border border-slate-700/60 backdrop-blur-sm">
               <div className="text-[10px] sm:text-[11px] text-emerald-400 uppercase font-bold tracking-wider">Free Mocks</div>

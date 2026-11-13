@@ -4818,6 +4818,7 @@ def seed_initial_mock_tests(db: Session):
                     difficulty_distribution_json=json.dumps({"Easy": 20.0, "Medium": 50.0, "Hard": 30.0}),
                     visibility_target=t_data.get("visibility_target", "all"),
                     target_class=t_data.get("target_class"),
+                    target_section="mock_test_library",
                     status=t_data.get("status", "published"),
                     price_inr=0,
                     price_paise=0,
@@ -4839,6 +4840,9 @@ def seed_initial_mock_tests(db: Session):
                 )
                 db.add(test)
                 logger.info(f"Seeded mock test: {test.title} ({len(questions)} Qs)")
+            else:
+                if not getattr(existing, "target_section", None):
+                    existing.target_section = "mock_test_library"
 
         
         # 4. Seed Corporate Placement Mock Tests (TCS NQT ₹9, Infosys ₹12, HCLTech ₹9, TCS Digital ₹12, Wipro, Accenture)
@@ -4876,6 +4880,7 @@ def seed_initial_mock_tests(db: Session):
                     language="English",
                     difficulty_distribution_json=json.dumps({"Easy": 30.0, "Medium": 50.0, "Hard": 20.0}),
                     visibility_target="all",
+                    target_section="placement_tests",
                     status="published",
                     price_inr=p_inr,
                     price_paise=p_inr * 100,
@@ -4901,6 +4906,7 @@ def seed_initial_mock_tests(db: Session):
                 existing_c.price_inr = p_inr
                 existing_c.price_paise = p_inr * 100
                 existing_c.is_free = (p_inr <= 0)
+                existing_c.target_section = "placement_tests"
                 if not existing_c.category_id and corp_cat_id:
                     existing_c.category_id = corp_cat_id
                 if not existing_c.test_type_id and flm_type_id:

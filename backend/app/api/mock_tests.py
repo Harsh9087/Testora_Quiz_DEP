@@ -103,6 +103,15 @@ def serialize_summary(test: MockTest, user_purchase: Optional[MockTestPurchase] 
         except Exception:
             pass
 
+    t_sec = getattr(test, "target_section", None)
+    if not t_sec:
+        is_placement = (
+            (test.exam_type and "corporate" in test.exam_type.lower()) or
+            (test.category and ("corporate" in test.category.lower() or "placement" in test.category.lower())) or
+            (test.company_slug and test.company_slug.lower() not in ["testora", "testora_national", "testora_mock"])
+        )
+        t_sec = "placement_tests" if is_placement else "mock_test_library"
+
     return MockTestSummary(
         id=test.id,
         category_id=test.category_id,
@@ -133,6 +142,7 @@ def serialize_summary(test: MockTest, user_purchase: Optional[MockTestPurchase] 
         difficulty_distribution=diff_dist,
         visibility_target=test.visibility_target or "students_only",
         target_class=test.target_class,
+        target_section=t_sec,
         status=test.status or "published",
         price_inr=test.price_inr or 0,
         price_paise=test.price_paise or 0,
@@ -2669,6 +2679,7 @@ def admin_create_mock_test(
         company_logo=payload.company_logo,
         visibility_target=payload.visibility_target or "students_only",
         target_class=payload.target_class,
+        target_section=payload.target_section or "mock_test_library",
         status=payload.status or "published",
         price_inr=max(0, payload.price_inr),
         price_paise=price_paise,
@@ -2767,6 +2778,8 @@ def admin_update_mock_test(
         test.visibility_target = payload.visibility_target
     if payload.target_class is not None:
         test.target_class = payload.target_class
+    if payload.target_section is not None:
+        test.target_section = payload.target_section
     if payload.status is not None:
         test.status = payload.status
 

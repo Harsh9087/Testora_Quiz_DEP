@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   Clock,
   Coins,
+  Compass,
   Search,
   Tag,
   X,
@@ -74,6 +75,7 @@ interface AdminMockTest {
   language: string;
   visibility_target: string;
   target_class?: string;
+  target_section?: string;
   status: string; // "published", "draft", "unpublished"
   price_inr: number;
   is_free: boolean;
@@ -196,6 +198,7 @@ export default function AdminMockTestsPage() {
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedVisibility, setSelectedVisibility] = useState("all");
   const [selectedPricing, setSelectedPricing] = useState("all"); // "all", "free", "paid"
+  const [selectedSectionFilter, setSelectedSectionFilter] = useState("all"); // "all", "mock_test_library", "placement_tests", "both"
 
   // Sync Default Tests State
   const [syncingTests, setSyncingTests] = useState(false);
@@ -228,6 +231,7 @@ export default function AdminMockTestsPage() {
   const [difficulty, setDifficulty] = useState("Medium");
   const [language, setLanguage] = useState("English");
   const [visibilityTarget, setVisibilityTarget] = useState("all");
+  const [targetSection, setTargetSection] = useState<"mock_test_library" | "placement_tests" | "both">("mock_test_library");
   const [statusVal, setStatusVal] = useState("published");
   const [priceInr, setPriceInr] = useState(0);
   const [durationMinutes, setDurationMinutes] = useState(60);
@@ -418,6 +422,7 @@ export default function AdminMockTestsPage() {
     setDifficulty("Medium");
     setLanguage("English");
     setVisibilityTarget("all");
+    setTargetSection("mock_test_library");
     setStatusVal("published");
     setPriceInr(0);
     setDurationMinutes(60);
@@ -456,6 +461,14 @@ export default function AdminMockTestsPage() {
     setDifficulty(test.difficulty || "Medium");
     setLanguage(test.language || "English");
     setVisibilityTarget(test.visibility_target || "all");
+    const inferredSection =
+      (test.target_section as any) ||
+      (test.exam_type === "Corporate Placement" ||
+      (test.category && test.category.toLowerCase().includes("placement")) ||
+      (test.company_slug && !["testora", "testora_national"].includes(test.company_slug.toLowerCase()))
+        ? "placement_tests"
+        : "mock_test_library");
+    setTargetSection(inferredSection);
     setStatusVal(test.status || "published");
     setPriceInr(test.price_inr || 0);
     setDurationMinutes(test.duration_minutes || 60);
@@ -511,6 +524,7 @@ export default function AdminMockTestsPage() {
         difficulty,
         language,
         visibility_target: visibilityTarget,
+        target_section: targetSection,
         status: statusVal,
         price_inr: Number(priceInr) || 0,
         duration_minutes: Number(durationMinutes) || 60,
@@ -847,6 +861,17 @@ export default function AdminMockTestsPage() {
     return tests.filter((t) => {
       if (selectedPricing === "free" && (!t.is_free && (t.price_inr || 0) > 0)) return false;
       if (selectedPricing === "paid" && (t.is_free || (t.price_inr || 0) === 0)) return false;
+      if (selectedSectionFilter !== "all") {
+        if (selectedSectionFilter === "mock_test_library") {
+          const isLib = t.target_section === "mock_test_library" || t.target_section === "both" || (!t.target_section && t.exam_type !== "Corporate Placement");
+          if (!isLib) return false;
+        } else if (selectedSectionFilter === "placement_tests") {
+          const isPlace = t.target_section === "placement_tests" || t.target_section === "both" || (!t.target_section && t.exam_type === "Corporate Placement");
+          if (!isPlace) return false;
+        } else if (selectedSectionFilter === "both") {
+          if (t.target_section !== "both") return false;
+        }
+      }
       if (selectedCategory !== "all" && t.category !== selectedCategory) return false;
       if (selectedTestType !== "all" && t.test_type !== selectedTestType && t.test_type_id !== selectedTestType) return false;
       if (selectedMarksFilter !== "all") {
@@ -872,7 +897,7 @@ export default function AdminMockTestsPage() {
       }
       return true;
     });
-  }, [tests, selectedPricing, selectedCategory, selectedTestType, selectedMarksFilter, selectedClass, selectedSubject, selectedStatus, selectedVisibility, searchQuery]);
+  }, [tests, selectedPricing, selectedSectionFilter, selectedCategory, selectedTestType, selectedMarksFilter, selectedClass, selectedSubject, selectedStatus, selectedVisibility, searchQuery]);
 
   const totalPages = Math.ceil(filteredTests.length / itemsPerPage) || 1;
   const paginatedTests = filteredTests.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -1046,6 +1071,21 @@ export default function AdminMockTestsPage() {
             <option value="paid">Paid Tests Only (₹9 / ₹12)</option>
           </select>
 
+          {/* Target Section Filter */}
+          <select
+            value={selectedSectionFilter}
+            onChange={(e) => {
+              setSelectedSectionFilter(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="px-3 py-2 text-xs bg-slate-50 dark:bg-[#15233D] border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white font-semibold"
+          >
+            <option value="all">All Sections (Arena)</option>
+            <option value="mock_test_library">🎓 Mock Test Library Only</option>
+            <option value="placement_tests">🏢 Placement Tests Only</option>
+            <option value="both">🌐 Both Sections</option>
+          </select>
+
           {/* Test Type Dropdown */}
           <select
             value={selectedTestType}
@@ -1204,11 +1244,26 @@ export default function AdminMockTestsPage() {
                       )}
                     </td>
 
-                    {/* Category */}
+                    {/* Category & Section */}
                     <td className="py-3.5 px-4 whitespace-nowrap">
-                      <span className="px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 font-medium text-[11px]">
-                        {t.category}
-                      </span>
+                      <div className="flex flex-col items-start gap-1">
+                        <span className="px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 font-medium text-[11px]">
+                          {t.category}
+                        </span>
+                        {t.target_section === "placement_tests" || (!t.target_section && t.exam_type === "Corporate Placement") ? (
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[9.5px] font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300/60">
+                            🏢 Placement Arena
+                          </span>
+                        ) : t.target_section === "both" ? (
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[9.5px] font-bold bg-indigo-100 dark:bg-indigo-950/80 text-indigo-800 dark:text-indigo-300 border border-indigo-300/60">
+                            🌐 Both Sections
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[9.5px] font-bold bg-sky-100 dark:bg-sky-950/80 text-sky-800 dark:text-sky-300 border border-sky-300/60">
+                            🎓 Mock Library
+                          </span>
+                        )}
+                      </div>
                       {t.subcategory && (
                         <div className="text-[10px] text-slate-400 mt-0.5">{t.subcategory}</div>
                       )}
@@ -1919,6 +1974,82 @@ export default function AdminMockTestsPage() {
                       ? "✨ 100% Free Practice Mock — Instant access for all students in Mock Test Library."
                       : `⚡ Paid Assessment (₹${priceInr}) — Students unlock this corporate test through Razorpay in the Campus Placement Arena.`}
                   </p>
+                </div>
+              </div>
+
+              {/* Target Display Arena / Section Selector (Mock Test Library vs Placement Tests vs Both) */}
+              <div className="p-3.5 rounded-xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200/90 dark:border-blue-900/60 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <Compass className="w-3.5 h-3.5 text-blue-600" />
+                    <span>Target Display Section / Arena *</span>
+                  </label>
+                  <span className="text-[10px] font-bold text-slate-500">
+                    Active Target:{" "}
+                    <b className="text-blue-600 dark:text-blue-400">
+                      {targetSection === "both"
+                        ? "Both Sections (Global)"
+                        : targetSection === "placement_tests"
+                        ? "Placement Tests Arena"
+                        : "Mock Test Library"}
+                    </b>
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setTargetSection("mock_test_library")}
+                    className={`p-2.5 rounded-xl text-xs font-bold transition-all border cursor-pointer flex flex-col items-center justify-center text-center gap-1 ${
+                      targetSection === "mock_test_library"
+                        ? "bg-blue-600 text-white border-blue-700 shadow-xs ring-2 ring-blue-400/40"
+                        : "bg-white dark:bg-[#111C31] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-blue-300"
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <GraduationCap className="w-4 h-4" />
+                      <span>Mock Test Library</span>
+                    </div>
+                    <span className={`text-[10px] font-medium leading-tight ${targetSection === "mock_test_library" ? "text-blue-100" : "text-slate-400"}`}>
+                      School Boards, Class 11/12, JEE Main, NEET & Foundation
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setTargetSection("placement_tests")}
+                    className={`p-2.5 rounded-xl text-xs font-bold transition-all border cursor-pointer flex flex-col items-center justify-center text-center gap-1 ${
+                      targetSection === "placement_tests"
+                        ? "bg-emerald-600 text-white border-emerald-700 shadow-xs ring-2 ring-emerald-400/40"
+                        : "bg-white dark:bg-[#111C31] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-emerald-300"
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <Building2 className="w-4 h-4" />
+                      <span>Placement Tests</span>
+                    </div>
+                    <span className={`text-[10px] font-medium leading-tight ${targetSection === "placement_tests" ? "text-emerald-100" : "text-slate-400"}`}>
+                      Corporate campus recruitment (TCS, Infosys, Wipro, Paid ₹9/₹12)
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setTargetSection("both")}
+                    className={`p-2.5 rounded-xl text-xs font-bold transition-all border cursor-pointer flex flex-col items-center justify-center text-center gap-1 ${
+                      targetSection === "both"
+                        ? "bg-indigo-600 text-white border-indigo-700 shadow-xs ring-2 ring-indigo-400/40"
+                        : "bg-white dark:bg-[#111C31] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-300"
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <Layers className="w-4 h-4" />
+                      <span>Both Sections</span>
+                    </div>
+                    <span className={`text-[10px] font-medium leading-tight ${targetSection === "both" ? "text-indigo-100" : "text-slate-400"}`}>
+                      Visible in both Mock Test Library & Campus Placement Arena
+                    </span>
+                  </button>
                 </div>
               </div>
 

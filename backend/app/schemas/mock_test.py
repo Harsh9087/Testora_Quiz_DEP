@@ -170,6 +170,7 @@ class MockTestSummary(BaseModel):
 
     visibility_target: str = "students_only"
     target_class: Optional[str] = None
+    target_section: Optional[str] = "mock_test_library"
     status: str = "published"
 
     price_inr: int = 0
@@ -254,6 +255,7 @@ class MockTestCreate(BaseModel):
 
     visibility_target: str = "students_only"
     target_class: Optional[str] = None
+    target_section: Optional[str] = "mock_test_library"
     status: str = "published"
 
     price_inr: int = 0
@@ -307,6 +309,7 @@ class MockTestUpdate(BaseModel):
 
     visibility_target: Optional[str] = None
     target_class: Optional[str] = None
+    target_section: Optional[str] = None
     status: Optional[str] = None
 
     price_inr: Optional[int] = None

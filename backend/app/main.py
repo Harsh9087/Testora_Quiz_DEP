@@ -247,8 +247,14 @@ async def lifespan(app: FastAPI):
 
     try:
         Base.metadata.create_all(bind=engine)
-        # Automatic column synchronization for SQLite
+        # Automatic column synchronization for PostgreSQL and SQLite
         with engine.connect() as conn:
+            try:
+                if engine.dialect.name == "postgresql":
+                    conn.execute(text("ALTER TABLE mock_tests ADD COLUMN IF NOT EXISTS target_section VARCHAR(50) DEFAULT 'mock_test_library'"))
+                    conn.commit()
+            except Exception:
+                pass
             for table_name, table in Base.metadata.tables.items():
                 try:
                     res = conn.execute(text(f"PRAGMA table_info({table_name})"))
