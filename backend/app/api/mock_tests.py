@@ -40,7 +40,9 @@ from app.schemas.mock_test import (
     MockTestSharePublicDetail,
     MockTestStartPayload,
     MockTestSendEmailRequest,
-    MockTestResultItem
+    MockTestResultItem,
+    MockTestTakerRecord,
+    MockTestTakersResponse
 )
 from app.services.email_service import email_service
 from app.utils.security import get_current_user, RoleChecker
@@ -2544,6 +2546,86 @@ def admin_get_stats(
         hidden_count=hidden_count,
         total_questions=total_questions,
         total_attempts=total_attempts
+    )
+
+
+@router.get("/admin/{test_id}/takers", response_model=MockTestTakersResponse)
+def admin_get_mock_test_takers(
+    test_id: str,
+    current_user: User = Depends(admin_required),
+    db: Session = Depends(get_db)
+):
+    """
+    Super Admin / Admin: Retrieves all candidate attempts, scorecards, and Razorpay payment details for a mock test.
+    """
+    test = db.query(MockTest).filter(
+        MockTest.id == test_id,
+        MockTest.is_deleted == False
+    ).first()
+
+    if not test:
+        raise HTTPException(status_code=404, detail="Mock test not found")
+
+    purchases = db.query(MockTestPurchase).filter(
+        MockTestPurchase.mock_test_id == test.id,
+        MockTestPurchase.is_deleted == False
+    ).order_by(MockTestPurchase.created_at.desc()).all()
+
+    # Sync attempts count if not matched
+    if len(purchases) != (test.attempts_count or 0):
+        test.attempts_count = len(purchases)
+        try:
+            db.commit()
+        except Exception:
+            db.rollback()
+
+    records = []
+    total_revenue = 0
+    completed_count = 0
+
+    for p in purchases:
+        s_name = p.student_name
+        s_email = p.student_email
+        if (not s_name or not s_email) and p.student_id:
+            u = db.query(User).filter(User.id == p.student_id).first()
+            if u:
+                s_name = s_name or u.full_name
+                s_email = s_email or u.email
+
+        if p.status == "completed":
+            completed_count += 1
+
+        total_revenue += (p.amount_paid_inr or 0)
+
+        records.append(MockTestTakerRecord(
+            id=p.id,
+            student_id=p.student_id,
+            student_name=s_name or "Student Candidate",
+            student_email=s_email,
+            amount_paid_inr=p.amount_paid_inr or 0,
+            payment_method=p.payment_method or ("RAZORPAY" if (p.amount_paid_inr or 0) > 0 else "FREE"),
+            razorpay_order_id=p.razorpay_order_id,
+            razorpay_payment_id=p.razorpay_payment_id,
+            status=p.status or "completed",
+            score=float(p.score) if p.score is not None else None,
+            max_score=float(p.max_score or test.total_marks or 50.0),
+            percentage=float(p.percentage) if p.percentage is not None else None,
+            passed=p.passed,
+            time_taken_seconds=p.time_taken_seconds,
+            attempt_number=p.attempt_number or 1,
+            created_at=str(p.created_at) if p.created_at else None,
+            completed_at=p.completed_at
+        ))
+
+    return MockTestTakersResponse(
+        test_id=test.id,
+        test_title=test.title,
+        price_inr=test.price_inr or 0,
+        is_free=bool(test.is_free or test.price_inr == 0),
+        total_takers=len(purchases),
+        total_completed=completed_count,
+        total_revenue_inr=total_revenue,
+        records=records
     )
 
 

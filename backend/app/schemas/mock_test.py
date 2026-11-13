@@ -483,3 +483,35 @@ class MockTestResultItem(BaseModel):
     time_taken_seconds: Optional[int] = None
     attempt_number: int = 1
 
+
+class MockTestTakerRecord(BaseModel):
+    id: str
+    student_id: str
+    student_name: str
+    student_email: Optional[str] = None
+    amount_paid_inr: int = 0
+    payment_method: str = "FREE"
+    razorpay_order_id: Optional[str] = None
+    razorpay_payment_id: Optional[str] = None
+    status: str = "completed" # "unlocked", "completed"
+    score: Optional[float] = None
+    max_score: Optional[float] = None
+    percentage: Optional[float] = None
+    passed: Optional[bool] = None
+    time_taken_seconds: Optional[int] = None
+    attempt_number: int = 1
+    created_at: Optional[Any] = None
+    completed_at: Optional[str] = None
+
+
+class MockTestTakersResponse(BaseModel):
+    test_id: str
+    test_title: str
+    price_inr: int = 0
+    is_free: bool = True
+    total_takers: int = 0
+    total_completed: int = 0
+    total_revenue_inr: int = 0
+    records: List[MockTestTakerRecord] = []
+
+

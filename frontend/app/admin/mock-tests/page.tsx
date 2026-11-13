@@ -40,7 +40,10 @@ import {
   Link2,
   ExternalLink,
   Zap,
-  RefreshCw
+  RefreshCw,
+  Users,
+  Download,
+  XCircle
 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
@@ -298,6 +301,41 @@ export default function AdminMockTestsPage() {
   const [previewTest, setPreviewTest] = useState<AdminMockTest | null>(null);
   const [previewQuestions, setPreviewQuestions] = useState<QuestionItem[]>([]);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+
+  // Candidate Takers & Payment Records Modal
+  const [isTakersModalOpen, setIsTakersModalOpen] = useState(false);
+  const [selectedTestForTakers, setSelectedTestForTakers] = useState<AdminMockTest | null>(null);
+  const [takersData, setTakersData] = useState<{
+    test_id: string;
+    test_title: string;
+    price_inr: number;
+    is_free: boolean;
+    total_takers: number;
+    total_completed: number;
+    total_revenue_inr: number;
+    records: Array<{
+      id: string;
+      student_id: string;
+      student_name: string;
+      student_email?: string;
+      amount_paid_inr: number;
+      payment_method: string;
+      razorpay_order_id?: string;
+      razorpay_payment_id?: string;
+      status: string;
+      score?: number;
+      max_score?: number;
+      percentage?: number;
+      passed?: boolean;
+      time_taken_seconds?: number;
+      attempt_number: number;
+      created_at?: string;
+      completed_at?: string;
+    }>;
+  } | null>(null);
+  const [loadingTakers, setLoadingTakers] = useState(false);
+  const [takersSearchQuery, setTakersSearchQuery] = useState("");
+  const [takersStatusFilter, setTakersStatusFilter] = useState<"all" | "completed" | "unlocked" | "passed" | "failed" | "paid" | "free">("all");
 
   // Category Manager Modal
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
@@ -750,6 +788,114 @@ export default function AdminMockTestsPage() {
     setIsPreviewModalOpen(true);
   };
 
+  // Test Takers & Payment Records Modal
+  const handleOpenTakers = async (test: AdminMockTest) => {
+    setSelectedTestForTakers(test);
+    setIsTakersModalOpen(true);
+    setLoadingTakers(true);
+    setTakersSearchQuery("");
+    setTakersStatusFilter("all");
+    try {
+      const res = await apiFetch(`/mock-tests/admin/${test.id}/takers`, { token });
+      if (res.ok) {
+        const data = await res.json();
+        setTakersData(data);
+      } else {
+        setTakersData({
+          test_id: test.id,
+          test_title: test.title,
+          price_inr: test.price_inr || 0,
+          is_free: Boolean(test.is_free || test.price_inr === 0),
+          total_takers: test.attempts_count || 0,
+          total_completed: 0,
+          total_revenue_inr: 0,
+          records: []
+        });
+      }
+    } catch (err: any) {
+      console.error("Failed to load test takers:", err);
+      setTakersData({
+        test_id: test.id,
+        test_title: test.title,
+        price_inr: test.price_inr || 0,
+        is_free: Boolean(test.is_free || test.price_inr === 0),
+        total_takers: test.attempts_count || 0,
+        total_completed: 0,
+        total_revenue_inr: 0,
+        records: []
+      });
+    } finally {
+      setLoadingTakers(false);
+    }
+  };
+
+  const handleExportTakersCSV = () => {
+    if (!takersData || !takersData.records || !takersData.records.length) return;
+    const headers = [
+      "Candidate Name",
+      "Email",
+      "Access / Payment Type",
+      "Amount Paid (INR)",
+      "Razorpay Order ID",
+      "Razorpay Payment ID",
+      "Status",
+      "Score",
+      "Max Score",
+      "Percentage (%)",
+      "Result",
+      "Time Taken",
+      "Attempt No",
+      "Date Enrolled / Completed"
+    ];
+    const rows = takersData.records.map((r: any) => [
+      `"${(r.student_name || "Candidate").replace(/"/g, '""')}"`,
+      `"${(r.student_email || "").replace(/"/g, '""')}"`,
+      `"${r.payment_method || (r.amount_paid_inr > 0 ? "RAZORPAY" : "FREE")}"`,
+      r.amount_paid_inr || 0,
+      `"${r.razorpay_order_id || ""}"`,
+      `"${r.razorpay_payment_id || ""}"`,
+      `"${r.status || "completed"}"`,
+      r.score ?? "",
+      r.max_score ?? "",
+      r.percentage != null ? `${r.percentage}%` : "",
+      r.passed === true ? "PASSED" : r.passed === false ? "FAILED" : "UNLOCKED",
+      r.time_taken_seconds ? `${Math.floor(r.time_taken_seconds / 60)}m ${r.time_taken_seconds % 60}s` : "",
+      r.attempt_number || 1,
+      `"${r.completed_at || r.created_at || ""}"`
+    ]);
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((e: any[]) => e.join(","))].join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `testora_${(selectedTestForTakers?.title || "test").toLowerCase().replace(/[^a-z0-9]/g, "_")}_takers.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const filteredTakers = useMemo(() => {
+    if (!takersData || !takersData.records) return [];
+    return takersData.records.filter((r: any) => {
+      if (takersStatusFilter === "completed" && r.status !== "completed") return false;
+      if (takersStatusFilter === "unlocked" && r.status === "completed") return false;
+      if (takersStatusFilter === "passed" && !r.passed) return false;
+      if (takersStatusFilter === "failed" && (r.status !== "completed" || r.passed)) return false;
+      if (takersStatusFilter === "paid" && (r.amount_paid_inr <= 0 && r.payment_method !== "RAZORPAY")) return false;
+      if (takersStatusFilter === "free" && (r.amount_paid_inr > 0 || r.payment_method === "RAZORPAY")) return false;
+
+      if (takersSearchQuery.trim()) {
+        const q = takersSearchQuery.toLowerCase();
+        const nameMatch = (r.student_name || "").toLowerCase().includes(q);
+        const emailMatch = (r.student_email || "").toLowerCase().includes(q);
+        const orderMatch = (r.razorpay_order_id || "").toLowerCase().includes(q);
+        const payMatch = (r.razorpay_payment_id || "").toLowerCase().includes(q);
+        const statusMatch = (r.status || "").toLowerCase().includes(q);
+        return nameMatch || emailMatch || orderMatch || payMatch || statusMatch;
+      }
+      return true;
+    });
+  }, [takersData, takersStatusFilter, takersSearchQuery]);
+
   // Category Manager
   const handleSaveCategory = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1195,6 +1341,7 @@ export default function AdminMockTestsPage() {
               <tr>
                 <th className="py-3 px-4">Test Title</th>
                 <th className="py-3 px-4">Fee / Access</th>
+                <th className="py-3 px-4">Takers / Attempts</th>
                 <th className="py-3 px-4">Category & Subcategory</th>
                 <th className="py-3 px-4">Class / Exam</th>
                 <th className="py-3 px-4">Questions</th>
@@ -1208,13 +1355,13 @@ export default function AdminMockTestsPage() {
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
               {loading ? (
                 <tr>
-                  <td colSpan={10} className="py-12 text-center text-slate-500">
+                  <td colSpan={11} className="py-12 text-center text-slate-500">
                     Loading mock test catalogue...
                   </td>
                 </tr>
               ) : paginatedTests.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="py-12 text-center text-slate-500">
+                  <td colSpan={11} className="py-12 text-center text-slate-500">
                     No mock tests match the selected filters.
                   </td>
                 </tr>
@@ -1242,6 +1389,23 @@ export default function AdminMockTestsPage() {
                           <span>₹{t.price_inr} Paid</span>
                         </span>
                       )}
+                    </td>
+
+                    {/* Takers / Attempts */}
+                    <td className="py-3.5 px-4 whitespace-nowrap">
+                      <button
+                        onClick={() => handleOpenTakers(t)}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold bg-slate-100 hover:bg-emerald-50 dark:bg-slate-800/80 dark:hover:bg-emerald-950/50 text-slate-700 hover:text-emerald-700 dark:text-slate-300 dark:hover:text-emerald-300 border border-slate-200 dark:border-slate-700 hover:border-emerald-300 transition-all cursor-pointer group shadow-2xs"
+                        title="Click to view candidate scorecards & Razorpay payment records"
+                      >
+                        <Users className="w-3.5 h-3.5 text-emerald-600 group-hover:scale-110 transition-transform" />
+                        <span>{t.attempts_count || 0} Candidates</span>
+                        {!t.is_free && (t.price_inr || 0) > 0 && (
+                          <span className="px-1.5 py-0.2 rounded text-[9px] font-extrabold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                            ₹{t.price_inr}
+                          </span>
+                        )}
+                      </button>
                     </td>
 
                     {/* Category & Section */}
@@ -1332,6 +1496,15 @@ export default function AdminMockTestsPage() {
                     {/* Action Buttons */}
                     <td className="py-3.5 px-4 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-1">
+                        {/* Candidates & Payment Records */}
+                        <button
+                          onClick={() => handleOpenTakers(t)}
+                          className="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/40 cursor-pointer"
+                          title="View Candidate Attempts & Payment Records"
+                        >
+                          <Users className="w-3.5 h-3.5" />
+                        </button>
+
                         {/* Preview */}
                         <button
                           onClick={() => handleOpenPreview(t)}
@@ -2824,6 +2997,377 @@ export default function AdminMockTestsPage() {
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════════════
+          CANDIDATE TAKERS, ATTEMPTS & RAZORPAY PAYMENT RECORDS MODAL
+      ═══════════════════════════════════════════════════════════════════════ */}
+      {isTakersModalOpen && selectedTestForTakers && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
+          <div
+            className="w-full max-w-4xl bg-white dark:bg-[#111C31] border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-scaleUp"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-start sm:items-center justify-between gap-3 bg-slate-50/50 dark:bg-[#15233D]/50">
+              <div className="flex items-start sm:items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center shrink-0 shadow-2xs">
+                  <Users className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white truncate">
+                    Candidate Takers & Payment Records
+                  </h3>
+                  <div className="text-xs text-slate-500 dark:text-slate-400 flex flex-wrap items-center gap-1.5 mt-0.5">
+                    <span className="font-semibold text-slate-700 dark:text-slate-200 truncate max-w-xs">{selectedTestForTakers.title}</span>
+                    <span>•</span>
+                    <span>{selectedTestForTakers.total_questions} Qs</span>
+                    <span>•</span>
+                    <span>{selectedTestForTakers.total_marks} Marks</span>
+                    <span>•</span>
+                    {selectedTestForTakers.is_free || (selectedTestForTakers.price_inr || 0) === 0 ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.2 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-bold text-[10px]">
+                        Free Mock Test
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.2 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 font-black text-[10px]">
+                        ₹{selectedTestForTakers.price_inr} Razorpay Premium
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={handleExportTakersCSV}
+                  disabled={!takersData?.records?.length}
+                  className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-[#111C31] hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 transition-colors shadow-2xs cursor-pointer disabled:opacity-40"
+                  title="Download CSV report of candidate attempts and payments"
+                >
+                  <Download className="w-3.5 h-3.5 text-blue-600" />
+                  <span>Export CSV</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsTakersModalOpen(false)}
+                  className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5">
+              {/* KPI Summary Cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="p-3.5 rounded-2xl bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/80 dark:border-blue-900/60 shadow-2xs">
+                  <div className="flex items-center justify-between text-blue-600 dark:text-blue-400">
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Total Candidates</span>
+                    <Users className="w-4 h-4" />
+                  </div>
+                  <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-1">
+                    {takersData?.total_takers ?? 0}
+                  </div>
+                  <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Enrolled / Attempted</div>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/80 dark:border-emerald-900/60 shadow-2xs">
+                  <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-400">
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Completed</span>
+                    <CheckCircle2 className="w-4 h-4" />
+                  </div>
+                  <div className="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
+                    {takersData?.total_completed ?? 0}
+                  </div>
+                  <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+                    {takersData?.total_takers ? Math.round(((takersData.total_completed || 0) / takersData.total_takers) * 100) : 0}% completion
+                  </div>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-900/60 shadow-2xs">
+                  <div className="flex items-center justify-between text-amber-600 dark:text-amber-400">
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Total Revenue</span>
+                    <Coins className="w-4 h-4" />
+                  </div>
+                  <div className="text-xl sm:text-2xl font-black text-amber-600 dark:text-amber-400 mt-1">
+                    ₹{takersData?.total_revenue_inr ?? 0}
+                  </div>
+                  <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+                    {(!selectedTestForTakers.is_free && (selectedTestForTakers.price_inr || 0) > 0) ? "Razorpay Gateway" : "100% Free Access"}
+                  </div>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-purple-50/50 dark:bg-purple-950/20 border border-purple-200/80 dark:border-purple-900/60 shadow-2xs">
+                  <div className="flex items-center justify-between text-purple-600 dark:text-purple-400">
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Passed Count</span>
+                    <Award className="w-4 h-4" />
+                  </div>
+                  <div className="text-xl sm:text-2xl font-black text-purple-600 dark:text-purple-400 mt-1">
+                    {takersData?.records?.filter((r: any) => r.passed).length ?? 0}
+                  </div>
+                  <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+                    Cutoff: {selectedTestForTakers.pass_percentage || 40}%
+                  </div>
+                </div>
+              </div>
+
+              {/* Search & Filter Tabs */}
+              <div className="space-y-2.5">
+                <div className="relative">
+                  <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    value={takersSearchQuery}
+                    onChange={(e) => setTakersSearchQuery(e.target.value)}
+                    placeholder="Search candidate by name, email, or Razorpay payment ID..."
+                    className="w-full pl-10 pr-4 py-2 text-xs bg-slate-50 dark:bg-[#15233D] border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  />
+                  {takersSearchQuery && (
+                    <button
+                      onClick={() => setTakersSearchQuery("")}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs font-bold"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+
+                {/* Filter Pills */}
+                <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setTakersStatusFilter("all")}
+                    className={`px-2.5 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer ${
+                      takersStatusFilter === "all"
+                        ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs"
+                        : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                    }`}
+                  >
+                    All ({takersData?.records?.length || 0})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTakersStatusFilter("completed")}
+                    className={`px-2.5 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer ${
+                      takersStatusFilter === "completed"
+                        ? "bg-emerald-600 text-white shadow-xs"
+                        : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                    }`}
+                  >
+                    Completed ({takersData?.records?.filter((r: any) => r.status === "completed").length || 0})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTakersStatusFilter("passed")}
+                    className={`px-2.5 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer ${
+                      takersStatusFilter === "passed"
+                        ? "bg-blue-600 text-white shadow-xs"
+                        : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                    }`}
+                  >
+                    Passed ({takersData?.records?.filter((r: any) => r.passed).length || 0})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTakersStatusFilter("failed")}
+                    className={`px-2.5 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer ${
+                      takersStatusFilter === "failed"
+                        ? "bg-rose-600 text-white shadow-xs"
+                        : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                    }`}
+                  >
+                    Needs Review ({takersData?.records?.filter((r: any) => r.status === "completed" && !r.passed).length || 0})
+                  </button>
+                  {(!selectedTestForTakers.is_free && (selectedTestForTakers.price_inr || 0) > 0) && (
+                    <button
+                      type="button"
+                      onClick={() => setTakersStatusFilter("paid")}
+                      className={`px-2.5 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer ${
+                        takersStatusFilter === "paid"
+                          ? "bg-amber-600 text-white shadow-xs"
+                          : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                      }`}
+                    >
+                      Razorpay Paid ({takersData?.records?.filter((r: any) => r.amount_paid_inr > 0 || r.payment_method === "RAZORPAY").length || 0})
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Records Content */}
+              {loadingTakers ? (
+                <div className="py-16 text-center text-slate-500 text-xs space-y-2">
+                  <RefreshCw className="w-6 h-6 mx-auto animate-spin text-blue-500" />
+                  <p>Loading candidate attempts & payment audit records...</p>
+                </div>
+              ) : filteredTakers.length === 0 ? (
+                <div className="py-16 text-center bg-slate-50/50 dark:bg-[#15233D]/50 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-6 space-y-2">
+                  <Users className="w-10 h-10 mx-auto text-slate-400 opacity-50" />
+                  <h4 className="font-bold text-sm text-slate-800 dark:text-slate-200">
+                    {takersSearchQuery || takersStatusFilter !== "all" ? "No Matching Candidate Records Found" : "No Attempts Recorded Yet"}
+                  </h4>
+                  <p className="text-xs text-slate-500 max-w-md mx-auto">
+                    {takersSearchQuery || takersStatusFilter !== "all"
+                      ? "Try adjusting your search terms or selecting a different status filter."
+                      : "When students unlock or submit this mock test, their scorecards, completion times, and Razorpay payment transactions will be recorded here automatically."}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {filteredTakers.map((record: any, idx: number) => {
+                    const isPaid = (record.amount_paid_inr || 0) > 0 || record.payment_method === "RAZORPAY";
+                    const isCompleted = record.status === "completed";
+                    const isPassed = record.passed;
+
+                    return (
+                      <div
+                        key={record.id || idx}
+                        className="p-4 rounded-2xl bg-slate-50/60 dark:bg-[#15233D]/70 border border-slate-200/90 dark:border-slate-800 hover:border-blue-400/60 dark:hover:border-blue-600/60 transition-all shadow-2xs space-y-3"
+                      >
+                        {/* Candidate Header Row */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 font-extrabold text-xs flex items-center justify-center shrink-0 border border-blue-200 dark:border-blue-800">
+                              {(record.student_name || "S").slice(0, 2).toUpperCase()}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white truncate flex items-center gap-2">
+                                <span>{record.student_name || "Student Candidate"}</span>
+                                <span className="text-[10px] font-normal text-slate-400">
+                                  #{idx + 1}
+                                </span>
+                              </div>
+                              <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                                {record.student_email || "No email recorded"}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Result Status Badge */}
+                          <div className="flex items-center gap-2 shrink-0 self-start sm:self-center">
+                            {isCompleted ? (
+                              isPassed ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300/60">
+                                  <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                  <span>PASSED</span>
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-300/60">
+                                  <XCircle className="w-3 h-3 text-rose-600" />
+                                  <span>NEEDS REVIEW</span>
+                                </span>
+                              )
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300 border border-sky-300/60">
+                                <Clock className="w-3 h-3 text-sky-600" />
+                                <span>READY TO ATTEMPT</span>
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* 3-Column Audit Information Grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2 border-t border-slate-200/70 dark:border-slate-800/80 text-xs">
+                          {/* Payment Column */}
+                          <div className="p-2.5 rounded-xl bg-white dark:bg-[#111C31] border border-slate-200/80 dark:border-slate-800 space-y-1">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                              Payment & Access
+                            </span>
+                            {isPaid ? (
+                              <div>
+                                <div className="font-extrabold text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                                  <span>₹{record.amount_paid_inr} Paid via Razorpay</span>
+                                </div>
+                                {record.razorpay_payment_id && (
+                                  <div className="text-[10px] font-mono text-slate-600 dark:text-slate-400 truncate mt-0.5" title={record.razorpay_payment_id}>
+                                    Pay ID: <span className="text-slate-800 dark:text-slate-200 font-semibold">{record.razorpay_payment_id}</span>
+                                  </div>
+                                )}
+                                {record.razorpay_order_id && (
+                                  <div className="text-[10px] font-mono text-slate-400 truncate" title={record.razorpay_order_id}>
+                                    Order: {record.razorpay_order_id}
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                                <CheckCircle2 className="w-3 h-3" />
+                                <span>100% Free Practice Access</span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Score Column */}
+                          <div className="p-2.5 rounded-xl bg-white dark:bg-[#111C31] border border-slate-200/80 dark:border-slate-800 space-y-1">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                              Scorecard Performance
+                            </span>
+                            {isCompleted && record.score !== null ? (
+                              <div>
+                                <div className="font-black text-slate-900 dark:text-white">
+                                  {record.score} / {record.max_score || selectedTestForTakers.total_marks || 50}
+                                  <span className="text-blue-600 dark:text-blue-400 ml-1.5 font-bold">
+                                    ({record.percentage != null ? `${record.percentage}%` : "0%"})
+                                  </span>
+                                </div>
+                                {record.time_taken_seconds && (
+                                  <div className="text-[10px] text-slate-500 flex items-center gap-1 mt-0.5">
+                                    <Clock className="w-3 h-3 text-slate-400" />
+                                    <span>Time Taken: {Math.floor(record.time_taken_seconds / 60)}m {record.time_taken_seconds % 60}s</span>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="text-slate-400 text-xs italic">
+                                Exam not submitted yet
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Timestamp & Attempt Column */}
+                          <div className="p-2.5 rounded-xl bg-white dark:bg-[#111C31] border border-slate-200/80 dark:border-slate-800 space-y-1">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                              Attempt Details
+                            </span>
+                            <div className="font-semibold text-slate-700 dark:text-slate-300">
+                              Attempt #{record.attempt_number || 1}
+                            </div>
+                            <div className="text-[10px] text-slate-400">
+                              {record.completed_at ? (
+                                <span>Completed: {record.completed_at}</span>
+                              ) : record.created_at ? (
+                                <span>Enrolled: {new Date(record.created_at).toLocaleDateString()}</span>
+                              ) : (
+                                <span>Recently Enrolled</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-[#15233D]/50 text-xs">
+              <span className="text-slate-500 dark:text-slate-400 font-medium">
+                Showing {filteredTakers.length} of {takersData?.records?.length || 0} candidate records
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsTakersModalOpen(false)}
+                className="px-4 py-2 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                Close Records
+              </button>
             </div>
           </div>
         </div>
