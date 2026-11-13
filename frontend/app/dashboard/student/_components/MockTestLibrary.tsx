@@ -29,8 +29,7 @@ import {
   Layers,
   BookOpen,
   BarChart3,
-  Info,
-  RefreshCw
+  Info
 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
@@ -512,30 +511,6 @@ export default function MockTestLibrary() {
                 <Sparkles className="h-4 w-4 stroke-[2.5]" />
                 <span>Explore Mock Tests</span>
                 <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const searchEl = document.querySelector('input[placeholder*="Search mock tests"]');
-                  if (searchEl) {
-                    (searchEl as HTMLInputElement).focus();
-                    searchEl.scrollIntoView({ behavior: "smooth" });
-                  }
-                }}
-                className="px-4 py-2.5 rounded-xl bg-white/90 dark:bg-slate-900/80 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/90 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold shadow-xs backdrop-blur-xs transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
-              >
-                <BookOpen className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                <span>Subject-Wise Practice</span>
-              </button>
-              <button
-                type="button"
-                onClick={fetchTests}
-                disabled={loading}
-                className="px-3.5 py-2.5 rounded-xl bg-white/90 dark:bg-slate-900/80 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/90 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold shadow-xs backdrop-blur-xs transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
-                title="Refresh Tests"
-              >
-                <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin text-blue-600 dark:text-cyan-400" : "text-slate-600 dark:text-slate-300"}`} />
-                <span>Refresh</span>
               </button>
             </div>
           </div>
