@@ -205,18 +205,20 @@ export default function StudentDashboard() {
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                <h1 className="text-base sm:text-lg font-bold text-[#111827] dark:text-[#F1F5F9] truncate">
-                  {mounted && fullName ? fullName : (isTeacher ? "Instructor Portal" : "Student Candidate")}
-                </h1>
-                {isTeacher ? (
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <h1 className="text-base sm:text-lg font-bold text-[#111827] dark:text-[#F1F5F9] truncate">
+                    {mounted && fullName ? fullName : (isTeacher ? "Instructor Portal" : "Student Candidate")}
+                  </h1>
+                  {!isTeacher && (
+                    <span title="Verified Student" className="inline-flex items-center text-emerald-600 dark:text-emerald-400 shrink-0">
+                      <CheckCircle2 className="h-4 w-4 fill-emerald-100 dark:fill-emerald-950/80" />
+                    </span>
+                  )}
+                </div>
+                {isTeacher && (
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200 dark:border-blue-800 flex items-center gap-1 shrink-0">
                     <User className="h-3 w-3" />
                     <span>Teacher View</span>
-                  </span>
-                ) : (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center gap-1 shrink-0">
-                    <CheckCircle2 className="h-3 w-3" />
-                    <span>Verified Student</span>
                   </span>
                 )}
                 {liveExamsCount > 0 && (
