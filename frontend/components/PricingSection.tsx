@@ -468,10 +468,23 @@ export default function PricingSection() {
         </div>
 
         {/* ───────────────────────────────────────────────────────────
-            4 EDUCATOR PRICING CARDS IN A RESPONSIVE ROW
-            1-col (<640px), 2-col (640-1024px), 4-col (>=1024px)
+            MOBILE SWIPE HELPER PILL
         ─────────────────────────────────────────────────────────── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-5 lg:gap-6 items-stretch max-w-7xl mx-auto relative pt-2">
+        <div className="sm:hidden flex items-center justify-between px-1 pb-1">
+          <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            Teacher Plans ({educatorPlans.length})
+          </span>
+          <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1">
+            <span>← Swipe plans →</span>
+          </span>
+        </div>
+
+        {/* ───────────────────────────────────────────────────────────
+            4 EDUCATOR PRICING CARDS IN A RESPONSIVE ROW
+            Mobile: Horizontal swipeable row with snap points
+            Desktop: 2-col (640-1024px), 4-col (>=1024px)
+        ─────────────────────────────────────────────────────────── */}
+        <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-none sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-5 lg:gap-6 items-stretch max-w-7xl mx-auto relative pt-1 sm:pt-2 -mx-4 px-4 sm:mx-auto sm:px-0 pb-3">
           {educatorPlans.map((plan) => {
             const styling = getColorClasses(plan.color_accent, plan.is_recommended);
             const isProcessing = processingPlanCode === plan.plan_code;
@@ -479,31 +492,31 @@ export default function PricingSection() {
             return (
               <div
                 key={plan.id}
-                className={`group relative flex flex-col justify-between p-5 sm:p-6 rounded-[26px] bg-white dark:bg-slate-900 border ${styling.border} shadow-md ${styling.shadow} hover:-translate-y-1 transition-all duration-300`}
+                className={`group relative flex flex-col justify-between w-[80vw] max-w-[285px] sm:w-auto shrink-0 snap-center p-4 sm:p-6 rounded-[22px] sm:rounded-[26px] bg-white dark:bg-slate-900 border ${styling.border} shadow-md ${styling.shadow} sm:hover:-translate-y-1 transition-all duration-300`}
               >
                 {/* Layered physical backing sheet */}
                 <div
-                  className={`absolute -bottom-2 -right-2 w-full h-full rounded-[26px] ${styling.backing} -z-10 group-hover:-bottom-2.5 group-hover:-right-2.5 transition-all`}
+                  className={`absolute -bottom-1.5 -right-1.5 sm:-bottom-2 sm:-right-2 w-full h-full rounded-[22px] sm:rounded-[26px] ${styling.backing} -z-10 group-hover:-bottom-2.5 group-hover:-right-2.5 transition-all`}
                 />
 
-                <div className="space-y-4">
+                <div className="space-y-3.5 sm:space-y-4">
                   {/* Header: Icon + Badge + Title + Price */}
-                  <div className="space-y-3">
+                  <div className="space-y-2 sm:space-y-3">
                     <div className="flex items-center justify-between gap-1">
                       <div
-                        className={`w-11 h-11 rounded-2xl ${styling.iconBg} border flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform`}
+                        className={`w-10 h-10 sm:w-11 sm:h-11 rounded-2xl ${styling.iconBg} border flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform`}
                       >
                         {plan.price_inr === 0 ? (
-                          <Gift className="w-5 h-5" />
+                          <Gift className="w-4.5 h-4.5 sm:w-5 sm:h-5" />
                         ) : plan.is_recommended ? (
-                          <Sparkles className="w-5 h-5" />
+                          <Sparkles className="w-4.5 h-4.5 sm:w-5 sm:h-5" />
                         ) : (
-                          <Coins className="w-5 h-5" />
+                          <Coins className="w-4.5 h-4.5 sm:w-5 sm:h-5" />
                         )}
                       </div>
                       {plan.badge && (
                         <span
-                          className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border shrink-0 ${styling.badge}`}
+                          className={`text-[9.5px] sm:text-[10px] font-black px-2 sm:px-2.5 py-0.5 rounded-full border shrink-0 ${styling.badge}`}
                         >
                           {plan.badge}
                         </span>
@@ -511,15 +524,15 @@ export default function PricingSection() {
                     </div>
 
                     <div>
-                      <h3 className="text-base font-black text-slate-900 dark:text-white tracking-tight truncate">
+                      <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-tight truncate">
                         {plan.name}
                       </h3>
-                      <div className="flex items-baseline gap-1.5 mt-1">
-                        <span className={`text-3xl sm:text-4xl font-black ${styling.priceText} tracking-tight`}>
+                      <div className="flex items-baseline gap-1.5 mt-0.5 sm:mt-1">
+                        <span className={`text-2xl sm:text-4xl font-black ${styling.priceText} tracking-tight`}>
                           {plan.formatted_price}
                         </span>
                         {plan.price_subtext && (
-                          <span className="text-xs font-semibold text-slate-400 dark:text-slate-500">
+                          <span className="text-[11px] sm:text-xs font-semibold text-slate-400 dark:text-slate-500">
                             {plan.price_subtext}
                           </span>
                         )}
@@ -528,7 +541,7 @@ export default function PricingSection() {
                   </div>
 
                   {/* Credits & Validity Info Box */}
-                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 text-[11px] space-y-1">
+                  <div className="p-2 sm:p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 text-[10.5px] sm:text-[11px] space-y-1">
                     <div className="flex items-center justify-between text-slate-700 dark:text-slate-300">
                       <span className="text-slate-500">Total Credits:</span>
                       <strong className="font-bold text-slate-900 dark:text-white">
@@ -541,7 +554,7 @@ export default function PricingSection() {
                         <span>+{plan.bonus_credits.toLocaleString()} Extra</span>
                       </div>
                     )}
-                    <div className="flex items-center justify-between text-[10px] text-slate-400 pt-0.5 border-t border-slate-200/50 dark:border-slate-700/50">
+                    <div className="flex items-center justify-between text-[9.5px] sm:text-[10px] text-slate-400 pt-0.5 border-t border-slate-200/50 dark:border-slate-700/50">
                       <span>Validity:</span>
                       <span>
                         {plan.credits_never_expire
@@ -553,17 +566,17 @@ export default function PricingSection() {
 
                   {/* Description */}
                   {plan.description && (
-                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed min-h-[32px]">
+                    <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 leading-relaxed sm:min-h-[32px] line-clamp-2 sm:line-clamp-none">
                       {plan.description}
                     </p>
                   )}
 
                   {/* Features List */}
-                  <ul className="space-y-2 pt-1">
+                  <ul className="space-y-1.5 sm:space-y-2 pt-0.5 sm:pt-1">
                     {plan.features.map((feat, idx) => (
                       <li
                         key={idx}
-                        className="flex items-start gap-2 text-xs font-medium text-slate-700 dark:text-slate-300"
+                        className="flex items-start gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-medium text-slate-700 dark:text-slate-300"
                       >
                         <CheckCircle2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
                         <span className="leading-tight">{feat}</span>
@@ -573,12 +586,12 @@ export default function PricingSection() {
                 </div>
 
                 {/* Bottom CTA Button */}
-                <div className="pt-5 mt-auto">
+                <div className="pt-4 sm:pt-5 mt-auto">
                   <button
                     type="button"
                     onClick={() => handlePlanClick(plan)}
                     disabled={isProcessing}
-                    className={`w-full min-h-[44px] py-2.5 px-4 rounded-xl ${styling.btn} font-bold text-xs text-center shadow-md flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed`}
+                    className={`w-full min-h-[40px] sm:min-h-[44px] py-2 sm:py-2.5 px-3 sm:px-4 rounded-xl ${styling.btn} font-bold text-xs text-center shadow-md flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed`}
                   >
                     {isProcessing ? (
                       <>
@@ -598,11 +611,23 @@ export default function PricingSection() {
           })}
         </div>
 
+        {/* Mobile Swipe Dots Indicator */}
+        <div className="sm:hidden flex items-center justify-center gap-1.5 pt-0.5 pb-2">
+          {educatorPlans.map((p) => (
+            <div
+              key={p.id}
+              className={`h-1.5 rounded-full transition-all ${
+                p.is_recommended ? "w-5 bg-blue-600 dark:bg-blue-400" : "w-1.5 bg-slate-300 dark:bg-slate-700"
+              }`}
+            />
+          ))}
+        </div>
+
         {/* ───────────────────────────────────────────────────────────
             PLAN 5: HIGHLIGHTED COLLEGE & FDP INSTITUTIONAL PLAN
         ─────────────────────────────────────────────────────────── */}
         <div className="max-w-7xl mx-auto">
-          <div className="relative rounded-[28px] bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-teal-500/10 dark:from-emerald-950/40 dark:via-slate-900 dark:to-teal-950/30 border-2 border-emerald-400/80 dark:border-emerald-600/80 p-6 sm:p-8 shadow-xl shadow-emerald-500/5 overflow-hidden">
+          <div className="relative rounded-[22px] sm:rounded-[28px] bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-teal-500/10 dark:from-emerald-950/40 dark:via-slate-900 dark:to-teal-950/30 border-2 border-emerald-400/80 dark:border-emerald-600/80 p-4 sm:p-8 shadow-xl shadow-emerald-500/5 overflow-hidden">
             {/* Top decorative gradient bar */}
             <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-500" />
 
