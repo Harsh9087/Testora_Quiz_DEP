@@ -733,12 +733,20 @@ class CertificateService:
 
         try:
             cert.email_attempt_count += 1
-            # Send using existing email service
-            success = email_service._send_email_via_resend(cert.recipient_email, subject, html_body)
-            if not success:
+            # Primary: Deliver via configured SMTP (with vector PDF certificate attached)
+            success = email_service._send_smtp_email(
+                to_email=cert.recipient_email,
+                subject=subject,
+                html_content=html_body,
+                attachment_path=cert.pdf_file_path,
+                attachment_name=f"{cert.certificate_code}.pdf"
+            )
+            # Secondary fallback: Resend HTTP REST API
+            if not success and getattr(settings, "RESEND_API_KEY", None):
+                success = email_service._send_email_via_resend(cert.recipient_email, subject, html_body)
+            # Tertiary fallback: SendGrid HTTP API
+            if not success and getattr(settings, "SENDGRID_API_KEY", None):
                 success = email_service._send_email_via_sendgrid(cert.recipient_email, subject, html_body)
-            if not success:
-                success = email_service._send_email_via_smtp(cert.recipient_email, subject, html_body)
 
             if success:
                 cert.email_status = "SENT"

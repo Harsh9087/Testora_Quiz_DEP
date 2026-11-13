@@ -1,8 +1,10 @@
+import os
 import logging
 import smtplib
 import ssl
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.mime.application import MIMEApplication
 from typing import Optional, Union
 from datetime import datetime
 from app.config import settings
@@ -82,25 +84,48 @@ class EmailService:
             logger.warning(f"⚠️ SendGrid HTTP API exception: {e}")
             return False
 
-    def _send_smtp_email(self, to_email: str, subject: str, html_content: str):
+    def _send_smtp_email(
+        self,
+        to_email: str,
+        subject: str,
+        html_content: str,
+        attachment_path: Optional[str] = None,
+        attachment_name: Optional[str] = None,
+    ):
         """Transmits HTML email via Resend HTTP API (primary for Render) or SMTP server."""
         # 1. Primary for Cloud: Resend HTTP REST API (Never blocked by cloud firewalls on Render/Vercel)
-        if getattr(settings, "RESEND_API_KEY", None):
+        if getattr(settings, "RESEND_API_KEY", None) and not attachment_path:
             if self._send_email_via_resend(to_email, subject, html_content):
                 return True
 
         # 2. Secondary HTTP: SendGrid API
-        if getattr(settings, "SENDGRID_API_KEY", None):
+        if getattr(settings, "SENDGRID_API_KEY", None) and not attachment_path:
             if self._send_email_via_sendgrid(to_email, subject, html_content):
                 return True
 
         # 3. Direct SMTP Server (SSL 465 then STARTTLS 587)
         if settings.SMTP_HOST and settings.SMTP_USER and settings.SMTP_PASSWORD and not to_email.endswith("@aegeus.edu"):
-            msg = MIMEMultipart("alternative")
-            msg["Subject"] = subject
-            msg["From"] = f"{settings.EMAILS_FROM_NAME} <{settings.EMAILS_FROM_EMAIL}>"
-            msg["To"] = to_email
-            msg.attach(MIMEText(html_content, "html"))
+            if attachment_path and os.path.exists(attachment_path):
+                msg = MIMEMultipart("mixed")
+                msg["Subject"] = subject
+                msg["From"] = f"{settings.EMAILS_FROM_NAME} <{settings.EMAILS_FROM_EMAIL}>"
+                msg["To"] = to_email
+
+                alt_part = MIMEMultipart("alternative")
+                alt_part.attach(MIMEText(html_content, "html"))
+                msg.attach(alt_part)
+
+                with open(attachment_path, "rb") as f:
+                    part = MIMEApplication(f.read(), _subtype="pdf")
+                    filename = attachment_name or os.path.basename(attachment_path)
+                    part.add_header("Content-Disposition", "attachment", filename=filename)
+                    msg.attach(part)
+            else:
+                msg = MIMEMultipart("alternative")
+                msg["Subject"] = subject
+                msg["From"] = f"{settings.EMAILS_FROM_NAME} <{settings.EMAILS_FROM_EMAIL}>"
+                msg["To"] = to_email
+                msg.attach(MIMEText(html_content, "html"))
             
             # Primary Attempt: SSL Port 465
             try:
@@ -143,6 +168,8 @@ class EmailService:
                     f"Set RESEND_API_KEY or SMTP credentials in your Render Environment Variables."
                 )
             return False
+
+    _send_email_via_smtp = _send_smtp_email
 
     def send_student_authorization_email(self, student_name: str, email: str, verification_token: str, roll_number: Optional[str] = None):
         """Dispatches an authorization email requesting the student to verify their account or authorize with Google."""
