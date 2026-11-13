@@ -17,16 +17,12 @@ import {
   ShieldCheck,
   ChevronDown,
   ChevronUp,
-  Moon,
-  Sun,
-  LogOut,
   GraduationCap,
   ArrowLeft
 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/components/Toast";
-import PlatformSettingsAndGuide from "@/components/PlatformSettingsAndGuide";
 
 interface StudentProfileData {
   id: string;
@@ -74,9 +70,6 @@ export default function StudentProfilePage() {
   const [expandWallet, setExpandWallet] = useState<boolean>(true);
   const [expandActivity, setExpandActivity] = useState<boolean>(true);
   const [expandLedger, setExpandLedger] = useState<boolean>(false);
-  const [expandSettings, setExpandSettings] = useState<boolean>(false);
-
-  const [themeMode, setThemeMode] = useState<"light" | "dark">("light");
 
   const getAvatarUrl = (url?: string | null) => {
     if (!url || url.trim() === "" || url.toLowerCase() === "none") return null;
@@ -152,29 +145,6 @@ export default function StudentProfilePage() {
       showToast(err.message || "Failed to remove photo", "error");
     } finally {
       setSaving(false);
-    }
-  };
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const saved = (localStorage.getItem("theme_mode") || localStorage.getItem("theme")) as "light" | "dark" | null;
-      setThemeMode(saved === "dark" ? "dark" : "light");
-    }
-  }, []);
-
-  const toggleTheme = () => {
-    const nextMode = themeMode === "light" ? "dark" : "light";
-    setThemeMode(nextMode);
-    if (nextMode === "dark") {
-      document.documentElement.classList.add("dark");
-      document.documentElement.setAttribute("data-theme", "dark");
-      localStorage.setItem("theme", "dark");
-      localStorage.setItem("theme_mode", "dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-      document.documentElement.setAttribute("data-theme", "light");
-      localStorage.setItem("theme", "light");
-      localStorage.setItem("theme_mode", "light");
     }
   };
 
@@ -267,17 +237,17 @@ export default function StudentProfilePage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-5 pb-16 px-2 sm:px-4">
+    <div className="max-w-4xl mx-auto space-y-4 sm:space-y-5 pb-16 px-2.5 sm:px-4">
       {/* ══════════════════════════════════════════════════════
           TOP NAVIGATION BAR
          ══════════════════════════════════════════════════════ */}
       <div className="flex items-center justify-between pt-2">
         <Link
           href="/dashboard/student"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] text-xs font-semibold text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9] transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] text-xs font-semibold text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9] transition-colors shadow-2xs"
         >
           <ArrowLeft className="h-4 w-4" />
-          <span>Back to Student Portal</span>
+          <span>Back</span>
         </Link>
 
         <button
@@ -506,8 +476,8 @@ export default function StudentProfilePage() {
         </div>
 
         {expandWallet && (
-          <div className="p-5 pt-0 border-t border-[#E2E8F0]/60 dark:border-[#263449] space-y-4">
-            <div className="p-4 rounded-xl bg-[#F8FAFC] dark:bg-[#17243A] border border-[#E2E8F0] dark:border-[#263449] flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-4">
+          <div className="p-3.5 sm:p-5 pt-0 border-t border-[#E2E8F0]/60 dark:border-[#263449] space-y-4">
+            <div className="p-3.5 sm:p-4 rounded-xl bg-[#F8FAFC] dark:bg-[#17243A] border border-[#E2E8F0] dark:border-[#263449] flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-3.5 sm:mt-4">
               <div>
                 <div className="text-[11px] font-bold text-[#64748B] dark:text-[#A3B1C6] uppercase tracking-wider">
                   Current Wallet Balance
@@ -525,7 +495,7 @@ export default function StudentProfilePage() {
                 <button
                   type="button"
                   onClick={() => setExpandLedger(!expandLedger)}
-                  className="px-3.5 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#263449] text-xs font-semibold text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-white bg-white dark:bg-[#111C31] flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
+                  className="w-full sm:w-auto justify-center px-3.5 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#263449] text-xs font-semibold text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-white bg-white dark:bg-[#111C31] flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
                 >
                   <History className="h-3.5 w-3.5 text-amber-500" />
                   <span>{expandLedger ? "Hide Ledger" : "View Credit Activity"}</span>
@@ -546,7 +516,7 @@ export default function StudentProfilePage() {
                     No transactions recorded yet.
                   </div>
                 ) : (
-                  <div className="overflow-x-auto rounded-xl border border-[#E2E8F0] dark:border-[#263449]">
+                  <div className="overflow-x-auto scrollbar-none rounded-xl border border-[#E2E8F0] dark:border-[#263449]">
                     <table className="w-full text-left text-xs">
                       <thead className="bg-[#F8FAFC] dark:bg-[#17243A] text-[#64748B] border-b border-[#E2E8F0] dark:border-[#263449]">
                         <tr>
@@ -622,9 +592,9 @@ export default function StudentProfilePage() {
         </div>
 
         {expandActivity && (
-          <div className="p-5 pt-0 border-t border-[#E2E8F0]/60 dark:border-[#263449] space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-              <div className="p-4 rounded-xl bg-[#F8FAFC] dark:bg-[#17243A] border border-[#E2E8F0] dark:border-[#263449]">
+          <div className="p-3.5 sm:p-5 pt-0 border-t border-[#E2E8F0]/60 dark:border-[#263449] space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3.5 sm:mt-4">
+              <div className="p-3.5 sm:p-4 rounded-xl bg-[#F8FAFC] dark:bg-[#17243A] border border-[#E2E8F0] dark:border-[#263449]">
                 <div className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider">
                   Total Completed Submissions
                 </div>
@@ -636,7 +606,7 @@ export default function StudentProfilePage() {
                 </p>
               </div>
 
-              <div className="p-4 rounded-xl bg-[#F8FAFC] dark:bg-[#17243A] border border-[#E2E8F0] dark:border-[#263449]">
+              <div className="p-3.5 sm:p-4 rounded-xl bg-[#F8FAFC] dark:bg-[#17243A] border border-[#E2E8F0] dark:border-[#263449]">
                 <div className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider">
                   Average Assessment Score
                 </div>
@@ -649,88 +619,16 @@ export default function StudentProfilePage() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-1">
-              <span className="text-xs text-[#64748B]">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-[#E2E8F0]/60 dark:border-[#263449]/60">
+              <span className="text-xs text-[#64748B] dark:text-[#A3B1C6]">
                 Ready to take a new test?
               </span>
               <Link
                 href="/dashboard/student"
-                className="px-4 py-2 rounded-xl bg-[#2563EB] text-white text-xs font-bold hover:bg-[#1D4ED8] transition-colors shadow-xs"
+                className="w-full sm:w-auto text-center px-4 py-2 rounded-xl bg-[#2563EB] text-white text-xs font-bold hover:bg-[#1D4ED8] transition-colors shadow-xs"
               >
                 Go to Active Assessments
               </Link>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* ══════════════════════════════════════════════════════
-          BLOCK 4: PREFERENCES & SECURITY (Expand / Hide)
-         ══════════════════════════════════════════════════════ */}
-      <div className="bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-2xl shadow-xs overflow-hidden">
-        <div 
-          onClick={() => setExpandSettings(!expandSettings)}
-          className="p-4 flex items-center justify-between cursor-pointer hover:bg-[#F8FAFC]/60 dark:hover:bg-[#17243A]/60 transition-colors"
-        >
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-blue-500/10 text-[#2563EB] dark:text-[#60A5FA]">
-              <Moon className="h-4.5 w-4.5" />
-            </div>
-            <div>
-              <h2 className="text-xs font-bold text-[#111827] dark:text-[#F1F5F9]">
-                Appearance & Account Security
-              </h2>
-              <p className="text-[11px] text-[#64748B] dark:text-[#A3B1C6]">
-                Theme preferences and logout
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <span className="text-[11px] text-[#64748B] capitalize">
-              {themeMode} mode
-            </span>
-            {expandSettings ? (
-              <ChevronUp className="h-4 w-4 text-[#64748B]" />
-            ) : (
-              <ChevronDown className="h-4 w-4 text-[#64748B]" />
-            )}
-          </div>
-        </div>
-
-        {expandSettings && (
-          <div className="p-5 pt-0 border-t border-[#E2E8F0]/60 dark:border-[#263449] space-y-4">
-            <div className="mt-3 space-y-4">
-              {/* Embedded Platform Feature Guides, Route Diagnostics & Preferences */}
-              <PlatformSettingsAndGuide
-                currentRole="student"
-                themeMode={themeMode}
-                onToggleTheme={toggleTheme}
-              />
-
-              {/* Logout Option */}
-              <div className="pt-2">
-                <div>
-                  <div className="text-xs font-bold text-red-600">
-                    Sign Out Account
-                  </div>
-                  <div className="text-[11px] text-[#64748B] dark:text-[#A3B1C6]">
-                    Safely log out from this device
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    logout();
-                    router.push("/login");
-                  }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-950/30 dark:hover:bg-red-950/50 text-xs font-bold transition-all cursor-pointer"
-                >
-                  <LogOut className="h-3.5 w-3.5" />
-                  <span>Log Out</span>
-                </button>
-              </div>
             </div>
           </div>
         )}
