@@ -95,6 +95,25 @@ export default function UnifiedHomePage() {
       ? "/dashboard/student"
       : "/dashboard/teacher";
 
+  const aiFormsHref =
+    role === "super_admin"
+      ? "/admin"
+      : role === "student"
+      ? "/dashboard/student?tab=custom-forms"
+      : "/dashboard/teacher?tab=custom-forms";
+
+  const mockTestsHref =
+    role === "teacher"
+      ? "/dashboard/teacher?tab=mock-tests"
+      : "/dashboard/student?tab=mock-tests";
+
+  const certificatesHref =
+    role === "teacher"
+      ? "/dashboard/teacher?tab=certificates"
+      : "/dashboard/student?tab=certificates";
+
+  const studyMaterialHref = "/dashboard/study-material";
+
   const getDisplayAvatarUrl = (url?: string | null) => {
     if (!url || typeof url !== "string" || url.trim() === "" || url.toLowerCase() === "none") return null;
     if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) {
@@ -321,6 +340,15 @@ export default function UnifiedHomePage() {
                 Free
               </span>
             </button>
+            <Link
+              href="/dashboard/study-material"
+              className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer py-1 flex items-center gap-1"
+            >
+              <span>Study Material</span>
+              <span className="px-1.5 py-0.2 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 text-[9px] font-black uppercase tracking-wider">
+                New
+              </span>
+            </Link>
             <button
               type="button"
               onClick={() => scrollTo("certificates")}
@@ -433,61 +461,170 @@ export default function UnifiedHomePage() {
 
                   {/* Profile Dropdown Menu */}
                   {userMenuOpen && (
-                    <div className="absolute right-0 top-full mt-2 w-64 p-2.5 bg-white dark:bg-[#0D182E] border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl z-50 animate-in fade-in zoom-in-95 duration-150">
-                      <div className="p-2.5 bg-slate-50 dark:bg-slate-900/80 rounded-xl mb-2 flex items-center gap-2.5">
-                        <div className="h-9 w-9 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-extrabold text-xs flex items-center justify-center shrink-0">
-                          {fullName ? fullName.trim().charAt(0).toUpperCase() : "U"}
-                        </div>
+                    <div className="absolute right-0 top-full mt-2 w-72 sm:w-80 p-2.5 bg-white dark:bg-[#0D182E] border border-slate-200/90 dark:border-slate-800 rounded-2xl shadow-2xl shadow-blue-500/10 dark:shadow-black/70 z-50 animate-in fade-in zoom-in-95 duration-150 backdrop-blur-md">
+                      {/* User Header */}
+                      <div className="p-3 bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-slate-900/90 dark:to-blue-950/20 border border-slate-100 dark:border-slate-800/80 rounded-xl mb-2 flex items-center gap-3">
+                        {getDisplayAvatarUrl(avatarUrl) && !avatarImgError ? (
+                          <div className="relative shrink-0">
+                            <img
+                              src={getDisplayAvatarUrl(avatarUrl)!}
+                              alt={fullName || "User"}
+                              onError={() => setAvatarImgError(true)}
+                              className="h-10 w-10 rounded-full object-cover border-2 border-blue-500 shadow-xs"
+                            />
+                            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-[#0D182E]" />
+                          </div>
+                        ) : (
+                          <div className="relative h-10 w-10 rounded-full bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 text-white font-black text-sm flex items-center justify-center shrink-0 shadow-xs border-2 border-white dark:border-[#0D182E]">
+                            <span>{fullName ? fullName.trim().charAt(0).toUpperCase() : "U"}</span>
+                            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-[#0D182E]" />
+                          </div>
+                        )}
                         <div className="min-w-0 flex-1">
-                          <div className="font-bold text-xs text-slate-900 dark:text-white truncate">
+                          <div className="font-bold text-sm text-slate-900 dark:text-white truncate">
                             {fullName || "User Account"}
                           </div>
-                          <div className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold capitalize">
-                            {role === "super_admin" ? "Administrator" : role === "teacher" ? "Teacher / Faculty" : role === "student" ? "Candidate / Student" : role || "Member"}
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/50">
+                              {role === "super_admin" ? "Administrator" : role === "teacher" ? "Teacher / Faculty" : role === "student" ? "Candidate / Student" : role || "Member"}
+                            </span>
                           </div>
                         </div>
+                      </div>
+
+                      {/* Portals & Workspaces Section */}
+                      <div className="px-2 pt-1 pb-1">
+                        <span className="text-[10px] font-black tracking-wider uppercase text-slate-400 dark:text-slate-500">
+                          Portals &amp; Workspaces
+                        </span>
                       </div>
 
                       <div className="space-y-1 text-xs font-semibold">
+                        {/* Go to Dashboard */}
                         <Link
                           href={dashboardHref}
                           onClick={() => setUserMenuOpen(false)}
-                          className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-950/40 dark:hover:text-blue-400 transition-colors"
+                          className="flex items-center justify-between px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-600 dark:hover:text-blue-400 transition-colors group"
                         >
-                          <LayoutDashboard className="w-4 h-4 text-blue-600" />
-                          <span>Go to Dashboard</span>
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="w-7 h-7 rounded-lg bg-blue-100 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                              <LayoutDashboard className="w-4 h-4" />
+                            </div>
+                            <div className="truncate">
+                              <div className="font-bold">Main Dashboard</div>
+                              <div className="text-[10px] text-slate-400 dark:text-slate-500 font-normal truncate">Overview &amp; quick actions</div>
+                            </div>
+                          </div>
+                          <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
                         </Link>
+
+                        {/* AI Form Builder */}
+                        <Link
+                          href={aiFormsHref}
+                          onClick={() => setUserMenuOpen(false)}
+                          className="flex items-center justify-between px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-amber-50 dark:hover:bg-amber-950/30 hover:text-amber-600 dark:hover:text-amber-400 transition-colors group"
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-amber-500/20 to-orange-500/20 text-orange-600 dark:text-orange-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                              <Wand2 className="w-4 h-4 text-orange-500" />
+                            </div>
+                            <div className="truncate">
+                              <div className="font-bold flex items-center gap-1.5">
+                                <span>AI Form Builder</span>
+                                <span className="px-1.5 py-0.2 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 text-white text-[9px] font-black tracking-wider">
+                                  AI
+                                </span>
+                              </div>
+                              <div className="text-[10px] text-slate-400 dark:text-slate-500 font-normal truncate">Smart forms &amp; registrations</div>
+                            </div>
+                          </div>
+                          <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+                        </Link>
+
+                        {/* Study Material */}
+                        <Link
+                          href={studyMaterialHref}
+                          onClick={() => setUserMenuOpen(false)}
+                          className="flex items-center justify-between px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-purple-50 dark:hover:bg-purple-950/30 hover:text-purple-600 dark:hover:text-purple-400 transition-colors group"
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="w-7 h-7 rounded-lg bg-purple-100 dark:bg-purple-950/80 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                              <BookOpen className="w-4 h-4" />
+                            </div>
+                            <div className="truncate">
+                              <div className="font-bold flex items-center gap-1.5">
+                                <span>Study Material</span>
+                                <span className="px-1.5 py-0.2 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 text-[9px] font-black uppercase tracking-wider">
+                                  NEW
+                                </span>
+                              </div>
+                              <div className="text-[10px] text-slate-400 dark:text-slate-500 font-normal truncate">Company notes &amp; DSA guides</div>
+                            </div>
+                          </div>
+                          <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+                        </Link>
+
+                        {/* Mock Test Library */}
+                        <Link
+                          href={mockTestsHref}
+                          onClick={() => setUserMenuOpen(false)}
+                          className="flex items-center justify-between px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors group"
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                              <GraduationCap className="w-4 h-4" />
+                            </div>
+                            <div className="truncate">
+                              <div className="font-bold flex items-center gap-1.5">
+                                <span>Mock Test Library</span>
+                                <span className="px-1.5 py-0.2 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[9px] font-black">
+                                  FREE
+                                </span>
+                              </div>
+                              <div className="text-[10px] text-slate-400 dark:text-slate-500 font-normal truncate">TCS, Wipro, GATE &amp; JEE tests</div>
+                            </div>
+                          </div>
+                          <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+                        </Link>
+
+                        {/* Certificates */}
+                        <Link
+                          href={certificatesHref}
+                          onClick={() => setUserMenuOpen(false)}
+                          className="flex items-center justify-between px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors group"
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="w-7 h-7 rounded-lg bg-indigo-100 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                              <Award className="w-4 h-4" />
+                            </div>
+                            <div className="truncate">
+                              <div className="font-bold">Certificates &amp; Badges</div>
+                              <div className="text-[10px] text-slate-400 dark:text-slate-500 font-normal truncate">Verifiable credentials</div>
+                            </div>
+                          </div>
+                          <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+                        </Link>
+                      </div>
+
+                      {/* Account Section */}
+                      <div className="pt-2 mt-2 border-t border-slate-100 dark:border-slate-800/80">
                         <Link
                           href={profileHref}
                           onClick={() => setUserMenuOpen(false)}
-                          className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                          className="flex items-center justify-between px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors group"
                         >
-                          <User className="w-4 h-4 text-slate-500" />
-                          <span>Profile &amp; Settings</span>
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center justify-center shrink-0">
+                              <User className="w-4 h-4" />
+                            </div>
+                            <span className="font-bold text-xs">Profile &amp; Settings</span>
+                          </div>
+                          <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
                         </Link>
-                        {role === "student" && (
-                          <Link
-                            href="/dashboard/student"
-                            onClick={() => setUserMenuOpen(false)}
-                            className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                          >
-                            <GraduationCap className="w-4 h-4 text-indigo-500" />
-                            <span>Mock Test Library</span>
-                          </Link>
-                        )}
-                        {role === "teacher" && (
-                          <Link
-                            href="/dashboard/teacher"
-                            onClick={() => setUserMenuOpen(false)}
-                            className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                          >
-                            <BookOpen className="w-4 h-4 text-emerald-500" />
-                            <span>Creator Studio</span>
-                          </Link>
-                        )}
                       </div>
 
-                      <div className="pt-2 mt-2 border-t border-slate-100 dark:border-slate-800">
+                      {/* Sign Out */}
+                      <div className="pt-1.5 mt-1 border-t border-slate-100 dark:border-slate-800/80">
                         <button
                           type="button"
                           onClick={() => {
@@ -495,10 +632,15 @@ export default function UnifiedHomePage() {
                             logout();
                             router.push("/login");
                           }}
-                          className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-xs font-bold transition-colors cursor-pointer"
+                          className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-xs font-bold transition-colors cursor-pointer group"
                         >
-                          <LogOut className="w-4 h-4" />
-                          <span>Sign Out</span>
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-7 h-7 rounded-lg bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+                              <LogOut className="w-4 h-4" />
+                            </div>
+                            <span>Sign Out</span>
+                          </div>
+                          <ArrowRight className="w-3.5 h-3.5 text-rose-400 group-hover:translate-x-0.5 transition-transform" />
                         </button>
                       </div>
                     </div>
@@ -562,16 +704,43 @@ export default function UnifiedHomePage() {
                   <Link
                     href={dashboardHref}
                     onClick={() => setMobileMenuOpen(false)}
-                    className="py-2 px-3 rounded-xl bg-[#2563EB] hover:bg-[#1d4ed8] text-white text-xs font-bold text-center shadow-xs"
+                    className="py-2 px-3 rounded-xl bg-[#2563EB] hover:bg-[#1d4ed8] text-white text-xs font-bold text-center shadow-xs flex items-center justify-center gap-1.5"
                   >
-                    Dashboard
+                    <LayoutDashboard className="w-3.5 h-3.5" />
+                    <span>Dashboard</span>
                   </Link>
                   <Link
                     href={profileHref}
                     onClick={() => setMobileMenuOpen(false)}
-                    className="py-2 px-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold text-center hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                    className="py-2 px-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold text-center hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-1.5"
                   >
-                    My Profile
+                    <User className="w-3.5 h-3.5" />
+                    <span>My Profile</span>
+                  </Link>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <Link
+                    href={aiFormsHref}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="py-1.5 px-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/60 text-amber-800 dark:text-amber-300 text-[11px] font-bold flex items-center justify-between"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <Wand2 className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                      <span>AI Forms</span>
+                    </span>
+                    <span className="px-1.5 py-0.2 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[9px] font-black">AI</span>
+                  </Link>
+                  <Link
+                    href={studyMaterialHref}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="py-1.5 px-2.5 rounded-lg bg-purple-50 dark:bg-purple-950/40 border border-purple-200/80 dark:border-purple-800/60 text-purple-800 dark:text-purple-300 text-[11px] font-bold flex items-center justify-between"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <BookOpen className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                      <span>Study Notes</span>
+                    </span>
+                    <span className="px-1.5 py-0.2 rounded-full bg-purple-600 text-white text-[9px] font-black">NEW</span>
                   </Link>
                 </div>
               </div>
@@ -608,16 +777,6 @@ export default function UnifiedHomePage() {
               type="button"
               onClick={() => {
                 setMobileMenuOpen(false);
-                scrollTo("capabilities");
-              }}
-              className="block w-full text-left px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
-            >
-              Platform Capabilities
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setMobileMenuOpen(false);
                 scrollTo("mock-tests");
               }}
               className="block w-full text-left px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer flex items-center justify-between"
@@ -627,6 +786,16 @@ export default function UnifiedHomePage() {
                 100% Free
               </span>
             </button>
+            <Link
+              href="/dashboard/study-material"
+              onClick={() => setMobileMenuOpen(false)}
+              className="w-full text-left px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer flex items-center justify-between"
+            >
+              <span>Study Material</span>
+              <span className="px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 text-[10px] font-bold">
+                New
+              </span>
+            </Link>
             <button
               type="button"
               onClick={() => {
@@ -646,9 +815,19 @@ export default function UnifiedHomePage() {
               className="block w-full text-left px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer flex items-center justify-between"
             >
               <span>AI Form Studio</span>
-              <span className="px-2 py-0.5 rounded-full bg-orange-100 dark:bg-orange-950 text-orange-700 dark:text-orange-300 text-[10px] font-bold">
-                New
+              <span className="px-2 py-0.5 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 text-white text-[10px] font-black tracking-wider">
+                AI
               </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                scrollTo("capabilities");
+              }}
+              className="block w-full text-left px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+            >
+              Platform Capabilities
             </button>
             <button
               type="button"
