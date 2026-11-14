@@ -536,10 +536,10 @@ export default function DashboardLayout({
         return items;
       }
 
-      // Creator Studio
+      // Main Dashboard
       const isOverview = !currentTab || currentTab === "overview" || currentTab === "all";
       items.push({
-        label: "Creator Studio",
+        label: "Main Dashboard",
         onClick: () => navToTab("overview"),
       });
 
@@ -664,10 +664,41 @@ export default function DashboardLayout({
         
         {/* Navigation Links */}
         <nav className="flex-1 px-3 py-3 space-y-5 overflow-y-auto overflow-x-hidden">
-          {/* SECTION: CREATOR STUDIO OR STUDENT DASHBOARD */}
+          {/* Main Dashboard (Standalone, Open at Top without any section label) */}
+          {isTeacher && (
+            <div className="space-y-1">
+              <button 
+                onClick={() => navToTab("overview")}
+                className={`group relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                  sidebarCollapsed ? "md:justify-center md:px-0" : ""
+                } ${
+                  isTabActive("overview")
+                    ? "bg-blue-50/80 dark:bg-blue-950/40 text-[#2563EB] dark:text-[#60A5FA] font-bold border-l-4 border-[#2563EB] shadow-2xs"
+                    : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                }`}
+              >
+                <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105">
+                  <Home className="h-4 w-4" />
+                </div>
+                <span className={`truncate text-left flex-1 ${sidebarCollapsed ? "md:hidden" : ""}`}>
+                  Main Dashboard
+                </span>
+                {!sidebarCollapsed && (
+                  <ChevronRight className="h-3.5 w-3.5 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 dark:group-hover:text-slate-400 shrink-0 transition-transform group-hover:translate-x-0.5" />
+                )}
+                {sidebarCollapsed && (
+                  <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
+                    Main Dashboard
+                  </span>
+                )}
+              </button>
+            </div>
+          )}
+
+          {/* SECTION: ASSESSMENT MANAGEMENT (OR STUDENT NAVIGATION) */}
           <div className="space-y-1">
             <div className={`text-[10px] font-bold text-slate-400 dark:text-slate-500 px-2 mb-1.5 uppercase tracking-wider ${sidebarCollapsed ? "md:hidden" : ""}`}>
-              {isTeacher ? "Creator Studio" : "Dashboard Navigation"}
+              {isTeacher ? "Assessment Management" : "Dashboard Navigation"}
             </div>
             {sidebarCollapsed && (
               <div className="hidden md:block w-6 h-0.5 bg-slate-200 dark:bg-slate-800 mx-auto mb-2 rounded" />
@@ -676,33 +707,6 @@ export default function DashboardLayout({
             <div className="space-y-1">
               {isTeacher ? (
                 <>
-                  {/* Main Dashboard */}
-                  <button 
-                    onClick={() => navToTab("overview")}
-                    className={`group relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                      sidebarCollapsed ? "md:justify-center md:px-0" : ""
-                    } ${
-                      isTabActive("overview")
-                        ? "bg-blue-50/80 dark:bg-blue-950/40 text-[#2563EB] dark:text-[#60A5FA] font-bold border-l-4 border-[#2563EB] shadow-2xs"
-                        : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60"
-                    }`}
-                  >
-                    <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105">
-                      <Home className="h-4 w-4" />
-                    </div>
-                    <span className={`truncate text-left flex-1 ${sidebarCollapsed ? "md:hidden" : ""}`}>
-                      Main Dashboard
-                    </span>
-                    {!sidebarCollapsed && (
-                      <ChevronRight className="h-3.5 w-3.5 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 dark:group-hover:text-slate-400 shrink-0 transition-transform group-hover:translate-x-0.5" />
-                    )}
-                    {sidebarCollapsed && (
-                      <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
-                        Main Dashboard
-                      </span>
-                    )}
-                  </button>
-
                   {/* Assessments */}
                   <button 
                     onClick={() => navToTab("exams")}
@@ -1527,7 +1531,7 @@ export default function DashboardLayout({
                 aria-current="page"
               >
                 {leafItem?.label === "Overview" || leafItem?.label === "Main Dashboard"
-                  ? (isTeacher ? "Creator Studio" : "Student Portal")
+                  ? (isTeacher ? "Main Dashboard" : "Student Portal")
                   : (leafItem?.label || "Dashboard")}
               </span>
             </div>
