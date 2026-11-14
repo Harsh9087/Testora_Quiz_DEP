@@ -50,3 +50,4 @@ class StudyMaterialUnlock(TimeStampedModel):
 
     user = relationship("User")
     material = relationship("StudyMaterial", back_populates="unlocks")
+

@@ -171,3 +171,4 @@ export default function WelcomeOfferModal({ onScrollToPricing }: WelcomeOfferMod
     </div>
   );
 }
+

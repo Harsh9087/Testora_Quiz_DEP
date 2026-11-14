@@ -90,3 +90,4 @@ export default function FloatingPromoBanner({ onScrollToPricing }: FloatingPromo
     </div>
   );
 }
+

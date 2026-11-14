@@ -172,7 +172,7 @@ def list_study_materials(
         # 1. It is free (is_paid == False)
         # 2. User has unlocked it
         # 3. User is super_admin or inst_admin
-        is_unlocked = (not item.is_paid) or (item.id in unlocked_material_ids) or is_admin
+        is_unlocked = bool((not item.is_paid) or (item.id in unlocked_material_ids) or is_admin)
 
         result.append({
             "id": item.id,
@@ -523,3 +523,4 @@ def delete_study_material(
     db.commit()
 
     return {"success": True, "message": f"Study material '{material.title}' deleted successfully."}
+
