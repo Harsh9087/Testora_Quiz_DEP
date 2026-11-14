@@ -347,9 +347,18 @@ export default function TeacherDashboard() {
         apiFetch("/registration-forms", { token: activeToken }).catch(() => null),
       ]);
 
-      if (docsRes && docsRes.ok) setDocuments(await docsRes.json().catch(() => []));
-      if (examsRes && examsRes.ok) setExams(await examsRes.json().catch(() => []));
-      if (subjectsRes && subjectsRes.ok) setKbSubjects(await subjectsRes.json().catch(() => []));
+      if (docsRes && docsRes.ok) {
+        const dData = await docsRes.json().catch(() => []);
+        setDocuments(Array.isArray(dData) ? dData : []);
+      }
+      if (examsRes && examsRes.ok) {
+        const eData = await examsRes.json().catch(() => []);
+        setExams(Array.isArray(eData) ? eData : []);
+      }
+      if (subjectsRes && subjectsRes.ok) {
+        const sData = await subjectsRes.json().catch(() => []);
+        setKbSubjects(Array.isArray(sData) ? sData : []);
+      }
       if (Array.isArray(dirsRes)) {
         setStudentDirectories(dirsRes);
         if (dirsRes.length > 0 && !selectedDirectoryId) {
@@ -558,12 +567,19 @@ export default function TeacherDashboard() {
     const msLeft = Math.max(0, expiryTime - Date.now());
     const daysLeft = Math.max(1, Math.ceil(msLeft / (24 * 60 * 60 * 1000)));
 
+    const stepTitles: Record<number, string> = {
+      1: "1. Source",
+      2: "2. Questions",
+      3: "3. Schedule",
+      4: "4. Review",
+    };
+
     return {
       examName: examName.trim() || "Untitled Assessment Draft",
       examSubject: examSubject || "General",
       createStep,
       totalSteps: 4,
-      stepTitle: WIZARD_STEPS[createStep - 1]?.shortTitle || `Step ${createStep}`,
+      stepTitle: stepTitles[createStep] || `Step ${createStep}`,
       questionsCount: computedQuestionCount || parseInt(numMcq) || 5,
       duration: examDuration || "30",
       marks: examMarks || "50",
@@ -797,21 +813,49 @@ export default function TeacherDashboard() {
   const handleCreateExam = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // If teacher selected a document in Upload mode but didn't click the inner upload button, auto-upload it now!
+    let activeSubject = examSubject;
+    if (step1SourceMode === "upload" && step1UploadFile) {
+      try {
+        setIsGenerating(true);
+        const sub = step1UploadSubject.trim() || activeSubject || "General_101";
+        const formData = new FormData();
+        formData.append("file", step1UploadFile);
+        formData.append("subject_id", sub);
+
+        const upRes = await apiFetch("/kb/upload", {
+          token,
+          method: "POST",
+          body: formData,
+        });
+        if (upRes.ok) {
+          activeSubject = sub;
+          setExamSubject(sub);
+          setStep1UploadFile(null);
+          showToast(`Document "${step1UploadFile.name}" uploaded & indexed!`, "success");
+        }
+      } catch (upErr) {
+        console.warn("Auto-upload notice:", upErr);
+      }
+    }
+
     // AI Prompt mode: use prompt as knowledge context, no KB required
     const isAiPromptMode = step1SourceMode === "ai_prompt";
     if (isAiPromptMode && !step1AiPrompt.trim()) {
       showToast("Please enter a topic/prompt for AI to generate questions from.", "error");
+      setIsGenerating(false);
       return;
     }
     const effectiveSubject = isAiPromptMode
-      ? (examSubject || "ai_prompt_generated")
-      : examSubject;
+      ? (activeSubject || "ai_prompt_generated")
+      : activeSubject;
     const effectiveCustomInstructions = isAiPromptMode
       ? `${step1AiPrompt.trim()}${customPromptInstructions ? `\n\nAdditional: ${customPromptInstructions}` : ""}`
       : customPromptInstructions;
 
     if (!examName || !effectiveSubject) {
       showToast("Please provide an assessment title and select a knowledge source", "error");
+      setIsGenerating(false);
       return;
     }
     setIsGenerating(true);
@@ -1947,7 +1991,7 @@ export default function TeacherDashboard() {
                 )}
                 <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EFF6FF] text-[#1E3A8A] dark:bg-[#172B4D] dark:text-[#60A5FA] text-xs font-bold">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#2563EB] animate-pulse" />
-                  <span>Step {createStep} of 4: {WIZARD_STEPS[createStep - 1].shortTitle}</span>
+                  <span>Step {createStep} of 4: {WIZARD_STEPS[Math.max(0, Math.min(3, (createStep || 1) - 1))]?.shortTitle || `Step ${createStep}`}</span>
                 </div>
                 <button
                   type="button"
@@ -2142,7 +2186,7 @@ export default function TeacherDashboard() {
                     )}
 
                     {/* MODE A: Select from Existing Knowledge Base */}
-                    {step1SourceMode === "select" ? (
+                    {step1SourceMode === "select" && (
                       <div className="space-y-1.5">
                         {kbSubjects.length > 0 ? (
                           <select
@@ -2157,11 +2201,16 @@ export default function TeacherDashboard() {
                             className={inputCls}
                           >
                             <option value="">Select Knowledge Source...</option>
-                            {kbSubjects.map((s) => (
-                              <option key={s.subject_id} value={s.subject_id}>
-                                {s.name} ({s.document_count} document{s.document_count > 1 ? "s" : ""})
-                              </option>
-                            ))}
+                            {kbSubjects.map((s: any, idx: number) => {
+                              const sId = typeof s === "string" ? s : s.subject_id;
+                              const sName = typeof s === "string" ? s : s.name;
+                              const sCount = typeof s === "object" && s !== null ? s.document_count : undefined;
+                              return (
+                                <option key={sId || idx} value={sId}>
+                                  {sName} {sCount !== undefined ? `(${sCount} document${sCount > 1 ? "s" : ""})` : ""}
+                                </option>
+                              );
+                            })}
                             <option value="general_101">General Knowledge Base</option>
                           </select>
                         ) : (
@@ -2183,8 +2232,10 @@ export default function TeacherDashboard() {
                           Questions will be strictly generated using documents in this knowledge source.
                         </p>
                       </div>
-                    ) : (
-                      /* MODE B: Direct Inline KB Document Upload */
+                    )}
+
+                    {/* MODE B: Direct Inline KB Document Upload */}
+                    {step1SourceMode === "upload" && (
                       <div className="space-y-3 p-3.5 rounded-xl bg-[#FBF9F5] dark:bg-[#1D1B19] border border-[#E5E0D8] dark:border-[#292524]">
                         <div className="space-y-1">
                           <label className="text-[11px] font-bold text-[#57534E] dark:text-[#A8A29E] uppercase tracking-wider">
@@ -2200,9 +2251,10 @@ export default function TeacherDashboard() {
                           />
                           {kbSubjects.length > 0 && (
                             <datalist id="existing-kb-subjects-list">
-                              {kbSubjects.map((s) => (
-                                <option key={s.subject_id} value={s.subject_id} />
-                              ))}
+                              {kbSubjects.map((s: any, idx: number) => {
+                                const sVal = typeof s === "string" ? s : s.subject_id;
+                                return <option key={sVal || idx} value={sVal} />;
+                              })}
                             </datalist>
                           )}
                         </div>
@@ -2490,7 +2542,10 @@ export default function TeacherDashboard() {
                   <div className="pt-3 flex justify-end">
                     <button 
                       type="button" 
-                      onClick={() => {
+                      onClick={async () => {
+                        if (step1SourceMode === "upload" && step1UploadFile && !examSubject) {
+                          await handleStep1DirectUpload();
+                        }
                         setCreateStep(2);
                         setExpandedStep(2);
                       }} 

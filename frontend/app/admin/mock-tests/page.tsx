@@ -3005,12 +3005,27 @@ export default function AdminMockTestsPage() {
                   {previewTest.category} • {previewTest.total_questions} Questions • {previewTest.total_marks} Total Marks • {previewTest.duration_minutes} Mins
                 </div>
               </div>
-              <button
-                onClick={() => setIsPreviewModalOpen(false)}
-                className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsPreviewModalOpen(false);
+                    handleOpenTakers(previewTest);
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                  title="View Candidate Attempts, Scorecards & Payment Records"
+                >
+                  <Users className="w-3.5 h-3.5" />
+                  <span>Attempts &amp; Payments ({previewTest.attempts_count || 0})</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsPreviewModalOpen(false)}
+                  className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             <div className="flex-1 overflow-y-auto p-5 space-y-4">
