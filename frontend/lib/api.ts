@@ -1,13 +1,29 @@
-const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
-// Clean trailing slashes and redundant /api/v1 suffixes
-let baseHost = rawApiUrl.replace(/\/api\/v1\/?$/, "").replace(/\/+$/, "");
-// Normalize localhost to 127.0.0.1 on local environments to prevent 2-second Windows IPv6 ::1 timeout
-if (baseHost.includes("localhost:8000")) {
-  baseHost = baseHost.replace("localhost:8000", "127.0.0.1:8000");
+export function resolveApiBase(): string {
+  if (typeof window !== "undefined" && window.location && window.location.hostname) {
+    const h = window.location.hostname.toLowerCase();
+    if (h.includes("testoraquiz.com") || (!h.includes("localhost") && !h.includes("127.0.0.1") && !h.startsWith("192.168."))) {
+      return "https://api.testoraquiz.com";
+    }
+  }
+
+  const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+  let baseHost = rawApiUrl.replace(/\/api\/v1\/?$/, "").replace(/\/+$/, "");
+  if (baseHost.includes("localhost:8000")) {
+    baseHost = baseHost.replace("localhost:8000", "127.0.0.1:8000");
+  }
+  return baseHost;
 }
 
-export const API_BASE = baseHost;
-export const API_V1 = `${baseHost}/api/v1`;
+export function getApiBase(): string {
+  return resolveApiBase();
+}
+
+export function getApiV1(): string {
+  return `${resolveApiBase()}/api/v1`;
+}
+
+export const API_BASE = resolveApiBase();
+export const API_V1 = `${resolveApiBase()}/api/v1`;
 
 export function getFrontendBaseUrl(): string {
   if (typeof window !== "undefined" && window.location.origin) {
@@ -100,7 +116,8 @@ export async function apiFetch(
     normalizedPath = normalizedPath.substring(7);
   }
 
-  const url = `${API_V1}${normalizedPath}`;
+  const currentApiV1 = getApiV1();
+  const url = `${currentApiV1}${normalizedPath}`;
 
   const response = await fetch(url, {
     credentials: "include",

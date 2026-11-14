@@ -8,7 +8,7 @@ import {
   ExternalLink, Building2, Calendar, FileText, Check, Copy, ArrowLeft, Loader2
 } from "lucide-react";
 import AppLogo from "@/components/AppLogo";
-import { API_BASE, API_V1 } from "@/lib/api";
+import { API_BASE, API_V1, getApiV1 } from "@/lib/api";
 import { formatLocalizedDate } from "@/lib/dateUtils";
 
 interface VerifyData {
@@ -47,7 +47,8 @@ export default function PublicVerifyCertificatePage() {
   const verifyCert = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_V1}/certificates/verify/${encodeURIComponent(certId)}`);
+      const apiEndpoint = getApiV1();
+      const res = await fetch(`${apiEndpoint}/certificates/verify/${encodeURIComponent(certId)}`);
       if (res.ok) {
         setData(await res.json());
       } else {

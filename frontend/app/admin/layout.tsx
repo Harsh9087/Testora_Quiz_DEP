@@ -32,7 +32,8 @@ import {
   CheckCircle2,
   Tag,
   Award,
-  BookOpen
+  BookOpen,
+  DollarSign
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { apiFetch } from "@/lib/api";
@@ -46,7 +47,8 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { name: "Overview", href: "/admin", icon: LayoutDashboard },
+  { name: "Executive Overview", href: "/admin", icon: LayoutDashboard },
+  { name: "Payments & Revenue", href: "/admin/credits", icon: DollarSign },
   { name: "Institutional Requests", href: "/admin/institutional-requests", icon: Building2 },
   { name: "Free Credit Requests", href: "/admin/credit-requests", icon: Sparkles },
   { name: "Help & Support", href: "/admin/support", icon: LifeBuoy },

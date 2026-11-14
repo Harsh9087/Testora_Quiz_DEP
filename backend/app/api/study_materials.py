@@ -118,7 +118,8 @@ def get_categories(db: Session = Depends(get_db)):
     return categories_result
 
 
-@router.get("/")
+@router.get("", response_model=None)
+@router.get("/", response_model=None)
 def list_study_materials(
     category: Optional[str] = None,
     is_paid: Optional[bool] = None,

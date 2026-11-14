@@ -24,7 +24,7 @@ import {
   FileText,
   AlertCircle
 } from "lucide-react";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, getApiV1 } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 
 interface AdminMaterial {
@@ -154,8 +154,7 @@ export default function AdminStudyMaterialsPage() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const base = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
-      const res = await fetch(`${base}/api/v1/study-materials/upload-file`, {
+      const res = await fetch(`${getApiV1()}/study-materials/upload-file`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`

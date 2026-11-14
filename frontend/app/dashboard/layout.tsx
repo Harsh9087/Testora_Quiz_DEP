@@ -4,7 +4,7 @@ import { useAuthStore } from "../../store/authStore";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { apiFetch, API_BASE } from "../../lib/api";
+import { apiFetch, API_BASE, getApiBase } from "../../lib/api";
 import { 
   GraduationCap, 
   BookOpen, 
@@ -75,7 +75,7 @@ export default function DashboardLayout({
     if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) {
       return url;
     }
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+    const baseUrl = getApiBase();
     return `${baseUrl}${url.startsWith("/") ? "" : "/"}${url}`;
   };
   const [sidebarOpen, setSidebarOpen] = useState(false);

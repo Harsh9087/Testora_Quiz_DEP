@@ -13,6 +13,9 @@ from app.models.user import User, Student
 from app.models.institution import Institution, Department, Course, Subject
 from app.models.exam import Exam, ExamSubmission, AuditLog
 from app.models.payment import PaymentOrder, CreditTransaction
+from app.models.candidate import ExamCandidate
+from app.models.certificate import IssuedCertificate
+from app.models.pricing_plan import PricingPlan
 from app.models.coupon import CouponCampaign, Coupon, SystemSetting
 from app.models.custom_form import CustomForm
 from app.models.registration_form import StudentRegistrationForm
@@ -119,6 +122,141 @@ def get_admin_overview(
             "timestamp": a.timestamp.isoformat() if a.timestamp else None
         })
 
+    # Candidate, Certificate, and Extended Metrics
+    total_candidates = db.query(ExamCandidate).count()
+    total_certs = db.query(IssuedCertificate).count()
+    certs_delivered = db.query(IssuedCertificate).filter(IssuedCertificate.email_status == "SENT").count()
+    certs_failed = db.query(IssuedCertificate).filter(IssuedCertificate.email_status == "FAILED").count()
+
+    # Plan name resolver
+    plan_names = {
+        "starter_recharge": "Starter Recharge (1,000 Credits)",
+        "pkg_1000": "Starter Recharge (1,000 Credits)",
+        "standard_recharge": "Standard Recharge (2,200 Credits)",
+        "pkg_2200": "Standard Recharge (2,200 Credits)",
+        "professional_recharge": "Professional Recharge (6,000 Credits)",
+        "pkg_6000": "Professional Recharge (6,000 Credits)",
+        "master_recharge": "Master Recharge (15,000 Credits)",
+        "pkg_15000": "Master Recharge (15,000 Credits)",
+        "institutional_plan": "Institutional Plan (10,000 Credits)",
+        "starter_monthly": "Starter Monthly Subscription",
+        "prepaid_credits": "Exam Publish (Prepaid Credits)",
+        "per_test_billing": "Direct Per-Test Checkout",
+    }
+
+    # 1. Comprehensive Recent Payments ("subscribe plan", "complete payments detail")
+    recent_orders_q = db.query(PaymentOrder).order_by(PaymentOrder.created_at.desc()).limit(25).all()
+    recent_payments = []
+    for ord in recent_orders_q:
+        u = db.query(User).filter(User.id == ord.user_id).first()
+        recent_payments.append({
+            "id": ord.id,
+            "order_type": ord.order_type,
+            "plan_id": ord.plan_id,
+            "plan_name": plan_names.get(ord.plan_id, ord.plan_id or "Credit Recharge"),
+            "amount_inr": round(ord.amount / 100, 2),
+            "credits_added": ord.credits_added,
+            "status": ord.status,
+            "invoice_number": ord.invoice_number,
+            "razorpay_order_id": ord.razorpay_order_id,
+            "razorpay_payment_id": ord.razorpay_payment_id,
+            "user_name": u.full_name if u else "Unknown User",
+            "user_email": u.email if u else "unknown",
+            "user_role": u.role if u else "user",
+            "created_at": ord.created_at.isoformat() if ord.created_at else None
+        })
+
+    # 2. Teacher Tests Conducted ("teacher ne kab test liya, kitne teacher ne kab test liya")
+    recent_exams_q = db.query(Exam).filter(Exam.is_deleted == False).order_by(Exam.created_at.desc()).limit(25).all()
+    teacher_exams = []
+    for ex in recent_exams_q:
+        t_user = db.query(User).filter(User.id == ex.created_by).first()
+        cand_count = db.query(ExamCandidate).filter(ExamCandidate.exam_id == ex.id).count()
+        sub_count = db.query(ExamSubmission).filter(ExamSubmission.exam_id == ex.id).count()
+        pass_count = db.query(ExamSubmission).filter(ExamSubmission.exam_id == ex.id, ExamSubmission.percentage >= (ex.passing_marks or 40)).count()
+        pass_rate = round((pass_count / max(sub_count, 1)) * 100, 1) if sub_count > 0 else 0
+        teacher_exams.append({
+            "id": ex.id,
+            "title": ex.name,
+            "exam_code": ex.exam_code,
+            "teacher_name": t_user.full_name if t_user else "Faculty",
+            "teacher_email": t_user.email if t_user else "unknown",
+            "created_at": ex.created_at.isoformat() if ex.created_at else None,
+            "is_published": ex.is_published,
+            "duration_minutes": ex.duration_minutes or 60,
+            "total_marks": ex.total_marks or 100,
+            "passing_marks": ex.passing_marks or 40,
+            "candidate_count": cand_count,
+            "submission_count": sub_count,
+            "passing_rate": pass_rate
+        })
+
+    # 3. Certificates Conferred & Sent ("certificate sent")
+    recent_certs_q = db.query(IssuedCertificate).order_by(IssuedCertificate.created_at.desc()).limit(25).all()
+    recent_certificates = []
+    for c in recent_certs_q:
+        recent_certificates.append({
+            "id": c.id,
+            "certificate_code": c.certificate_code,
+            "verification_token": c.verification_token,
+            "recipient_name": c.recipient_name,
+            "recipient_email": c.recipient_email,
+            "recipient_roll_number": c.recipient_roll_number,
+            "exam_name": c.exam_name_snapshot,
+            "institute_name": c.institute_name_snapshot,
+            "percentage": c.percentage_snapshot,
+            "grade": c.grade_snapshot,
+            "issue_date": c.issue_date.isoformat() if c.issue_date else None,
+            "email_status": c.email_status or "PENDING",
+            "is_revoked": c.is_revoked
+        })
+
+    # 4. Student Platform Network ("kitne student platform se hai jude")
+    recent_students_q = db.query(User).filter(User.role == "student", User.is_deleted == False).order_by(User.created_at.desc()).limit(20).all()
+    recent_students = []
+    for st_u in recent_students_q:
+        subs_cnt = db.query(ExamSubmission).filter(ExamSubmission.student_user_id == st_u.id).count()
+        recent_students.append({
+            "id": st_u.id,
+            "name": st_u.full_name,
+            "email": st_u.email,
+            "created_at": st_u.created_at.isoformat() if st_u.created_at else None,
+            "tests_attempted": subs_cnt
+        })
+
+    # 5. User Credits & Wallets ("credit of users")
+    top_teachers_q = db.query(User).filter(User.role.in_(["teacher", "inst_admin"]), User.is_deleted == False).order_by((User.credits_balance + User.bonus_credits).desc()).limit(20).all()
+    top_teachers_credits = []
+    for tu in top_teachers_q:
+        ex_cnt = db.query(Exam).filter(Exam.created_by == tu.id, Exam.is_deleted == False).count()
+        top_teachers_credits.append({
+            "id": tu.id,
+            "name": tu.full_name,
+            "email": tu.email,
+            "role": tu.role,
+            "regular_credits": tu.credits_balance or 0,
+            "bonus_credits": tu.bonus_credits or 0,
+            "total_credits": (tu.credits_balance or 0) + (tu.bonus_credits or 0),
+            "bonus_expires_at": tu.bonus_credits_expires_at.isoformat() if getattr(tu, "bonus_credits_expires_at", None) else None,
+            "exams_created": ex_cnt
+        })
+
+    # 6. Recent Credit Transactions
+    recent_tx_q = db.query(CreditTransaction).order_by(CreditTransaction.created_at.desc()).limit(20).all()
+    recent_credit_transactions = []
+    for ctx in recent_tx_q:
+        u = db.query(User).filter(User.id == ctx.user_id).first()
+        recent_credit_transactions.append({
+            "id": ctx.id,
+            "user_name": u.full_name if u else "User",
+            "user_email": u.email if u else "unknown",
+            "transaction_type": ctx.transaction_type,
+            "amount_credits": ctx.amount_credits,
+            "balance_after": ctx.balance_after,
+            "description": ctx.description,
+            "created_at": ctx.created_at.isoformat() if ctx.created_at else None
+        })
+
     return {
         "stats": {
             "total_users": total_users,
@@ -126,6 +264,7 @@ def get_admin_overview(
             "total_students": total_students,
             "total_admins": total_admins,
             "total_institutions": total_institutions,
+            "total_candidates_platform": total_candidates,
             "total_exams": total_exams,
             "published_exams": published_exams,
             "completed_submissions": completed_submissions,
@@ -134,6 +273,9 @@ def get_admin_overview(
             "total_available_credits": circulating_credits + circulating_bonus,
             "total_paid_orders": total_paid_orders,
             "total_revenue_inr": round(total_revenue_paise / 100, 2),
+            "total_certificates_issued": total_certs,
+            "certificates_delivered_count": certs_delivered,
+            "certificates_failed_count": certs_failed,
             "total_coupon_campaigns": total_campaigns,
             "total_coupons_generated": total_coupons,
             "total_coupons_redeemed": redeemed_coupons,
@@ -159,6 +301,12 @@ def get_admin_overview(
             "total_vouchers_requested": db.query(func.sum(InstitutionalRequest.vouchers_requested)).filter(InstitutionalRequest.is_deleted == False).scalar() or 0,
         },
         "recent_activity": audit_list,
+        "recent_payments": recent_payments,
+        "teacher_exams": teacher_exams,
+        "recent_certificates": recent_certificates,
+        "recent_students": recent_students,
+        "top_teachers_credits": top_teachers_credits,
+        "recent_credit_transactions": recent_credit_transactions,
         "recent_credit_requests": [
             {
                 "id": cr.id,
@@ -188,6 +336,96 @@ def get_admin_overview(
             }
             for st in db.query(SupportTicket).filter(SupportTicket.is_deleted == False).order_by(SupportTicket.created_at.desc()).limit(5).all()
         ]
+    }
+
+
+@router.get("/payments")
+def list_admin_payments(
+    status: Optional[str] = None,
+    order_type: Optional[str] = None,
+    search: Optional[str] = None,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=10, le=100),
+    current_user: User = Depends(super_admin_required),
+    db: Session = Depends(get_db)
+):
+    """
+    Searchable and filterable payment transaction records for super admin.
+    Returns Razorpay orders, plan subscriptions, tax invoices, and revenue breakdown.
+    """
+    plan_names = {
+        "starter_recharge": "Starter Recharge (1,000 Credits)",
+        "pkg_1000": "Starter Recharge (1,000 Credits)",
+        "standard_recharge": "Standard Recharge (2,200 Credits)",
+        "pkg_2200": "Standard Recharge (2,200 Credits)",
+        "professional_recharge": "Professional Recharge (6,000 Credits)",
+        "pkg_6000": "Professional Recharge (6,000 Credits)",
+        "master_recharge": "Master Recharge (15,000 Credits)",
+        "pkg_15000": "Master Recharge (15,000 Credits)",
+        "institutional_plan": "Institutional Plan (10,000 Credits)",
+        "starter_monthly": "Starter Monthly Subscription",
+        "prepaid_credits": "Exam Publish (Prepaid Credits)",
+        "per_test_billing": "Direct Per-Test Checkout",
+    }
+
+    query = db.query(PaymentOrder).join(User, PaymentOrder.user_id == User.id)
+
+    if status:
+        query = query.filter(PaymentOrder.status == status)
+
+    if order_type:
+        query = query.filter(PaymentOrder.order_type == order_type)
+
+    if search:
+        s = f"%{search.strip()}%"
+        query = query.filter(
+            (User.email.ilike(s)) |
+            (User.full_name.ilike(s)) |
+            (PaymentOrder.invoice_number.ilike(s)) |
+            (PaymentOrder.razorpay_order_id.ilike(s)) |
+            (PaymentOrder.razorpay_payment_id.ilike(s))
+        )
+
+    total_count = query.count()
+    offset = (page - 1) * page_size
+    orders = query.order_by(PaymentOrder.created_at.desc()).offset(offset).limit(page_size).all()
+
+    items = []
+    for ord in orders:
+        u = db.query(User).filter(User.id == ord.user_id).first()
+        items.append({
+            "id": ord.id,
+            "user_id": ord.user_id,
+            "user_name": u.full_name if u else "Unknown User",
+            "user_email": u.email if u else "unknown",
+            "user_role": u.role if u else "user",
+            "order_type": ord.order_type,
+            "plan_id": ord.plan_id,
+            "plan_name": plan_names.get(ord.plan_id, ord.plan_id or "Credit Recharge"),
+            "amount_inr": round(ord.amount / 100, 2),
+            "credits_added": ord.credits_added,
+            "status": ord.status,
+            "invoice_number": ord.invoice_number,
+            "razorpay_order_id": ord.razorpay_order_id,
+            "razorpay_payment_id": ord.razorpay_payment_id,
+            "created_at": ord.created_at.isoformat() if ord.created_at else None
+        })
+
+    # Summary aggregations
+    paid_revenue_paise = db.query(func.sum(PaymentOrder.amount)).filter(PaymentOrder.status == "paid").scalar() or 0
+    total_paid_count = db.query(PaymentOrder).filter(PaymentOrder.status == "paid").count()
+
+    return {
+        "items": items,
+        "total": total_count,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": (total_count + page_size - 1) // page_size,
+        "summary": {
+            "total_revenue_inr": round(paid_revenue_paise / 100, 2),
+            "total_paid_orders": total_paid_count,
+            "avg_order_value_inr": round((paid_revenue_paise / 100) / max(total_paid_count, 1), 2) if total_paid_count > 0 else 0
+        }
     }
 
 

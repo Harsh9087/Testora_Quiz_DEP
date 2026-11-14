@@ -20,7 +20,7 @@ import {
   GraduationCap,
   ArrowLeft
 } from "lucide-react";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, getApiBase, getApiV1 } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/components/Toast";
 
@@ -76,7 +76,7 @@ export default function StudentProfilePage() {
     if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) {
       return url;
     }
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+    const baseUrl = getApiBase();
     return `${baseUrl}${url.startsWith("/") ? "" : "/"}${url}`;
   };
 
@@ -99,7 +99,7 @@ export default function StudentProfilePage() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+      const baseUrl = getApiBase();
       const res = await fetch(`${baseUrl}/api/v1/auth/avatar/upload`, {
         method: "POST",
         headers: {

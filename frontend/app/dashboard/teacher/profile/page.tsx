@@ -29,7 +29,7 @@ import {
   CheckCircle2,
   LayoutDashboard
 } from "lucide-react";
-import { apiFetch, API_V1 } from "@/lib/api";
+import { apiFetch, API_V1, getApiBase } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/components/Toast";
 import CreditRechargeModal from "../_components/CreditRechargeModal";
@@ -110,7 +110,7 @@ export default function TeacherProfilePage() {
     if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) {
       return url;
     }
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+    const baseUrl = getApiBase();
     return `${baseUrl}${url.startsWith("/") ? "" : "/"}${url}`;
   };
 
@@ -133,7 +133,7 @@ export default function TeacherProfilePage() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+      const baseUrl = getApiBase();
       const res = await fetch(`${baseUrl}/api/v1/auth/avatar/upload`, {
         method: "POST",
         headers: {

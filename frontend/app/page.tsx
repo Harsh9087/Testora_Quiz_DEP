@@ -54,7 +54,7 @@ import {
   Share2,
 } from "lucide-react";
 import { useAuthStore } from "../store/authStore";
-import { apiFetch } from "../lib/api";
+import { apiFetch, getApiBase } from "../lib/api";
 import ThemeToggle from "../components/ThemeToggle";
 import AppLogo from "../components/AppLogo";
 import AIAgentGuideWidget from "../components/AIAgentGuideWidget";
@@ -119,7 +119,7 @@ export default function UnifiedHomePage() {
     if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) {
       return url;
     }
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+    const baseUrl = getApiBase();
     return `${baseUrl}${url.startsWith("/") ? "" : "/"}${url}`;
   };
 

@@ -26,7 +26,7 @@ import {
   AlertCircle,
   X
 } from "lucide-react";
-import { apiFetch, API_BASE } from "../../../lib/api";
+import { apiFetch, API_BASE, getApiBase } from "../../../lib/api";
 import { useAuthStore } from "../../../store/authStore";
 
 interface StudyMaterialItem {
@@ -193,7 +193,7 @@ function StudyMaterialContent() {
   const getFullDownloadUrl = (url?: string | null) => {
     if (!url) return "#";
     if (url.startsWith("http://") || url.startsWith("https://")) return url;
-    const base = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+    const base = getApiBase();
     return `${base}${url.startsWith("/") ? "" : "/"}${url}`;
   };
 
