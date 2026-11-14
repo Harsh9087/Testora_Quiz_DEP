@@ -313,7 +313,7 @@ export default function StudentDashboard() {
             <span className="sm:hidden">Placement Tests</span>
             <span className="hidden sm:inline">Placement Tests (TCS, Infosys)</span>
             <span className="px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-blue-500 text-white ml-0.5">
-              ₹9 / Free
+              99 Credits / Free
             </span>
           </button>
 

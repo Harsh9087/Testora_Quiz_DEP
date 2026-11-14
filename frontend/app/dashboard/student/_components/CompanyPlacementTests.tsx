@@ -203,109 +203,49 @@ export default function CompanyPlacementTests() {
     }
   };
 
-  // Handle Paid Test Checkout (₹9 / ₹12 Razorpay)
-  const handleUnlockPaid = async (test: MockTestItem) => {
+  // Handle Paid Test Checkout via 99 Credits
+  const handleUnlockWithCredits = async (test: MockTestItem) => {
     try {
       setProcessingId(test.id);
-      
-      const orderRes = await apiFetch(`/mock-tests/${test.id}/create-order`, {
+
+      const confirmed = window.confirm(
+        `[Unlock Placement Mock Test]\n\n` +
+        `Test: ${test.title}\n` +
+        `Company: ${test.company_name}\n` +
+        `Access Fee: 99 Credits\n\n` +
+        `Would you like to unlock this assessment using 99 credits from your wallet balance?`
+      );
+
+      if (!confirmed) {
+        setProcessingId(null);
+        return;
+      }
+
+      const res = await apiFetch(`/mock-tests/${test.id}/unlock-credits`, {
         method: "POST",
         token
       });
 
-      if (!orderRes.ok) {
-        const err = await orderRes.json().catch(() => ({}));
-        alert(err.detail || "Failed to initialize payment gateway order.");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(err.detail || "Failed to unlock test with credits. Please check your credit balance.");
         setProcessingId(null);
         return;
       }
 
-      const orderData = await orderRes.json();
-      const scriptLoaded = await loadRazorpayScript();
+      const data = await res.json();
+      setTests((prev) =>
+        prev.map((t) => (t.id === test.id ? { ...t, is_unlocked: true } : t))
+      );
 
-      const isSimulation =
-        orderData.order_id.startsWith("order_mt_") ||
-        orderData.key_id === "rzp_test_placeholder" ||
-        !orderData.key_id;
-
-      if (isSimulation || !scriptLoaded) {
-        const confirmed = window.confirm(
-          `[Testora Secure Payment Checkout]\n\n` +
-          `Test: ${test.title}\n` +
-          `Company: ${test.company_name}\n` +
-          `Amount: ₹${test.price_inr}\n` +
-          `Order ID: ${orderData.order_id}\n\n` +
-          `Click OK to confirm mock test unlock.`
-        );
-
-        if (confirmed) {
-          const verifyRes = await apiFetch(`/mock-tests/${test.id}/verify-payment`, {
-            method: "POST",
-            token,
-            body: JSON.stringify({
-              razorpay_order_id: orderData.order_id,
-              razorpay_payment_id: `pay_sim_${Date.now()}`,
-              razorpay_signature: "simulated_mock_test_signature"
-            })
-          });
-
-          if (verifyRes.ok) {
-            setTests((prev) =>
-              prev.map((t) => (t.id === test.id ? { ...t, is_unlocked: true } : t))
-            );
-            setActiveTest(test);
-          }
-        }
-        setProcessingId(null);
-        return;
+      if (data.new_balance !== undefined) {
+        window.dispatchEvent(new CustomEvent("credits-updated", { detail: data.new_balance }));
       }
 
-      // Live Razorpay popup
-      const options = {
-        key: orderData.key_id,
-        amount: orderData.amount,
-        currency: orderData.currency || "INR",
-        name: "Testora Quiz",
-        description: `${test.company_name} Placement Test: ${test.title}`,
-        order_id: orderData.order_id,
-        prefill: {
-          name: fullName || "Student Candidate",
-          email: ""
-        },
-        theme: {
-          color: "#2563EB"
-        },
-        handler: async (response: any) => {
-          try {
-            const verifyRes = await apiFetch(`/mock-tests/${test.id}/verify-payment`, {
-              method: "POST",
-              token,
-              body: JSON.stringify({
-                razorpay_order_id: response.razorpay_order_id || orderData.order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature
-              })
-            });
-
-            if (verifyRes.ok) {
-              setTests((prev) =>
-                prev.map((t) => (t.id === test.id ? { ...t, is_unlocked: true } : t))
-              );
-              setActiveTest(test);
-            }
-          } catch (err: any) {
-            alert(err.message || "Payment verification failed.");
-          }
-        }
-      };
-
-      const razorpayInstance = new (window as any).Razorpay(options);
-      razorpayInstance.on("payment.failed", (failResp: any) => {
-        alert(failResp.error?.description || "Payment was declined.");
-      });
-      razorpayInstance.open();
-    } catch (err: any) {
-      alert(err.message || "Checkout error.");
+      setTestMode("exam");
+      setActiveTest({ ...test, is_unlocked: true });
+    } catch (e: any) {
+      alert("Error unlocking test: " + (e?.message || "Network error"));
     } finally {
       setProcessingId(null);
     }
@@ -382,7 +322,7 @@ export default function CompanyPlacementTests() {
             </div>
             <div className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 backdrop-blur-md border border-white/10 flex items-center gap-2 transition-all">
               <Coins className="w-3.5 h-3.5 text-amber-300 shrink-0" />
-              <span>Premium Tests at ₹9 & ₹12</span>
+              <span>Placement Tests (99 Credits)</span>
             </div>
             <div className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 backdrop-blur-md border border-white/10 flex items-center gap-2 transition-all">
               <Zap className="w-3.5 h-3.5 text-blue-400 shrink-0" />
@@ -405,8 +345,8 @@ export default function CompanyPlacementTests() {
               <div className="text-base sm:text-xl font-black text-emerald-300 mt-0.5">{freeCount} Free</div>
             </div>
             <div className="p-2.5 rounded-xl bg-slate-900/60 border border-slate-700/60 backdrop-blur-sm">
-              <div className="text-[10px] sm:text-[11px] text-amber-400 uppercase font-bold tracking-wider">Starting At</div>
-              <div className="text-base sm:text-xl font-black text-amber-300 mt-0.5">₹9 Only</div>
+              <div className="text-[10px] sm:text-[11px] text-amber-400 uppercase font-bold tracking-wider">Credit Access</div>
+              <div className="text-base sm:text-xl font-black text-amber-300 mt-0.5">99 Credits</div>
             </div>
             <div className="hidden sm:block p-2.5 rounded-xl bg-slate-900/60 border border-slate-700/60 backdrop-blur-sm">
               <div className="text-[10px] sm:text-[11px] text-blue-400 uppercase font-bold tracking-wider">Completed</div>
@@ -541,8 +481,8 @@ export default function CompanyPlacementTests() {
                     : "text-amber-700 dark:text-amber-400 hover:text-amber-800"
                 }`}
               >
-                <Tag className="w-3 h-3" />
-                <span>₹9 / ₹12</span>
+                <Coins className="w-3 h-3" />
+                <span>99 Credits</span>
               </button>
             </div>
 
@@ -654,8 +594,8 @@ export default function CompanyPlacementTests() {
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-xs">
-                            <Tag className="w-3 h-3 text-slate-900" />
-                            <span>₹{test.price_inr} ONLY</span>
+                            <Coins className="w-3.5 h-3.5 text-slate-950" />
+                            <span>99 CREDITS</span>
                           </span>
                         )}
                       </div>
@@ -812,11 +752,11 @@ export default function CompanyPlacementTests() {
                     <button
                       type="button"
                       disabled={isProcessing}
-                      onClick={() => handleUnlockPaid(test)}
+                      onClick={() => handleUnlockWithCredits(test)}
                       className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white text-xs font-extrabold transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
                     >
-                      <ShieldCheck className="w-4 h-4 text-amber-200" />
-                      <span>{isProcessing ? "Initializing Checkout..." : `Unlock Placement Test for ₹${test.price_inr} →`}</span>
+                      <Coins className="w-4 h-4 text-amber-200" />
+                      <span>{isProcessing ? "Unlocking with Credits..." : "Unlock Test (99 Credits) →"}</span>
                     </button>
                   )}
                 </div>

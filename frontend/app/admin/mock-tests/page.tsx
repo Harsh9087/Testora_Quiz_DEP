@@ -1148,7 +1148,7 @@ export default function AdminMockTestsPage() {
           <div className="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5">{freeCount}</div>
         </div>
         <div className="p-3 bg-white dark:bg-[#111C31] rounded-xl border border-amber-200/80 dark:border-amber-800 shadow-2xs bg-amber-50/20">
-          <div className="text-[10px] text-amber-700 dark:text-amber-300 font-bold uppercase tracking-wider">Paid (₹9/₹12)</div>
+          <div className="text-[10px] text-amber-700 dark:text-amber-300 font-bold uppercase tracking-wider">Paid (99 Credits)</div>
           <div className="text-xl font-black text-amber-600 dark:text-amber-400 mt-0.5">{paidCount}</div>
         </div>
         <div className="p-3 bg-white dark:bg-[#111C31] rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
@@ -1213,9 +1213,9 @@ export default function AdminMockTestsPage() {
             }}
             className="px-3 py-2 text-xs bg-slate-50 dark:bg-[#15233D] border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white font-semibold"
           >
-            <option value="all">All Pricing</option>
-            <option value="free">100% Free Only (₹0)</option>
-            <option value="paid">Paid Tests Only (₹9 / ₹12)</option>
+            <option value="all">All Access Tiers</option>
+            <option value="free">100% Free Only (0 Credits)</option>
+            <option value="paid">Paid Tests Only (99 Credits)</option>
           </select>
 
           {/* Target Section Filter */}
@@ -2085,12 +2085,12 @@ export default function AdminMockTestsPage() {
                       Pricing & Access Tier *
                     </label>
                     <span className="text-[10px] font-bold text-slate-500">
-                      Current Fee: <b className={priceInr > 0 ? "text-amber-600" : "text-emerald-600"}>{priceInr > 0 ? `₹${priceInr} INR (Paid)` : "100% Free"}</b>
+                      Current Access: <b className={priceInr > 0 ? "text-amber-600" : "text-emerald-600"}>{priceInr > 0 ? "99 Credits (Placement Mock)" : "100% Free"}</b>
                     </span>
                   </div>
 
                   {/* Preset Pricing Buttons */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     <button
                       type="button"
                       onClick={() => setPriceInr(0)}
@@ -2101,52 +2101,31 @@ export default function AdminMockTestsPage() {
                       }`}
                     >
                       <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>Free Access (₹0)</span>
+                      <span>Free Access (0 Credits)</span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => setPriceInr(9)}
                       className={`py-2 px-3 rounded-xl text-xs font-bold transition-all border cursor-pointer flex items-center justify-center gap-1.5 ${
-                        priceInr === 9
+                        priceInr > 0
                           ? "bg-amber-600 text-white border-amber-700 shadow-xs"
                           : "bg-white dark:bg-[#111C31] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-amber-300"
                       }`}
                     >
-                      <span className="font-black">₹9</span>
-                      <span>Placement Mock</span>
+                      <Coins className="w-3.5 h-3.5" />
+                      <span>99 Credits (Placement)</span>
                     </button>
 
-                    <button
-                      type="button"
-                      onClick={() => setPriceInr(12)}
-                      className={`py-2 px-3 rounded-xl text-xs font-bold transition-all border cursor-pointer flex items-center justify-center gap-1.5 ${
-                        priceInr === 12
-                          ? "bg-indigo-600 text-white border-indigo-700 shadow-xs"
-                          : "bg-white dark:bg-[#111C31] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-300"
-                      }`}
-                    >
-                      <span className="font-black">₹12</span>
-                      <span>Premium Mock</span>
-                    </button>
-
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-black text-slate-400">₹</span>
-                      <input
-                        type="number"
-                        min="0"
-                        placeholder="Custom ₹"
-                        value={priceInr === 0 || priceInr === 9 || priceInr === 12 ? "" : priceInr}
-                        onChange={(e) => setPriceInr(Math.max(0, Number(e.target.value)))}
-                        className="w-full pl-7 pr-3 py-2 text-xs bg-white dark:bg-[#111C31] border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-bold"
-                      />
+                    <div className="flex items-center text-[11px] text-slate-500 px-2 font-medium">
+                      {priceInr > 0 ? "Corporate recruitment mock unlocked with 99 student wallet credits" : "100% Free mock for all students & teachers"}
                     </div>
                   </div>
 
                   <p className="text-[10px] text-slate-500 leading-normal">
                     {priceInr === 0
                       ? "✨ 100% Free Practice Mock — Instant access for all students in Mock Test Library."
-                      : `⚡ Paid Assessment (₹${priceInr}) — Students unlock this corporate test through Razorpay in the Campus Placement Arena.`}
+                      : "⚡ Paid Placement Assessment (99 Credits) — Students unlock this corporate test using 99 wallet credits in the Campus Placement Arena."}
                   </p>
                 </div>
               </div>

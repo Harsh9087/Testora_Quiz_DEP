@@ -1117,7 +1117,7 @@ export default function DashboardLayout({
                           Placement Tests
                         </span>
                         <span className="px-1.5 py-0.5 rounded-full text-[9.5px] font-extrabold bg-blue-50 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800/60 shrink-0">
-                          ₹9 / Free
+                          99 Credits / Free
                         </span>
                       </div>
                       <span className="text-[10.5px] text-slate-400 dark:text-slate-500 font-medium truncate">
@@ -1200,7 +1200,7 @@ export default function DashboardLayout({
                   </span>
                   {!sidebarCollapsed && (
                     <span className="px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300 shrink-0">
-                      ₹9 / Free
+                      99 Credits / Free
                     </span>
                   )}
                   {!sidebarCollapsed && (

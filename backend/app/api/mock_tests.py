@@ -2171,6 +2171,105 @@ def start_free_mock_test(
     return {"success": True, "message": f"'{test.title}' is now unlocked for you!"}
 
 
+@router.post("/{test_id}/unlock-credits")
+def unlock_mock_test_with_credits(
+    test_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Unlocks a corporate placement mock test using 99 wallet credits.
+    """
+    test = db.query(MockTest).filter(
+        MockTest.id == test_id,
+        MockTest.is_deleted == False
+    ).first()
+
+    if not test:
+        raise HTTPException(status_code=404, detail="Mock test not found.")
+
+    if test.status != "published" and current_user.role not in ["inst_admin", "super_admin"]:
+        raise HTTPException(status_code=403, detail="This mock test is not published.")
+
+    # Check if already unlocked
+    existing = db.query(MockTestPurchase).filter(
+        MockTestPurchase.mock_test_id == test.id,
+        MockTestPurchase.student_id == current_user.id,
+        MockTestPurchase.is_deleted == False,
+        MockTestPurchase.status.in_(["unlocked", "completed"])
+    ).first()
+
+    if existing:
+        return {
+            "success": True,
+            "message": f"'{test.title}' is already unlocked!",
+            "is_unlocked": True,
+            "new_balance": current_user.total_available_credits
+        }
+
+    # If test is free, unlock with 0 credits
+    if test.is_free or (test.price_inr or 0) == 0:
+        new_purchase = MockTestPurchase(
+            student_id=current_user.id,
+            mock_test_id=test.id,
+            amount_paid_inr=0,
+            amount_paid_paise=0,
+            payment_method="FREE",
+            status="unlocked",
+            created_at=now_utc(),
+            updated_at=now_utc()
+        )
+        db.add(new_purchase)
+        db.commit()
+        return {
+            "success": True,
+            "message": f"'{test.title}' is now unlocked for you!",
+            "is_unlocked": True,
+            "new_balance": current_user.total_available_credits
+        }
+
+    # Standard placement mock test credit cost: 99 credits
+    credits_needed = 99
+    available_balance = current_user.total_available_credits
+
+    if available_balance < credits_needed:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Insufficient credits. You need {credits_needed} credits, but your current balance is {available_balance} credits. Please recharge your wallet."
+        )
+
+    # Deduct bonus credits first, then main balance
+    active_bonus = current_user.active_bonus_credits
+    bonus_deducted = min(active_bonus, credits_needed)
+    if bonus_deducted > 0:
+        current_user.bonus_credits = max(0, current_user.bonus_credits - bonus_deducted)
+
+    remainder_needed = credits_needed - bonus_deducted
+    if remainder_needed > 0:
+        current_user.credits_balance = max(0, (current_user.credits_balance or 0) - remainder_needed)
+
+    new_purchase = MockTestPurchase(
+        student_id=current_user.id,
+        mock_test_id=test.id,
+        amount_paid_inr=0,
+        amount_paid_paise=0,
+        payment_method="CREDITS",
+        razorpay_order_id=f"crd_mt_{uuid.uuid4().hex[:14]}",
+        status="unlocked",
+        created_at=now_utc(),
+        updated_at=now_utc()
+    )
+    db.add(new_purchase)
+    db.commit()
+
+    return {
+        "success": True,
+        "message": f"'{test.title}' successfully unlocked with {credits_needed} credits!",
+        "is_unlocked": True,
+        "new_balance": current_user.total_available_credits
+    }
+
+
 @router.post("/{test_id}/create-order", response_model=MockTestOrderResponse)
 def create_mock_test_order(
     test_id: str,
