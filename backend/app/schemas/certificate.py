@@ -114,6 +114,7 @@ class CertificatePublicVerifyResponse(BaseModel):
     show_grade: bool = False
     is_revoked: bool = False
     revocation_reason: Optional[str] = None
+    download_url: Optional[str] = None
     message: str
 
 

@@ -8,7 +8,7 @@ import {
   ExternalLink, Building2, Calendar, FileText, Check, Copy, ArrowLeft, Loader2
 } from "lucide-react";
 import AppLogo from "@/components/AppLogo";
-import { API_V1 } from "@/lib/api";
+import { API_BASE, API_V1 } from "@/lib/api";
 import { formatLocalizedDate } from "@/lib/dateUtils";
 
 interface VerifyData {
@@ -267,9 +267,13 @@ export default function PublicVerifyCertificatePage() {
 
             {/* Download and Verification Action */}
             <div className="pt-2 flex flex-col sm:flex-row gap-3">
-              {data.download_url && (
+              {data.is_valid && !data.is_revoked && (
                 <a
-                  href={data.download_url}
+                  href={
+                    data.download_url
+                      ? (data.download_url.startsWith("http") ? data.download_url : `${API_BASE}${data.download_url}`)
+                      : `${API_V1}/certificates/download-public/${encodeURIComponent(data.certificate_code || certId)}`
+                  }
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex-1 inline-flex items-center justify-center gap-2 py-3 px-5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md transition-all cursor-pointer"

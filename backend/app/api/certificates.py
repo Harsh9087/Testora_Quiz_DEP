@@ -580,6 +580,21 @@ def public_verify_certificate(
         (IssuedCertificate.certificate_code == query_str)
     ).first()
 
+    # Resilient homoglyph & OCR fallback (e.g. '0' vs 'O', '1' vs 'l')
+    if not cert:
+        candidates = set()
+        if '0' in query_str: candidates.add(query_str.replace('0', 'O'))
+        if 'O' in query_str: candidates.add(query_str.replace('O', '0'))
+        if '1' in query_str: candidates.add(query_str.replace('1', 'l'))
+        if 'l' in query_str: candidates.add(query_str.replace('l', '1'))
+        for cand in candidates:
+            cert = db.query(IssuedCertificate).filter(
+                (IssuedCertificate.verification_token == cand) |
+                (IssuedCertificate.certificate_code == cand)
+            ).first()
+            if cert:
+                break
+
     if not cert:
         return {
             "is_valid": False,
@@ -622,8 +637,90 @@ def public_verify_certificate(
         "show_marks": show_mks,
         "show_grade": show_grd,
         "is_revoked": False,
+        "download_url": f"/api/v1/certificates/download-public/{cert.certificate_code}",
         "message": "Official Testora Quiz Examination Certificate Verified."
     }
+
+
+@router.get("/download-public/{token_or_code}")
+def download_public_certificate(
+    token_or_code: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Publicly accessible high-resolution certificate PDF download for students and verifying recruiters.
+    Accepts certificate code (e.g. TQ-CERT-2026-...) or verification token with OCR homoglyph tolerance.
+    """
+    query_str = token_or_code.strip()
+    cert = db.query(IssuedCertificate).filter(
+        (IssuedCertificate.verification_token == query_str) |
+        (IssuedCertificate.certificate_code == query_str)
+    ).first()
+
+    if not cert:
+        candidates = set()
+        if '0' in query_str: candidates.add(query_str.replace('0', 'O'))
+        if 'O' in query_str: candidates.add(query_str.replace('O', '0'))
+        if '1' in query_str: candidates.add(query_str.replace('1', 'l'))
+        if 'l' in query_str: candidates.add(query_str.replace('l', '1'))
+        for cand in candidates:
+            cert = db.query(IssuedCertificate).filter(
+                (IssuedCertificate.verification_token == cand) |
+                (IssuedCertificate.certificate_code == cand)
+            ).first()
+            if cert:
+                break
+
+    if not cert:
+        raise HTTPException(status_code=404, detail="Certificate not found")
+
+    if cert.is_revoked:
+        raise HTTPException(status_code=410, detail="This certificate has been revoked and cannot be downloaded.")
+
+    # 1. If physical file exists on disk, stream directly
+    if cert.pdf_file_path and os.path.exists(cert.pdf_file_path):
+        return FileResponse(
+            path=cert.pdf_file_path,
+            filename=f"{cert.certificate_code}.pdf",
+            media_type="application/pdf"
+        )
+
+    # 2. Dynamic generation on-the-fly fallback
+    config = db.query(CertificateConfig).filter(CertificateConfig.exam_id == cert.exam_id).first()
+    config_dict = {
+        "template_id": config.template_id if config else "testora_default",
+        "certificate_title": config.certificate_title if config else "Certificate of Excellence",
+        "certificate_subtitle": config.certificate_subtitle if config else "This is to certify that",
+        "custom_text": config.custom_text if config else None,
+        "footer_message": config.footer_message if config else "Verified & Issued securely via Testora Quiz Examination Platform",
+        "institute_name": cert.institute_name_snapshot,
+        "institute_logo_url": config.institute_logo_url if config else None,
+        "signatory_name": config.signatory_name if config else "Academic Director",
+        "signatory_designation": config.signatory_designation if config else "Head of Examination",
+        "show_marks": config.show_marks if config else False,
+        "show_percentage": config.show_percentage if config else True,
+        "show_grade": config.show_grade if config else False,
+    }
+
+    pdf_bytes = certificate_service.generate_certificate_pdf(
+        config=config_dict,
+        student_name=cert.recipient_name,
+        exam_name=cert.exam_name_snapshot,
+        issue_date=cert.issue_date,
+        certificate_code=cert.certificate_code,
+        verification_token=cert.verification_token,
+        score=cert.score_snapshot,
+        total_marks=cert.total_marks_snapshot,
+        percentage=cert.percentage_snapshot,
+        grade=cert.grade_snapshot,
+        roll_number=cert.recipient_roll_number
+    )
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'inline; filename="{cert.certificate_code}.pdf"'}
+    )
 
 
 # ══════════════════════════════════════════════════════════════════════════════

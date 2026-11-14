@@ -525,7 +525,7 @@ export default function PricingSection() {
             Mobile: Horizontal swipeable row with snap points
             Desktop: 2-col (640px), 3-col (768px), 5-col (>=1280px)
         ─────────────────────────────────────────────────────────── */}
-        <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-none sm:grid sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-3.5 lg:gap-4 items-stretch max-w-7xl mx-auto relative pt-1 sm:pt-2 -mx-4 px-4 sm:mx-auto sm:px-0 pb-3">
+        <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-none sm:grid sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-2.5 sm:gap-3 lg:gap-3.5 items-stretch max-w-7xl mx-auto relative pt-1 sm:pt-2 -mx-4 px-4 sm:mx-auto sm:px-0 pb-2">
           {educatorPlans.map((plan) => {
             const styling = getColorClasses(plan.color_accent, plan.is_recommended);
             const isProcessing = processingPlanCode === plan.plan_code;
@@ -533,31 +533,31 @@ export default function PricingSection() {
             return (
               <div
                 key={plan.id}
-                className={`group relative flex flex-col justify-between w-[70vw] max-w-[240px] sm:w-auto shrink-0 snap-center p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border ${styling.border} shadow-sm ${styling.shadow} sm:hover:-translate-y-1 transition-all duration-300`}
+                className={`group relative flex flex-col justify-between w-[64vw] max-w-[215px] sm:w-auto shrink-0 snap-center p-2.5 sm:p-3 rounded-2xl bg-white dark:bg-slate-900 border ${styling.border} shadow-xs ${styling.shadow} sm:hover:-translate-y-0.5 transition-all duration-200`}
               >
                 {/* Layered physical backing sheet */}
                 <div
-                  className={`absolute -bottom-1 -right-1 sm:-bottom-1.5 sm:-right-1.5 w-full h-full rounded-2xl ${styling.backing} -z-10 group-hover:-bottom-2 group-hover:-right-2 transition-all`}
+                  className={`absolute -bottom-1 -right-1 sm:-bottom-1.5 sm:-right-1.5 w-full h-full rounded-2xl ${styling.backing} -z-10 group-hover:-bottom-1.5 group-hover:-right-1.5 transition-all`}
                 />
 
-                <div className="space-y-2.5 sm:space-y-3">
+                <div className="space-y-2 sm:space-y-2.5">
                   {/* Header: Icon + Badge + Title + Price */}
-                  <div className="space-y-1.5 sm:space-y-2">
+                  <div className="space-y-1 sm:space-y-1.5">
                     <div className="flex items-center justify-between gap-1">
                       <div
-                        className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl ${styling.iconBg} border flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform`}
+                        className={`w-7 h-7 sm:w-8 sm:h-8 rounded-xl ${styling.iconBg} border flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform`}
                       >
                         {plan.price_inr === 0 ? (
-                          <Gift className="w-4 h-4" />
+                          <Gift className="w-3.5 h-3.5" />
                         ) : plan.is_recommended ? (
-                          <Sparkles className="w-4 h-4" />
+                          <Sparkles className="w-3.5 h-3.5" />
                         ) : (
-                          <Coins className="w-4 h-4" />
+                          <Coins className="w-3.5 h-3.5" />
                         )}
                       </div>
                       {plan.badge && (
                         <span
-                          className={`text-[9px] sm:text-[9.5px] font-black px-2 py-0.5 rounded-full border shrink-0 ${styling.badge}`}
+                          className={`text-[8.5px] sm:text-[9px] font-black px-1.5 py-0.5 rounded-full border shrink-0 ${styling.badge}`}
                         >
                           {plan.badge}
                         </span>
@@ -565,15 +565,15 @@ export default function PricingSection() {
                     </div>
 
                     <div>
-                      <h3 className="text-xs sm:text-[13.5px] font-black text-slate-900 dark:text-white tracking-tight truncate">
+                      <h3 className="text-xs sm:text-[13px] font-black text-slate-900 dark:text-white tracking-tight truncate">
                         {plan.name}
                       </h3>
                       <div className="flex items-baseline gap-1 mt-0.5">
-                        <span className={`text-xl sm:text-2xl font-black ${styling.priceText} tracking-tight`}>
+                        <span className={`text-lg sm:text-xl font-black ${styling.priceText} tracking-tight`}>
                           {plan.formatted_price}
                         </span>
                         {plan.price_subtext && (
-                          <span className="text-[10px] sm:text-[10.5px] font-semibold text-slate-400 dark:text-slate-500">
+                          <span className="text-[9.5px] sm:text-[10px] font-semibold text-slate-400 dark:text-slate-500">
                             {plan.price_subtext}
                           </span>
                         )}
@@ -582,7 +582,7 @@ export default function PricingSection() {
                   </div>
 
                   {/* Credits & Validity Info Box */}
-                  <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 text-[10px] sm:text-[10.5px] space-y-0.5">
+                  <div className="p-1.5 px-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 text-[9.5px] sm:text-[10px] space-y-0.5">
                     <div className="flex items-center justify-between text-slate-700 dark:text-slate-300">
                       <span className="text-slate-500">Total Credits:</span>
                       <strong className="font-bold text-slate-900 dark:text-white">
@@ -595,7 +595,7 @@ export default function PricingSection() {
                         <span>+{plan.bonus_credits.toLocaleString()} Extra</span>
                       </div>
                     )}
-                    <div className="flex items-center justify-between text-[9px] sm:text-[9.5px] text-slate-400 pt-0.5 border-t border-slate-200/50 dark:border-slate-700/50">
+                    <div className="flex items-center justify-between text-[8.5px] sm:text-[9px] text-slate-400 pt-0.5 border-t border-slate-200/50 dark:border-slate-700/50">
                       <span>Validity:</span>
                       <span>
                         {plan.credits_never_expire
@@ -607,42 +607,42 @@ export default function PricingSection() {
 
                   {/* Description */}
                   {plan.description && (
-                    <p className="text-[10px] sm:text-[10.5px] text-slate-500 dark:text-slate-400 leading-snug line-clamp-2">
+                    <p className="text-[9px] sm:text-[9.5px] text-slate-500 dark:text-slate-400 leading-snug line-clamp-1">
                       {plan.description}
                     </p>
                   )}
 
                   {/* Features List */}
-                  <ul className="space-y-1 pt-0.5">
-                    {plan.features.map((feat, idx) => (
+                  <ul className="space-y-0.5 pt-0.5">
+                    {plan.features.slice(0, 4).map((feat, idx) => (
                       <li
                         key={idx}
-                        className="flex items-start gap-1.5 text-[10px] sm:text-[10.5px] font-medium text-slate-700 dark:text-slate-300"
+                        className="flex items-start gap-1 text-[9px] sm:text-[9.5px] font-medium text-slate-700 dark:text-slate-300"
                       >
-                        <CheckCircle2 className="w-3 h-3 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
-                        <span className="leading-tight">{feat}</span>
+                        <CheckCircle2 className="w-2.5 h-2.5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+                        <span className="leading-tight truncate">{feat}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
 
                 {/* Bottom CTA Button */}
-                <div className="pt-3 sm:pt-3.5 mt-auto">
+                <div className="pt-2 sm:pt-2.5 mt-auto">
                   <button
                     type="button"
                     onClick={() => handlePlanClick(plan)}
                     disabled={isProcessing}
-                    className={`w-full min-h-[34px] sm:min-h-[36px] py-1.5 sm:py-2 px-3 rounded-xl ${styling.btn} font-bold text-[11px] sm:text-xs text-center shadow-xs flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed`}
+                    className={`w-full min-h-[30px] sm:min-h-[32px] py-1 sm:py-1.5 px-2.5 rounded-xl ${styling.btn} font-bold text-[10.5px] sm:text-[11px] text-center shadow-2xs flex items-center justify-center gap-1 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed`}
                   >
                     {isProcessing ? (
                       <>
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <Loader2 className="w-3 h-3 animate-spin" />
                         <span>Processing...</span>
                       </>
                     ) : (
                       <>
                         <span>{plan.button_label}</span>
-                        <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                        <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                       </>
                     )}
                   </button>

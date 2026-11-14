@@ -703,38 +703,34 @@ export default function DashboardLayout({
             <div 
               onClick={() => {
                 closeSidebarMobile();
-                if (isTeacher) {
-                  setCreditRechargeModalOpen(true);
-                } else {
-                  router.push("/dashboard/student/profile");
-                }
+                setCreditRechargeModalOpen(true);
               }}
-              className="group relative cursor-pointer overflow-hidden rounded-xl p-2.5 bg-gradient-to-r from-[#2A1B4E] via-[#1E1B4B] to-[#172554] text-white shadow-xs hover:shadow-indigo-500/20 transition-all duration-200 border border-purple-400/30 hover:border-purple-400/60"
+              className="group relative cursor-pointer overflow-hidden rounded-xl p-2 bg-gradient-to-r from-[#2A1B4E] via-[#1E1B4B] to-[#172554] text-white shadow-2xs hover:shadow-indigo-500/20 transition-all duration-200 border border-purple-400/30 hover:border-purple-400/60"
             >
               <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-amber-400/15 via-transparent to-transparent pointer-events-none" />
               
-              <div className="relative flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 min-w-0">
-                  <div className="w-7 h-7 rounded-lg bg-amber-400/20 text-amber-300 border border-amber-400/30 flex items-center justify-center shrink-0">
-                    <Crown className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+              <div className="relative flex items-center justify-between gap-1.5">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <div className="w-6 h-6 rounded-lg bg-amber-400/20 text-amber-300 border border-amber-400/30 flex items-center justify-center shrink-0">
+                    <Crown className="w-3 h-3 fill-amber-400 text-amber-400" />
                   </div>
                   <div className="min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[11px] font-bold text-white tracking-tight truncate">
+                    <div className="flex items-center gap-1">
+                      <span className="text-[10.5px] font-bold text-white tracking-tight truncate">
                         Testora Premium
                       </span>
-                      <span className="px-1 py-0.2 rounded text-[8.5px] font-black uppercase bg-amber-400 text-slate-950 tracking-wider shrink-0">
+                      <span className="px-1 py-0.2 rounded text-[7.5px] font-black uppercase bg-amber-400 text-slate-950 tracking-wider shrink-0">
                         PRO
                       </span>
                     </div>
-                    <p className="text-[9.5px] text-purple-200/90 truncate font-medium leading-tight">
-                      AI Tools, Tests & 15k Credits
+                    <p className="text-[8.5px] text-purple-200/90 truncate font-medium leading-tight">
+                      Unlock tests, AI &amp; creator tools
                     </p>
                   </div>
                 </div>
 
                 <div className="shrink-0 flex items-center">
-                  <span className="px-2 py-0.5 rounded-md text-[9.5px] font-bold bg-amber-400 hover:bg-amber-300 text-slate-950 transition-colors whitespace-nowrap shadow-2xs flex items-center gap-0.5 group-hover:scale-105">
+                  <span className="px-1.5 py-0.5 rounded text-[8.5px] font-bold bg-amber-400 hover:bg-amber-300 text-slate-950 transition-colors whitespace-nowrap shadow-2xs flex items-center gap-0.5 group-hover:scale-105">
                     Plans →
                   </span>
                 </div>
@@ -744,10 +740,7 @@ export default function DashboardLayout({
             <div className="hidden md:flex justify-center">
               <button
                 type="button"
-                onClick={() => {
-                  if (isTeacher) setCreditRechargeModalOpen(true);
-                  else router.push("/dashboard/student/profile");
-                }}
+                onClick={() => setCreditRechargeModalOpen(true)}
                 className="group relative p-2 rounded-xl bg-gradient-to-br from-indigo-900 to-purple-900 text-amber-400 border border-purple-400/30 shadow-md hover:scale-105 transition-transform cursor-pointer"
                 title="Testora Premium Plans"
               >

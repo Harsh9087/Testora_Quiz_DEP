@@ -657,7 +657,8 @@ class CertificateService:
             cert.email_status = "NO_EMAIL"
             return False
 
-        verify_url = f"https://testoraquiz.com/verify-certificate/{cert.verification_token}"
+        # Use human-friendly certificate_code in link to eliminate token homoglyph OCR corruption
+        verify_url = f"https://testoraquiz.com/verify-certificate/{cert.certificate_code}"
         inst_display = institute_name or "Testora Quiz Examination Academy"
         
         subject = f"Congratulations! Your Examination Certificate Is Ready — {exam_name}"
