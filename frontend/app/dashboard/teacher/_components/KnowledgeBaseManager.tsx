@@ -94,8 +94,9 @@ export default function KnowledgeBaseManager({ documents, token, onRefresh }: Kn
         const errData = await res.json().catch(() => ({}));
         showToast(errData.detail || "Document upload failed. Please check file format.", "error");
       }
-    } catch {
-      showToast("Upload network error. Please verify backend server connection.", "error");
+    } catch (err: any) {
+      console.error("Upload error details:", err);
+      showToast(err?.message ? `Upload failed: ${err.message}` : "Upload network error. Please verify backend server connection.", "error");
     } finally {
       setIsUploading(false);
     }

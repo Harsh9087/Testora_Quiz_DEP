@@ -109,8 +109,9 @@ export default function UploadKBModal({
         const errData = await res.json().catch(() => ({}));
         showToast(errData.detail || "Upload failed. Please check the file format.", "error");
       }
-    } catch {
-      showToast("Upload network error. Please verify backend connection.", "error");
+    } catch (err: any) {
+      console.error("Upload KB modal error:", err);
+      showToast(err?.message ? `Upload failed: ${err.message}` : "Upload network error. Please verify backend connection.", "error");
     } finally {
       setIsUploading(false);
     }

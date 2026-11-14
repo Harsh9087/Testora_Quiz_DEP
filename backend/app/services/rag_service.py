@@ -296,6 +296,69 @@ class RAGService:
             vector.append(val)
         return vector
 
+    def compute_embeddings_batch(self, texts: List[str], output_dim: int = 768) -> List[List[float]]:
+        """
+        Computes text embedding vectors in batches for optimal latency and to prevent 
+        hitting Gemini per-request rate limits or HTTP timeouts during large document indexing.
+        """
+        if not texts:
+            return []
+
+        sanitized_texts = [self._sanitize_unicode(t) for t in texts]
+        results: List[Optional[List[float]]] = [None] * len(sanitized_texts)
+
+        indices_to_embed = [i for i, t in enumerate(sanitized_texts) if t.strip()]
+        if not indices_to_embed:
+            return [[0.0] * output_dim] * len(texts)
+
+        if self.enabled:
+            candidates = self._discover_embedding_models()
+            batch_size = 20  # Batch 20 chunks at a time for optimal performance
+            for i in range(0, len(indices_to_embed), batch_size):
+                batch_indices = indices_to_embed[i:i + batch_size]
+                batch_texts = [sanitized_texts[idx] for idx in batch_indices]
+
+                batch_success = False
+                for candidate in candidates:
+                    try:
+                        res = genai.embed_content(
+                            model=candidate,
+                            content=batch_texts,
+                            task_type="retrieval_document",
+                            output_dimensionality=output_dim
+                        )
+                        if res and "embedding" in res:
+                            embs = res["embedding"]
+                            if isinstance(embs, list) and len(embs) == len(batch_texts):
+                                for bi, emb in zip(batch_indices, embs):
+                                    results[bi] = emb if not output_dim or len(emb) <= output_dim else emb[:output_dim]
+                                batch_success = True
+                                break
+                    except Exception as err:
+                        logger.debug(f"[RAG] Batch embedding with {candidate} failed: {err}")
+                        continue
+
+                # If batch API failed, fallback to sequential compute_embedding for this batch
+                if not batch_success:
+                    for bi in batch_indices:
+                        results[bi] = self.compute_embedding(sanitized_texts[bi], output_dim)
+        else:
+            for bi in indices_to_embed:
+                results[bi] = self.compute_embedding(sanitized_texts[bi], output_dim)
+
+        # Fill any remaining None with fallback
+        default_vec = [0.0] * output_dim
+        final_results: List[List[float]] = []
+        for i, res in enumerate(results):
+            if res is not None:
+                final_results.append(res)
+            elif sanitized_texts[i].strip():
+                final_results.append(self.compute_embedding(sanitized_texts[i], output_dim))
+            else:
+                final_results.append(default_vec)
+
+        return final_results
+
     def add_document_to_index(
         self, 
         doc_id: str, 
@@ -305,12 +368,14 @@ class RAGService:
         workspace_id: Optional[str] = None
     ):
         """
-        Generates embeddings for chunks and appends them to local index.
+        Generates embeddings for chunks in batch and appends them to local index.
         Stores subject_id and workspace_id for strict multi-tenant vector search scoping.
         """
-        for c in chunks:
-            clean_content = self._sanitize_unicode(c["content"])
-            vector = self.compute_embedding(clean_content)
+        contents = [c.get("content", "") for c in chunks]
+        embeddings = self.compute_embeddings_batch(contents)
+
+        for c, vector in zip(chunks, embeddings):
+            clean_content = self._sanitize_unicode(c.get("content", ""))
             self.vectors.append({
                 "chunk_id": f"{doc_id}_{c.get('chunk_index', 0)}",
                 "document_id": doc_id,

@@ -312,6 +312,9 @@ default_local_origins = [
     "http://127.0.0.1:3001",
     "http://localhost:3002",
     "http://127.0.0.1:3002",
+    "https://testoraquiz.com",
+    "https://www.testoraquiz.com",
+    "https://testora-quiz-f.onrender.com",
 ]
 
 raw_origins = [o.strip() for o in settings.ALLOWED_ORIGINS.split(",") if o.strip()]
@@ -330,7 +333,7 @@ if "*" in raw_origins:
 app.add_middleware(
     CORSMiddleware,
     allow_origins=raw_origins,
-    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$",
+    allow_origin_regex=r"^https?://([a-zA-Z0-9-]+\.)*testoraquiz\.com(:[0-9]+)?$|^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$",
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
