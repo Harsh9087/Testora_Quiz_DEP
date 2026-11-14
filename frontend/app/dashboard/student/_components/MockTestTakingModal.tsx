@@ -310,7 +310,7 @@ export default function MockTestTakingModal({
 
   const modalContent = (
     <div 
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-0 sm:p-4 bg-slate-950/90 backdrop-blur-md"
+      className="fixed inset-0 z-[99999] isolate flex items-center justify-center p-0 sm:p-4 bg-slate-950/90 backdrop-blur-md"
       onClick={handleSafeClose}
     >
       <div 

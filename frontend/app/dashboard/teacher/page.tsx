@@ -39,6 +39,7 @@ import CSVImportModal from "./_components/CSVImportModal";
 import CertificateStudioModal from "./_components/CertificateStudioModal";
 import CertificateManagementDrawer from "./_components/CertificateManagementDrawer";
 import TeacherMockTestLibrary from "./_components/TeacherMockTestLibrary";
+import CompanyPlacementTests from "../student/_components/CompanyPlacementTests";
 import { fetchStudentDirectories } from "@/lib/api/studentDirectories";
 import { StudentDirectory } from "@/types/studentDirectory";
 
@@ -3853,6 +3854,13 @@ export default function TeacherDashboard() {
       {activeSectionTab === "mock-tests" && (
       <section id="mock-tests" className="scroll-mt-16 space-y-4">
         <TeacherMockTestLibrary />
+      </section>
+      )}
+
+      {/* ═══════ SECTION: PLACEMENT MOCK TESTS ═══════ */}
+      {(activeSectionTab === "placement-tests" || activeSectionTab === "company-tests") && (
+      <section id="placement-tests" className="scroll-mt-16 space-y-4 animate-fadeIn">
+        <CompanyPlacementTests />
       </section>
       )}
 
