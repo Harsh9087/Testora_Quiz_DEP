@@ -11,7 +11,7 @@ class UserPreference(TimeStampedModel):
     font_family = Column(String(50), default="inter", nullable=False)  # inter, sans, serif, arial, dyslexic
     text_scale = Column(Integer, default=100, nullable=False)           # 85, 100, 115, 130
     interface_density = Column(String(50), default="standard", nullable=False) # compact, standard, comfortable, spacious
-    theme = Column(String(50), default="system", nullable=False)        # light, dark, system
+    theme = Column(String(50), default="light", nullable=False)        # light, dark, system
     
     # Language & Regional
     language = Column(String(10), default="en", nullable=False)         # en, hi, mr

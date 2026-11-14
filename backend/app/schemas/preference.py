@@ -6,7 +6,7 @@ class PreferenceBase(BaseModel):
     font_family: Optional[str] = "inter"
     text_scale: Optional[int] = Field(default=100, ge=80, le=140)
     interface_density: Optional[Literal["compact", "standard", "comfortable", "spacious"]] = "standard"
-    theme: Optional[Literal["light", "dark", "system"]] = "system"
+    theme: Optional[Literal["light", "dark", "system"]] = "light"
     language: Optional[Literal["en", "hi", "mr"]] = "en"
     timezone: Optional[str] = "Asia/Kolkata"
     date_format: Optional[str] = "DD/MM/YYYY"

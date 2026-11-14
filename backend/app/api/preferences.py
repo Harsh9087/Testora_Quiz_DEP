@@ -21,7 +21,7 @@ def get_or_create_user_preference(db: Session, user: User) -> UserPreference:
             font_family="inter",
             text_scale=100,
             interface_density="standard",
-            theme="system",
+            theme="light",
             language="en",
             timezone="Asia/Kolkata",
             date_format="DD/MM/YYYY",
@@ -98,7 +98,7 @@ def reset_preferences(
     pref.font_family = "inter"
     pref.text_scale = 100
     pref.interface_density = "standard"
-    pref.theme = "system"
+    pref.theme = "light"
     pref.language = "en"
     pref.timezone = "Asia/Kolkata"
     pref.date_format = "DD/MM/YYYY"
