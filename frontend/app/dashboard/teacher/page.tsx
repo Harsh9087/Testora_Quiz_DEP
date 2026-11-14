@@ -202,6 +202,16 @@ export default function TeacherDashboard() {
   const [paymentModalExam, setPaymentModalExam] = useState<any | null>(null);
   const [isRechargeOpen, setIsRechargeOpen] = useState(false);
   const [isCsvImportModalOpen, setIsCsvImportModalOpen] = useState(false);
+  const [showTeacherPromo, setShowTeacherPromo] = useState(true);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const dismissed = sessionStorage.getItem("testora_teacher_promo_dismissed");
+      if (dismissed === "true") {
+        setShowTeacherPromo(false);
+      }
+    }
+  }, []);
 
   // Certificate Settings State
   const [enableCertificate, setEnableCertificate] = useState(false);
@@ -1151,6 +1161,58 @@ export default function TeacherDashboard() {
         <>
           {/* Header & Quick Action Toolbar Group (Compact Gap) */}
           <div className="space-y-2 sm:space-y-3">
+            {/* Promotional Offer Callout Box (Master Recharge Plan) */}
+            {showTeacherPromo && (
+              <div className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-r from-purple-900/90 via-indigo-950/90 to-slate-900 text-white p-3 sm:py-2.5 sm:px-4 border border-purple-400/30 shadow-md">
+                <div className="absolute top-0 right-0 -mr-6 -mt-6 w-24 h-24 bg-purple-500/10 rounded-full blur-xl pointer-events-none" />
+                <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                  <div className="flex items-start sm:items-center gap-2.5 min-w-0">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-slate-950 flex items-center justify-center shrink-0 shadow-xs mt-0.5 sm:mt-0">
+                      <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-slate-950" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs sm:text-sm font-bold text-white tracking-tight">
+                          Upgrade to Master Recharge Plan
+                        </span>
+                        <span className="px-2 py-0.2 rounded-full text-[9px] font-black uppercase bg-amber-400 text-slate-950 tracking-wider">
+                          ₹999 • 15,000 Credits
+                        </span>
+                      </div>
+                      <p className="text-[10.5px] sm:text-xs text-purple-200/90 font-medium mt-0.5 leading-snug">
+                        Includes +5,000 Extra Bonus credits for AI exam generation, instant candidate evaluation & verified certificates.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+                    <button
+                      type="button"
+                      onClick={() => setIsRechargeOpen(true)}
+                      className="px-3 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-bold transition-all shadow-xs flex items-center gap-1 active:scale-95 cursor-pointer whitespace-nowrap"
+                    >
+                      <span>Recharge Now</span>
+                      <ArrowRight className="w-3.5 h-3.5 inline" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowTeacherPromo(false);
+                        try {
+                          sessionStorage.setItem("testora_teacher_promo_dismissed", "true");
+                        } catch {}
+                      }}
+                      className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                      title="Dismiss notice"
+                      aria-label="Dismiss banner"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Dashboard Heading Area */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b border-slate-200/80 dark:border-[#263449] pb-2 sm:pb-2.5">
               <div>

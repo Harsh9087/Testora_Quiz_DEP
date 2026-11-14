@@ -68,6 +68,8 @@ import FeedbackSection from "../components/FeedbackSection";
 import MockTestLibraryHighlight from "../components/MockTestLibraryHighlight";
 import CertificateManagementHighlight from "../components/CertificateManagementHighlight";
 import AIFormBuilderHighlight from "../components/AIFormBuilderHighlight";
+import WelcomeOfferModal from "../components/WelcomeOfferModal";
+import FloatingPromoBanner from "../components/FloatingPromoBanner";
 
 export default function UnifiedHomePage() {
   const router = useRouter();
@@ -2482,6 +2484,12 @@ export default function UnifiedHomePage() {
 
       {/* Floating AI Guide Widget */}
       <AIAgentGuideWidget isOpen={showGuideWidget} onOpenChange={setShowGuideWidget} onOpenExamModal={() => setShowCodeModal(true)} />
+
+      {/* First-time Welcome & Special Offer Modal */}
+      <WelcomeOfferModal onScrollToPricing={() => scrollTo("pricing")} />
+
+      {/* Floating Promotional Bar (₹999 Master Recharge Highlight) */}
+      <FloatingPromoBanner onScrollToPricing={() => scrollTo("pricing")} />
     </div>
   );
 }
