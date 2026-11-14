@@ -138,11 +138,15 @@ class CertificateService:
         percentage: float,
         roll_number: Optional[str] = None,
         grade: Optional[str] = None,
+        recipient_roll_number: Optional[str] = None,
+        **kwargs: Any
     ) -> bytes:
         """
         Renders a high-resolution, print-ready Landscape A4 Certificate PDF.
         Permanent official Testora Quiz branding is rendered into the vector canvas.
         """
+        if not roll_number and recipient_roll_number:
+            roll_number = recipient_roll_number
         buffer = io.BytesIO()
         width, height = landscape(A4) # 841.89 x 595.27 points
         
