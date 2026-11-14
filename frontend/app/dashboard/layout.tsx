@@ -440,31 +440,31 @@ export default function DashboardLayout({
     ];
 
     if (pathname === "/dashboard/settings") {
-      items.push({ label: "Preferences", href: "/dashboard/settings" });
+      items.push({ label: "Settings & Account", href: "/dashboard/settings" });
       items.push({ label: "Settings", isCurrent: true });
       return items;
     }
 
     if (pathname === "/dashboard/teacher/profile") {
-      items.push({ label: "Preferences", href: "/dashboard/settings" });
-      items.push({ label: "Profile & Billing Summary", isCurrent: true });
+      items.push({ label: "Settings & Account", href: "/dashboard/settings" });
+      items.push({ label: "Profile & Billing", isCurrent: true });
       return items;
     }
 
     if (pathname === "/dashboard/student/profile") {
-      items.push({ label: "Preferences", href: "/dashboard/settings" });
+      items.push({ label: "Settings & Account", href: "/dashboard/settings" });
       items.push({ label: "Student Profile & Account", isCurrent: true });
       return items;
     }
 
     if (pathname === "/dashboard/profile") {
-      items.push({ label: "Preferences", href: "/dashboard/settings" });
+      items.push({ label: "Settings & Account", href: "/dashboard/settings" });
       items.push({ label: "User Profile", isCurrent: true });
       return items;
     }
 
     if (pathname === "/dashboard/support") {
-      items.push({ label: "Preferences", href: "/dashboard/settings" });
+      items.push({ label: "Settings & Account", href: "/dashboard/settings" });
       items.push({ label: "Help & Support", isCurrent: true });
       return items;
     }
@@ -526,7 +526,7 @@ export default function DashboardLayout({
 
       if (currentTab === "credits") {
         items.push({
-          label: "Preferences",
+          label: "Settings & Account",
           href: "/dashboard/settings",
         });
         items.push({
@@ -1295,10 +1295,10 @@ export default function DashboardLayout({
             </div>
           )}
 
-          {/* SECTION: PREFERENCES */}
+          {/* SECTION: SETTINGS & ACCOUNT */}
           <div className="space-y-1">
-            <div className={`text-[10px] font-bold text-slate-400 dark:text-slate-500 px-2 mb-1.5 uppercase tracking-wider ${sidebarCollapsed ? "md:hidden" : ""}`}>
-              Preferences
+            <div className={`text-[10px] font-bold text-slate-400 dark:text-slate-500 px-2 mb-1 uppercase tracking-wider ${sidebarCollapsed ? "md:hidden" : ""}`}>
+              Settings &amp; Account
             </div>
             {sidebarCollapsed && (
               <div className="hidden md:block w-6 h-0.5 bg-slate-200 dark:bg-slate-800 mx-auto mb-2 rounded" />
@@ -1309,18 +1309,18 @@ export default function DashboardLayout({
               {isTeacher && (
                 <button 
                   onClick={() => { closeSidebarMobile(); setCreditRechargeModalOpen(true); }}
-                  className={`group relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-all cursor-pointer ${
+                  className={`group relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-all cursor-pointer ${
                     sidebarCollapsed ? "md:justify-center md:px-0" : ""
                   }`}
                 >
                   <div className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105">
                     <Coins className="h-4 w-4" />
                   </div>
-                  <span className={`truncate text-left flex-1 ${sidebarCollapsed ? "md:hidden" : ""}`}>
+                  <span className={`text-xs font-medium text-slate-700 dark:text-slate-200 truncate text-left flex-1 ${sidebarCollapsed ? "md:hidden" : ""}`}>
                     Recharge Credits
                   </span>
                   {!sidebarCollapsed && (
-                    <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-200 shrink-0">
+                    <span className="px-2 py-0.5 rounded-full text-[10.5px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-200 shrink-0">
                       {mounted && userCredits !== null ? userCredits.toLocaleString() : "0"}
                     </span>
                   )}
@@ -1335,29 +1335,29 @@ export default function DashboardLayout({
                 </button>
               )}
 
-              {/* Profile & Billing Summary */}
+              {/* Profile & Billing */}
               <button 
                 onClick={() => { closeSidebarMobile(); router.push(profileUrl); }}
-                className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-xs font-semibold transition-all cursor-pointer ${
+                className={`group relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
                   sidebarCollapsed ? "md:justify-center md:px-0" : ""
                 } ${
                   pathname === "/dashboard/teacher/profile" || pathname === "/dashboard/student/profile"
                     ? "bg-blue-50/90 text-[#2563EB] dark:bg-blue-950/60 dark:text-[#60A5FA] border border-blue-200/80 dark:border-blue-900/60 font-bold shadow-xs"
-                    : "text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/60 border border-transparent"
+                    : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60 border border-transparent"
                 }`}
               >
-                <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105">
+                <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105">
                   <Sliders className="h-4 w-4" />
                 </div>
-                <span className={`text-[13px] font-semibold text-slate-800 dark:text-slate-200 truncate text-left flex-1 ${sidebarCollapsed ? "md:hidden" : ""}`}>
-                  Profile &amp; Billing Summary
+                <span className={`text-xs font-medium text-slate-700 dark:text-slate-200 truncate text-left flex-1 ${sidebarCollapsed ? "md:hidden" : ""}`}>
+                  Profile &amp; Billing
                 </span>
                 {!sidebarCollapsed && (
                   <ChevronRight className="h-3.5 w-3.5 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 dark:group-hover:text-slate-400 shrink-0 transition-transform group-hover:translate-x-0.5" />
                 )}
                 {sidebarCollapsed && (
                   <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
-                    Profile &amp; Billing Summary
+                    Profile &amp; Billing
                   </span>
                 )}
               </button>
@@ -1365,18 +1365,18 @@ export default function DashboardLayout({
               {/* Settings */}
               <button 
                 onClick={() => { closeSidebarMobile(); router.push("/dashboard/settings"); }}
-                className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-xs font-semibold transition-all cursor-pointer ${
+                className={`group relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
                   sidebarCollapsed ? "md:justify-center md:px-0" : ""
                 } ${
                   pathname === "/dashboard/settings"
                     ? "bg-blue-50/90 text-[#2563EB] dark:bg-blue-950/60 dark:text-[#60A5FA] border border-blue-200/80 dark:border-blue-900/60 font-bold shadow-xs"
-                    : "text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/60 border border-transparent"
+                    : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60 border border-transparent"
                 }`}
               >
-                <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105">
+                <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105">
                   <Settings className="h-4 w-4" />
                 </div>
-                <span className={`text-[13px] font-semibold text-slate-800 dark:text-slate-200 truncate text-left flex-1 ${sidebarCollapsed ? "md:hidden" : ""}`}>
+                <span className={`text-xs font-medium text-slate-700 dark:text-slate-200 truncate text-left flex-1 ${sidebarCollapsed ? "md:hidden" : ""}`}>
                   Settings
                 </span>
                 {!sidebarCollapsed && (
@@ -1392,20 +1392,20 @@ export default function DashboardLayout({
               {/* Help & Support */}
               <button 
                 onClick={() => { closeSidebarMobile(); router.push("/dashboard/support"); }}
-                className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-xs font-semibold cursor-pointer transition-all ${
+                className={`group relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-medium cursor-pointer transition-all ${
                   pathname === "/dashboard/support"
                     ? "bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 font-bold border border-sky-200/80 dark:border-sky-900/60 shadow-xs"
-                    : "text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/60 border border-transparent"
+                    : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60 border border-transparent"
                 } ${sidebarCollapsed ? "md:justify-center md:px-0" : ""}`}
               >
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
                   pathname === "/dashboard/support"
                     ? "bg-sky-600 text-white shadow-xs"
                     : "bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400"
                 }`}>
                   <HelpCircle className="h-4 w-4" />
                 </div>
-                <span className={`text-[13px] font-semibold text-slate-800 dark:text-slate-200 truncate text-left flex-1 ${sidebarCollapsed ? "md:hidden" : ""}`}>
+                <span className={`text-xs font-medium text-slate-700 dark:text-slate-200 truncate text-left flex-1 ${sidebarCollapsed ? "md:hidden" : ""}`}>
                   Help &amp; Support
                 </span>
                 {!sidebarCollapsed && (
