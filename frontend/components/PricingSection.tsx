@@ -182,6 +182,37 @@ const DEFAULT_PLANS: PricingPlanData[] = [
   },
   {
     id: "default-5",
+    plan_code: "master_recharge",
+    name: "Master Recharge",
+    plan_type: "RECHARGE",
+    price_inr: 999,
+    price_paise: 99900,
+    formatted_price: "₹999",
+    price_subtext: "/ 15,000 Credits",
+    base_credits: 10000,
+    bonus_credits: 5000,
+    total_credits: 15000,
+    validity_days: null,
+    credits_never_expire: true,
+    badge: "+5,000 Extra",
+    is_featured: false,
+    is_recommended: false,
+    is_active: true,
+    display_order: 5,
+    color_accent: "amber",
+    button_label: "Choose Master Plan",
+    button_action: "recharge",
+    description: "Maximum value package with 5,000 extra bonus credits for heavy semester testing & college-wide mocks.",
+    features: [
+      "15,000 candidate question attempts",
+      "Includes +5,000 Bonus Credits Extra",
+      "Purchased credits NEVER expire",
+      "Priority Gemini AI Synthesis & RAG",
+      "Bulk Excel Gradebooks & Proctor Logs"
+    ]
+  },
+  {
+    id: "default-6",
     plan_code: "institutional_plan",
     name: "College & FDP Institutional Plan",
     plan_type: "INSTITUTIONAL",
@@ -198,7 +229,7 @@ const DEFAULT_PLANS: PricingPlanData[] = [
     is_featured: false,
     is_recommended: false,
     is_active: true,
-    display_order: 5,
+    display_order: 6,
     color_accent: "emerald",
     button_label: "Request College Proposal",
     button_action: "institutional_modal",
@@ -409,6 +440,16 @@ export default function PricingSection() {
           badge: "bg-teal-50 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300 border-teal-200/80 dark:border-teal-800",
           btn: "bg-teal-600 hover:bg-teal-700 text-white shadow-teal-500/20"
         };
+      case "amber":
+        return {
+          border: "border-amber-300 dark:border-amber-700/80 ring-1 ring-amber-400/30",
+          shadow: "shadow-amber-500/10 hover:shadow-amber-500/20",
+          backing: "bg-amber-100/70 dark:bg-amber-950/50 border-amber-200/60 dark:border-amber-800/40",
+          iconBg: "bg-amber-50 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-900/60",
+          priceText: "text-amber-600 dark:text-amber-400",
+          badge: "bg-amber-500 text-white font-black border-amber-600 shadow-xs",
+          btn: "bg-gradient-to-r from-amber-500 via-amber-600 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white shadow-amber-500/25"
+        };
       case "purple":
       default:
         return {
@@ -480,11 +521,11 @@ export default function PricingSection() {
         </div>
 
         {/* ───────────────────────────────────────────────────────────
-            4 EDUCATOR PRICING CARDS IN A RESPONSIVE ROW
+            5 EDUCATOR PRICING CARDS IN A RESPONSIVE ROW
             Mobile: Horizontal swipeable row with snap points
-            Desktop: 2-col (640-1024px), 4-col (>=1024px)
+            Desktop: 2-col (640px), 3-col (768px), 5-col (>=1280px)
         ─────────────────────────────────────────────────────────── */}
-        <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-none sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-5 lg:gap-6 items-stretch max-w-7xl mx-auto relative pt-1 sm:pt-2 -mx-4 px-4 sm:mx-auto sm:px-0 pb-3">
+        <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-none sm:grid sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-3.5 lg:gap-4 items-stretch max-w-7xl mx-auto relative pt-1 sm:pt-2 -mx-4 px-4 sm:mx-auto sm:px-0 pb-3">
           {educatorPlans.map((plan) => {
             const styling = getColorClasses(plan.color_accent, plan.is_recommended);
             const isProcessing = processingPlanCode === plan.plan_code;
@@ -492,31 +533,31 @@ export default function PricingSection() {
             return (
               <div
                 key={plan.id}
-                className={`group relative flex flex-col justify-between w-[80vw] max-w-[285px] sm:w-auto shrink-0 snap-center p-4 sm:p-6 rounded-[22px] sm:rounded-[26px] bg-white dark:bg-slate-900 border ${styling.border} shadow-md ${styling.shadow} sm:hover:-translate-y-1 transition-all duration-300`}
+                className={`group relative flex flex-col justify-between w-[70vw] max-w-[240px] sm:w-auto shrink-0 snap-center p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border ${styling.border} shadow-sm ${styling.shadow} sm:hover:-translate-y-1 transition-all duration-300`}
               >
                 {/* Layered physical backing sheet */}
                 <div
-                  className={`absolute -bottom-1.5 -right-1.5 sm:-bottom-2 sm:-right-2 w-full h-full rounded-[22px] sm:rounded-[26px] ${styling.backing} -z-10 group-hover:-bottom-2.5 group-hover:-right-2.5 transition-all`}
+                  className={`absolute -bottom-1 -right-1 sm:-bottom-1.5 sm:-right-1.5 w-full h-full rounded-2xl ${styling.backing} -z-10 group-hover:-bottom-2 group-hover:-right-2 transition-all`}
                 />
 
-                <div className="space-y-3.5 sm:space-y-4">
+                <div className="space-y-2.5 sm:space-y-3">
                   {/* Header: Icon + Badge + Title + Price */}
-                  <div className="space-y-2 sm:space-y-3">
+                  <div className="space-y-1.5 sm:space-y-2">
                     <div className="flex items-center justify-between gap-1">
                       <div
-                        className={`w-10 h-10 sm:w-11 sm:h-11 rounded-2xl ${styling.iconBg} border flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform`}
+                        className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl ${styling.iconBg} border flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform`}
                       >
                         {plan.price_inr === 0 ? (
-                          <Gift className="w-4.5 h-4.5 sm:w-5 sm:h-5" />
+                          <Gift className="w-4 h-4" />
                         ) : plan.is_recommended ? (
-                          <Sparkles className="w-4.5 h-4.5 sm:w-5 sm:h-5" />
+                          <Sparkles className="w-4 h-4" />
                         ) : (
-                          <Coins className="w-4.5 h-4.5 sm:w-5 sm:h-5" />
+                          <Coins className="w-4 h-4" />
                         )}
                       </div>
                       {plan.badge && (
                         <span
-                          className={`text-[9.5px] sm:text-[10px] font-black px-2 sm:px-2.5 py-0.5 rounded-full border shrink-0 ${styling.badge}`}
+                          className={`text-[9px] sm:text-[9.5px] font-black px-2 py-0.5 rounded-full border shrink-0 ${styling.badge}`}
                         >
                           {plan.badge}
                         </span>
@@ -524,15 +565,15 @@ export default function PricingSection() {
                     </div>
 
                     <div>
-                      <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-tight truncate">
+                      <h3 className="text-xs sm:text-[13.5px] font-black text-slate-900 dark:text-white tracking-tight truncate">
                         {plan.name}
                       </h3>
-                      <div className="flex items-baseline gap-1.5 mt-0.5 sm:mt-1">
-                        <span className={`text-2xl sm:text-4xl font-black ${styling.priceText} tracking-tight`}>
+                      <div className="flex items-baseline gap-1 mt-0.5">
+                        <span className={`text-xl sm:text-2xl font-black ${styling.priceText} tracking-tight`}>
                           {plan.formatted_price}
                         </span>
                         {plan.price_subtext && (
-                          <span className="text-[11px] sm:text-xs font-semibold text-slate-400 dark:text-slate-500">
+                          <span className="text-[10px] sm:text-[10.5px] font-semibold text-slate-400 dark:text-slate-500">
                             {plan.price_subtext}
                           </span>
                         )}
@@ -541,7 +582,7 @@ export default function PricingSection() {
                   </div>
 
                   {/* Credits & Validity Info Box */}
-                  <div className="p-2 sm:p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 text-[10.5px] sm:text-[11px] space-y-1">
+                  <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 text-[10px] sm:text-[10.5px] space-y-0.5">
                     <div className="flex items-center justify-between text-slate-700 dark:text-slate-300">
                       <span className="text-slate-500">Total Credits:</span>
                       <strong className="font-bold text-slate-900 dark:text-white">
@@ -554,7 +595,7 @@ export default function PricingSection() {
                         <span>+{plan.bonus_credits.toLocaleString()} Extra</span>
                       </div>
                     )}
-                    <div className="flex items-center justify-between text-[9.5px] sm:text-[10px] text-slate-400 pt-0.5 border-t border-slate-200/50 dark:border-slate-700/50">
+                    <div className="flex items-center justify-between text-[9px] sm:text-[9.5px] text-slate-400 pt-0.5 border-t border-slate-200/50 dark:border-slate-700/50">
                       <span>Validity:</span>
                       <span>
                         {plan.credits_never_expire
@@ -566,19 +607,19 @@ export default function PricingSection() {
 
                   {/* Description */}
                   {plan.description && (
-                    <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 leading-relaxed sm:min-h-[32px] line-clamp-2 sm:line-clamp-none">
+                    <p className="text-[10px] sm:text-[10.5px] text-slate-500 dark:text-slate-400 leading-snug line-clamp-2">
                       {plan.description}
                     </p>
                   )}
 
                   {/* Features List */}
-                  <ul className="space-y-1.5 sm:space-y-2 pt-0.5 sm:pt-1">
+                  <ul className="space-y-1 pt-0.5">
                     {plan.features.map((feat, idx) => (
                       <li
                         key={idx}
-                        className="flex items-start gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-medium text-slate-700 dark:text-slate-300"
+                        className="flex items-start gap-1.5 text-[10px] sm:text-[10.5px] font-medium text-slate-700 dark:text-slate-300"
                       >
-                        <CheckCircle2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+                        <CheckCircle2 className="w-3 h-3 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
                         <span className="leading-tight">{feat}</span>
                       </li>
                     ))}
@@ -586,12 +627,12 @@ export default function PricingSection() {
                 </div>
 
                 {/* Bottom CTA Button */}
-                <div className="pt-4 sm:pt-5 mt-auto">
+                <div className="pt-3 sm:pt-3.5 mt-auto">
                   <button
                     type="button"
                     onClick={() => handlePlanClick(plan)}
                     disabled={isProcessing}
-                    className={`w-full min-h-[40px] sm:min-h-[44px] py-2 sm:py-2.5 px-3 sm:px-4 rounded-xl ${styling.btn} font-bold text-xs text-center shadow-md flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed`}
+                    className={`w-full min-h-[34px] sm:min-h-[36px] py-1.5 sm:py-2 px-3 rounded-xl ${styling.btn} font-bold text-[11px] sm:text-xs text-center shadow-xs flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed`}
                   >
                     {isProcessing ? (
                       <>

@@ -76,6 +76,17 @@ class Settings(BaseSettings):
             "popular": False,
             "badge": "20% Extra",
             "description": "6,000 Credits • Includes 1,000 Bonus Credits for full departments"
+        },
+        {
+            "id": "pkg_15000",
+            "name": "Master Recharge",
+            "credits": 15000,
+            "amount_paise": 99900,
+            "formatted_amount": "₹999",
+            "rate_per_credit": "₹0.067",
+            "popular": False,
+            "badge": "+5,000 Extra",
+            "description": "15,000 Credits • Includes 5,000 Bonus Credits for major exams & annual testing"
         }
     ]
     

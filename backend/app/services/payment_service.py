@@ -885,6 +885,8 @@ class PaymentService:
             plan_code_query = "standard_recharge"
         elif package_id == "pkg_6000" or package_id == "pkg_499":
             plan_code_query = "professional_recharge"
+        elif package_id == "pkg_15000" or package_id == "pkg_999":
+            plan_code_query = "master_recharge"
 
         db_plan = db.query(PricingPlan).filter(
             (PricingPlan.plan_code == plan_code_query) | (PricingPlan.id == package_id) | (PricingPlan.plan_code == package_id),
