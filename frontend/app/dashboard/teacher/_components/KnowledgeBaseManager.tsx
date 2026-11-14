@@ -96,7 +96,7 @@ export default function KnowledgeBaseManager({ documents, token, onRefresh }: Kn
       }
     } catch (err: any) {
       console.error("Upload error details:", err);
-      showToast(err?.message ? `Upload failed: ${err.message}` : "Upload network error. Please verify backend server connection.", "error");
+      showToast(err?.message ? `Upload failed: ${err.message}` : "Upload network error. Please check your network connection and retry.", "error");
     } finally {
       setIsUploading(false);
     }
@@ -144,7 +144,7 @@ export default function KnowledgeBaseManager({ documents, token, onRefresh }: Kn
             </div>
             <div>
               <h2 className="text-sm font-bold text-[#111827] dark:text-[#F1F5F9]">Upload Knowledge Source</h2>
-              <p className="text-[11px] text-[#64748B] dark:text-[#A3B1C6]">Embed course materials into Vector DB</p>
+              <p className="text-[11px] text-[#64748B] dark:text-[#A3B1C6]">Upload materials to Smart Knowledge Base</p>
             </div>
           </div>
         </div>
@@ -254,12 +254,12 @@ export default function KnowledgeBaseManager({ documents, token, onRefresh }: Kn
             {isUploading ? (
               <>
                 <div className="w-3.5 h-3.5 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                <span>Extracting & Indexing Vector Chunks...</span>
+                <span>Extracting & Indexing Document Chunks...</span>
               </>
             ) : (
               <>
                 <Upload className="h-3.5 w-3.5" />
-                <span>Index Material into Vector DB</span>
+                <span>Index Document into Knowledge Base</span>
               </>
             )}
           </button>
@@ -286,7 +286,7 @@ export default function KnowledgeBaseManager({ documents, token, onRefresh }: Kn
                 No documents indexed in this workspace yet.
               </div>
               <p className="text-[11px] text-[#64748B]/80 max-w-sm mx-auto">
-                Upload lecture slides, course textbooks, or revision sheets on the left to start generating AI assessments with Gemini RAG.
+                Upload lecture slides, course textbooks, or revision sheets on the left to start generating AI assessments from your Knowledge Base.
               </p>
             </div>
           ) : (

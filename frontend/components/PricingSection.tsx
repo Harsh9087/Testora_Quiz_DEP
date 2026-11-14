@@ -81,7 +81,7 @@ const DEFAULT_PLANS: PricingPlanData[] = [
     description: "Start immediately with 200 free promotional credits to test AI assessments.",
     features: [
       "200 candidate question attempts",
-      "AI Question Generation (Gemini AI)",
+      "AI Question Generation (Standard AI)",
       "Printable Exam Papers with Keys",
       "Online Assessment Tools",
       "Valid for 15 days upon registration"
@@ -207,7 +207,7 @@ const DEFAULT_PLANS: PricingPlanData[] = [
       "15,000 candidate question attempts",
       "Includes +5,000 Bonus Credits Extra",
       "Purchased credits NEVER expire",
-      "Priority Gemini AI Synthesis & RAG",
+      "Priority AI Synthesis & Smart Knowledge Base",
       "Bulk Excel Gradebooks & Proctor Logs"
     ]
   },

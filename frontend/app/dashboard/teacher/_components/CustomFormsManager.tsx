@@ -996,7 +996,7 @@ export default function CustomFormsManager({ token }: CustomFormsManagerProps) {
                         </>
                       )}
                     </button>
-                    <span className="text-[10px] text-blue-600 font-bold hidden sm:inline">Gemini AI Prompt Engine</span>
+                    <span className="text-[10px] text-blue-600 font-bold hidden sm:inline">Smart Form AI Engine</span>
                   </div>
                 </div>
 

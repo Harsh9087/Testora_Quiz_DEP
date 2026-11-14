@@ -60,7 +60,7 @@ const GUIDE_TOPICS: GuideTopic[] = [
   {
     id: "custom-forms",
     title: "AI-Powered Custom Form Builder",
-    badge: "Gemini AI Engine",
+    badge: "Smart AI Engine",
     icon: Wand2,
     color: "text-blue-600 bg-blue-50 dark:bg-blue-950/40",
     routeHref: "/dashboard/teacher?tab=custom-forms",
@@ -68,7 +68,7 @@ const GUIDE_TOPICS: GuideTopic[] = [
     steps: [
       "Go to 'AI Form Builder' from the sidebar.",
       "Type a natural language prompt (e.g. 'Create a workshop feedback form with ratings, content clarity, and suggestions').",
-      "Click 'Generate Form with AI' — Gemini will synthesize structured questions, input types, and choices.",
+      "Click 'Generate Form with AI' — Testora AI will synthesize structured questions, input types, and choices.",
       "Preview and edit question labels, reorder fields, add new questions, or toggle required settings.",
       "Click 'Publish & Generate Link' to share with respondents across WhatsApp, LMS, or Email.",
       "View live submissions with dynamic columns matching your questions and export to Excel with 1 click."
@@ -76,15 +76,15 @@ const GUIDE_TOPICS: GuideTopic[] = [
   },
   {
     id: "quiz-creation",
-    title: "Create Quiz & RAG Knowledge Base",
-    badge: "ChromaDB + Gemini",
+    title: "Create Quiz & Smart Knowledge Base",
+    badge: "Smart Knowledge Base",
     icon: FileEdit,
     color: "text-indigo-600 bg-indigo-50 dark:bg-indigo-950/40",
     routeHref: "/dashboard/teacher?tab=create",
     summary: "Synthesize calibrated assessments from course documents, textbook chapters, or custom syllabus blueprints.",
     steps: [
       "Open 'Create Quiz Wizard' from the Creator Studio sidebar.",
-      "Step 1: Upload course files (PDF, DOCX, TXT) to the Knowledge Base for ChromaDB vector indexing.",
+      "Step 1: Upload course files (PDF, DOCX, TXT) to the Knowledge Base for automatic syllabus indexing.",
       "Step 2: Choose difficulty, question distribution (MCQs, Subjective, True/False), and passing criteria.",
       "Step 3: Review AI-generated question items with LaTeX math formulas and edit as needed.",
       "Step 4: Set scheduled time windows, anti-cheat rules, and publish to candidates."
@@ -355,10 +355,10 @@ export default function PlatformSettingsAndGuide({
             <div className="p-3 rounded-xl bg-[#F8FAFC] dark:bg-[#17243A] border border-[#E2E8F0] dark:border-[#263449]">
               <div className="flex items-center gap-2 text-blue-600 text-xs font-bold mb-1">
                 <Server className="h-4 w-4" />
-                <span>Backend Gateway</span>
+                <span>API Engine</span>
               </div>
               <div className="text-xs font-bold text-[#111827] dark:text-[#F1F5F9]">
-                FastAPI v0.115 + SQLite/ChromaDB
+                Enterprise High-Performance API
               </div>
             </div>
 

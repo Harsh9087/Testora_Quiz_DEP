@@ -1078,7 +1078,7 @@ export default function TeacherDashboard() {
         showToast(errData.detail || "Upload failed. Please check the document format.", "error");
       }
     } catch {
-      showToast("Upload network error. Please verify backend connection.", "error");
+      showToast("Upload network error. Please check your internet connection.", "error");
     } finally {
       setIsStep1Uploading(false);
     }
@@ -2403,7 +2403,7 @@ export default function TeacherDashboard() {
                           {isStep1Uploading ? (
                             <>
                               <Loader2 className="h-4 w-4 animate-spin" />
-                              <span>Indexing into Vector DB...</span>
+                              <span>Processing Document into Knowledge Base...</span>
                             </>
                           ) : (
                             <>
@@ -2463,7 +2463,7 @@ export default function TeacherDashboard() {
                           <span>Photo of Notes / Textbook Page</span>
                         </div>
                         <p className="text-[11px] text-blue-600 dark:text-blue-400 leading-relaxed">
-                          Take a photo of your textbook, whiteboard, or handwritten notes. Gemini Vision will read the content and generate questions from it.
+                          Take a photo of your textbook, whiteboard, or handwritten notes. OCR AI will scan the content and generate questions from it.
                         </p>
 
                         {/* Preview + Clear */}
@@ -2569,7 +2569,7 @@ export default function TeacherDashboard() {
                             className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition-all shadow-xs disabled:opacity-50 cursor-pointer"
                           >
                             {step1CameraUploading ? (
-                              <><Loader2 className="h-4 w-4 animate-spin" /><span>Indexing Photo with Gemini Vision...</span></>
+                              <><Loader2 className="h-4 w-4 animate-spin" /><span>Scanning Photo with Smart OCR...</span></>
                             ) : (
                               <><Camera className="h-4 w-4" /><span>Index Photo & Use as Knowledge Source</span></>
                             )}
@@ -3838,7 +3838,7 @@ export default function TeacherDashboard() {
       </section>
       )}
 
-      {/* ═══════ SECTION 4: KNOWLEDGE SOURCES (RAG VECTOR DB) ═══════ */}
+      {/* ═══════ SECTION 4: KNOWLEDGE SOURCES (SMART KNOWLEDGE BASE) ═══════ */}
       {activeSectionTab === "kb" && (
       <section id="kb" className="scroll-mt-16 space-y-4">
         <KnowledgeBaseManager

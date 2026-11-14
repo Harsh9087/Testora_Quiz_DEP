@@ -55,7 +55,7 @@ export const GUIDE_TOPICS: GuideTopic[] = [
     steps: [
       "⚡ Free Mock Tests: Practice with timed tests, Bloom's cognitive taxonomy, PYQ tracking, and instant auto-grading.",
       "📚 Study Material & Notes: Access curated company-specific placement guides (TCS, Wipro), DSA sheets, and CS core subjects.",
-      "🤖 AI Form Builder: Type any form requirement in plain English and watch Gemini AI construct custom fields, validations, and shareable links.",
+      "🤖 AI Form Builder: Type any form requirement in plain English and watch Testora AI construct custom fields, validations, and shareable links.",
       "🔑 Candidate Exam HUD: Test how students take scheduled assessments using a 6-digit access code (Try demo code: DEMO-2026).",
       "🎓 Tamper-Proof Certificates: Inspect official academic credentials with cryptographic verification and 300-DPI vector PDF downloads.",
       "🛡️ Anti-Cheat Proctoring: Server-side focus monitoring, tab-switch telemetry, and fullscreen lock enforce exam integrity."
@@ -112,7 +112,7 @@ export const GUIDE_TOPICS: GuideTopic[] = [
     badge: "Prompt-to-Form",
     icon: Wand2,
     color: "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 border-amber-200/80 dark:border-amber-800/40",
-    summary: "Describe any workshop evaluation, feedback survey, or event registration in plain English, and Gemini AI synthesizes the form instantly.",
+    summary: "Describe any workshop evaluation, feedback survey, or event registration in plain English, and Testora AI synthesizes the form instantly.",
     steps: [
       "Open 'Custom Forms' from the faculty sidebar or click 'AI Forms' in the top navigation.",
       "Enter a natural language description of your form (e.g. 'Post-exam feedback with rating scales and open comments').",
@@ -192,11 +192,11 @@ export const GUIDE_TOPICS: GuideTopic[] = [
     badge: "Faculty Studio",
     icon: FileEdit,
     color: "text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/50 border-indigo-200/80 dark:border-indigo-800/40",
-    summary: "Synthesize calibrated assessments from syllabus blueprints, textbook chapters, or custom question banks with Gemini Pro AI.",
+    summary: "Synthesize calibrated assessments from syllabus blueprints, textbook chapters, or custom question banks with Smart AI.",
     steps: [
       "Open 'Teacher Assessment Studio' from the home card or faculty dashboard.",
       "Click 'Create Test' and select your academic domain (e.g. Computer Science, Engineering, Mathematics).",
-      "Upload course PDFs or DOCX files into the ChromaDB vector knowledge base for exact syllabus alignment.",
+      "Upload course PDFs or DOCX files into the secure course Knowledge Base for exact syllabus alignment.",
       "Choose question distribution: MCQs, Subjective, True/False, and calibrate Bloom's taxonomy cognitive levels (L1 to L6).",
       "Review synthesized items with auto-formatted KaTeX formulas, configure proctoring limits, and publish your test."
     ],

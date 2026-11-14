@@ -111,7 +111,7 @@ export default function UploadKBModal({
       }
     } catch (err: any) {
       console.error("Upload KB modal error:", err);
-      showToast(err?.message ? `Upload failed: ${err.message}` : "Upload network error. Please verify backend connection.", "error");
+      showToast(err?.message ? `Upload failed: ${err.message}` : "Upload network error. Please check your internet connection.", "error");
     } finally {
       setIsUploading(false);
     }
@@ -268,7 +268,7 @@ export default function UploadKBModal({
               {isUploading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Embedding into Vector DB...</span>
+                  <span>Analyzing and Saving Document...</span>
                 </>
               ) : (
                 <>

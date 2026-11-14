@@ -1331,7 +1331,7 @@ export default function TeacherMockTestLibrary() {
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                 <h4 className="text-xs font-black text-blue-950 dark:text-blue-200 uppercase tracking-wider">
-                  AI Question Generator (Gemini Powered)
+                  AI Question Generator (High Precision)
                 </h4>
               </div>
 

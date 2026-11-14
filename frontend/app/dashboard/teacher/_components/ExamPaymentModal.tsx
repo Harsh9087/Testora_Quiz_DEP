@@ -307,7 +307,7 @@ export default function ExamPaymentModal({
         onPaymentSuccess(exam.id);
       }
     } catch (err: any) {
-      setErrorMessage(err.message || "Failed to verify signature with backend authority.");
+      setErrorMessage(err.message || "Payment verification failed. Please try again.");
       setModalState("FAILED");
     }
   };

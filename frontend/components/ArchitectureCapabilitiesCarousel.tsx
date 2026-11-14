@@ -291,7 +291,7 @@ export default function ArchitectureCapabilitiesCarousel() {
                               Knowledge Base
                             </h4>
                             <p className="text-xs text-[#64748B] dark:text-[#A3B1C6] leading-relaxed mt-0.5 line-clamp-2">
-                              Select existing document or upload new PDF/PPTX/TXT files directly for instant ChromaDB vector embedding.
+                              Select existing document or upload new PDF/PPTX/TXT files directly for instant syllabus indexing & processing.
                             </p>
                           </div>
                         </div>
@@ -833,7 +833,7 @@ export default function ArchitectureCapabilitiesCarousel() {
                       </div>
                     </div>
                     <p className="text-xs sm:text-sm text-[#64748B] dark:text-[#A3B1C6] leading-relaxed">
-                      Hybrid grading engine combining deterministic objective evaluation with Gemini AI subjective rubrics.
+                      Hybrid grading engine combining deterministic objective evaluation with Automated AI subjective rubrics.
                     </p>
                   </div>
 
@@ -864,7 +864,7 @@ export default function ArchitectureCapabilitiesCarousel() {
                       />
                       <MovableBadge
                         icon={Sparkles}
-                        text="Gemini AI Rubrics"
+                        text="Automated AI Rubrics"
                         iconColorClass="text-[#2563EB] dark:text-[#60A5FA]"
                         initialPos={{ top: "42%", right: "-12px" }}
                         animationClass="animate-float-delayed"
@@ -894,7 +894,7 @@ export default function ArchitectureCapabilitiesCarousel() {
                         <Sparkles className="w-3.5 h-3.5" />
                       </div>
                       <div>
-                        <div className="font-bold text-[#111827] dark:text-[#F1F5F9] text-[11px]">Gemini Rubrics</div>
+                        <div className="font-bold text-[#111827] dark:text-[#F1F5F9] text-[11px]">AI Rubrics</div>
                         <div className="text-[10px] text-[#64748B] dark:text-[#A3B1C6]">Constructive AI feedback</div>
                       </div>
                     </div>
@@ -937,7 +937,7 @@ export default function ArchitectureCapabilitiesCarousel() {
                           </div>
                           <div>
                             <h4 className="font-extrabold text-sm sm:text-base text-[#111827] dark:text-[#F1F5F9] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA] transition-colors">Instant Objective Scoring</h4>
-                            <p className="text-xs text-[#64748B] dark:text-[#A3B1C6] leading-relaxed mt-0.5 line-clamp-2">Objective questions graded immediately; subjective answers evaluated by Gemini with feedback.</p>
+                            <p className="text-xs text-[#64748B] dark:text-[#A3B1C6] leading-relaxed mt-0.5 line-clamp-2">Objective questions graded immediately; subjective answers evaluated by Intelligent AI with feedback.</p>
                           </div>
                         </div>
                         <div className="w-8 h-8 rounded-full border border-[#E2E8F0] dark:border-[#334155] flex items-center justify-center text-[#94A3B8] group-hover:border-[#2563EB] group-hover:text-[#2563EB] group-hover:bg-[#EFF6FF] transition-all shrink-0">

@@ -217,13 +217,13 @@ export default function PromoDashboardPlayer() {
       <div className="absolute -bottom-28 -right-28 w-80 h-80 rounded-full bg-indigo-400/10 dark:bg-indigo-600/20 blur-3xl pointer-events-none" />
       <div className="absolute inset-0 bg-[radial-gradient(#94A3B8_1px,transparent_1px)] dark:bg-[radial-gradient(#1E3A8A_1px,transparent_1px)] [background-size:24px_24px] opacity-35 dark:opacity-15 pointer-events-none" />
 
-      {/* FLOATING UI CARD 1: TOP RIGHT GEMINI AI BADGE */}
+      {/* FLOATING UI CARD 1: TOP RIGHT AI ENGINE BADGE */}
       <div className="absolute top-14 right-5 z-20 hidden md:flex items-center gap-2.5 px-3.5 py-1.5 rounded-2xl bg-white/95 dark:bg-slate-900/90 backdrop-blur-xl border border-blue-200 dark:border-blue-500/30 shadow-lg shadow-blue-500/10 dark:shadow-2xl transition-all duration-300 hover:border-blue-400/60">
         <div className="w-6 h-6 rounded-lg bg-blue-50 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold border border-blue-100 dark:border-transparent">
           <Sparkles className="w-3.5 h-3.5" />
         </div>
         <div>
-          <div className="text-[9px] text-slate-500 dark:text-slate-400 font-mono uppercase tracking-wider">Gemini Pro AI</div>
+          <div className="text-[9px] text-slate-500 dark:text-slate-400 font-mono uppercase tracking-wider">Enterprise AI Engine</div>
           <div className="text-[11px] font-bold text-slate-900 dark:text-white flex items-center gap-1">
             <span>25 Items Synthesized</span>
             <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono">(2.3s)</span>

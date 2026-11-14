@@ -240,7 +240,7 @@ export default function UnifiedHomePage() {
 
             <span className="inline-flex items-center gap-1.5 px-6 font-medium">
               <Cpu className="w-3.5 h-3.5 text-purple-400 shrink-0" />
-              <span><strong>Google Gemini Pro AI:</strong> Dynamic Question Synthesis &amp; Semantic Evaluation</span>
+              <span><strong>Testora AI Engine:</strong> Dynamic Question Synthesis &amp; Semantic Evaluation</span>
             </span>
             <span className="text-blue-400/60">✦</span>
 
@@ -274,7 +274,7 @@ export default function UnifiedHomePage() {
 
             <span className="inline-flex items-center gap-1.5 px-6 font-medium">
               <Cpu className="w-3.5 h-3.5 text-purple-400 shrink-0" />
-              <span><strong>Google Gemini Pro AI:</strong> Dynamic Question Synthesis &amp; Semantic Evaluation</span>
+              <span><strong>Testora AI Engine:</strong> Dynamic Question Synthesis &amp; Semantic Evaluation</span>
             </span>
             <span className="text-blue-400/60">✦</span>
 
@@ -1002,7 +1002,7 @@ export default function UnifiedHomePage() {
               <div className="hidden lg:grid pt-1 sm:pt-2 grid-cols-2 gap-1.5 sm:gap-2.5 text-[10.5px] sm:text-xs text-slate-600 dark:text-slate-300 text-left max-w-md mx-auto lg:mx-0">
                 <div className="flex items-center gap-1.5 p-1.5 sm:p-2 rounded-xl bg-white/70 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/80 shadow-2xs">
                   <Cpu className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-500 shrink-0" />
-                  <span className="truncate font-medium">Gemini Pro AI</span>
+                  <span className="truncate font-medium">Smart AI Engine</span>
                 </div>
                 <div className="flex items-center gap-1.5 p-1.5 sm:p-2 rounded-xl bg-white/70 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/80 shadow-2xs">
                   <Gift className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-500 shrink-0" />
@@ -1034,7 +1034,7 @@ export default function UnifiedHomePage() {
               <div className="grid lg:hidden mt-3.5 grid-cols-2 gap-1.5 text-[10.5px] sm:text-xs text-slate-600 dark:text-slate-300 text-left max-w-md mx-auto">
                 <div className="flex items-center gap-1.5 p-1.5 sm:p-2 rounded-xl bg-white/70 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/80 shadow-2xs">
                   <Cpu className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-500 shrink-0" />
-                  <span className="truncate font-medium">Gemini Pro AI</span>
+                  <span className="truncate font-medium">Smart AI Engine</span>
                 </div>
                 <div className="flex items-center gap-1.5 p-1.5 sm:p-2 rounded-xl bg-white/70 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/80 shadow-2xs">
                   <Gift className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-500 shrink-0" />
@@ -1651,7 +1651,7 @@ export default function UnifiedHomePage() {
                       <span className="block sm:inline text-[#0066FF] dark:text-[#38BDF8]">Test Creation</span>
                     </h3>
                     <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed max-w-lg">
-                      Configure exam parameters, synthesize questions using Google Gemini AI or uploaded Knowledge Base documents, and export print-ready papers.
+                      Configure exam parameters, synthesize questions using Testora AI or uploaded Knowledge Base documents, and export print-ready papers.
                     </p>
                   </div>
 
@@ -1743,7 +1743,7 @@ export default function UnifiedHomePage() {
                       </div>
                       <div className="flex items-center gap-1.5 sm:gap-2 p-2 sm:p-2.5 rounded-xl bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/70 dark:border-slate-800 font-medium text-[10px] sm:text-xs">
                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                        <span className="truncate sm:whitespace-normal">Gemini AI question synthesis</span>
+                        <span className="truncate sm:whitespace-normal">Smart AI question synthesis</span>
                       </div>
                       <div className="flex items-center gap-1.5 sm:gap-2 p-2 sm:p-2.5 rounded-xl bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/70 dark:border-slate-800 font-medium text-[10px] sm:text-xs">
                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
@@ -1783,13 +1783,13 @@ export default function UnifiedHomePage() {
                   <div className="absolute w-[60%] h-[55%] bg-cyan-400/20 dark:bg-blue-400/20 rounded-full blur-2xl pointer-events-none" />
                   
                   <div className="relative z-10 w-full flex flex-col items-center animate-laptop-float">
-                    {/* Floating Badge 1: Gemini Pro AI Synthesis (Top-Left) */}
+                    {/* Floating Badge 1: AI Question Synthesis (Top-Left) */}
                     <div className="hidden sm:flex absolute sm:-top-5 sm:-left-3 lg:-left-6 z-20 items-center gap-2.5 px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-2xl bg-white/95 dark:bg-[#0B1528]/95 backdrop-blur-md border border-blue-200/90 dark:border-blue-500/40 shadow-xl shadow-blue-500/10 dark:shadow-black/60 transition-transform duration-300 hover:scale-105 animate-float-slow">
                       <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-blue-50 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold border border-blue-100 dark:border-transparent shrink-0">
                         <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400 fill-blue-600/20" />
                       </div>
                       <div>
-                        <div className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 font-mono uppercase tracking-wider font-semibold">Gemini Pro AI</div>
+                        <div className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 font-mono uppercase tracking-wider font-semibold">Smart AI Engine</div>
                         <div className="text-xs sm:text-[13px] font-bold text-[#0B1B3D] dark:text-white flex items-center gap-1.5">
                           <span>25 Questions Synthesized</span>
                           <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono font-bold bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.2 rounded-full border border-emerald-200 dark:border-emerald-800">2.3s</span>
@@ -2204,7 +2204,7 @@ export default function UnifiedHomePage() {
                           <span className="w-4 h-4 rounded-full bg-purple-100 dark:bg-purple-900/80 text-purple-700 dark:text-purple-300 flex items-center justify-center text-[10px] font-mono font-bold">2</span>
                           <span>Semantic AI Review</span>
                         </div>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">Subjective theory answers evaluated against rubrics via Gemini AI.</p>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">Subjective theory answers evaluated against rubrics via Intelligent AI.</p>
                       </div>
                       <div className="p-2.5 rounded-xl bg-white dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-700/60 space-y-1">
                         <div className="flex items-center gap-1.5 font-bold text-slate-900 dark:text-white text-xs">
@@ -2228,7 +2228,7 @@ export default function UnifiedHomePage() {
                     <div className="font-bold text-slate-900 dark:text-white">Implemented Capabilities:</div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-700 dark:text-slate-300">
                       <div className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200/70 dark:border-slate-800"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" /> Instant MCQ and numerical scoring</div>
-                      <div className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200/70 dark:border-slate-800"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" /> Gemini semantic answer evaluation</div>
+                      <div className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200/70 dark:border-slate-800"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" /> Intelligent semantic answer evaluation</div>
                       <div className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200/70 dark:border-slate-800"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" /> Topic accuracy &amp; weakness diagnoses</div>
                       <div className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200/70 dark:border-slate-800"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" /> Candidate question review screen</div>
                       <div className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200/70 dark:border-slate-800"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" /> Downloadable Excel &amp; CSV gradebooks</div>
@@ -2449,7 +2449,7 @@ export default function UnifiedHomePage() {
             {[
               {
                 q: "What do I get when I sign up as a teacher or faculty member?",
-                a: "Every new faculty member automatically receives 200 free assessment credits with a 15-day validity period upon signup. You can immediately create exams, generate questions with Gemini AI, and conduct real assessments with your students."
+                a: "Every new faculty member automatically receives 200 free assessment credits with a 15-day validity period upon signup. You can immediately create exams, generate questions with Testora AI, and conduct real assessments with your students."
               },
               {
                 q: "How does the prepaid credit deduction work?",

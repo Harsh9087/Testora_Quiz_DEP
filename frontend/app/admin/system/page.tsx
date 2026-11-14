@@ -138,7 +138,7 @@ export default function AdminSystemPage() {
                 {data.ai_engine.status}
               </div>
               <div className="text-xs text-slate-500">
-                Provider: <strong className="text-slate-700 dark:text-slate-300">Google Gemini Pro</strong>
+                Provider: <strong className="text-slate-700 dark:text-slate-300">Enterprise Cloud AI Engine</strong>
               </div>
             </div>
           </div>
