@@ -14,6 +14,7 @@ import bcrypt
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login")
+oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login", auto_error=False)
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     try:
@@ -90,6 +91,20 @@ def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_
             detail="Session user not found. Please log in again."
         )
     return user
+
+def get_optional_current_user(db: Session = Depends(get_db), token: Optional[str] = Depends(oauth2_scheme_optional)) -> Optional[User]:
+    if not token:
+        return None
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"], options={"verify_exp": False})
+        user_id: str = payload.get("sub")
+        token_type: str = payload.get("type")
+        if user_id is None or token_type != "access":
+            return None
+        user = db.query(User).filter(User.id == user_id, User.is_deleted == False).first()
+        return user
+    except Exception:
+        return None
 
 class RoleChecker:
     def __init__(self, allowed_roles: list):

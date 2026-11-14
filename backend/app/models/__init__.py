@@ -23,6 +23,7 @@ from app.models.pricing_plan import PricingPlan
 from app.models.feedback import FeedbackSubmission
 from app.models.mock_test import MockTest, MockTestPurchase, MockTestCategory, MockTestType
 from app.models.certificate import CertificateConfig, SavedCertificateTemplate, IssuedCertificate
+from app.models.study_material import StudyMaterial, StudyMaterialUnlock
 
 __all__ = [
     "Base",
@@ -30,6 +31,8 @@ __all__ = [
     "CertificateConfig",
     "SavedCertificateTemplate",
     "IssuedCertificate",
+    "StudyMaterial",
+    "StudyMaterialUnlock",
     "MockTest",
     "MockTestPurchase",
     "MockTestCategory",

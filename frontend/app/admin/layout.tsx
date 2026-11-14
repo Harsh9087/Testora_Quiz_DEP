@@ -31,7 +31,8 @@ import {
   ArrowRight,
   CheckCircle2,
   Tag,
-  Award
+  Award,
+  BookOpen
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { apiFetch } from "@/lib/api";
@@ -54,6 +55,7 @@ const navItems: NavItem[] = [
   { name: "Institutions", href: "/admin/institutions", icon: Building2 },
   { name: "Assessments", href: "/admin/exams", icon: FileSpreadsheet },
   { name: "Mock Tests Library", href: "/admin/mock-tests", icon: Award },
+  { name: "Study Materials", href: "/admin/study-materials", icon: BookOpen },
   { name: "Certificates", href: "/admin/certificates", icon: Award },
   { name: "Credit Ledger", href: "/admin/credits", icon: Coins },
   { name: "Coupons & Vouchers", href: "/admin/coupons", icon: Ticket },

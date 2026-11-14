@@ -47,6 +47,9 @@ import {
   ClipboardList,
   Wand2,
   Crown,
+  Code2,
+  Cloud,
+  FolderOpen,
   LayoutDashboard
 } from "lucide-react";
 import CreditRechargeModal from "./teacher/_components/CreditRechargeModal";
@@ -461,6 +464,12 @@ export default function DashboardLayout({
     const items: BreadcrumbItem[] = [
       { label: "Testora Quiz", href: "/" }
     ];
+
+    if (pathname === "/dashboard/study-material") {
+      items.push({ label: "Study Material", href: "/dashboard/study-material" });
+      items.push({ label: "Placement Notes & Resources", isCurrent: true });
+      return items;
+    }
 
     if (pathname === "/dashboard/settings") {
       items.push({ label: "Settings & Account", href: "/dashboard/settings" });
@@ -1203,6 +1212,157 @@ export default function DashboardLayout({
                   </a>
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* SECTION: STUDY MATERIAL (Premium Resources & Placement Notes) */}
+          <div className="space-y-1">
+            <div className={`flex items-center justify-between px-2 mb-1.5 ${sidebarCollapsed ? "md:hidden" : ""}`}>
+              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                Study Material
+              </span>
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-purple-50 text-purple-700 dark:bg-purple-950/80 dark:text-purple-300 border border-purple-200/80 dark:border-purple-800/60">
+                <Crown className="w-2.5 h-2.5 text-purple-600 fill-purple-600" /> Premium Resources
+              </span>
+            </div>
+            {sidebarCollapsed && (
+              <div className="hidden md:block w-6 h-0.5 bg-slate-200 dark:bg-slate-800 mx-auto mb-2 rounded" />
+            )}
+
+            <div className="space-y-1">
+              {/* 1. Company Notes (TCS, Wipro & More) */}
+              <Link
+                href="/dashboard/study-material?category=company_notes"
+                onClick={closeSidebarMobile}
+                className={`group relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                  sidebarCollapsed ? "md:justify-center md:px-0" : ""
+                } ${
+                  pathname === "/dashboard/study-material"
+                    ? "bg-purple-50/80 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 font-bold border-l-4 border-purple-600 shadow-2xs"
+                    : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                }`}
+              >
+                <div className="w-8 h-8 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105">
+                  <Building2 className="h-4 w-4" />
+                </div>
+                <span className={`truncate text-left flex-1 ${sidebarCollapsed ? "md:hidden" : ""}`}>
+                  Company Notes (TCS, Wipro &amp; More)
+                </span>
+                {!sidebarCollapsed && (
+                  <span className="px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-purple-100 text-purple-800 dark:bg-purple-950/80 dark:text-purple-300 shrink-0">
+                    NEW
+                  </span>
+                )}
+                {!sidebarCollapsed && (
+                  <ChevronRight className="h-3.5 w-3.5 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 dark:group-hover:text-slate-400 shrink-0 transition-transform group-hover:translate-x-0.5" />
+                )}
+                {sidebarCollapsed && (
+                  <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
+                    Company Notes (TCS, Wipro &amp; More)
+                  </span>
+                )}
+              </Link>
+
+              {/* 2. DSA & Problem Solving */}
+              <Link
+                href="/dashboard/study-material?category=dsa"
+                onClick={closeSidebarMobile}
+                className={`group relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                  sidebarCollapsed ? "md:justify-center md:px-0" : ""
+                } text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60`}
+              >
+                <div className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105">
+                  <Code2 className="h-4 w-4" />
+                </div>
+                <span className={`truncate text-left flex-1 ${sidebarCollapsed ? "md:hidden" : ""}`}>
+                  DSA &amp; Problem Solving
+                </span>
+                {!sidebarCollapsed && (
+                  <ChevronRight className="h-3.5 w-3.5 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 dark:group-hover:text-slate-400 shrink-0 transition-transform group-hover:translate-x-0.5" />
+                )}
+                {sidebarCollapsed && (
+                  <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
+                    DSA &amp; Problem Solving
+                  </span>
+                )}
+              </Link>
+
+              {/* 3. Web Development */}
+              <Link
+                href="/dashboard/study-material?category=web_development"
+                onClick={closeSidebarMobile}
+                className={`group relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                  sidebarCollapsed ? "md:justify-center md:px-0" : ""
+                } text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60`}
+              >
+                <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105">
+                  <Monitor className="h-4 w-4" />
+                </div>
+                <span className={`truncate text-left flex-1 ${sidebarCollapsed ? "md:hidden" : ""}`}>
+                  Web Development
+                </span>
+                {!sidebarCollapsed && (
+                  <ChevronRight className="h-3.5 w-3.5 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 dark:group-hover:text-slate-400 shrink-0 transition-transform group-hover:translate-x-0.5" />
+                )}
+                {sidebarCollapsed && (
+                  <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
+                    Web Development
+                  </span>
+                )}
+              </Link>
+
+              {/* 4. Cloud Computing */}
+              <Link
+                href="/dashboard/study-material?category=cloud_computing"
+                onClick={closeSidebarMobile}
+                className={`group relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                  sidebarCollapsed ? "md:justify-center md:px-0" : ""
+                } text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60`}
+              >
+                <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105">
+                  <Cloud className="h-4 w-4" />
+                </div>
+                <span className={`truncate text-left flex-1 ${sidebarCollapsed ? "md:hidden" : ""}`}>
+                  Cloud Computing
+                </span>
+                {!sidebarCollapsed && (
+                  <ChevronRight className="h-3.5 w-3.5 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 dark:group-hover:text-slate-400 shrink-0 transition-transform group-hover:translate-x-0.5" />
+                )}
+                {sidebarCollapsed && (
+                  <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
+                    Cloud Computing
+                  </span>
+                )}
+              </Link>
+
+              {/* 5. All Study Materials */}
+              <Link
+                href="/dashboard/study-material?category=all"
+                onClick={closeSidebarMobile}
+                className={`group relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                  sidebarCollapsed ? "md:justify-center md:px-0" : ""
+                } text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60`}
+              >
+                <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105">
+                  <FolderOpen className="h-4 w-4" />
+                </div>
+                <span className={`truncate text-left flex-1 ${sidebarCollapsed ? "md:hidden" : ""}`}>
+                  All Study Materials
+                </span>
+                {!sidebarCollapsed && (
+                  <span className="px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 shrink-0">
+                    FREE
+                  </span>
+                )}
+                {!sidebarCollapsed && (
+                  <ChevronRight className="h-3.5 w-3.5 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 dark:group-hover:text-slate-400 shrink-0 transition-transform group-hover:translate-x-0.5" />
+                )}
+                {sidebarCollapsed && (
+                  <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
+                    All Study Materials (Free)
+                  </span>
+                )}
+              </Link>
             </div>
           </div>
 
