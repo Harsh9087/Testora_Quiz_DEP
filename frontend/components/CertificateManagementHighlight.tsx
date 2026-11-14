@@ -122,17 +122,17 @@ export default function CertificateManagementHighlight({
           <div className="w-full lg:col-span-6 lg:col-start-1 lg:row-start-1 lg:row-span-2 order-2 lg:order-1 flex flex-col items-center lg:self-center">
             
             {/* Interactive Template Selector Pill Bar */}
-            <div className="w-full max-w-[580px] flex items-center justify-between gap-2 mb-2 sm:mb-2.5 px-0.5 text-xs">
+            <div className="w-full max-w-[580px] flex flex-col xs:flex-row xs:items-center justify-between gap-2 mb-2 sm:mb-2.5 px-0.5 text-xs">
               <span className="font-bold text-slate-500 dark:text-slate-400 text-[10.5px] sm:text-[11px] uppercase tracking-wider flex items-center gap-1.5 shrink-0">
                 <Palette className="w-3.5 h-3.5 text-amber-500" />
                 <span>Template Preview</span>
               </span>
 
-              <div className="flex items-center gap-1 p-0.5 sm:p-1 rounded-xl bg-slate-200/70 dark:bg-slate-800/70 border border-slate-300/60 dark:border-slate-700/60">
+              <div className="grid grid-cols-3 xs:flex items-center gap-1 p-0.5 sm:p-1 rounded-xl bg-slate-200/70 dark:bg-slate-800/70 border border-slate-300/60 dark:border-slate-700/60 w-full xs:w-auto">
                 <button
                   type="button"
                   onClick={() => setActiveTemplate("modern_navy")}
-                  className={`px-2 sm:px-2.5 py-1 rounded-lg text-[9.5px] xs:text-[10px] sm:text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                  className={`px-2 py-1.5 xs:py-1 rounded-lg text-[10px] xs:text-[10.5px] sm:text-xs font-bold text-center transition-all cursor-pointer whitespace-nowrap ${
                     activeTemplate === "modern_navy"
                       ? "bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-400 shadow-2xs"
                       : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
@@ -143,7 +143,7 @@ export default function CertificateManagementHighlight({
                 <button
                   type="button"
                   onClick={() => setActiveTemplate("classic_gold")}
-                  className={`px-2 sm:px-2.5 py-1 rounded-lg text-[9.5px] xs:text-[10px] sm:text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                  className={`px-2 py-1.5 xs:py-1 rounded-lg text-[10px] xs:text-[10.5px] sm:text-xs font-bold text-center transition-all cursor-pointer whitespace-nowrap ${
                     activeTemplate === "classic_gold"
                       ? "bg-white dark:bg-slate-900 text-amber-700 dark:text-amber-400 shadow-2xs"
                       : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
@@ -154,7 +154,7 @@ export default function CertificateManagementHighlight({
                 <button
                   type="button"
                   onClick={() => setActiveTemplate("minimal_azure")}
-                  className={`px-2 sm:px-2.5 py-1 rounded-lg text-[9.5px] xs:text-[10px] sm:text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                  className={`px-2 py-1.5 xs:py-1 rounded-lg text-[10px] xs:text-[10.5px] sm:text-xs font-bold text-center transition-all cursor-pointer whitespace-nowrap ${
                     activeTemplate === "minimal_azure"
                       ? "bg-white dark:bg-slate-900 text-cyan-700 dark:text-cyan-400 shadow-2xs"
                       : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
