@@ -444,10 +444,17 @@ export default function MockTestLibrary() {
       <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-200/90 dark:border-blue-900/40 bg-white dark:bg-[#071328] text-slate-900 dark:text-white shadow-xl min-h-[290px] lg:min-h-[300px] lg:max-h-[320px] flex items-center">
         {/* 16:5 Wide Landscape White-Themed Background Image with Responsive Positioning */}
         <div className="absolute inset-0 z-0 pointer-events-none">
+          {/* Light Mode Banner */}
           <img
             src="/images/mock_test_white_banner_bg.jpg"
             alt="Mock Test Examination Background"
-            className="w-full h-full object-cover object-right opacity-95"
+            className="w-full h-full object-cover object-right opacity-95 block dark:hidden"
+          />
+          {/* Dark Mode Banner (Complete Dark Image) */}
+          <img
+            src="/images/mock_test_banner_bg.jpg"
+            alt="Mock Test Examination Background"
+            className="w-full h-full object-cover object-right opacity-95 hidden dark:block"
           />
           {/* Clean White / Ice-Blue Gradient Overlay on the Left for pure legibility */}
           <div className="absolute inset-0 bg-gradient-to-r from-white via-white/95 sm:via-white/85 md:via-white/70 to-transparent dark:from-[#071328] dark:via-[#071328]/95 dark:sm:via-[#071328]/85 dark:md:via-[#071328]/70 dark:to-transparent" />

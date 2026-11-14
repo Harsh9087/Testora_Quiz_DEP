@@ -38,6 +38,36 @@ export default function MockTestLibraryHighlight({
       id="mock-tests"
       className="relative py-12 sm:py-16 lg:py-20 bg-[#FDFDFF] dark:bg-[#070D1B] border-b border-slate-200/80 dark:border-slate-800/80 overflow-hidden scroll-mt-16 transition-colors duration-200"
     >
+      {/* ══════════════════════════════════════════════════════════
+          FULL-BLEED BACKGROUND COVER (EXTENDS BEHIND TEXT AREA & ENTIRE SECTION)
+         ══════════════════════════════════════════════════════════ */}
+      {/* Light Theme Background Banner */}
+      <div className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden block dark:hidden">
+        <Image
+          src="/images/mock_test_white_banner_bg.jpg"
+          alt="Mock Test Light Background"
+          fill
+          className="object-cover object-right opacity-35 sm:opacity-45"
+          priority
+        />
+        {/* Soft white gradient to ensure text readability on the left */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#FDFDFF] via-[#FDFDFF]/90 sm:via-[#FDFDFF]/80 to-transparent" />
+      </div>
+
+      {/* Dark Theme Background Banner (Complete Dark Image covering behind text area too) */}
+      <div className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden hidden dark:block">
+        <Image
+          src="/images/mock_test_banner_bg.jpg"
+          alt="Mock Test Dark Background"
+          fill
+          className="object-cover object-right opacity-60 sm:opacity-75"
+          priority
+        />
+        {/* Deep navy dark gradient to seamlessly blend behind the text area */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#070D1B] via-[#070D1B]/95 sm:via-[#070D1B]/85 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#070D1B] via-transparent to-[#070D1B]/90" />
+      </div>
+
       {/* Subtle Background Lighting & Soft Ambient Grids */}
       <div className="absolute top-0 right-1/4 w-[420px] h-[420px] bg-blue-400/5 dark:bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 left-10 w-96 h-96 bg-indigo-400/5 dark:bg-indigo-600/10 rounded-full blur-3xl pointer-events-none" />
@@ -92,20 +122,30 @@ export default function MockTestLibraryHighlight({
                 MOBILE-ONLY WORKSPACE PREVIEW (Shown right below description)
                ══════════════════════════════════════════════════════════ */}
             <div className="block lg:hidden my-6">
-              <div className="relative w-full rounded-2xl overflow-hidden bg-white dark:bg-[#0B1528] border border-slate-200/90 dark:border-slate-800/90 shadow-xl shadow-blue-900/10 dark:shadow-black/50">
+              <div className="relative w-full rounded-2xl overflow-hidden bg-white dark:bg-[#070D1B] border border-slate-200/90 dark:border-blue-900/50 shadow-xl shadow-blue-900/10 dark:shadow-[0_0_30px_rgba(37,99,235,0.2)]">
                 {/* Status Indicator */}
-                <div className="absolute top-3 right-3 z-20 pointer-events-none flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/80 dark:border-slate-800 text-[10px] font-bold text-slate-700 dark:text-slate-300 shadow-xs">
+                <div className="absolute top-3 right-3 z-20 pointer-events-none flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/95 dark:bg-[#0B1528]/95 backdrop-blur-md border border-slate-200/80 dark:border-blue-900/60 text-[10px] font-bold text-slate-700 dark:text-slate-200 shadow-xs">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   <span>Live Exam Simulation</span>
                 </div>
 
                 <div className="relative w-full aspect-[549/473]">
+                  {/* Light Mode Mockup */}
                   <Image
                     src="/images/mock_test_workspace_clean_2x.png"
                     alt="Testora Quiz Mock Test Examination Workspace"
                     width={1098}
                     height={946}
-                    className="w-full h-full object-cover object-left-top"
+                    className="w-full h-full object-cover object-left-top block dark:hidden"
+                    priority
+                  />
+                  {/* Dark Mode Mockup (Complete Dark Theme Image) */}
+                  <Image
+                    src="/images/mock_test_workspace_dark_2x.png"
+                    alt="Testora Quiz Dark Mock Test Examination Workspace"
+                    width={1200}
+                    height={896}
+                    className="w-full h-full object-cover object-left-top hidden dark:block"
                     priority
                   />
                 </div>
@@ -256,25 +296,35 @@ export default function MockTestLibraryHighlight({
           <div className="hidden lg:flex lg:col-span-6 relative items-center justify-center">
             
             {/* Soft Ambient Radial Glow Backdrop */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-blue-400/10 via-sky-300/10 to-indigo-400/10 rounded-3xl blur-2xl pointer-events-none transform scale-95" />
+            <div className="absolute inset-0 bg-gradient-to-tr from-blue-400/10 via-sky-300/10 to-indigo-400/10 dark:from-blue-600/20 dark:via-cyan-500/15 dark:to-indigo-600/20 rounded-3xl blur-2xl pointer-events-none transform scale-95" />
             
             {/* Main Stage Frame */}
-            <div className="relative w-full rounded-2xl lg:rounded-3xl overflow-hidden bg-white dark:bg-[#0B1528] border border-slate-200/90 dark:border-slate-800/90 shadow-2xl shadow-blue-900/10 dark:shadow-black/50 transition-all duration-300 group">
+            <div className="relative w-full rounded-2xl lg:rounded-3xl overflow-hidden bg-white dark:bg-[#070D1B] border border-slate-200/90 dark:border-blue-900/50 shadow-2xl shadow-blue-900/10 dark:shadow-[0_0_40px_rgba(37,99,235,0.25)] transition-all duration-300 group">
               
               {/* Top subtle status pill */}
-              <div className="absolute top-4 right-4 z-20 pointer-events-none flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/80 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 shadow-xs">
+              <div className="absolute top-4 right-4 z-20 pointer-events-none flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/95 dark:bg-[#0B1528]/95 backdrop-blur-md border border-slate-200/80 dark:border-blue-900/60 text-xs font-bold text-slate-700 dark:text-slate-200 shadow-xs">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 <span>Live Exam Simulation</span>
               </div>
 
               {/* Crisp Workspace Illustration */}
               <div className="relative w-full aspect-[549/473]">
+                {/* Light Mode Mockup */}
                 <Image
                   src="/images/mock_test_workspace_clean_2x.png"
                   alt="Testora Quiz Mock Test Examination Workspace"
                   width={1098}
                   height={946}
-                  className="w-full h-full object-cover object-left-top transform group-hover:scale-[1.01] transition-transform duration-500"
+                  className="w-full h-full object-cover object-left-top transform group-hover:scale-[1.01] transition-transform duration-500 block dark:hidden"
+                  priority
+                />
+                {/* Dark Mode Mockup (Complete Dark Theme Image) */}
+                <Image
+                  src="/images/mock_test_workspace_dark_2x.png"
+                  alt="Testora Quiz Dark Mock Test Examination Workspace"
+                  width={1200}
+                  height={896}
+                  className="w-full h-full object-cover object-left-top transform group-hover:scale-[1.01] transition-transform duration-500 hidden dark:block"
                   priority
                 />
               </div>
