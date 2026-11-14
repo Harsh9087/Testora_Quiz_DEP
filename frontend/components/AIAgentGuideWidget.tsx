@@ -24,7 +24,8 @@ import {
   ArrowRight,
   BookOpen,
   HelpCircle,
-  MessageSquare
+  MessageSquare,
+  Zap
 } from "lucide-react";
 
 export interface GuideTopic {
@@ -44,24 +45,25 @@ export interface GuideTopic {
 
 export const GUIDE_TOPICS: GuideTopic[] = [
   {
-    id: "forms-registrations",
-    title: "Student Data Collection Forms",
-    shortTitle: "Student Forms",
-    badge: "0-Login Required",
-    icon: ClipboardList,
-    color: "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 border-amber-200/80 dark:border-amber-800/40",
-    summary: "Collect student roster information via shareable online forms without requiring students to create accounts, and import directly into Student Directories.",
+    id: "test-drive",
+    title: "New User Quick Start & Test Drive",
+    shortTitle: "🚀 Quick Test",
+    badge: "New User Guide",
+    icon: Sparkles,
+    color: "text-amber-500 dark:text-amber-400 bg-amber-500/10 border-amber-500/30",
+    summary: "Welcome to Testora Quiz! Test and explore every major feature in 1 click without complicated setups. Follow this quick test drive to experience the entire assessment ecosystem.",
     steps: [
-      "Navigate to 'Forms & Registrations' from the faculty dashboard sidebar.",
-      "Click 'Create Registration Form' and enter the Form Name (e.g. 'CS Branch Batch 2026').",
-      "Copy the unique shareable link or present the QR code for students to scan on mobile.",
-      "Students fill in their Name, Email, Roll Number, and Phone without creating accounts or signing in.",
-      "Access submitted responses in the dashboard and export directly to CSV / Excel or import into student rosters."
+      "⚡ Free Mock Tests: Practice with timed tests, Bloom's cognitive taxonomy, PYQ tracking, and instant auto-grading.",
+      "📚 Study Material & Notes: Access curated company-specific placement guides (TCS, Wipro), DSA sheets, and CS core subjects.",
+      "🤖 AI Form Builder: Type any form requirement in plain English and watch Gemini AI construct custom fields, validations, and shareable links.",
+      "🔑 Candidate Exam HUD: Test how students take scheduled assessments using a 6-digit access code (Try demo code: DEMO-2026).",
+      "🎓 Tamper-Proof Certificates: Inspect official academic credentials with cryptographic verification and 300-DPI vector PDF downloads.",
+      "🛡️ Anti-Cheat Proctoring: Server-side focus monitoring, tab-switch telemetry, and fullscreen lock enforce exam integrity."
     ],
-    actionText: "Open Forms & Registrations →",
-    actionUrl: "/dashboard/teacher",
+    actionText: "Start With Free Mock Tests →",
+    actionUrl: "/dashboard/student?tab=mock-tests",
     actionType: "link",
-    keywords: ["form", "registration", "student form", "collect", "qr", "link", "no login", "data", "excel", "roster", "student info"]
+    keywords: ["test", "test all", "new user", "guide", "cat bot", "cah bot", "chat bot", "chatbot", "start", "demo", "tour", "how to use", "explore", "first time", "welcome", "all"]
   },
   {
     id: "mock-tests",
@@ -73,15 +75,95 @@ export const GUIDE_TOPICS: GuideTopic[] = [
     summary: "Practice with full-length mock tests, subject-wise quizzes, and exam-oriented preparation resources with authentic PYQ tracking.",
     steps: [
       "Click 'Explore Mock Tests' from the home section or open Mock Tests in your student dashboard.",
-      "Browse standardized tests by category: JEE, NEET, SSC, Banking, or Engineering domains.",
+      "Browse standardized tests by category: Corporate Placements (TCS, Wipro), JEE, NEET, SSC, Banking, or Engineering domains.",
       "Review the exam specifications: total questions, duration, marking scheme (+3/-1), and PYQ origin.",
       "Attempt the test in the realistic exam HUD with countdown timer, question palette, and autosaved answers.",
       "Submit to view instant performance telemetry, topic mastery scorecards, and step-by-step solutions."
     ],
     actionText: "Explore Mock Tests Now →",
-    actionUrl: "/dashboard/student",
+    actionUrl: "/dashboard/student?tab=mock-tests",
     actionType: "link",
-    keywords: ["mock", "test", "practice", "jee", "neet", "ssc", "banking", "free", "pyq", "exam library", "speed test", "questions"]
+    keywords: ["mock", "test", "practice", "jee", "neet", "ssc", "banking", "free", "pyq", "exam library", "speed test", "questions", "placement"]
+  },
+  {
+    id: "study-materials",
+    title: "Study Material & Placement Notes",
+    shortTitle: "Study Material",
+    badge: "Free & Pro Notes",
+    icon: BookOpen,
+    color: "text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/50 border-purple-200/80 dark:border-purple-800/40",
+    summary: "Access curated semester notes, company-specific placement guides (TCS, Wipro, Accenture), DSA problem-solving sheets, and CS core subject cheat-sheets.",
+    steps: [
+      "Open 'Study Material' from the sidebar or click the Study Material link in the navbar.",
+      "Filter notes by category: Company Notes (TCS, Wipro & More), DSA & Problem Solving, Web Development, or Cloud Computing.",
+      "Look for 'FREE' tags for instant reading, or unlock comprehensive placement bundles using wallet credits.",
+      "Read structured markdown summaries with syntax-highlighted code, diagrams, and key takeaway bullets.",
+      "Download or save notes for offline interview preparation and last-minute revision."
+    ],
+    actionText: "Explore Study Materials →",
+    actionUrl: "/dashboard/study-material",
+    actionType: "link",
+    keywords: ["study", "notes", "material", "tcs", "wipro", "placement", "dsa", "pdf", "revision", "interview", "cheat sheet", "free notes", "company notes"]
+  },
+  {
+    id: "custom-forms",
+    title: "AI-Powered Custom Form Builder",
+    shortTitle: "AI Form Builder",
+    badge: "Prompt-to-Form",
+    icon: Wand2,
+    color: "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 border-amber-200/80 dark:border-amber-800/40",
+    summary: "Describe any workshop evaluation, feedback survey, or event registration in plain English, and Gemini AI synthesizes the form instantly.",
+    steps: [
+      "Open 'Custom Forms' from the faculty sidebar or click 'AI Forms' in the top navigation.",
+      "Enter a natural language description of your form (e.g. 'Post-exam feedback with rating scales and open comments').",
+      "AI automatically generates calibrated form sections, dropdowns, checkboxes, and text inputs.",
+      "Customize field labels, toggle required validation, and click 'Publish & Copy Link'.",
+      "Analyze response charts and export submissions directly to CSV / Excel."
+    ],
+    actionText: "Open AI Form Studio →",
+    actionUrl: "/dashboard/teacher?tab=custom-forms",
+    actionType: "link",
+    keywords: ["ai form", "custom form", "builder", "survey", "feedback", "workshop", "poll", "prompt", "synthesize", "forms"]
+  },
+  {
+    id: "forms-registrations",
+    title: "Student Data Collection Forms",
+    shortTitle: "Student Forms",
+    badge: "0-Login Required",
+    icon: ClipboardList,
+    color: "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 border-emerald-200/80 dark:border-emerald-800/40",
+    summary: "Collect student roster information via shareable online forms without requiring students to create accounts, and import directly into Student Directories.",
+    steps: [
+      "Navigate to 'Forms & Registrations' from the faculty dashboard sidebar.",
+      "Click 'Create Registration Form' and enter the Form Name (e.g. 'CS Branch Batch 2026').",
+      "Copy the unique shareable link or present the QR code for students to scan on mobile.",
+      "Students fill in their Name, Email, Roll Number, and Phone without creating accounts or signing in.",
+      "Access submitted responses in the dashboard and export directly to CSV / Excel or import into student rosters."
+    ],
+    actionText: "Open Forms & Registrations →",
+    actionUrl: "/dashboard/teacher?tab=forms",
+    actionType: "link",
+    keywords: ["form", "registration", "student form", "collect", "qr", "link", "no login", "data", "excel", "roster", "student info"]
+  },
+  {
+    id: "student-portal",
+    title: "Take Your Test (Exam Code Access)",
+    shortTitle: "Take Test",
+    badge: "Exam Code Access",
+    icon: KeyRound,
+    color: "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 border-emerald-200/80 dark:border-emerald-800/40",
+    summary: "Students can access scheduled exams using a unique 6-digit access code without complicated account setups.",
+    steps: [
+      "Click 'Enter Exam Code' or visit the Candidate Portal.",
+      "Enter the 6-digit assessment access code provided by your course instructor (e.g., DEMO-2026).",
+      "Verify your full name, roll number, and student credentials on the verification screen.",
+      "Complete the system proctoring check (camera, fullscreen mode, and browser permissions).",
+      "Answer questions with real-time autosave. Every response is securely preserved locally and synced to the cloud."
+    ],
+    actionText: "Enter Exam Code Now →",
+    actionUrl: "modal:exam-code",
+    actionType: "code_modal",
+    keywords: ["take", "student", "code", "enter", "access", "exam code", "portal", "candidate", "start", "attempt", "demo code"]
   },
   {
     id: "certificates",
@@ -99,7 +181,7 @@ export const GUIDE_TOPICS: GuideTopic[] = [
       "Deliver credentials automatically via email with 300-DPI A4 vector PDF download and instant QR verification."
     ],
     actionText: "Explore Certificate Features →",
-    actionUrl: "/dashboard/teacher",
+    actionUrl: "/dashboard/student?tab=certificates",
     actionType: "link",
     keywords: ["certificate", "award", "degree", "verify", "qr", "pdf", "template", "gold", "seal", "credentials", "excellence"]
   },
@@ -122,46 +204,6 @@ export const GUIDE_TOPICS: GuideTopic[] = [
     actionUrl: "/dashboard/teacher",
     actionType: "link",
     keywords: ["create", "exam", "test", "quiz", "make", "generate", "ai questions", "teacher", "syllabus", "pdf", "latex", "math"]
-  },
-  {
-    id: "student-portal",
-    title: "Take Your Test (Exam Code Access)",
-    shortTitle: "Take Test",
-    badge: "Exam Code Access",
-    icon: KeyRound,
-    color: "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 border-emerald-200/80 dark:border-emerald-800/40",
-    summary: "Students can access scheduled exams using a unique 6-digit access code without complicated account setups.",
-    steps: [
-      "Click 'Enter Exam Code' or visit the Candidate Portal.",
-      "Enter the 6-digit assessment access code provided by your course instructor.",
-      "Verify your full name, roll number, and student credentials on the verification screen.",
-      "Complete the system proctoring check (camera, fullscreen mode, and browser permissions).",
-      "Answer questions with real-time autosave. Every response is securely preserved locally and synced to the cloud."
-    ],
-    actionText: "Enter Exam Code Now →",
-    actionUrl: "modal:exam-code",
-    actionType: "code_modal",
-    keywords: ["take", "student", "code", "enter", "access", "exam code", "portal", "candidate", "start", "attempt"]
-  },
-  {
-    id: "custom-forms",
-    title: "AI-Powered Custom Form Builder",
-    shortTitle: "AI Form Builder",
-    badge: "Prompt-to-Form",
-    icon: Wand2,
-    color: "text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/50 border-purple-200/80 dark:border-purple-800/40",
-    summary: "Describe any workshop evaluation, feedback survey, or event registration in plain English, and AI synthesizes the form instantly.",
-    steps: [
-      "Open 'Custom Forms' from the faculty sidebar and click 'Generate with AI'.",
-      "Enter a natural language description of your form (e.g. 'Post-exam feedback with rating scales and open comments').",
-      "AI automatically generates calibrated form sections, dropdowns, checkboxes, and text inputs.",
-      "Customize field labels, toggle required validation, and click 'Publish & Copy Link'.",
-      "Analyze response charts and export submissions directly to CSV / Excel."
-    ],
-    actionText: "Open AI Form Studio →",
-    actionUrl: "/dashboard/teacher",
-    actionType: "link",
-    keywords: ["ai form", "custom form", "builder", "survey", "feedback", "workshop", "poll", "prompt", "synthesize"]
   },
   {
     id: "anti-cheat",
@@ -205,10 +247,12 @@ export const GUIDE_TOPICS: GuideTopic[] = [
 
 // Suggested quick prompts displayed above search input
 const QUICK_PROMPTS = [
-  { label: "📝 Student Forms", query: "how do student registration forms work" },
+  { label: "🚀 New User Tour", query: "test all features for new user guide" },
   { label: "⚡ Mock Tests", query: "how to practice free mock tests" },
-  { label: "🎓 Certificates", query: "how to issue and verify certificates" },
+  { label: "📚 Study Notes", query: "study materials and placement notes" },
+  { label: "🤖 AI Form Builder", query: "how to create ai custom form" },
   { label: "🔑 Enter Exam Code", query: "how to enter exam code as student" },
+  { label: "🎓 Certificates", query: "how to issue and verify certificates" },
   { label: "🛡️ Anti-Cheat", query: "what are the proctoring and tab switch rules" }
 ];
 
@@ -232,13 +276,25 @@ export default function AIAgentGuideWidget({
     onOpenChange?.(val);
   };
 
-  const [selectedTopicId, setSelectedTopicId] = useState<string>("forms-registrations");
+  const [selectedTopicId, setSelectedTopicId] = useState<string>("test-drive");
   const [userQuestion, setUserQuestion] = useState("");
   const [answeredQuery, setAnsweredQuery] = useState<string | null>(null);
   const [copiedStepIdx, setCopiedStepIdx] = useState<number | null>(null);
 
   // Content scroll ref to ensure step 1 is never cut off
   const contentRef = useRef<HTMLDivElement>(null);
+
+  // Global event listener so any button can open the AI guide
+  useEffect(() => {
+    const handleOpenGuide = (e: any) => {
+      setIsOpen(true);
+      if (e?.detail?.topicId) {
+        setSelectedTopicId(e.detail.topicId);
+      }
+    };
+    window.addEventListener("open-ai-guide", handleOpenGuide);
+    return () => window.removeEventListener("open-ai-guide", handleOpenGuide);
+  }, []);
 
   // Movable / Draggable icon state
   const [position, setPosition] = useState<{ x: number; y: number } | null>(null);
@@ -439,13 +495,70 @@ export default function AIAgentGuideWidget({
     }
   };
 
-  // Smart Search & Question Matcher
+  // Smart Search & Question Matcher with friendly NLP intent handling
   const handleAskQuestion = (q: string) => {
     const query = q.trim().toLowerCase();
     if (!query) return;
 
     setAnsweredQuery(q);
 
+    // 1. Direct intent recognition for new users & common features
+    if (
+      query.includes("cat bot") ||
+      query.includes("cah bot") ||
+      query.includes("chat bot") ||
+      query.includes("chatbot") ||
+      query.includes("test all") ||
+      query.includes("new user") ||
+      query.includes("guide") ||
+      query.includes("tour") ||
+      query.includes("start") ||
+      query.includes("hello") ||
+      query.includes("hi") ||
+      query.includes("explore")
+    ) {
+      setSelectedTopicId("test-drive");
+      setUserQuestion("");
+      return;
+    }
+
+    if (query.includes("notes") || query.includes("study") || query.includes("material") || query.includes("dsa") || query.includes("company")) {
+      setSelectedTopicId("study-materials");
+      setUserQuestion("");
+      return;
+    }
+
+    if (query.includes("mock") || query.includes("practice") || query.includes("test library") || query.includes("pyq")) {
+      setSelectedTopicId("mock-tests");
+      setUserQuestion("");
+      return;
+    }
+
+    if (query.includes("ai form") || query.includes("form builder") || query.includes("generate form")) {
+      setSelectedTopicId("custom-forms");
+      setUserQuestion("");
+      return;
+    }
+
+    if (query.includes("code") || query.includes("passcode") || query.includes("take exam") || query.includes("portal")) {
+      setSelectedTopicId("student-portal");
+      setUserQuestion("");
+      return;
+    }
+
+    if (query.includes("certificate") || query.includes("verify") || query.includes("badge") || query.includes("qr")) {
+      setSelectedTopicId("certificates");
+      setUserQuestion("");
+      return;
+    }
+
+    if (query.includes("cheat") || query.includes("proctor") || query.includes("tab") || query.includes("camera")) {
+      setSelectedTopicId("anti-cheat");
+      setUserQuestion("");
+      return;
+    }
+
+    // 2. Fallback weighted scoring
     let bestTopic = GUIDE_TOPICS[0];
     let highestScore = -1;
 
@@ -484,6 +597,8 @@ export default function AIAgentGuideWidget({
       const elem = document.getElementById(elementId);
       if (elem) {
         elem.scrollIntoView({ behavior: "smooth" });
+      } else {
+        router.push("/" + topic.actionUrl);
       }
     } else {
       router.push(topic.actionUrl);
@@ -710,6 +825,87 @@ export default function AIAgentGuideWidget({
                 </p>
               </div>
             </div>
+
+            {/* 1-Click Interactive Feature Testing Grid for New Users */}
+            {selectedTopic.id === "test-drive" && (
+              <div className="p-3.5 rounded-2xl bg-gradient-to-br from-amber-500/10 via-blue-500/10 to-purple-500/10 border border-amber-500/30 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-amber-400">
+                    <Sparkles className="w-4 h-4 text-amber-400" />
+                    <span>Instant 1-Click Feature Testing</span>
+                  </div>
+                  <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-extrabold border border-amber-500/40">
+                    Test All
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 pt-0.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsOpen(false);
+                      const el = document.getElementById("mock-tests");
+                      if (el) el.scrollIntoView({ behavior: "smooth" });
+                      else router.push("/dashboard/student?tab=mock-tests");
+                    }}
+                    className="p-2.5 rounded-xl bg-[#0D182E] hover:bg-[#122344] border border-blue-500/40 text-left transition-all group cursor-pointer"
+                  >
+                    <div className="flex items-center gap-1.5 text-blue-400 font-bold text-xs">
+                      <Layers className="w-3.5 h-3.5 shrink-0" />
+                      <span className="truncate">Free Mock Tests</span>
+                    </div>
+                    <p className="text-[10px] text-slate-400 mt-0.5 truncate">Practice with PYQs</p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsOpen(false);
+                      router.push("/dashboard/study-material");
+                    }}
+                    className="p-2.5 rounded-xl bg-[#0D182E] hover:bg-[#122344] border border-purple-500/40 text-left transition-all group cursor-pointer"
+                  >
+                    <div className="flex items-center gap-1.5 text-purple-400 font-bold text-xs">
+                      <BookOpen className="w-3.5 h-3.5 shrink-0" />
+                      <span className="truncate">Study Material</span>
+                    </div>
+                    <p className="text-[10px] text-slate-400 mt-0.5 truncate">TCS, Wipro &amp; DSA</p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsOpen(false);
+                      const el = document.getElementById("form-builder");
+                      if (el) el.scrollIntoView({ behavior: "smooth" });
+                      else router.push("/dashboard/teacher?tab=custom-forms");
+                    }}
+                    className="p-2.5 rounded-xl bg-[#0D182E] hover:bg-[#122344] border border-amber-500/40 text-left transition-all group cursor-pointer"
+                  >
+                    <div className="flex items-center gap-1.5 text-amber-400 font-bold text-xs">
+                      <Wand2 className="w-3.5 h-3.5 shrink-0" />
+                      <span className="truncate">AI Form Builder</span>
+                    </div>
+                    <p className="text-[10px] text-slate-400 mt-0.5 truncate">Describe &amp; generate</p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsOpen(false);
+                      if (onOpenExamModal) onOpenExamModal();
+                      else router.push("/portal");
+                    }}
+                    className="p-2.5 rounded-xl bg-[#0D182E] hover:bg-[#122344] border border-emerald-500/40 text-left transition-all group cursor-pointer"
+                  >
+                    <div className="flex items-center gap-1.5 text-emerald-400 font-bold text-xs">
+                      <KeyRound className="w-3.5 h-3.5 shrink-0" />
+                      <span className="truncate">Enter Exam Code</span>
+                    </div>
+                    <p className="text-[10px] text-slate-400 mt-0.5 truncate">Try DEMO-2026</p>
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Step-by-Step Instructions Block (Never cut off) */}
             <div className="space-y-2 pt-1">

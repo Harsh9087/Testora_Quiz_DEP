@@ -55,6 +55,7 @@ import {
 import CreditRechargeModal from "./teacher/_components/CreditRechargeModal";
 import ThemeToggle from "../../components/ThemeToggle";
 import AppLogo from "../../components/AppLogo";
+import AIAgentGuideWidget from "../../components/AIAgentGuideWidget";
 import { fetchStudentDirectories } from "../../lib/api/studentDirectories";
 import { parseUtcDate } from "../../lib/dateUtils";
 
@@ -2061,6 +2062,9 @@ export default function DashboardLayout({
           setUserCredits(newBal);
         }}
       />
+
+      {/* Floating Testora AI Assistant / Chatbot for Instant Guidance & Testing */}
+      <AIAgentGuideWidget />
     </div>
   );
 }
