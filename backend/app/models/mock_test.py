@@ -95,6 +95,7 @@ class MockTest(TimeStampedModel):
     price_inr = Column(Integer, default=0, nullable=False)
     price_paise = Column(Integer, default=0, nullable=False)
     is_free = Column(Boolean, default=True, nullable=False)
+    credit_cost = Column(Integer, default=0, nullable=True)
 
     # Examination Configuration & Independent Marks
     duration_minutes = Column(Integer, default=60, nullable=False)

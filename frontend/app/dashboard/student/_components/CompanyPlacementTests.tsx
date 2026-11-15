@@ -42,6 +42,7 @@ interface MockTestItem {
   category: string;
   difficulty: string;
   price_inr: number;
+  credit_cost?: number;
   price_paise: number;
   is_free: boolean;
   duration_minutes: number;
@@ -208,12 +209,13 @@ export default function CompanyPlacementTests() {
     try {
       setProcessingId(test.id);
 
+      const cost = (test.credit_cost && test.credit_cost > 0) ? test.credit_cost : (test.price_inr >= 20 ? test.price_inr : 99);
       const confirmed = window.confirm(
         `[Unlock Placement Mock Test]\n\n` +
         `Test: ${test.title}\n` +
         `Company: ${test.company_name}\n` +
-        `Access Fee: 99 Credits\n\n` +
-        `Would you like to unlock this assessment using 99 credits from your wallet balance?`
+        `Access Fee: ${cost} Credits\n\n` +
+        `Would you like to unlock this assessment using ${cost} credits from your wallet balance?`
       );
 
       if (!confirmed) {
@@ -595,7 +597,7 @@ export default function CompanyPlacementTests() {
                         ) : (
                           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-xs">
                             <Coins className="w-3.5 h-3.5 text-slate-950" />
-                            <span>99 CREDITS</span>
+                            <span>{(test.credit_cost && test.credit_cost > 0) ? `${test.credit_cost} CREDITS` : (test.price_inr >= 20 ? `${test.price_inr} CREDITS` : "99 CREDITS")}</span>
                           </span>
                         )}
                       </div>
@@ -756,7 +758,7 @@ export default function CompanyPlacementTests() {
                       className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white text-xs font-extrabold transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
                     >
                       <Coins className="w-4 h-4 text-amber-200" />
-                      <span>{isProcessing ? "Unlocking with Credits..." : "Unlock Test (99 Credits) →"}</span>
+                      <span>{isProcessing ? "Unlocking with Credits..." : `Unlock Test (${(test.credit_cost && test.credit_cost > 0) ? test.credit_cost : (test.price_inr >= 20 ? test.price_inr : 99)} Credits) →`}</span>
                     </button>
                   )}
                 </div>

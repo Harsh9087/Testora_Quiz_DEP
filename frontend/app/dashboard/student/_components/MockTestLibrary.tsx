@@ -62,6 +62,7 @@ interface MockTestItem {
   target_class?: string;
   status: string;
   price_inr: number;
+  credit_cost?: number;
   price_paise: number;
   is_free: boolean;
   duration_minutes: number;

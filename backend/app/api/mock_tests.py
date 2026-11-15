@@ -147,8 +147,9 @@ def serialize_summary(test: MockTest, user_purchase: Optional[MockTestPurchase] 
         target_section=t_sec,
         status=test.status or "published",
         price_inr=test.price_inr or 0,
+        credit_cost=getattr(test, "credit_cost", 0) or 0,
         price_paise=test.price_paise or 0,
-        is_free=test.is_free if test.is_free is not None else (test.price_inr == 0),
+        is_free=test.is_free if test.is_free is not None else (test.price_inr == 0 and (getattr(test, "credit_cost", 0) or 0) == 0),
         duration_minutes=test.duration_minutes or 60,
         total_questions=test.total_questions or 50,
         total_marks=float(test.total_marks or 50.0),
@@ -2207,8 +2208,13 @@ def unlock_mock_test_with_credits(
             "new_balance": current_user.total_available_credits
         }
 
+    # Derive credits needed from credit_cost or price_inr
+    credits_needed = getattr(test, "credit_cost", 0) or 0
+    if credits_needed == 0 and (test.price_inr or 0) > 0:
+        credits_needed = test.price_inr if test.price_inr >= 20 else 99
+
     # If test is free, unlock with 0 credits
-    if test.is_free or (test.price_inr or 0) == 0:
+    if test.is_free or credits_needed == 0:
         new_purchase = MockTestPurchase(
             student_id=current_user.id,
             mock_test_id=test.id,
@@ -2228,8 +2234,6 @@ def unlock_mock_test_with_credits(
             "new_balance": current_user.total_available_credits
         }
 
-    # Standard placement mock test credit cost: 99 credits
-    credits_needed = 99
     available_balance = current_user.total_available_credits
 
     if available_balance < credits_needed:
@@ -2949,7 +2953,8 @@ def admin_create_mock_test(
     Super Admin: creates a new mock test with full examination configuration & test type classification.
     """
     slug = (payload.company_slug or payload.company_name or "testora").lower().strip().replace(" ", "_")
-    is_free = payload.price_inr <= 0
+    credit_cost_val = payload.credit_cost if payload.credit_cost is not None else (payload.price_inr if payload.price_inr > 0 else 0)
+    is_free = (payload.price_inr <= 0) and (credit_cost_val <= 0)
     price_paise = max(0, payload.price_inr * 100)
 
     q_count = len(payload.questions) if payload.questions else payload.total_questions
@@ -3004,6 +3009,7 @@ def admin_create_mock_test(
         target_section=payload.target_section or "mock_test_library",
         status=payload.status or "published",
         price_inr=max(0, payload.price_inr),
+        credit_cost=max(0, credit_cost_val),
         price_paise=price_paise,
         is_free=is_free,
         duration_minutes=payload.duration_minutes or 60,
@@ -3105,10 +3111,14 @@ def admin_update_mock_test(
     if payload.status is not None:
         test.status = payload.status
 
+    if payload.credit_cost is not None:
+        test.credit_cost = max(0, payload.credit_cost)
+
     if payload.price_inr is not None:
         test.price_inr = max(0, payload.price_inr)
         test.price_paise = test.price_inr * 100
-        test.is_free = (test.price_inr == 0)
+
+    test.is_free = bool((test.price_inr or 0) == 0 and (test.credit_cost or 0) == 0)
 
     if payload.duration_minutes is not None:
         test.duration_minutes = payload.duration_minutes

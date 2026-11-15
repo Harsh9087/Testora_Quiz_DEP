@@ -174,6 +174,7 @@ class MockTestSummary(BaseModel):
     status: str = "published"
 
     price_inr: int = 0
+    credit_cost: Optional[int] = 0
     price_paise: int = 0
     is_free: bool = True
 
@@ -259,6 +260,7 @@ class MockTestCreate(BaseModel):
     status: str = "published"
 
     price_inr: int = 0
+    credit_cost: Optional[int] = 0
     duration_minutes: int = 60
     total_questions: int = 50
     total_marks: float = 50.0
@@ -313,6 +315,7 @@ class MockTestUpdate(BaseModel):
     status: Optional[str] = None
 
     price_inr: Optional[int] = None
+    credit_cost: Optional[int] = None
     duration_minutes: Optional[int] = None
     total_questions: Optional[int] = None
     total_marks: Optional[float] = None
@@ -508,6 +511,7 @@ class MockTestTakersResponse(BaseModel):
     test_id: str
     test_title: str
     price_inr: int = 0
+    credit_cost: Optional[int] = 0
     is_free: bool = True
     total_takers: int = 0
     total_completed: int = 0

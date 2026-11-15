@@ -81,6 +81,7 @@ interface AdminMockTest {
   target_section?: string;
   status: string; // "published", "draft", "unpublished"
   price_inr: number;
+  credit_cost?: number;
   is_free: boolean;
   duration_minutes: number;
   total_questions: number;
@@ -237,6 +238,8 @@ export default function AdminMockTestsPage() {
   const [targetSection, setTargetSection] = useState<"mock_test_library" | "placement_tests" | "both">("mock_test_library");
   const [statusVal, setStatusVal] = useState("published");
   const [priceInr, setPriceInr] = useState(0);
+  const [creditCost, setCreditCost] = useState<number>(0);
+  const [creditPreset, setCreditPreset] = useState<"0" | "99" | "custom">("0");
   const [durationMinutes, setDurationMinutes] = useState(60);
   const [totalQuestions, setTotalQuestions] = useState(50);
   const [marksPreset, setMarksPreset] = useState<"25" | "50" | "100" | "200" | "300" | "custom">("100");
@@ -463,6 +466,8 @@ export default function AdminMockTestsPage() {
     setTargetSection("mock_test_library");
     setStatusVal("published");
     setPriceInr(0);
+    setCreditCost(0);
+    setCreditPreset("0");
     setDurationMinutes(60);
     setTotalQuestions(50);
     setMarksPreset("100");
@@ -509,6 +514,13 @@ export default function AdminMockTestsPage() {
     setTargetSection(inferredSection);
     setStatusVal(test.status || "published");
     setPriceInr(test.price_inr || 0);
+    const cCost = test.credit_cost !== undefined && test.credit_cost !== null && test.credit_cost > 0
+      ? Number(test.credit_cost)
+      : (Number(test.price_inr) > 0 ? (Number(test.price_inr) >= 20 ? Number(test.price_inr) : 99) : 0);
+    setCreditCost(cCost);
+    if (cCost === 0) setCreditPreset("0");
+    else if (cCost === 99) setCreditPreset("99");
+    else setCreditPreset("custom");
     setDurationMinutes(test.duration_minutes || 60);
     setTotalQuestions(test.total_questions || 50);
 
@@ -564,7 +576,8 @@ export default function AdminMockTestsPage() {
         visibility_target: visibilityTarget,
         target_section: targetSection,
         status: statusVal,
-        price_inr: Number(priceInr) || 0,
+        price_inr: creditCost > 0 ? (Number(creditCost) >= 20 ? Number(creditCost) : 9) : 0,
+        credit_cost: Number(creditCost) || 0,
         duration_minutes: Number(durationMinutes) || 60,
         total_questions: Number(totalQuestions) || 50,
         total_marks: Number(totalMarks) || 100,
@@ -1379,15 +1392,15 @@ export default function AdminMockTestsPage() {
 
                     {/* Fee / Access */}
                     <td className="py-3.5 px-4 whitespace-nowrap">
-                      {t.is_free || (t.price_inr || 0) === 0 ? (
+                      {t.is_free || ((t.credit_cost || 0) === 0 && (t.price_inr || 0) === 0) ? (
                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-bold text-[10px] border border-emerald-200/80 dark:border-emerald-800">
                           <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                           <span>100% Free</span>
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 font-black text-[10px] border border-amber-200/80 dark:border-amber-800">
-                          <span className="text-amber-600 text-xs font-black">₹</span>
-                          <span>₹{t.price_inr} Paid</span>
+                          <Coins className="w-3 h-3 text-amber-600 fill-amber-500" />
+                          <span>{t.credit_cost ? `${t.credit_cost} Credits` : (t.price_inr >= 20 ? `${t.price_inr} Credits` : "99 Credits")}</span>
                         </span>
                       )}
                     </td>
@@ -2079,36 +2092,48 @@ export default function AdminMockTestsPage() {
                 </div>
 
                 {/* Pricing & Monetization Tier Selection */}
-                <div className="p-3 bg-slate-50 dark:bg-[#15233D] border border-slate-200 dark:border-slate-800 rounded-xl space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label className="text-[11px] font-bold text-slate-800 dark:text-slate-200">
-                      Pricing & Access Tier *
+                <div className="p-3.5 bg-slate-50 dark:bg-[#15233D] border border-slate-200 dark:border-slate-800 rounded-2xl space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-1">
+                    <label className="text-[11px] font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                      <Coins className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                      <span>Pricing &amp; Access Tier *</span>
                     </label>
-                    <span className="text-[10px] font-bold text-slate-500">
-                      Current Access: <b className={priceInr > 0 ? "text-amber-600" : "text-emerald-600"}>{priceInr > 0 ? "99 Credits (Placement Mock)" : "100% Free"}</b>
+                    <span className="text-[10.5px] font-bold">
+                      Current Access:{" "}
+                      <b className={creditCost > 0 ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400"}>
+                        {creditCost > 0 ? `${creditCost} Credits (Paid Mock)` : "100% Free Access (0 Credits)"}
+                      </b>
                     </span>
                   </div>
 
                   {/* Preset Pricing Buttons */}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     <button
                       type="button"
-                      onClick={() => setPriceInr(0)}
+                      onClick={() => {
+                        setCreditPreset("0");
+                        setCreditCost(0);
+                        setPriceInr(0);
+                      }}
                       className={`py-2 px-3 rounded-xl text-xs font-bold transition-all border cursor-pointer flex items-center justify-center gap-1.5 ${
-                        priceInr === 0
+                        creditCost === 0
                           ? "bg-emerald-600 text-white border-emerald-700 shadow-xs"
                           : "bg-white dark:bg-[#111C31] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-emerald-300"
                       }`}
                     >
                       <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>Free Access (0 Credits)</span>
+                      <span>Free Access (0 Cr)</span>
                     </button>
 
                     <button
                       type="button"
-                      onClick={() => setPriceInr(9)}
+                      onClick={() => {
+                        setCreditPreset("99");
+                        setCreditCost(99);
+                        setPriceInr(9);
+                      }}
                       className={`py-2 px-3 rounded-xl text-xs font-bold transition-all border cursor-pointer flex items-center justify-center gap-1.5 ${
-                        priceInr > 0
+                        creditPreset === "99" && creditCost === 99
                           ? "bg-amber-600 text-white border-amber-700 shadow-xs"
                           : "bg-white dark:bg-[#111C31] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-amber-300"
                       }`}
@@ -2117,15 +2142,88 @@ export default function AdminMockTestsPage() {
                       <span>99 Credits (Placement)</span>
                     </button>
 
-                    <div className="flex items-center text-[11px] text-slate-500 px-2 font-medium">
-                      {priceInr > 0 ? "Corporate recruitment mock unlocked with 99 student wallet credits" : "100% Free mock for all students & teachers"}
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCreditPreset("custom");
+                        if (creditCost === 0 || creditCost === 99) {
+                          setCreditCost(49);
+                          setPriceInr(9);
+                        }
+                      }}
+                      className={`py-2 px-3 rounded-xl text-xs font-bold transition-all border cursor-pointer flex items-center justify-center gap-1.5 ${
+                        creditPreset === "custom" || (creditCost > 0 && creditCost !== 99)
+                          ? "bg-purple-600 text-white border-purple-700 shadow-xs"
+                          : "bg-white dark:bg-[#111C31] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-purple-300"
+                      }`}
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Custom Credits {creditCost > 0 && creditCost !== 99 ? `(${creditCost} Cr)` : ""}</span>
+                    </button>
                   </div>
 
+                  {/* Custom Credit Amount Input Section */}
+                  {(creditPreset === "custom" || (creditCost > 0 && creditCost !== 99)) && (
+                    <div className="p-3 rounded-xl bg-purple-50/70 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800/70 space-y-2.5 animate-in fade-in duration-150">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+                        <label className="text-[11px] font-bold text-purple-900 dark:text-purple-200 flex items-center gap-1">
+                          <Coins className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                          <span>Enter Custom Credit Amount:</span>
+                        </label>
+                        <span className="text-[10px] text-purple-600 dark:text-purple-400 font-semibold">
+                          Charged to student wallet upon unlocking
+                        </span>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2">
+                        <div className="relative w-36">
+                          <input
+                            type="number"
+                            min="1"
+                            max="10000"
+                            value={creditCost || ""}
+                            onChange={(e) => {
+                              const val = Math.max(0, parseInt(e.target.value) || 0);
+                              setCreditCost(val);
+                              setPriceInr(val > 0 ? (val >= 20 ? val : 9) : 0);
+                            }}
+                            placeholder="e.g. 49, 149..."
+                            className="w-full pl-3 pr-10 py-1.5 text-xs font-black bg-white dark:bg-[#111C31] border border-purple-300 dark:border-purple-700 rounded-xl text-purple-950 dark:text-purple-100 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                          />
+                          <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-purple-500">
+                            Credits
+                          </span>
+                        </div>
+
+                        {/* Quick preset chips */}
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-[10px] text-slate-400 font-medium mr-0.5">Presets:</span>
+                          {[29, 49, 69, 149, 199, 299].map((chip) => (
+                            <button
+                              key={chip}
+                              type="button"
+                              onClick={() => {
+                                setCreditCost(chip);
+                                setPriceInr(chip >= 20 ? chip : 9);
+                              }}
+                              className={`px-2 py-1 rounded-lg text-[10px] font-extrabold border transition-all cursor-pointer ${
+                                creditCost === chip
+                                  ? "bg-purple-600 text-white border-purple-700 shadow-2xs"
+                                  : "bg-white dark:bg-[#111C31] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-purple-300"
+                              }`}
+                            >
+                              {chip} Cr
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <p className="text-[10px] text-slate-500 leading-normal">
-                    {priceInr === 0
+                    {creditCost === 0
                       ? "✨ 100% Free Practice Mock — Instant access for all students in Mock Test Library."
-                      : "⚡ Paid Placement Assessment (99 Credits) — Students unlock this corporate test using 99 wallet credits in the Campus Placement Arena."}
+                      : `⚡ Paid Placement Assessment (${creditCost} Credits) — Students unlock this corporate test using ${creditCost} wallet credits in the Campus Placement Arena.`}
                   </p>
                 </div>
               </div>
