@@ -1237,7 +1237,7 @@ def get_submission_certificate_html(
     cert_code = issued_cert.certificate_code if issued_cert else f"SUB-{submission_id[:12].upper()}"
     cert_id = issued_cert.id if issued_cert else submission_id
     verify_url = f"https://testoraquiz.com/verify-certificate/{cert_code}"
-    download_url = f"/api/v1/certificates/download/{cert_id}"
+    download_url = f"/api/v1/certificates/download-public/{cert_code}"
 
     grade_label = "Distinction" if score_pct >= 85 else "Merit" if score_pct >= 70 else "Pass" if is_passed else "Completed"
     badge_color = "#10B981" if is_passed else "#D97706"

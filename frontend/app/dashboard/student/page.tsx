@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, Suspense } from "react";
 import { apiFetch, API_V1 } from "../../../lib/api";
 import { parseUtcDate, formatLocalizedTime, formatLocalizedDate } from "../../../lib/dateUtils";
 import { useAuthStore } from "../../../store/authStore";
@@ -15,6 +15,7 @@ import MathText from "../../../components/MathText";
 import FeaturedHighYieldTests from "../../../components/FeaturedHighYieldTests";
 import CompanyPlacementTests from "./_components/CompanyPlacementTests";
 import MockTestLibrary from "./_components/MockTestLibrary";
+import { StudyMaterialContent } from "../study-material/_components/StudyMaterialContent";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, RadarChart, PolarGrid, PolarAngleAxis, Radar } from "recharts";
 import { useRouter } from "next/navigation";
 
@@ -22,6 +23,7 @@ export default function StudentDashboard() {
   const router = useRouter();
   const { token, fullName, role } = useAuthStore();
   const [mounted, setMounted] = useState(false);
+  const effectiveToken = token || (typeof window !== "undefined" ? localStorage.getItem("token") || localStorage.getItem("access_token") : null) || "";
   
   // Data States
   const [assignedExams, setAssignedExams] = useState<any[]>([]);
@@ -32,7 +34,7 @@ export default function StudentDashboard() {
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   
   // UI States
-  const [activePortalTab, setActivePortalTab] = useState<"assigned" | "company-tests" | "mock-tests" | "submissions" | "progress" | "certificates">("assigned");
+  const [activePortalTab, setActivePortalTab] = useState<"assigned" | "company-tests" | "mock-tests" | "submissions" | "progress" | "certificates" | "study-materials">("assigned");
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeViewTab, setActiveViewTab] = useState<"questions" | "topics" | "leaderboard">("questions");
@@ -137,6 +139,10 @@ export default function StudentDashboard() {
         setActivePortalTab("company-tests");
       } else if (tabParam === "mock-tests") {
         setActivePortalTab("mock-tests");
+      } else if (tabParam === "study-materials" || tabParam === "study-material") {
+        setActivePortalTab("study-materials");
+      } else if (tabParam === "submissions") {
+        setActivePortalTab("submissions");
       }
 
       const handleSwitchTab = (e: any) => {
@@ -146,6 +152,8 @@ export default function StudentDashboard() {
           setActivePortalTab("mock-tests");
         } else if (e.detail === "certificates") {
           setActivePortalTab("certificates");
+        } else if (e.detail === "study-materials" || e.detail === "study-material") {
+          setActivePortalTab("study-materials");
         } else if (e.detail === "assigned") {
           setActivePortalTab("assigned");
         }
@@ -363,6 +371,25 @@ export default function StudentDashboard() {
               </span>
             )}
           </button>
+
+          <button
+            onClick={() => {
+              setActivePortalTab("study-materials");
+              window.history.pushState(null, "", "/dashboard/student?tab=study-materials");
+            }}
+            className={`px-3 sm:px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 sm:gap-2 shrink-0 cursor-pointer ${
+              (activePortalTab as string) === "study-materials"
+                ? "bg-[#2563EB] text-white shadow-xs"
+                : "bg-[#F1F5F9] dark:bg-[#17243A] text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9]"
+            }`}
+          >
+            <BookOpen className="h-3.5 w-3.5" />
+            <span className="sm:hidden">Study Notes</span>
+            <span className="hidden sm:inline">Study Materials & Notes</span>
+            <span className="px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-purple-500 text-white ml-0.5">
+              NEW
+            </span>
+          </button>
         </div>
 
         {/* Overall KPI Stats Grid */}
@@ -395,7 +422,7 @@ export default function StudentDashboard() {
       )}
 
       {/* ═══════ COMPACT RETURN BAR FOR FEATURE PAGES ═══════ */}
-      {(activePortalTab === "mock-tests" || activePortalTab === "company-tests" || activePortalTab === "certificates") && (
+      {(activePortalTab === "mock-tests" || activePortalTab === "company-tests" || activePortalTab === "certificates" || activePortalTab === "study-materials") && (
         <div className="flex items-center justify-between gap-3 pt-1">
           <button
             onClick={() => {
@@ -412,6 +439,7 @@ export default function StudentDashboard() {
             {activePortalTab === "mock-tests" && "Mock Tests"}
             {activePortalTab === "company-tests" && "Placement Arena"}
             {activePortalTab === "certificates" && "Certificates"}
+            {activePortalTab === "study-materials" && "Placement Study Materials & Notes"}
           </span>
         </div>
       )}
@@ -663,6 +691,13 @@ export default function StudentDashboard() {
         <CompanyPlacementTests />
       )}
 
+      {/* ═══════ SECTION: STUDY MATERIALS & PLACEMENT NOTES ═══════ */}
+      {activePortalTab === "study-materials" && (
+        <Suspense fallback={<div className="p-12 text-center text-xs text-slate-400">Loading study materials...</div>}>
+          <StudyMaterialContent />
+        </Suspense>
+      )}
+
       {/* ═══════ SECTION 2: SUBMISSIONS & PERFORMANCE BREAKDOWN ═══════ */}
       {activePortalTab === "submissions" && (
         submissions.length === 0 ? (
@@ -796,7 +831,7 @@ export default function StudentDashboard() {
                         
                         {/* Certificate Button */}
                         <a
-                          href={`${API_V1}/reports/submissions/${selectedSubDetail.submission_id}/certificate-html${token ? `?token=${encodeURIComponent(token)}` : ""}`}
+                          href={`${API_V1}/reports/submissions/${selectedSubDetail.submission_id}/certificate-html${effectiveToken ? `?token=${encodeURIComponent(effectiveToken)}` : ""}`}
                           target="_blank"
                           rel="noreferrer"
                           className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30 hover:bg-amber-500/25 transition-all shadow-2xs"
@@ -809,7 +844,7 @@ export default function StudentDashboard() {
 
                         {/* Report Card Button */}
                         <a
-                          href={`${API_V1}/reports/submissions/${selectedSubDetail.submission_id}/report-card-html${token ? `?token=${encodeURIComponent(token)}` : ""}`}
+                          href={`${API_V1}/reports/submissions/${selectedSubDetail.submission_id}/report-card-html${effectiveToken ? `?token=${encodeURIComponent(effectiveToken)}` : ""}`}
                           target="_blank"
                           rel="noreferrer"
                           className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-blue-500/15 text-blue-800 dark:text-blue-300 border border-blue-500/30 hover:bg-blue-500/25 transition-all shadow-2xs"
@@ -1327,7 +1362,7 @@ export default function StudentDashboard() {
                   {/* Actions Bar */}
                   <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2">
                     <a
-                      href={`${API_V1}/certificates/download/${cert.id}${token ? `?token=${encodeURIComponent(token)}` : ""}`}
+                      href={`${API_V1}/certificates/download/${cert.id}${effectiveToken ? `?token=${encodeURIComponent(effectiveToken)}` : ""}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs cursor-pointer transition-all"

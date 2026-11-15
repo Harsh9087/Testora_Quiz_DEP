@@ -126,10 +126,45 @@ export default function ExamPortal() {
           const verifyRes = await apiFetch(`/attempts/exam-info?token=${storedToken}`);
           if (verifyRes.ok) {
             const verifyData = await verifyRes.json();
+            
+            // If attempt is already completed/submitted, immediately display results scorecard (never prompt to re-take)
+            if (verifyData.is_completed || verifyData.status === "submitted" || verifyData.status === "auto_submitted" || verifyData.status === "graded") {
+              setSubmittedResult({
+                status: verifyData.status,
+                score: verifyData.score || 0,
+                total_marks: verifyData.total_marks || 50,
+                percentage: verifyData.percentage || 0,
+                is_passed: Boolean((verifyData.percentage || 0) >= 40),
+                submission_id: verifyData.submission_id
+              });
+              setCandidateName(verifyData.student_name || authFullName || "Student");
+              return;
+            }
+
+            // If not started yet, route to instructions
             if (verifyData.status === "not_started" || !verifyData.is_started) {
               router.replace(`/exam/${examCode}/instructions`);
               return;
             }
+
+            // Attempt was started (e.g. from instructions page): Mount question paper directly with NO double start!
+            examStore.setExamSession(
+              storedToken,
+              verifyData.exam_name,
+              verifyData.duration_minutes,
+              verifyData.questions,
+              verifyData.saved_answers,
+              verifyData.time_remaining_seconds
+            );
+            setCandidateName(verifyData.student_name || authFullName || "Student");
+            if (verifyData.deadline_at_ist) {
+              setDeadlineIST(verifyData.deadline_at_ist);
+            } else if (verifyData.deadline_at) {
+              setDeadlineIST(formatISTTime(verifyData.deadline_at));
+            }
+            setIsLogged(true);
+            setExamStatus("active");
+            return;
           }
         }
       } catch {
@@ -270,6 +305,20 @@ export default function ExamPortal() {
         sessionStorage.setItem(`exam_token_${examCode}`, data.session_token);
       }
 
+      // If attempt is already completed, show scorecard immediately (prevent re-test)
+      if (data.is_completed || data.status === "submitted" || data.status === "auto_submitted" || data.status === "graded") {
+        setSubmittedResult({
+          status: data.status,
+          score: data.score || 0,
+          total_marks: data.total_marks || 50,
+          percentage: data.percentage || 0,
+          is_passed: Boolean((data.percentage || 0) >= 40),
+          submission_id: data.submission_id
+        });
+        showToast("You have already submitted this assessment.", "info");
+        return;
+      }
+
       // If attempt is NOT started, route to instructions
       if (!data.is_started || data.status === "not_started") {
         examStore.setExamSession(
@@ -347,6 +396,9 @@ export default function ExamPortal() {
         examStore.clearExamSession();
         try {
           localStorage.removeItem(backupKey);
+          if (typeof window !== "undefined") {
+            sessionStorage.removeItem(`exam_token_${examCode}`);
+          }
         } catch {}
       } else {
         showToast(data.detail || "Submission failed", "error");
@@ -877,13 +929,22 @@ export default function ExamPortal() {
                 <span>Return to Teacher Studio</span>
               </button>
             ) : (
-              <button
-                onClick={() => router.push("/dashboard/student")}
-                className="btn-primary w-full sm:w-auto px-6 py-2.5 text-xs font-bold flex items-center justify-center gap-2"
-              >
-                <Home className="h-4 w-4" />
-                <span>Return to Student Portal</span>
-              </button>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full">
+                <button
+                  onClick={() => router.replace("/dashboard/student")}
+                  className="btn-primary w-full sm:w-auto px-6 py-2.5 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer shadow-md"
+                >
+                  <Home className="h-4 w-4" />
+                  <span>Return to Student Dashboard</span>
+                </button>
+                <button
+                  onClick={() => router.replace("/dashboard/student?tab=submissions")}
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/50 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-300 text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer"
+                >
+                  <Trophy className="h-4 w-4" />
+                  <span>View All Past Submissions</span>
+                </button>
+              </div>
             )}
           </div>
         </div>

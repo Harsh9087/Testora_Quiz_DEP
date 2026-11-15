@@ -159,22 +159,22 @@ export default function PreExamInstructionsPage() {
     <div className="min-h-screen bg-[#F7F4EF] dark:bg-[#0F0E0D] text-[#242321] dark:text-[#F5F5F4] pb-24 font-sans">
       {/* ══════════════ PORTAL TOP HUD HEADER ══════════════ */}
       <header className="sticky top-0 z-40 bg-white/95 dark:bg-[#171615]/95 backdrop-blur-md border-b border-[#E5E0D8] dark:border-[#292524] shadow-xs">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5 sm:gap-3">
-            <div className="h-9 w-9 rounded-xl bg-[#C84B18]/10 text-[#C84B18] dark:bg-[#EA580C]/15 dark:text-[#EA580C] flex items-center justify-center font-bold font-serif text-base border border-[#C84B18]/20">
+        <div className="max-w-5xl mx-auto px-3 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between gap-2 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+            <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-[#C84B18]/10 text-[#C84B18] dark:bg-[#EA580C]/15 dark:text-[#EA580C] flex items-center justify-center font-bold font-serif text-sm sm:text-base border border-[#C84B18]/20 shrink-0">
               EQ
             </div>
-            <div>
-              <div className="text-[10px] font-bold text-[#C84B18] uppercase tracking-wider">
-                Testora Quiz Candidate Examination Portal
+            <div className="min-w-0 flex-1">
+              <div className="text-[9px] sm:text-[10px] font-bold text-[#C84B18] uppercase tracking-wider truncate">
+                Candidate Portal
               </div>
-              <h1 className="text-sm sm:text-base font-bold text-[#242321] dark:text-[#F5F5F4] truncate">
+              <h1 className="text-xs sm:text-base font-bold text-[#242321] dark:text-[#F5F5F4] truncate">
                 {examMeta?.exam_name || "Assessment"}
               </h1>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <div className="hidden sm:flex flex-col text-right">
               <span className="text-[11px] font-bold text-[#242321] dark:text-[#F5F5F4]">
                 {examMeta?.candidate_name}
@@ -183,8 +183,8 @@ export default function PreExamInstructionsPage() {
                 Roll: {examMeta?.roll_number}
               </span>
             </div>
-            <div className="px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-400 text-[11px] font-bold flex items-center gap-1.5">
-              <Clock className="h-3.5 w-3.5" />
+            <div className="px-2 sm:px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-400 text-[10px] sm:text-[11px] font-bold flex items-center gap-1 sm:gap-1.5 shrink-0 whitespace-nowrap">
+              <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
               <span>Not Started</span>
             </div>
           </div>

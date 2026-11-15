@@ -154,7 +154,7 @@ export default function AdminStudyMaterialsPage() {
       return;
     }
 
-    const activeToken = token || (typeof window !== "undefined" ? localStorage.getItem("token") : null);
+    const activeToken = token || (typeof window !== "undefined" ? localStorage.getItem("token") || localStorage.getItem("access_token") : null);
 
     try {
       setUploadingFile(true);
@@ -162,12 +162,10 @@ export default function AdminStudyMaterialsPage() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const res = await fetch(`${getApiV1()}/study-materials/upload-file`, {
+      const res = await apiFetch("/study-materials/upload-file", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${activeToken}`
-        },
-        body: formData
+        body: formData,
+        token: activeToken || undefined
       });
 
       if (res.ok) {
@@ -592,16 +590,19 @@ export default function AdminStudyMaterialsPage() {
 
                 <div>
                   <span className="text-[10px] text-slate-400 block mb-0.5">
-                    Or direct URL path:
+                    Or direct URL path (PDF / Google Drive):
                   </span>
                   <input
                     type="text"
                     required
                     value={formFileUrl}
                     onChange={(e) => setFormFileUrl(e.target.value)}
-                    placeholder="e.g. /static/study_materials/tcs_prep.pdf or https://..."
+                    placeholder="e.g. /static/study_materials/tcs_prep.pdf or https://drive.google.com/file/d/..."
                     className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none"
                   />
+                  <p className="text-[10px] text-purple-600 dark:text-purple-400 mt-1">
+                    💡 For Google Drive links: Set share setting to &apos;Anyone with the link can view&apos; so students can open and read it smoothly.
+                  </p>
                 </div>
               </div>
 
