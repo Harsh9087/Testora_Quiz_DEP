@@ -1000,7 +1000,7 @@ export default function AdminMockTestsPage() {
         token
       });
       if (res.ok) {
-        setSyncSuccessMsg("Catalogue synced! Default academic & corporate ₹9/₹12 placement mock tests have been verified & loaded.");
+        setSyncSuccessMsg("Catalogue synced! Default academic & corporate placement mock tests have been verified & loaded.");
         await Promise.all([fetchTests(), fetchStats()]);
         setTimeout(() => setSyncSuccessMsg(null), 6000);
       } else {
@@ -1101,7 +1101,7 @@ export default function AdminMockTestsPage() {
             onClick={handleSyncDefaultTests}
             disabled={syncingTests}
             className="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border border-emerald-200/80 dark:border-emerald-800 disabled:opacity-50"
-            title="Seed & verify all default Academic and Corporate ₹9/₹12 Placement Tests"
+            title="Seed & verify all default Academic and Corporate Placement Tests"
           >
             <RefreshCw className={`w-3.5 h-3.5 text-emerald-600 ${syncingTests ? "animate-spin" : ""}`} />
             <span>{syncingTests ? "Syncing Tests..." : "Sync Default Tests"}</span>
@@ -1414,9 +1414,9 @@ export default function AdminMockTestsPage() {
                       >
                         <Users className="w-3.5 h-3.5 text-emerald-600 group-hover:scale-110 transition-transform" />
                         <span>{t.attempts_count || 0} Candidates</span>
-                        {!t.is_free && (t.price_inr || 0) > 0 && (
+                        {!t.is_free && ((t.credit_cost || 0) > 0 || (t.price_inr || 0) > 0) && (
                           <span className="px-1.5 py-0.2 rounded text-[9px] font-extrabold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
-                            ₹{t.price_inr}
+                            {t.credit_cost ? `${t.credit_cost} Cr` : "99 Cr"}
                           </span>
                         )}
                       </button>
@@ -3187,7 +3187,8 @@ export default function AdminMockTestsPage() {
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 px-2 py-0.2 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 font-black text-[10px]">
-                        ₹{selectedTestForTakers.price_inr} Razorpay Premium
+                        <Coins className="w-3 h-3 text-amber-600 fill-amber-500" />
+                        <span>{selectedTestForTakers.credit_cost ? `${selectedTestForTakers.credit_cost} Credits` : "99 Credits"} Access</span>
                       </span>
                     )}
                   </div>
@@ -3245,14 +3246,14 @@ export default function AdminMockTestsPage() {
 
                 <div className="p-3.5 rounded-2xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-900/60 shadow-2xs">
                   <div className="flex items-center justify-between text-amber-600 dark:text-amber-400">
-                    <span className="text-[10px] font-bold uppercase tracking-wider">Total Revenue</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Total Credits</span>
                     <Coins className="w-4 h-4" />
                   </div>
                   <div className="text-xl sm:text-2xl font-black text-amber-600 dark:text-amber-400 mt-1">
-                    ₹{takersData?.total_revenue_inr ?? 0}
+                    {takersData?.total_revenue_inr ? `${takersData.total_revenue_inr * 10} Cr` : "0 Cr"}
                   </div>
                   <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
-                    {(!selectedTestForTakers.is_free && (selectedTestForTakers.price_inr || 0) > 0) ? "Razorpay Gateway" : "100% Free Access"}
+                    {(!selectedTestForTakers.is_free && ((selectedTestForTakers.credit_cost || 0) > 0 || (selectedTestForTakers.price_inr || 0) > 0)) ? "Student Wallet Credits" : "100% Free Access"}
                   </div>
                 </div>
 
@@ -3435,7 +3436,8 @@ export default function AdminMockTestsPage() {
                             {isPaid ? (
                               <div>
                                 <div className="font-extrabold text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                                  <span>₹{record.amount_paid_inr} Paid via Razorpay</span>
+                                  <Coins className="w-3.5 h-3.5 fill-amber-500" />
+                                  <span>{record.amount_paid_inr ? `${record.amount_paid_inr * 10} Credits` : "99 Credits"} Unlocked</span>
                                 </div>
                                 {record.razorpay_payment_id && (
                                   <div className="text-[10px] font-mono text-slate-600 dark:text-slate-400 truncate mt-0.5" title={record.razorpay_payment_id}>

@@ -114,6 +114,10 @@ def serialize_summary(test: MockTest, user_purchase: Optional[MockTestPurchase] 
         )
         t_sec = "placement_tests" if is_placement else "mock_test_library"
 
+    raw_credit_cost = getattr(test, "credit_cost", 0) or 0
+    if raw_credit_cost == 0 and not test.is_free:
+        raw_credit_cost = 99
+
     return MockTestSummary(
         id=test.id,
         category_id=test.category_id,
@@ -146,10 +150,10 @@ def serialize_summary(test: MockTest, user_purchase: Optional[MockTestPurchase] 
         target_class=test.target_class,
         target_section=t_sec,
         status=test.status or "published",
-        price_inr=test.price_inr or 0,
-        credit_cost=getattr(test, "credit_cost", 0) or 0,
-        price_paise=test.price_paise or 0,
-        is_free=test.is_free if test.is_free is not None else (test.price_inr == 0 and (getattr(test, "credit_cost", 0) or 0) == 0),
+        price_inr=0,
+        credit_cost=raw_credit_cost,
+        price_paise=0,
+        is_free=test.is_free if test.is_free is not None else (raw_credit_cost == 0),
         duration_minutes=test.duration_minutes or 60,
         total_questions=test.total_questions or 50,
         total_marks=float(test.total_marks or 50.0),

@@ -4127,7 +4127,8 @@ CORPORATE_PLACEMENT_MOCK_TESTS = [
         "description": "Comprehensive corporate test pattern covering Quantitative Aptitude, Logical Reasoning, and Verbal Ability modeled after the latest TCS National Qualifier Test pattern.",
         "category": "Aptitude & Cognitive",
         "difficulty": "Medium",
-        "price_inr": 9,
+        "price_inr": 0,
+        "credit_cost": 99,
         "duration_minutes": 30,
         "total_questions": 10,
         "pass_percentage": 50,
@@ -4218,7 +4219,8 @@ CORPORATE_PLACEMENT_MOCK_TESTS = [
         "description": "Specialist Programmer and Digital Specialist Engineer assessment covering Data Structures, Pseudocode Interpretation, and Analytical Problem Solving.",
         "category": "Technical & Logical",
         "difficulty": "Hard",
-        "price_inr": 12,
+        "price_inr": 0,
+        "credit_cost": 99,
         "duration_minutes": 35,
         "total_questions": 10,
         "pass_percentage": 50,
@@ -4314,7 +4316,8 @@ CORPORATE_PLACEMENT_MOCK_TESTS = [
         "description": "Tailored for fresh engineering graduates covering Quantitative Techniques, Logical Deduction, Basic IT and Networking Concepts.",
         "category": "Aptitude & Tech Core",
         "difficulty": "Medium",
-        "price_inr": 9,
+        "price_inr": 0,
+        "credit_cost": 99,
         "duration_minutes": 30,
         "total_questions": 10,
         "pass_percentage": 50,
@@ -4582,7 +4585,8 @@ CORPORATE_PLACEMENT_MOCK_TESTS = [
         "description": "High-package tier preparation for TCS Digital roles (₹7+ LPA) featuring advanced algorithms, data structures, and higher difficulty mathematical logic.",
         "category": "Coding & DSA",
         "difficulty": "Hard",
-        "price_inr": 12,
+        "price_inr": 0,
+        "credit_cost": 99,
         "duration_minutes": 40,
         "total_questions": 10,
         "pass_percentage": 50,
@@ -4858,7 +4862,11 @@ def seed_initial_mock_tests(db: Session):
             ).first()
 
             c_questions = c_data.get("questions", [])
-            p_inr = c_data.get("price_inr", 0)
+            c_credit = c_data.get("credit_cost", 0)
+            if c_credit == 0 and not c_data.get("is_free", False):
+                if c_data.get("price_inr", 0) > 0:
+                    c_credit = 99
+            is_test_free = (c_credit <= 0) and (c_data.get("price_inr", 0) <= 0) and c_data.get("is_free", False)
 
             if not existing_c:
                 c_test = MockTest(
@@ -4882,9 +4890,10 @@ def seed_initial_mock_tests(db: Session):
                     visibility_target="all",
                     target_section="placement_tests",
                     status="published",
-                    price_inr=p_inr,
-                    price_paise=p_inr * 100,
-                    is_free=(p_inr <= 0),
+                    price_inr=0,
+                    price_paise=0,
+                    credit_cost=c_credit,
+                    is_free=is_test_free,
                     duration_minutes=c_data.get("duration_minutes", 30),
                     total_questions=len(c_questions),
                     total_marks=float(len(c_questions)),
@@ -4901,11 +4910,13 @@ def seed_initial_mock_tests(db: Session):
                     updated_at=now_utc()
                 )
                 db.add(c_test)
-                logger.info(f"Seeded corporate placement test: {c_test.title} (₹{p_inr})")
+                logger.info(f"Seeded corporate placement test: {c_test.title} ({c_credit} Credits)")
             else:
-                existing_c.price_inr = p_inr
-                existing_c.price_paise = p_inr * 100
-                existing_c.is_free = (p_inr <= 0)
+                existing_c.price_inr = 0
+                existing_c.price_paise = 0
+                if c_credit > 0:
+                    existing_c.credit_cost = c_credit
+                    existing_c.is_free = False
                 existing_c.target_section = "placement_tests"
                 if not existing_c.category_id and corp_cat_id:
                     existing_c.category_id = corp_cat_id

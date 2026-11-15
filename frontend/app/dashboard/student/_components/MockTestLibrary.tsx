@@ -887,15 +887,15 @@ export default function MockTestLibrary() {
 
                       {/* Price Badge */}
                       <div className="shrink-0">
-                        {test.is_free || (test.price_inr || 0) === 0 ? (
+                        {test.is_free || ((test.credit_cost || 0) === 0 && (test.price_inr || 0) === 0) ? (
                           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black bg-emerald-500 text-white shadow-xs">
                             <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
                             <span>FREE MOCK</span>
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-xs">
-                            <Tag className="w-3 h-3 text-slate-900" />
-                            <span>₹{test.price_inr} ONLY</span>
+                            <Coins className="w-3 h-3 text-slate-950 fill-amber-700" />
+                            <span>{(test.credit_cost && test.credit_cost > 0) ? `${test.credit_cost} CREDITS` : "99 CREDITS"}</span>
                           </span>
                         )}
                       </div>
@@ -1018,13 +1018,13 @@ export default function MockTestLibrary() {
                         <ArrowRight className="w-3.5 h-3.5" />
                       </button>
                     </div>
-                  ) : !test.is_free && (test.price_inr || 0) > 0 && !test.is_unlocked ? (
+                  ) : !test.is_free && ((test.credit_cost || 0) > 0 || (test.price_inr || 0) > 0) && !test.is_unlocked ? (
                     <a
                       href="/dashboard/student?tab=company-tests"
                       className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white text-xs font-extrabold transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer text-center"
                     >
-                      <ShieldCheck className="w-4 h-4 text-amber-200" />
-                      <span>Unlock Placement Test for ₹{test.price_inr} →</span>
+                      <Coins className="w-4 h-4 text-amber-200 fill-amber-300" />
+                      <span>Unlock Placement Test with {(test.credit_cost && test.credit_cost > 0) ? test.credit_cost : 99} Credits →</span>
                     </a>
                   ) : (
                     <button
