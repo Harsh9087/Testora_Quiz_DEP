@@ -370,6 +370,15 @@ export default function DashboardLayout({
     };
     window.addEventListener("open-credit-recharge", handleOpenRecharge);
 
+    const handleOpenSidebarMenu = () => {
+      setSidebarOpen(true);
+    };
+    const handleCloseSidebarMenu = () => {
+      setSidebarOpen(false);
+    };
+    window.addEventListener("open-sidebar-menu", handleOpenSidebarMenu);
+    window.addEventListener("close-sidebar-menu", handleCloseSidebarMenu);
+
     const handleVisibilityChange = () => {
       if (typeof document !== "undefined" && document.visibilityState === "visible") {
         fetchNotifications();
@@ -395,6 +404,8 @@ export default function DashboardLayout({
       window.removeEventListener("refresh-sidebar-stats", handleRefreshStats);
       window.removeEventListener("avatar-updated", handleAvatarUpdated);
       window.removeEventListener("open-credit-recharge", handleOpenRecharge);
+      window.removeEventListener("open-sidebar-menu", handleOpenSidebarMenu);
+      window.removeEventListener("close-sidebar-menu", handleCloseSidebarMenu);
     };
   }, [token]);
 

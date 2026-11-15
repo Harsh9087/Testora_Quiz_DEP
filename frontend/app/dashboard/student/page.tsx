@@ -448,19 +448,23 @@ export default function StudentDashboard() {
         <div className="flex items-center justify-between gap-3 pt-1">
           <button
             onClick={() => {
-              setActivePortalTab("assigned");
-              setMobileViewingDetail(false);
-              setSelectedSubId(null);
-              setSelectedSubDetail(null);
-              window.history.pushState(null, "", "/dashboard/student");
-              window.dispatchEvent(new CustomEvent("switch-tab", { detail: "assigned" }));
-              window.scrollTo(0, 0);
+              if (typeof window !== "undefined" && window.innerWidth < 768) {
+                window.dispatchEvent(new CustomEvent("open-sidebar-menu"));
+              } else {
+                setActivePortalTab("assigned");
+                setMobileViewingDetail(false);
+                setSelectedSubId(null);
+                setSelectedSubDetail(null);
+                window.history.pushState(null, "", "/dashboard/student");
+                window.dispatchEvent(new CustomEvent("switch-tab", { detail: "assigned" }));
+                window.scrollTo(0, 0);
+              }
             }}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-[#111C31] border border-slate-200/90 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-300 dark:hover:border-blue-700 shadow-2xs transition-all cursor-pointer group active:scale-95"
-            title="Return to Main Dashboard Overview"
+            title="Open Menu / Return to Dashboard"
           >
             <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5 text-slate-500 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400" />
-            <span>Back to Dashboard</span>
+            <span>Back</span>
           </button>
           <span className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400">
             {activePortalTab === "mock-tests" && "Mock Tests"}

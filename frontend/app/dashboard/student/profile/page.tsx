@@ -242,14 +242,21 @@ export default function StudentProfilePage() {
           TOP NAVIGATION BAR
          ══════════════════════════════════════════════════════ */}
       <div className="flex items-center justify-between pt-2">
-        <Link
-          href="/dashboard/student"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors shadow-2xs group"
-          title="Return to Main Dashboard"
+        <button
+          type="button"
+          onClick={() => {
+            if (typeof window !== "undefined" && window.innerWidth < 768) {
+              window.dispatchEvent(new CustomEvent("open-sidebar-menu"));
+            } else {
+              router.push("/dashboard/student");
+            }
+          }}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors shadow-2xs group cursor-pointer"
+          title="Open Menu / Return to Dashboard"
         >
           <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5 text-slate-500 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400" />
-          <span>Back to Dashboard</span>
-        </Link>
+          <span>Back</span>
+        </button>
 
         <button
           onClick={loadData}
