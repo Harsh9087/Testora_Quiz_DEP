@@ -796,7 +796,7 @@ def create_teacher_mock_test(
     if not payload.title or not payload.title.strip():
         raise HTTPException(status_code=400, detail="Mock test title is required")
 
-    q_dicts = [q.dict() for q in payload.questions] if payload.questions else []
+    q_dicts = [q.model_dump() for q in payload.questions] if payload.questions else []
     total_q = len(q_dicts)
     total_m = payload.total_marks or (total_q * 1.0)
     m_per_q = (total_m / total_q) if total_q > 0 else 1.0
@@ -976,7 +976,7 @@ def get_teacher_mock_test_detail(
 
     summary = serialize_summary(test)
     return {
-        **summary.dict(),
+        **summary.model_dump(),
         "instructions": test.instructions,
         "questions": qs,
         "assigned_directory_ids": assigned_dirs,
@@ -1024,7 +1024,7 @@ def update_teacher_mock_test(
     test.results_visibility = payload.results_visibility or test.results_visibility
 
     if payload.questions:
-        q_dicts = [q.dict() for q in payload.questions]
+        q_dicts = [q.model_dump() for q in payload.questions]
         test.questions_json = json.dumps(q_dicts)
         test.total_questions = len(q_dicts)
         test.total_marks = payload.total_marks or (len(q_dicts) * 1.0)
@@ -1859,7 +1859,7 @@ def submit_shared_mock_test(
     for q in raw_qs:
         q_id = str(q.get("id"))
         correct = str(q.get("correct_answer", "")).strip().lower()
-        selected = str(payload.answers.get(q_id, "")).strip().lower()
+        selected = (payload.answers.get(q_id) or "").strip().lower()
 
         marks = float(q.get("marks", test.marks_per_question or 1.0))
         neg = float(q.get("negative_marks", test.negative_marking or 0.0))
@@ -2498,7 +2498,7 @@ def submit_mock_test_answers(
     for idx, q in enumerate(raw_qs):
         q_id = str(q.get("id") or f"q_{idx+1}")
         correct_ans = str(q.get("correct_answer", "")).strip().upper()
-        student_ans = str(req.answers.get(q_id, "")).strip().upper()
+        student_ans = (req.answers.get(q_id) or "").strip().upper()
 
         q_marks = float(q.get("marks", default_marks_per_q))
         q_neg = float(q.get("negative_marks", default_neg_per_q))
@@ -3137,7 +3137,7 @@ def admin_update_mock_test(
         test.price_inr = max(0, payload.price_inr)
         test.price_paise = test.price_inr * 100
 
-    test.is_free = bool((test.price_inr or 0) == 0 and (test.credit_cost or 0) == 0)
+    test.is_free = (test.price_inr or 0) == 0 and (test.credit_cost or 0) == 0
 
     if payload.duration_minutes is not None:
         test.duration_minutes = payload.duration_minutes
