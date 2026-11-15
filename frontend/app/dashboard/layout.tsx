@@ -393,7 +393,8 @@ export default function DashboardLayout({
     closeSidebarMobile();
     const normalized = (tab === "all" || tab === "overview" || !tab) ? "overview" : tab;
     setCurrentTab(normalized);
-    if (pathname === "/dashboard/teacher") {
+    const cleanPath = (pathname || "").replace(/\/$/, "");
+    if (cleanPath === "/dashboard/teacher") {
       if (normalized === "overview") {
         if (window.location.hash) {
           window.history.pushState(null, "", window.location.pathname);
@@ -428,34 +429,20 @@ export default function DashboardLayout({
 
   const closeSidebarMobile = () => {
     setSidebarOpen(false);
-    if (typeof window !== "undefined" && window.history.state?.mobileSidebar) {
-      window.history.back();
-    }
   };
 
-  // Lock body scroll and intercept browser/gesture back button when mobile drawer is open
+  // Lock body scroll when mobile drawer is open
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     if (sidebarOpen && window.innerWidth < 768) {
       document.body.style.overflow = "hidden";
-      if (!window.history.state?.mobileSidebar) {
-        window.history.pushState({ mobileSidebar: true }, "");
-      }
     } else {
       document.body.style.overflow = "";
     }
 
-    const handlePopState = () => {
-      if (sidebarOpen) {
-        setSidebarOpen(false);
-      }
-    };
-
-    window.addEventListener("popstate", handlePopState);
     return () => {
       document.body.style.overflow = "";
-      window.removeEventListener("popstate", handlePopState);
     };
   }, [sidebarOpen]);
 
