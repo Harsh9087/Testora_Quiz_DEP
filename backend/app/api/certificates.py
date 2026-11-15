@@ -581,18 +581,24 @@ def get_my_certificates(
     """
     try:
         user_email = (current_user.email or "").lower().strip()
-        user_cand_ids = []
+        user_cand_ids: List[str] = []
         if user_email:
-            user_cand_ids = [c.id for c in db.query(ExamCandidate.id).filter(func.lower(ExamCandidate.email_snapshot) == user_email).all()]
+            cand_rows = db.query(ExamCandidate.id).filter(func.lower(ExamCandidate.email_snapshot) == user_email).all()
+            user_cand_ids = [str(c[0]) for c in cand_rows]
 
-        sub_filters = [ExamSubmission.student_user_id == current_user.id]
         if user_cand_ids:
-            sub_filters.append(ExamSubmission.candidate_id.in_(user_cand_ids))
-
-        unminted_subs = db.query(ExamSubmission).filter(
-            or_(*sub_filters),
-            ExamSubmission.status.in_(["submitted", "auto_submitted", "graded", "completed", "evaluated"])
-        ).all()
+            unminted_subs = db.query(ExamSubmission).filter(
+                or_(
+                    ExamSubmission.student_user_id == current_user.id,
+                    ExamSubmission.candidate_id.in_(user_cand_ids)
+                ),
+                ExamSubmission.status.in_(["submitted", "auto_submitted", "graded", "completed", "evaluated"])
+            ).all()
+        else:
+            unminted_subs = db.query(ExamSubmission).filter(
+                ExamSubmission.student_user_id == current_user.id,
+                ExamSubmission.status.in_(["submitted", "auto_submitted", "graded", "completed", "evaluated"])
+            ).all()
 
         for s in unminted_subs:
             pass_mark = float(s.exam.passing_marks or 0.0) if s.exam else 0.0
@@ -601,14 +607,18 @@ def get_my_certificates(
     except Exception as e:
         logger.warning(f"Auto-minting certificates on my-certificates failed: {e}")
 
-    cert_filters = [IssuedCertificate.student_user_id == current_user.id]
     user_email = (current_user.email or "").lower().strip()
     if user_email:
-        cert_filters.append(func.lower(IssuedCertificate.recipient_email) == user_email)
-
-    certs = db.query(IssuedCertificate).filter(
-        or_(*cert_filters)
-    ).order_by(IssuedCertificate.issue_date.desc()).all()
+        certs = db.query(IssuedCertificate).filter(
+            or_(
+                IssuedCertificate.student_user_id == current_user.id,
+                func.lower(IssuedCertificate.recipient_email) == user_email
+            )
+        ).order_by(IssuedCertificate.issue_date.desc()).all()
+    else:
+        certs = db.query(IssuedCertificate).filter(
+            IssuedCertificate.student_user_id == current_user.id
+        ).order_by(IssuedCertificate.issue_date.desc()).all()
 
     return certs
 
