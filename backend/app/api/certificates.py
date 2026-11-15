@@ -10,7 +10,7 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, Response, Header, Query, Request
 from fastapi.responses import FileResponse, StreamingResponse
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from jose import jwt
 
 from app.config import settings
@@ -579,7 +579,26 @@ def get_my_certificates(
     """
     Returns all valid issued certificates for the logged-in student.
     Matches by student_user_id or candidate email.
+    Auto-syncs accredited certificates for any passed submissions that do not have an IssuedCertificate yet.
     """
+    try:
+        user_cand_ids = [c.id for c in db.query(ExamCandidate.id).filter(ExamCandidate.email_snapshot == current_user.email).all()] if current_user.email else []
+        sub_filters = [ExamSubmission.student_user_id == current_user.id]
+        if user_cand_ids:
+            sub_filters.append(ExamSubmission.candidate_id.in_(user_cand_ids))
+
+        unminted_subs = db.query(ExamSubmission).filter(
+            or_(*sub_filters),
+            ExamSubmission.status.in_(["submitted", "auto_submitted", "graded"])
+        ).all()
+
+        for s in unminted_subs:
+            pass_mark = float(s.exam.passing_marks or 0.0) if s.exam else 0.0
+            if (s.score or 0.0) >= pass_mark or (s.percentage or 0.0) >= 40.0:
+                certificate_service.issue_certificate_for_submission(s, db, send_email=False)
+    except Exception as e:
+        logger.warning(f"Auto-minting certificates on my-certificates failed: {e}")
+
     certs = db.query(IssuedCertificate).filter(
         (IssuedCertificate.student_user_id == current_user.id) |
         (IssuedCertificate.recipient_email == current_user.email)

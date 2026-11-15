@@ -1228,6 +1228,19 @@ def get_submission_certificate_html(
     is_passed = sub.score >= pass_marks
     completion_date = sub.submitted_at.strftime("%B %d, %Y") if sub.submitted_at else "August 15, 2026"
     
+    # Auto-mint/ensure official accredited IssuedCertificate record exists for this passing submission
+    issued_cert = None
+    try:
+        from app.services.certificate_service import certificate_service
+        issued_cert = certificate_service.issue_certificate_for_submission(sub, db, send_email=False)
+    except Exception as e:
+        pass
+
+    cert_code = issued_cert.certificate_code if issued_cert else f"SUB-{submission_id[:12].upper()}"
+    cert_id = issued_cert.id if issued_cert else submission_id
+    verify_url = f"https://testoraquiz.com/verify-certificate/{cert_code}"
+    download_url = f"/api/v1/certificates/download/{cert_id}"
+
     grade_label = "Distinction" if score_pct >= 85 else "Merit" if score_pct >= 70 else "Pass" if is_passed else "Completed"
     badge_color = "#10B981" if is_passed else "#D97706"
 
@@ -1383,13 +1396,19 @@ def get_submission_certificate_html(
         </div>
 
         <div class="footer-hash">
-          Verification Hash: SUB-{submission_id[:12].upper()} • Secure QR Key Validated
+          Certificate ID: <strong>{cert_code}</strong> • Verification URL: <a href="{verify_url}" target="_blank" style="color: #2563EB;">{verify_url}</a>
         </div>
       </div>
       
-      <div class="no-print" style="position: fixed; bottom: 20px; right: 20px;">
-        <button onclick="window.print()" style="padding: 12px 24px; background: #92400E; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-          🖨️ Print / Save Certificate PDF
+      <div class="no-print" style="position: fixed; bottom: 20px; right: 20px; display: flex; gap: 10px; align-items: center; z-index: 1000; flex-wrap: wrap;">
+        <a href="{download_url}" target="_blank" style="padding: 12px 20px; background: #2563EB; color: #FFFFFF; text-decoration: none; border-radius: 12px; font-weight: bold; font-size: 13px; font-family: system-ui, sans-serif; box-shadow: 0 4px 12px rgba(37,99,235,0.3); display: inline-flex; align-items: center; gap: 6px;">
+          📥 Download Vector PDF
+        </a>
+        <a href="{verify_url}" target="_blank" style="padding: 12px 20px; background: #059669; color: #FFFFFF; text-decoration: none; border-radius: 12px; font-weight: bold; font-size: 13px; font-family: system-ui, sans-serif; box-shadow: 0 4px 12px rgba(5,150,105,0.3); display: inline-flex; align-items: center; gap: 6px;">
+          🛡️ View Verification Seal
+        </a>
+        <button onclick="window.print()" style="padding: 12px 20px; background: #92400E; color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 13px; font-family: system-ui, sans-serif; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+          🖨️ Print
         </button>
       </div>
     </body>

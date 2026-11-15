@@ -455,6 +455,162 @@ class CertificateService:
             f.write(pdf_bytes)
         return file_path
 
+    def issue_certificate_for_submission(
+        self,
+        sub: ExamSubmission,
+        db: Session,
+        send_email: bool = True
+    ) -> Optional[IssuedCertificate]:
+        """
+        Idempotently generates and records an accredited certificate for an individual passing submission.
+        Usable dynamically on submission, student certificate tab load, or direct certificate view.
+        """
+        if not sub:
+            return None
+
+        # 1. Idempotency Check: Return existing certificate if already issued
+        existing_cert = db.query(IssuedCertificate).filter(
+            IssuedCertificate.submission_id == sub.id
+        ).first()
+        if existing_cert:
+            return existing_cert
+
+        exam = sub.exam
+        if not exam:
+            return None
+
+        # 2. Check Passing Status
+        pass_marks = float(exam.passing_marks or 0.0)
+        total_marks = float(exam.total_marks or 100.0)
+        score = float(sub.score or 0.0)
+        pct = float(sub.percentage or 0.0)
+
+        config = db.query(CertificateConfig).filter(CertificateConfig.exam_id == exam.id).first()
+        if config and config.passing_criteria_type == "PERCENTAGE":
+            passing_val = config.passing_criteria_value or 40.0
+            is_passed = pct >= passing_val
+        elif config and config.passing_criteria_type == "MARKS":
+            passing_val = config.passing_criteria_value or pass_marks
+            is_passed = score >= passing_val
+        else:
+            if pass_marks > 0:
+                is_passed = score >= pass_marks
+            else:
+                is_passed = pct >= 40.0 or score > 0
+
+        if not is_passed:
+            return None
+
+        # 3. Resolve Student Details
+        student_name = "Candidate"
+        student_email = None
+        roll_number = "N/A"
+
+        if sub.candidate:
+            student_name = sub.candidate.name_snapshot or student_name
+            student_email = sub.candidate.email_snapshot
+            roll_number = sub.candidate.roll_number_snapshot or roll_number
+        elif sub.candidate_id:
+            cand = db.query(ExamCandidate).filter(ExamCandidate.id == sub.candidate_id).first()
+            if cand:
+                student_name = cand.name_snapshot or student_name
+                student_email = cand.email_snapshot or student_email
+                roll_number = cand.roll_number_snapshot or roll_number
+
+        if student_name == "Candidate" and sub.student_user_id:
+            stu_user = db.query(User).filter(User.id == sub.student_user_id).first()
+            if stu_user:
+                student_name = stu_user.full_name or student_name
+                student_email = stu_user.email or student_email
+
+        if student_name == "Candidate" and sub.credential and sub.credential.student and sub.credential.student.user:
+            student_name = sub.credential.student.user.full_name or student_name
+            student_email = sub.credential.student.user.email or student_email
+            roll_number = getattr(sub.credential.student, "roll_number", roll_number)
+
+        cert_code = self.generate_certificate_code()
+        verify_token = self.generate_verification_token()
+        issue_dt = now_utc()
+        letter_grade = calculate_grade(pct)
+
+        config_dict = {
+            "template_id": config.template_id if config else "testora_default",
+            "certificate_title": config.certificate_title if config else "Certificate of Academic Excellence",
+            "certificate_subtitle": config.certificate_subtitle if config else "This is to certify that",
+            "custom_text": config.custom_text if config else None,
+            "footer_message": config.footer_message if config else "Verified & Issued securely via Testora Quiz Examination Platform",
+            "institute_name": (config.institute_name if config else None) or exam.institution_name or "Testora Institute of Advanced Technologies",
+            "institute_logo_url": config.institute_logo_url if config else None,
+            "signatory_name": config.signatory_name if config else "Academic Director",
+            "signatory_designation": config.signatory_designation if config else "Head of Examination Standards",
+            "signature_url": config.signature_url if config else None,
+            "stamp_url": config.stamp_url if config else None,
+            "secondary_signatory_name": config.secondary_signatory_name if config else None,
+            "secondary_signatory_designation": config.secondary_signatory_designation if config else None,
+            "secondary_signature_url": config.secondary_signature_url if config else None,
+            "show_marks": config.show_marks if config else True,
+            "show_percentage": config.show_percentage if config else True,
+            "show_grade": config.show_grade if config else True
+        }
+
+        try:
+            pdf_bytes = self.generate_certificate_pdf(
+                config=config_dict,
+                student_name=student_name,
+                exam_name=exam.name,
+                issue_date=issue_dt,
+                certificate_code=cert_code,
+                verification_token=verify_token,
+                score=score,
+                total_marks=total_marks,
+                percentage=pct,
+                roll_number=roll_number,
+                grade=letter_grade
+            )
+            pdf_path = self.save_certificate_file(exam.id, cert_code, pdf_bytes)
+            pdf_size = len(pdf_bytes)
+
+            new_cert = IssuedCertificate(
+                id=str(uuid.uuid4()),
+                certificate_code=cert_code,
+                verification_token=verify_token,
+                exam_id=exam.id,
+                submission_id=sub.id,
+                candidate_id=sub.candidate_id,
+                student_user_id=sub.student_user_id,
+                recipient_name=student_name,
+                recipient_email=student_email,
+                recipient_roll_number=roll_number,
+                exam_name_snapshot=exam.name,
+                institute_name_snapshot=config_dict["institute_name"],
+                score_snapshot=score,
+                total_marks_snapshot=total_marks,
+                percentage_snapshot=pct,
+                passing_marks_snapshot=pass_marks,
+                grade_snapshot=letter_grade,
+                issue_date=issue_dt,
+                pdf_file_path=pdf_path,
+                pdf_file_size=pdf_size,
+                email_status="PENDING" if student_email else "NO_EMAIL",
+                credits_deducted=0
+            )
+            db.add(new_cert)
+            db.commit()
+            db.refresh(new_cert)
+
+            if send_email and student_email:
+                try:
+                    self.send_certificate_email(new_cert, exam.name, config_dict["institute_name"])
+                    db.commit()
+                except Exception:
+                    pass
+
+            return new_cert
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Failed to issue single certificate for sub {sub.id}: {e}", exc_info=True)
+            return None
+
     def process_exam_certificates(
         self,
         exam_id: str,

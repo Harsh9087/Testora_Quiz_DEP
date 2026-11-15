@@ -845,6 +845,15 @@ def process_exam_submission(sub: ExamSubmission, db: Session, auto_submitted: bo
 
     db.add(sub)
     db.commit()
+
+    # Automatically issue accredited passing certificate if candidate passed
+    is_passed = sub.score >= float(exam.passing_marks or 0.0) if exam.passing_marks else (sub.percentage or 0.0) >= 40.0
+    if is_passed and not str(sub.id).startswith("sim_"):
+        try:
+            from app.services.certificate_service import certificate_service
+            certificate_service.issue_certificate_for_submission(sub, db, send_email=True)
+        except Exception as cert_err:
+            logger.warning(f"Auto-issuing certificate on submission failed: {cert_err}")
     
     # Broadcast submission event to all connected teachers across workers
     cand_name = "Candidate"
