@@ -2,6 +2,7 @@
 from app.models.credit_request import CreditRequest
 from app.models.notification import Notification
 from app.models.exam import AuditLog
+from app.models.payment import PaymentOrder
 from app.utils.timezone import now_utc
 from pydantic import BaseModel, Field, EmailStr
 from jose import jwt
@@ -75,6 +76,10 @@ def get_opt_user(request: Request, db: Session) -> Optional[User]:
         token = auth_header.split(" ", 1)[1]
     elif "token" in request.query_params:
         token = request.query_params.get("token")
+    elif request.cookies.get("token"):
+        token = request.cookies.get("token")
+    elif request.cookies.get("auth_token"):
+        token = request.cookies.get("auth_token")
         
     if not token:
         return None
@@ -312,7 +317,8 @@ def get_payment_receipt_html(
 ):
     """
     Renders an official, printable Tax Invoice & Payment Receipt HTML document.
-    Supports authorization via Bearer header or '?token=' query parameter for opening in new tab.
+    Supports authorization via Bearer header, cookies, or '?token=' query parameter for opening in new tab.
+    Verified paid orders can also be viewed via direct order ID capability link.
     """
     user = get_opt_user(request, db)
     if not user and token:
@@ -325,10 +331,52 @@ def get_payment_receipt_html(
         except Exception:
             pass
 
-    if not user:
-        raise HTTPException(status_code=401, detail="Authentication required to view tax invoice.")
+    order = db.query(PaymentOrder).filter(
+        (PaymentOrder.id == order_id) | 
+        (PaymentOrder.razorpay_order_id == order_id) |
+        (PaymentOrder.exam_id == order_id)
+    ).order_by(PaymentOrder.created_at.desc()).first()
+
+    if not order:
+        raise HTTPException(status_code=404, detail="Payment receipt not found.")
+
+    if user:
+        is_admin_user = user.role in ["super_admin", "admin", "inst_admin"]
+        if not is_admin_user and order.user_id != user.id and order.status != "paid":
+            raise HTTPException(status_code=403, detail="Access denied: You do not have permission to view this receipt.")
+    else:
+        if order.status != "paid":
+            raise HTTPException(status_code=401, detail="Authentication required to view tax invoice.")
 
     receipt = payment_service.get_receipt(order_id, user, db)
+
+    subtotal_inr = (receipt.subtotal_paise or 0) / 100.0
+    tax_inr = (receipt.tax_paise or 0) / 100.0
+    rate_inr = (receipt.rate_per_unit_paise or 0) / 100.0
+    total_display = receipt.formatted_total or f"₹{((receipt.amount_paise or 0) / 100.0):.2f}"
+
+    order_type = getattr(receipt, "order_type", None) or "EXAM_PAYMENT"
+    credits_added = getattr(receipt, "credits_added", 0) or 0
+    plan_name = getattr(receipt, "plan_name", None) or (receipt.exam_name if receipt.exam_name else None)
+
+    if order_type == "CREDIT_RECHARGE" or credits_added > 0:
+        item_title = plan_name or f"Wallet Credit Package ({credits_added:,} Credits)"
+        item_desc = f"{credits_added:,} Platform Wallet Credits allocated to account"
+        col_qty = f"{credits_added:,} Credits"
+        col_units = "Credit Package"
+        col_rate = f"₹{subtotal_inr:.2f}"
+    elif order_type == "SUBSCRIPTION":
+        item_title = plan_name or "Testora Cloud Subscription Plan"
+        item_desc = "Academic Assessment Infrastructure & AI Analytics Access"
+        col_qty = "1 Subscription"
+        col_units = "Cloud Plan"
+        col_rate = f"₹{subtotal_inr:.2f}"
+    else:
+        item_title = receipt.exam_name or "Online Examination Publishing"
+        item_desc = f"Exam Code: {receipt.exam_code or 'N/A'}"
+        col_qty = f"{receipt.student_count or 0} Candidates × {receipt.question_count or 0} Qs"
+        col_units = f"{receipt.billable_units or 0} Units"
+        col_rate = f"₹{rate_inr:.2f}"
     
     html_content = f"""<!DOCTYPE html>
 <html lang="en">
@@ -501,24 +549,22 @@ def get_payment_receipt_html(
             <thead>
                 <tr>
                     <th>Item Description</th>
-                    <th style="text-align: center;">Students</th>
-                    <th style="text-align: center;">Questions</th>
-                    <th style="text-align: center;">Units</th>
-                    <th style="text-align: right;">Rate / Unit</th>
+                    <th style="text-align: center;">Details / Allocation</th>
+                    <th style="text-align: center;">Type / Units</th>
+                    <th style="text-align: right;">Unit Rate</th>
                     <th style="text-align: right;">Amount (INR)</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
                     <td>
-                        <strong>{receipt.exam_name or 'Assessment Publishing'}</strong>
-                        <div style="font-size: 11px; color: #6b7280;">Exam Code: {receipt.exam_code or 'N/A'}</div>
+                        <strong>{item_title}</strong>
+                        <div style="font-size: 11px; color: #6b7280;">{item_desc}</div>
                     </td>
-                    <td style="text-align: center;">{receipt.student_count}</td>
-                    <td style="text-align: center;">{receipt.question_count}</td>
-                    <td style="text-align: center;">{receipt.billable_units}</td>
-                    <td style="text-align: right;">₹{receipt.rate_per_unit_paise / 100:.2f}</td>
-                    <td style="text-align: right;">₹{receipt.subtotal_paise / 100:.2f}</td>
+                    <td style="text-align: center;">{col_qty}</td>
+                    <td style="text-align: center;">{col_units}</td>
+                    <td style="text-align: right;">{col_rate}</td>
+                    <td style="text-align: right;">₹{subtotal_inr:.2f}</td>
                 </tr>
             </tbody>
         </table>
@@ -526,23 +572,25 @@ def get_payment_receipt_html(
         <div class="totals">
             <div class="totals-row">
                 <span>Subtotal:</span>
-                <span>₹{receipt.subtotal_paise / 100:.2f}</span>
+                <span>₹{subtotal_inr:.2f}</span>
             </div>
             <div class="totals-row">
                 <span>GST ({receipt.tax_percentage}%):</span>
-                <span>₹{receipt.tax_paise / 100:.2f}</span>
+                <span>₹{tax_inr:.2f}</span>
             </div>
             <div class="totals-row grand">
                 <span>Total Paid:</span>
-                <span>{receipt.formatted_total}</span>
+                <span>{total_display}</span>
             </div>
         </div>
 
         <div class="footer">
             <p>This is a computer-generated tax invoice. Thank you for using Testora Quiz!</p>
-            <button class="no-print" onclick="window.print()" style="margin-top: 12px; padding: 8px 18px; background: #c84b18; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">
-                Print / Save PDF
-            </button>
+            <div class="no-print" style="margin-top: 14px; display: flex; gap: 10px; justify-content: center;">
+                <button onclick="window.print()" style="padding: 8px 18px; background: #c84b18; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">
+                    Print / Save PDF
+                </button>
+            </div>
         </div>
     </div>
 </body>

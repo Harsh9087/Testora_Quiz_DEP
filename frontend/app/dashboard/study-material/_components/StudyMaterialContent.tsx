@@ -654,3 +654,4 @@ export function StudyMaterialContent() {
     </div>
   );
 }
+

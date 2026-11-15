@@ -199,17 +199,21 @@ class PaymentReceiptResponse(BaseModel):
     tax_percentage: int
     currency: str
     formatted_total: str
-    student_count: int
-    question_count: int
-    billable_units: int
-    rate_per_unit_paise: int
+    student_count: Optional[int] = 0
+    question_count: Optional[int] = 0
+    billable_units: Optional[int] = 0
+    rate_per_unit_paise: Optional[int] = 0
     exam_id: Optional[str] = None
     exam_name: Optional[str] = None
     exam_code: Optional[str] = None
+    order_type: Optional[str] = "EXAM_PAYMENT"
+    plan_id: Optional[str] = None
+    plan_name: Optional[str] = None
+    credits_added: Optional[int] = 0
     user_name: Optional[str] = None
     user_email: Optional[str] = None
     institution_name: Optional[str] = None
-    created_at: datetime
+    created_at: Optional[datetime] = None
 
 class PaymentHistoryItem(BaseModel):
     id: str

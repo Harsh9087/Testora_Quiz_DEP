@@ -664,9 +664,9 @@ class PaymentService:
     # =========================================================================
     # Receipts & Teacher Transaction History
     # =========================================================================
-    def get_receipt(self, order_id: str, user: User, db: Session) -> PaymentReceiptResponse:
+    def get_receipt(self, order_id: str, user: Optional[User], db: Session) -> PaymentReceiptResponse:
         """
-        Generates structured payment receipt details for an authorized user.
+        Generates structured payment receipt details for an authorized user or verified paid order.
         """
         order = db.query(PaymentOrder).filter(
             (PaymentOrder.id == order_id) | 
@@ -677,34 +677,61 @@ class PaymentService:
         if not order:
             raise HTTPException(status_code=404, detail="Payment receipt not found.")
 
-        # Access check
-        if order.user_id != user.id and user.role != "super_admin":
-            raise HTTPException(status_code=403, detail="Access denied: You do not have permission to view this receipt.")
+        # Access check: Allow super_admin, admin, inst_admin, or order owner. Paid orders can be viewed by order ID capability.
+        if user:
+            is_admin_user = user.role in ["super_admin", "admin", "inst_admin"]
+            if not is_admin_user and order.user_id != user.id and order.status != "paid":
+                raise HTTPException(status_code=403, detail="Access denied: You do not have permission to view this receipt.")
+        elif order.status != "paid":
+            raise HTTPException(status_code=401, detail="Authentication required to view tax invoice.")
 
         exam = order.exam
-        inst = order.institution or (user.institution if user else None)
+        inst = order.institution or (order.user.institution if order.user else None) or (user.institution if user else None)
+
+        plan_names = {
+            "starter_recharge": "Starter Recharge (800 Credits)",
+            "pkg_800": "Starter Recharge (800 Credits)",
+            "standard_recharge": "Standard Recharge (2,200 Credits)",
+            "pkg_2200": "Standard Recharge (2,200 Credits)",
+            "professional_recharge": "Professional Recharge (6,000 Credits)",
+            "pkg_6000": "Professional Recharge (6,000 Credits)",
+            "master_recharge": "Master Recharge (15,000 Credits)",
+            "pkg_15000": "Master Recharge (15,000 Credits)",
+            "institutional_plan": "Institutional Plan (10,000 Credits)",
+            "starter_monthly": "Starter Monthly Subscription",
+            "prepaid_credits": "Exam Publish (Prepaid Credits)",
+            "per_test_billing": "Direct Per-Test Checkout",
+        }
+        resolved_plan_name = plan_names.get(order.plan_id, order.plan_id) if order.plan_id else None
+
+        subtotal = order.subtotal_amount if order.subtotal_amount is not None else order.amount
+        tax = order.tax_amount if order.tax_amount is not None else 0
 
         return PaymentReceiptResponse(
-            order_id=order.razorpay_order_id,
+            order_id=order.razorpay_order_id or order.id,
             invoice_number=order.invoice_number or f"INV-GEN-{order.id[:8].upper()}",
             receipt=order.receipt,
             payment_id=order.razorpay_payment_id,
             status=order.status,
-            amount_paise=order.amount,
-            subtotal_paise=order.subtotal_amount,
-            tax_paise=order.tax_amount,
+            amount_paise=order.amount or 0,
+            subtotal_paise=subtotal or 0,
+            tax_paise=tax or 0,
             tax_percentage=settings.GST_PERCENTAGE,
-            currency=order.currency,
-            formatted_total=f"₹{order.amount / 100.0:.2f}",
-            student_count=order.student_count,
-            question_count=order.question_count,
-            billable_units=order.billable_units,
-            rate_per_unit_paise=order.rate_per_unit_paise,
+            currency=order.currency or "INR",
+            formatted_total=f"₹{(order.amount or 0) / 100.0:.2f}",
+            student_count=order.student_count or 0,
+            question_count=order.question_count or 0,
+            billable_units=order.billable_units or 0,
+            rate_per_unit_paise=order.rate_per_unit_paise or 0,
             exam_id=order.exam_id,
             exam_name=exam.name if exam else None,
             exam_code=exam.exam_code if exam else None,
-            user_name=order.user.full_name if order.user else user.full_name,
-            user_email=order.user.email if order.user else user.email,
+            order_type=order.order_type or "EXAM_PAYMENT",
+            plan_id=order.plan_id,
+            plan_name=resolved_plan_name,
+            credits_added=order.credits_added or 0,
+            user_name=order.user.full_name if order.user else (user.full_name if user else "Valued Educator"),
+            user_email=order.user.email if order.user else (user.email if user else "billing@testoraquiz.com"),
             institution_name=inst.name if inst else "Independent Academic Instructor",
             created_at=order.created_at
         )

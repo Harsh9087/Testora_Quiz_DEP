@@ -185,6 +185,14 @@ export default function AdminOverviewPage() {
   const [activeTab, setActiveTab] = useState<TabType>("cockpit");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [authToken, setAuthToken] = useState<string>("");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedToken = localStorage.getItem("token") || "";
+      setAuthToken(storedToken);
+    }
+  }, []);
 
   // Search & Filters per Tab
   const [paymentSearch, setPaymentSearch] = useState("");
@@ -891,12 +899,12 @@ export default function AdminOverviewPage() {
                         {p.created_at ? formatLocalizedDate(p.created_at) : "—"}
                       </td>
                       <td className="py-3 px-4 text-right">
-                        {p.razorpay_order_id ? (
+                        {(p.razorpay_order_id || p.id) ? (
                           <a
-                            href={`${API_V1}/payments/receipt/${p.razorpay_order_id}/html`}
+                            href={`${API_V1}/payments/receipt/${encodeURIComponent(p.razorpay_order_id || p.id)}/html${authToken ? `?token=${encodeURIComponent(authToken)}` : ""}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400"
+                            className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 hover:underline"
                           >
                             <Receipt className="w-3.5 h-3.5" />
                             <span>Tax Invoice</span>
