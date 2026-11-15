@@ -355,6 +355,7 @@ class MockTestSubmitRequest(BaseModel):
 
 class QuestionReview(BaseModel):
     id: str
+    question_id: Optional[str] = None
     question: str
     options: List[str]
     question_type: Optional[str] = "single_choice"

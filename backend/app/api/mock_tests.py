@@ -2330,8 +2330,16 @@ def create_mock_test_order(
     purchase = db.query(MockTestPurchase).filter(
         MockTestPurchase.mock_test_id == test.id,
         MockTestPurchase.student_id == current_user.id,
+        MockTestPurchase.status == "completed",
         MockTestPurchase.is_deleted == False
-    ).first()
+    ).order_by(MockTestPurchase.updated_at.desc(), MockTestPurchase.created_at.desc()).first()
+
+    if not purchase:
+        purchase = db.query(MockTestPurchase).filter(
+            MockTestPurchase.mock_test_id == test.id,
+            MockTestPurchase.student_id == current_user.id,
+            MockTestPurchase.is_deleted == False
+        ).order_by(MockTestPurchase.updated_at.desc(), MockTestPurchase.created_at.desc()).first()
 
     if not purchase:
         purchase = MockTestPurchase(
@@ -2404,8 +2412,16 @@ def verify_mock_test_payment(
     purchase = db.query(MockTestPurchase).filter(
         MockTestPurchase.mock_test_id == test.id,
         MockTestPurchase.student_id == current_user.id,
+        MockTestPurchase.status == "completed",
         MockTestPurchase.is_deleted == False
-    ).first()
+    ).order_by(MockTestPurchase.updated_at.desc(), MockTestPurchase.created_at.desc()).first()
+
+    if not purchase:
+        purchase = db.query(MockTestPurchase).filter(
+            MockTestPurchase.mock_test_id == test.id,
+            MockTestPurchase.student_id == current_user.id,
+            MockTestPurchase.is_deleted == False
+        ).order_by(MockTestPurchase.updated_at.desc(), MockTestPurchase.created_at.desc()).first()
 
     if not purchase:
         purchase = MockTestPurchase(
@@ -2464,8 +2480,16 @@ def submit_mock_test_answers(
     purchase = db.query(MockTestPurchase).filter(
         MockTestPurchase.mock_test_id == test.id,
         MockTestPurchase.student_id == current_user.id,
+        MockTestPurchase.status == "completed",
         MockTestPurchase.is_deleted == False
-    ).first()
+    ).order_by(MockTestPurchase.updated_at.desc(), MockTestPurchase.created_at.desc()).first()
+
+    if not purchase:
+        purchase = db.query(MockTestPurchase).filter(
+            MockTestPurchase.mock_test_id == test.id,
+            MockTestPurchase.student_id == current_user.id,
+            MockTestPurchase.is_deleted == False
+        ).order_by(MockTestPurchase.updated_at.desc(), MockTestPurchase.created_at.desc()).first()
 
     if not test.is_free and (not purchase or purchase.status not in ["unlocked", "completed"]):
         raise HTTPException(status_code=403, detail="Test access is locked. Please unlock or purchase this test first.")
@@ -2651,8 +2675,16 @@ def get_mock_test_solution_review(
     purchase = db.query(MockTestPurchase).filter(
         MockTestPurchase.mock_test_id == test.id,
         MockTestPurchase.student_id == current_user.id,
+        MockTestPurchase.status == "completed",
         MockTestPurchase.is_deleted == False
-    ).first()
+    ).order_by(MockTestPurchase.updated_at.desc(), MockTestPurchase.created_at.desc()).first()
+
+    if not purchase:
+        purchase = db.query(MockTestPurchase).filter(
+            MockTestPurchase.mock_test_id == test.id,
+            MockTestPurchase.student_id == current_user.id,
+            MockTestPurchase.is_deleted == False
+        ).order_by(MockTestPurchase.updated_at.desc(), MockTestPurchase.created_at.desc()).first()
 
     if not purchase or purchase.status != "completed":
         raise HTTPException(
@@ -2727,6 +2759,7 @@ def get_mock_test_solution_review(
             q_type = "multiple_choice"
 
         reviews.append(QuestionReview(
+            id=q_id,
             question_id=q_id,
             question=q.get("question", ""),
             options=q.get("options", []),

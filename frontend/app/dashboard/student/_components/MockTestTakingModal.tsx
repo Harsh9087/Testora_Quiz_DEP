@@ -181,7 +181,7 @@ export default function MockTestTakingModal({
 
   // Countdown timer
   useEffect(() => {
-    if (!isOpen || result || loading || timeLeftSeconds <= 0) return;
+    if (!isOpen || result || loading || timeLeftSeconds <= 0 || initialMode === "solutions") return;
 
     const timer = setInterval(() => {
       setTimeLeftSeconds((prev) => {
@@ -195,7 +195,7 @@ export default function MockTestTakingModal({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isOpen, result, loading, timeLeftSeconds]);
+  }, [isOpen, result, loading, timeLeftSeconds, initialMode]);
 
   if (!isOpen) return null;
 
@@ -390,19 +390,43 @@ export default function MockTestTakingModal({
           {loading && (
             <div className="w-full py-24 text-center space-y-3.5 flex-1">
               <div className="w-10 h-10 border-3 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" />
-              <p className="text-xs font-bold text-slate-600 dark:text-slate-400">Loading standardized examination questions...</p>
+              <p className="text-xs font-bold text-slate-600 dark:text-slate-400">
+                {initialMode === "solutions" ? "Loading step-by-step solutions & scorecard..." : "Loading standardized examination questions..."}
+              </p>
             </div>
           )}
 
           {errorMsg && (
-            <div className="p-4 m-4 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2.5">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{errorMsg}</span>
+            <div className="p-4 m-4 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-center justify-between gap-2.5">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{errorMsg}</span>
+              </div>
+              {initialMode === "solutions" && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setErrorMsg(null);
+                    setLoading(true);
+                    apiFetch(`/mock-tests/${testId}/solution-review`, { token })
+                      .then((r) => r.json())
+                      .then((d) => {
+                        if (d && d.reviews) setResult(d);
+                        else setErrorMsg("Could not load solutions.");
+                      })
+                      .catch((e) => setErrorMsg(e.message || "Error loading solutions"))
+                      .finally(() => setLoading(false));
+                  }}
+                  className="px-3 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-[11px] cursor-pointer shrink-0"
+                >
+                  Retry
+                </button>
+              )}
             </div>
           )}
 
           {/* ═══════ ACTIVE TEST RUNNER (DESKTOP SPLIT / MOBILE SINGLE) ═══════ */}
-          {!loading && !result && questions.length > 0 && currentQ && (
+          {!loading && !result && initialMode !== "solutions" && questions.length > 0 && currentQ && (
             <>
               {/* Center / Main Examination Column (With Fixed Bottom Toolbar) */}
               <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
