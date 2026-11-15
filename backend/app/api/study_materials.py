@@ -14,7 +14,15 @@ from app.models.user import User
 from app.utils.security import get_current_user, RoleChecker, get_optional_current_user
 
 router = APIRouter(prefix="/study-materials", tags=["study-materials"])
-admin_required = RoleChecker(["super_admin", "inst_admin"])
+admin_required = RoleChecker(["super_admin", "inst_admin", "admin", "teacher"])
+
+def normalize_file_url(url: Optional[str]) -> Optional[str]:
+    """Ensures static file paths resolve to the full public backend endpoint."""
+    if not url:
+        return None
+    if url.startswith("/static/"):
+        return f"https://api.testoraquiz.com{url}"
+    return url
 
 # Predefined standard category mappings
 STANDARD_CATEGORIES = [
@@ -136,7 +144,7 @@ def list_study_materials(
     query = db.query(StudyMaterial).filter(StudyMaterial.is_deleted == False)
 
     # Non-admins only see published materials
-    is_admin = current_user and current_user.role in ["super_admin", "inst_admin"]
+    is_admin = current_user and current_user.role in ["super_admin", "inst_admin", "admin", "teacher"]
     if not is_admin:
         query = query.filter(StudyMaterial.is_published == True)
 
@@ -193,7 +201,7 @@ def list_study_materials(
             "views_count": item.views_count,
             "is_unlocked": is_unlocked,
             # Reveal file_url only if unlocked or admin
-            "file_url": item.file_url if is_unlocked else None,
+            "file_url": normalize_file_url(item.file_url) if is_unlocked else None,
             "created_at": item.created_at.isoformat() if item.created_at else None
         })
 
@@ -215,7 +223,7 @@ def get_study_material_detail(
     if not material:
         raise HTTPException(status_code=404, detail="Study material not found.")
 
-    is_admin = current_user and current_user.role in ["super_admin", "inst_admin"]
+    is_admin = current_user and current_user.role in ["super_admin", "inst_admin", "admin", "teacher"]
     if not material.is_published and not is_admin:
         raise HTTPException(status_code=403, detail="This material is currently not published.")
 
@@ -251,7 +259,7 @@ def get_study_material_detail(
         "downloads_count": material.downloads_count,
         "views_count": material.views_count,
         "is_unlocked": is_unlocked,
-        "file_url": material.file_url if is_unlocked else None,
+        "file_url": normalize_file_url(material.file_url) if is_unlocked else None,
         "created_at": material.created_at.isoformat() if material.created_at else None
     }
 
@@ -283,7 +291,7 @@ def unlock_study_material(
             "success": True,
             "message": f"'{material.title}' is free and ready to access!",
             "is_unlocked": True,
-            "download_url": material.file_url,
+            "download_url": normalize_file_url(material.file_url),
             "new_balance": current_user.total_available_credits
         }
 
@@ -298,7 +306,7 @@ def unlock_study_material(
             "success": True,
             "message": f"You have already unlocked '{material.title}'!",
             "is_unlocked": True,
-            "download_url": material.file_url,
+            "download_url": normalize_file_url(material.file_url),
             "new_balance": current_user.total_available_credits
         }
 
@@ -351,7 +359,7 @@ def unlock_study_material(
         "success": True,
         "message": f"Successfully unlocked '{material.title}' for {credits_needed} credits!",
         "is_unlocked": True,
-        "download_url": material.file_url,
+        "download_url": normalize_file_url(material.file_url),
         "new_balance": new_balance
     }
 
@@ -400,7 +408,7 @@ async def upload_study_material_file(
         f.write(contents)
 
     file_size_mb = round(len(contents) / (1024 * 1024), 2)
-    file_url = f"/static/study_materials/{unique_filename}"
+    file_url = f"https://api.testoraquiz.com/static/study_materials/{unique_filename}"
 
     return {
         "success": True,

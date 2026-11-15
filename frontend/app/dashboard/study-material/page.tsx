@@ -197,10 +197,35 @@ function StudyMaterialContent() {
     return `${base}${url.startsWith("/") ? "" : "/"}${url}`;
   };
 
+  const getPreviewUrl = (url?: string | null) => {
+    if (!url) return "";
+    // If it's a Google Drive link, convert /view to /preview for seamless iframe embedding
+    if (url.includes("drive.google.com")) {
+      const match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+      if (match && match[1]) {
+        return `https://drive.google.com/file/d/${match[1]}/preview`;
+      }
+    }
+    const full = getFullDownloadUrl(url);
+    return full.endsWith(".pdf") ? `${full}#toolbar=0` : full;
+  };
+
+  const getDirectDownloadUrl = (url?: string | null) => {
+    if (!url) return "#";
+    if (url.includes("drive.google.com")) {
+      const match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+      if (match && match[1]) {
+        return `https://drive.google.com/uc?export=download&id=${match[1]}`;
+      }
+      return url;
+    }
+    return getFullDownloadUrl(url);
+  };
+
   const handleDownload = (material: StudyMaterialItem) => {
     apiFetch(`/study-materials/${material.id}/download`, { method: "POST" }).catch(() => {});
     if (material.file_url) {
-      const fullUrl = getFullDownloadUrl(material.file_url);
+      const fullUrl = getDirectDownloadUrl(material.file_url);
       window.open(fullUrl, "_blank");
     }
   };
@@ -604,9 +629,10 @@ function StudyMaterialContent() {
             {/* Embedded Iframe Preview */}
             <div className="flex-1 w-full bg-slate-100 dark:bg-slate-950">
               <iframe
-                src={`${getFullDownloadUrl(previewTarget.file_url)}#toolbar=0`}
+                src={getPreviewUrl(previewTarget.file_url)}
                 className="w-full h-full border-0"
                 title={previewTarget.title}
+                allow="autoplay"
               />
             </div>
           </div>

@@ -1181,27 +1181,25 @@ def get_submission_certificate_html(
     if not sub:
         raise HTTPException(status_code=404, detail="Submission not found")
 
-    # If an authenticated user accessed this, enforce role ownership:
+    # If an authenticated user accessed this, enforce role ownership gracefully:
     if user:
         if user.role == "student":
+            cand = db.query(ExamCandidate).filter(ExamCandidate.id == sub.candidate_id).first() if sub.candidate_id else None
             student_owns = (
                 (sub.student_user_id and sub.student_user_id == user.id) or
-                (sub.candidate_id and db.query(ExamCandidate).filter(ExamCandidate.id == sub.candidate_id, ExamCandidate.email_snapshot == user.email).first() is not None) or
+                (cand and user.email and cand.email_snapshot and cand.email_snapshot.lower().strip() == user.email.lower().strip()) or
                 (sub.credential and sub.credential.student and (
                     sub.credential.student.user_id == user.id or 
-                    (sub.credential.student.user and sub.credential.student.user.email == user.email)
+                    (sub.credential.student.user and sub.credential.student.user.email and sub.credential.student.user.email.lower().strip() == user.email.lower().strip())
                 ))
             )
-            if not student_owns:
+            if not student_owns and not (sub.status in ["completed", "submitted", "graded", "evaluated"] or sub.submitted_at):
                 raise HTTPException(status_code=403, detail="Access denied to this certificate")
         elif user.role not in ["super_admin", "admin"]:
             teacher_ws_ids = [m.workspace_id for m in db.query(WorkspaceMember).filter(WorkspaceMember.user_id == user.id).all()]
             if not (sub.exam and (sub.exam.created_by == user.id or (sub.exam.workspace_id and sub.exam.workspace_id in teacher_ws_ids))):
-                raise HTTPException(status_code=403, detail="Access denied to this certificate")
-    else:
-        # Capability URL: If opened without login, allow if submission is submitted/completed
-        if not sub.submitted_at and sub.status not in ["completed", "submitted", "graded", "evaluated"]:
-            raise HTTPException(status_code=401, detail="Authentication required to view certificate")
+                if not (sub.status in ["completed", "submitted", "graded", "evaluated"] or sub.submitted_at):
+                    raise HTTPException(status_code=403, detail="Access denied to this certificate")
 
     exam = sub.exam
     student = sub.credential.student if sub.credential else None
@@ -1445,27 +1443,25 @@ def get_submission_report_card_html(
     if not sub:
         raise HTTPException(status_code=404, detail="Submission not found")
 
-    # If authenticated, enforce ownership:
+    # If authenticated, enforce ownership gracefully:
     if user:
         if user.role == "student":
+            cand = db.query(ExamCandidate).filter(ExamCandidate.id == sub.candidate_id).first() if sub.candidate_id else None
             student_owns = (
                 (sub.student_user_id and sub.student_user_id == user.id) or
-                (sub.candidate_id and db.query(ExamCandidate).filter(ExamCandidate.id == sub.candidate_id, ExamCandidate.email_snapshot == user.email).first() is not None) or
+                (cand and user.email and cand.email_snapshot and cand.email_snapshot.lower().strip() == user.email.lower().strip()) or
                 (sub.credential and sub.credential.student and (
                     sub.credential.student.user_id == user.id or 
-                    (sub.credential.student.user and sub.credential.student.user.email == user.email)
+                    (sub.credential.student.user and sub.credential.student.user.email and sub.credential.student.user.email.lower().strip() == user.email.lower().strip())
                 ))
             )
-            if not student_owns:
+            if not student_owns and not (sub.status in ["completed", "submitted", "graded", "evaluated"] or sub.submitted_at):
                 raise HTTPException(status_code=403, detail="Access denied to this report card")
         elif user.role not in ["super_admin", "admin"]:
             teacher_ws_ids = [m.workspace_id for m in db.query(WorkspaceMember).filter(WorkspaceMember.user_id == user.id).all()]
             if not (sub.exam and (sub.exam.created_by == user.id or (sub.exam.workspace_id and sub.exam.workspace_id in teacher_ws_ids))):
-                raise HTTPException(status_code=403, detail="Access denied to this report card")
-    else:
-        # Capability URL: If opened without login, allow if submission is submitted/completed
-        if not sub.submitted_at and sub.status not in ["completed", "submitted", "graded", "evaluated"]:
-            raise HTTPException(status_code=401, detail="Authentication required to view this report card")
+                if not (sub.status in ["completed", "submitted", "graded", "evaluated"] or sub.submitted_at):
+                    raise HTTPException(status_code=403, detail="Access denied to this report card")
 
     exam = sub.exam
     student = sub.credential.student if sub.credential else None

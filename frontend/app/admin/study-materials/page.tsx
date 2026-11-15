@@ -22,9 +22,10 @@ import {
   Cloud,
   FolderOpen,
   FileText,
-  AlertCircle
+  AlertCircle,
+  ExternalLink
 } from "lucide-react";
-import { apiFetch, getApiV1 } from "@/lib/api";
+import { apiFetch, getApiV1, getApiBase } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 
 interface AdminMaterial {
@@ -148,6 +149,13 @@ export default function AdminStudyMaterialsPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (file.size > 100 * 1024 * 1024) {
+      setFormError("File exceeds 100MB size limit. Please choose a smaller file.");
+      return;
+    }
+
+    const activeToken = token || (typeof window !== "undefined" ? localStorage.getItem("token") : null);
+
     try {
       setUploadingFile(true);
       setFormError(null);
@@ -157,7 +165,7 @@ export default function AdminStudyMaterialsPage() {
       const res = await fetch(`${getApiV1()}/study-materials/upload-file`, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${activeToken}`
         },
         body: formData
       });
@@ -171,8 +179,16 @@ export default function AdminStudyMaterialsPage() {
           setFormTitle(file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ").toUpperCase());
         }
       } else {
-        const err = await res.json().catch(() => ({}));
-        setFormError(err.detail || "Failed to upload document file.");
+        let errMsg = "Failed to upload document file.";
+        try {
+          const err = await res.json();
+          errMsg = err.detail || errMsg;
+        } catch {
+          if (res.status === 413) {
+            errMsg = "File is too large for upload (max 100MB).";
+          }
+        }
+        setFormError(errMsg);
       }
     } catch (err: any) {
       setFormError(err.message || "Network error uploading file.");
@@ -412,6 +428,17 @@ export default function AdminStudyMaterialsPage() {
                     </td>
 
                     <td className="py-3 px-4 text-right space-x-1">
+                      {mat.file_url && (
+                        <a
+                          href={mat.file_url.startsWith("http") ? mat.file_url : `${getApiBase()}${mat.file_url.startsWith("/") ? "" : "/"}${mat.file_url}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-1.5 inline-flex items-center rounded-lg text-slate-400 hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-950/50 cursor-pointer"
+                          title="View / Download Document"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </a>
+                      )}
                       <button
                         type="button"
                         onClick={() => openEditModal(mat)}

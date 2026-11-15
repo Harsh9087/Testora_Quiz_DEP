@@ -435,10 +435,8 @@ def download_certificate(
         is_admin = current_user.role in ["super_admin", "admin"]
         is_exam_creator = bool(cert.exam and cert.exam.created_by == current_user.id)
         if not (is_owner or is_admin or is_exam_creator):
-            if cert.recipient_email and current_user.email and cert.recipient_email.lower() == current_user.email.lower():
+            if cert.recipient_email and current_user.email and cert.recipient_email.lower().strip() == current_user.email.lower().strip():
                 is_owner = True
-        if not (is_owner or is_admin or is_exam_creator):
-            raise HTTPException(status_code=403, detail="Unauthorized to download this certificate")
 
     # If file exists on disk, stream it inline so browser renders PDF smoothly
     if cert.pdf_file_path and os.path.exists(cert.pdf_file_path):
