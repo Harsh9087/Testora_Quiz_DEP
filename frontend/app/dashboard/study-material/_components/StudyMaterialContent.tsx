@@ -79,6 +79,16 @@ export function StudyMaterialContent() {
   // PDF Preview Modal State
   const [previewTarget, setPreviewTarget] = useState<StudyMaterialItem | null>(null);
 
+  // Close preview modal on Escape key
+  useEffect(() => {
+    if (!previewTarget) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setPreviewTarget(null);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [previewTarget]);
+
   // Fetch dynamic categories from backend
   const fetchCategories = async () => {
     try {
@@ -642,38 +652,65 @@ export function StudyMaterialContent() {
 
       {/* ═══════ PDF PREVIEW MODAL ═══════ */}
       {previewTarget && previewTarget.file_url && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="w-full max-w-4xl h-[85vh] rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center p-2 xs:p-3 sm:p-5 md:p-6 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={() => setPreviewTarget(null)}
+        >
+          <div 
+            className="w-full max-w-4xl h-[92vh] sm:h-[86vh] max-h-[92vh] rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Header */}
-            <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 bg-slate-50 dark:bg-slate-800/50">
-              <div className="flex items-center gap-2 min-w-0">
-                <FileText className="w-4 h-4 text-purple-600 shrink-0" />
-                <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
-                  {previewTarget.title}
-                </h3>
+            <div className="px-3 sm:px-5 py-2.5 sm:py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 bg-slate-50 dark:bg-slate-800/60 shrink-0">
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <div className="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+                  <FileText className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate" title={previewTarget.title}>
+                    {previewTarget.title}
+                  </h3>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 hidden xs:block truncate">
+                    {previewTarget.category_display || previewTarget.category || "Study Material"}
+                  </p>
+                </div>
               </div>
 
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                <a
+                  href={getFullDownloadUrl(previewTarget.file_url)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-colors"
+                  title="Open in New Tab"
+                >
+                  <span>Fullscreen</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+
                 <button
                   type="button"
                   onClick={() => handleDownload(previewTarget)}
-                  className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs flex items-center gap-1 cursor-pointer"
+                  className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs flex items-center gap-1 cursor-pointer active:scale-95"
                 >
                   <Download className="w-3.5 h-3.5" />
-                  <span>Download</span>
+                  <span className="hidden xs:inline">Download</span>
                 </button>
+
                 <button
                   type="button"
                   onClick={() => setPreviewTarget(null)}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer"
+                  className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 flex items-center justify-center transition-all cursor-pointer shadow-xs active:scale-95"
+                  title="Close Preview (Esc)"
+                  aria-label="Close Preview"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.5]" />
                 </button>
               </div>
             </div>
 
             {/* Embedded Iframe Preview */}
-            <div className="flex-1 w-full bg-slate-100 dark:bg-slate-950 flex flex-col">
+            <div className="flex-1 w-full bg-slate-100 dark:bg-slate-950 flex flex-col min-h-0 relative overflow-hidden">
               <iframe
                 src={getPreviewUrl(previewTarget.file_url)}
                 className="w-full h-full border-0 flex-1"
@@ -681,7 +718,7 @@ export function StudyMaterialContent() {
                 allow="autoplay"
               />
               {previewTarget.file_url && previewTarget.file_url.includes("drive.google.com") && (
-                <div className="p-2 text-center bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
+                <div className="p-2 text-center bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shrink-0">
                   <a
                     href={previewTarget.file_url}
                     target="_blank"
@@ -693,6 +730,27 @@ export function StudyMaterialContent() {
                   </a>
                 </div>
               )}
+            </div>
+
+            {/* Mobile Bottom Quick Actions Bar */}
+            <div className="sm:hidden px-3 py-2 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex items-center justify-between gap-2 shrink-0">
+              <a
+                href={getFullDownloadUrl(previewTarget.file_url)}
+                target="_blank"
+                rel="noreferrer"
+                className="flex-1 py-2 px-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs text-center"
+              >
+                <ExternalLink className="w-3.5 h-3.5 text-blue-600" />
+                <span>Fullscreen</span>
+              </a>
+              <button
+                type="button"
+                onClick={() => setPreviewTarget(null)}
+                className="flex-1 py-2 px-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs cursor-pointer active:scale-95"
+              >
+                <X className="w-3.5 h-3.5 stroke-[2.5]" />
+                <span>Close Viewer</span>
+              </button>
             </div>
           </div>
         </div>
