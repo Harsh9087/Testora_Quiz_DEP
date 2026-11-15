@@ -451,17 +451,15 @@ export default function DashboardLayout({
 
   useEffect(() => {
     const handlePop = () => {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get("tab");
       const hash = window.location.hash.replace("#", "");
-      if (hash) {
+      if (tab) {
+        setCurrentTab(tab);
+      } else if (hash) {
         setCurrentTab(hash);
-      } else {
-        const params = new URLSearchParams(window.location.search);
-        const tab = params.get("tab");
-        if (tab) {
-          setCurrentTab(tab);
-        } else if (pathname === "/dashboard/teacher" || pathname === "/dashboard/student") {
-          setCurrentTab("overview");
-        }
+      } else if (pathname === "/dashboard/teacher" || pathname === "/dashboard/student") {
+        setCurrentTab("overview");
       }
     };
     handlePop();
@@ -485,20 +483,13 @@ export default function DashboardLayout({
     const normalized = (tab === "all" || tab === "overview" || !tab) ? "overview" : tab;
     setCurrentTab(normalized);
     const cleanPath = (pathname || "").replace(/\/$/, "");
+    const targetUrl = normalized === "overview" ? "/dashboard/teacher" : `/dashboard/teacher?tab=${normalized}`;
     if (cleanPath === "/dashboard/teacher") {
-      if (normalized === "overview") {
-        if (window.location.hash) {
-          window.history.pushState(null, "", window.location.pathname);
-        }
-        window.scrollTo(0, 0);
-        window.dispatchEvent(new CustomEvent("switch-tab", { detail: "overview" }));
-      } else {
-        window.location.hash = normalized;
-        window.scrollTo(0, 0);
-        window.dispatchEvent(new CustomEvent("switch-tab", { detail: normalized }));
-      }
+      window.history.pushState(null, "", targetUrl);
+      window.scrollTo(0, 0);
+      window.dispatchEvent(new CustomEvent("switch-tab", { detail: normalized }));
     } else {
-      router.push(normalized === "overview" ? "/dashboard/teacher" : `/dashboard/teacher#${normalized}`);
+      router.push(targetUrl);
     }
   };
 
@@ -729,7 +720,7 @@ export default function DashboardLayout({
   const parentItem = breadcrumbItems.length >= 2 ? breadcrumbItems[breadcrumbItems.length - 2] : null;
 
   return (
-    <div className="flex h-screen bg-[#F8FAFC] dark:bg-[#0B1120] overflow-hidden text-[#111827] dark:text-[#F1F5F9]">
+    <div className="flex h-screen h-[100dvh] max-h-[100dvh] w-full bg-[#F8FAFC] dark:bg-[#0B1120] overflow-hidden text-[#111827] dark:text-[#F1F5F9]">
       
       {/* Mobile Backdrop Overlay */}
       {sidebarOpen && (
@@ -1835,16 +1826,16 @@ export default function DashboardLayout({
       {/* ══════════════════════════════════════════════════════
           MAIN CONTENT AREA & TOPBAR
          ══════════════════════════════════════════════════════ */}
-      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+      <div className="flex-1 flex flex-col h-full min-h-0 overflow-hidden min-w-0">
         {/* Top App Navigation Header */}
-        <header className="h-14 sm:h-16 border-b border-slate-200 dark:border-[#263449] bg-white dark:bg-[#0F172A] px-2.5 xs:px-3 sm:px-4 md:px-6 flex items-center justify-between shrink-0 shadow-xs z-30 transition-colors w-full gap-2">
+        <header className="sticky top-0 z-40 h-14 sm:h-16 border-b border-slate-200 dark:border-[#263449] bg-white/95 dark:bg-[#0F172A]/95 backdrop-blur-md px-2.5 xs:px-3 sm:px-4 md:px-6 flex items-center justify-between shrink-0 shadow-xs transition-colors w-full gap-2">
           
           {/* Left Breadcrumb & Mobile Menu Toggle */}
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             {/* Mobile Hamburger Drawer Toggle */}
             <button 
               onClick={() => setSidebarOpen(true)}
-              className="md:hidden p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer shrink-0 transition-colors"
+              className="md:hidden p-2 rounded-xl text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700 cursor-pointer shrink-0 transition-colors shadow-2xs"
               aria-label="Open Sidebar Menu"
             >
               <Menu className="h-5 w-5" />
@@ -2117,7 +2108,7 @@ export default function DashboardLayout({
         </header>
 
         {/* Main Content Body */}
-        <main className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 bg-[#F8FAFC] dark:bg-[#0B1120] bg-texture-dots">
+        <main className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain p-3 sm:p-4 md:p-6 bg-[#F8FAFC] dark:bg-[#0B1120] bg-texture-dots">
           {children}
         </main>
       </div>

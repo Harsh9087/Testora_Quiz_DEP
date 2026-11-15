@@ -127,13 +127,8 @@ export default function TeacherDashboard() {
       reloadStudentDirectories();
     }
     if (typeof window !== "undefined") {
-      if (normalized === "overview") {
-        if (window.location.hash) {
-          window.history.pushState(null, "", window.location.pathname);
-        }
-      } else {
-        window.location.hash = normalized;
-      }
+      const targetUrl = normalized === "overview" ? window.location.pathname : `${window.location.pathname}?tab=${normalized}`;
+      window.history.pushState(null, "", targetUrl);
       window.scrollTo(0, 0);
       window.dispatchEvent(new CustomEvent("switch-tab", { detail: normalized }));
     }
@@ -141,21 +136,19 @@ export default function TeacherDashboard() {
 
   useEffect(() => {
     setMounted(true);
-    const handleHash = () => {
+    const handleUrlSync = () => {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get("tab");
       const hash = window.location.hash.replace("#", "");
-      if (hash) {
-        setActiveSectionTab(hash);
+      if (tab) {
+        setActiveSectionTab(tab === "all" ? "overview" : tab);
+      } else if (hash) {
+        setActiveSectionTab(hash === "all" ? "overview" : hash);
       } else {
-        const params = new URLSearchParams(window.location.search);
-        const tab = params.get("tab");
-        if (tab) {
-          setActiveSectionTab(tab);
-        } else {
-          setActiveSectionTab("overview");
-        }
+        setActiveSectionTab("overview");
       }
     };
-    handleHash();
+    handleUrlSync();
     const handleCustom = (e: any) => {
       if (e.detail) {
         const target = e.detail === "all" ? "overview" : e.detail;
@@ -163,10 +156,12 @@ export default function TeacherDashboard() {
         window.scrollTo(0, 0);
       }
     };
-    window.addEventListener("hashchange", handleHash);
+    window.addEventListener("hashchange", handleUrlSync);
+    window.addEventListener("popstate", handleUrlSync);
     window.addEventListener("switch-tab", handleCustom);
     return () => {
-      window.removeEventListener("hashchange", handleHash);
+      window.removeEventListener("hashchange", handleUrlSync);
+      window.removeEventListener("popstate", handleUrlSync);
       window.removeEventListener("switch-tab", handleCustom);
     };
   }, []);
@@ -680,29 +675,6 @@ export default function TeacherDashboard() {
   const completedExams = useMemo(() => {
     return exams.filter((e) => e.is_published && getExamStatus(e).status === "completed");
   }, [exams]);
-
-  useEffect(() => {
-    const handleHash = () => {
-      const hash = window.location.hash.replace("#", "");
-      if (hash) {
-        const el = document.getElementById(hash);
-        if (el) {
-          el.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-      }
-    };
-    handleHash();
-    window.addEventListener("hashchange", handleHash);
-    const handleSwitch = (e: any) => {
-      const el = document.getElementById(e.detail);
-      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-    };
-    window.addEventListener("switch-tab", handleSwitch);
-    return () => {
-      window.removeEventListener("hashchange", handleHash);
-      window.removeEventListener("switch-tab", handleSwitch);
-    };
-  }, []);
 
   // WebSocket Live Proctoring alerts feed
   useEffect(() => {
