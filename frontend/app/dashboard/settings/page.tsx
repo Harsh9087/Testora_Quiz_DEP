@@ -39,7 +39,8 @@ import {
   Moon,
   Monitor,
   Flame,
-  ArrowRight
+  ArrowRight,
+  ArrowLeft
 } from "lucide-react";
 
 import { usePreferenceStore, FontFamily, InterfaceDensity, ThemePreference } from "@/store/preferenceStore";
@@ -387,7 +388,22 @@ export default function SettingsPage() {
   );
 
   return (
-    <div className="max-w-[1240px] mx-auto space-y-6">
+    <div className="max-w-[1240px] mx-auto space-y-4">
+      {/* ═══════ RETURN TO DASHBOARD BAR ═══════ */}
+      <div className="flex items-center justify-between gap-3 pt-1">
+        <Link
+          href={role === "teacher" ? "/dashboard/teacher" : "/dashboard/student"}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-[#111C31] border border-slate-200/90 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-300 dark:hover:border-blue-700 shadow-2xs transition-all cursor-pointer group active:scale-95"
+          title="Return to Main Dashboard"
+        >
+          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5 text-slate-500 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400" />
+          <span>Back to Dashboard</span>
+        </Link>
+        <span className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400">
+          Account Settings
+        </span>
+      </div>
+
       {/* ══════════════════════════════════════════════════════
           TOP SETTINGS HEADER
          ══════════════════════════════════════════════════════ */}

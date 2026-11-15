@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   BookOpen,
   Search,
@@ -20,6 +21,7 @@ import {
   FileText,
   Coins,
   ArrowRight,
+  ArrowLeft,
   ExternalLink,
   ChevronRight,
   Loader2,
@@ -266,7 +268,22 @@ export function StudyMaterialContent() {
   };
 
   return (
-    <div className="space-y-6 pb-12 animate-in fade-in duration-200">
+    <div className="space-y-4 pb-12 animate-in fade-in duration-200">
+      {/* ═══════ COMPACT RETURN BAR TO DASHBOARD ═══════ */}
+      <div className="flex items-center justify-between gap-3 pt-1">
+        <Link
+          href={role === "teacher" ? "/dashboard/teacher" : "/dashboard/student"}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-[#111C31] border border-slate-200/90 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-300 dark:hover:border-blue-700 shadow-2xs transition-all cursor-pointer group active:scale-95"
+          title="Return to Main Dashboard"
+        >
+          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5 text-slate-500 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400" />
+          <span>Back to Dashboard</span>
+        </Link>
+        <span className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400">
+          Placement Study Materials &amp; Notes
+        </span>
+      </div>
+
       {/* ═══════ HEADER BANNER ═══════ */}
       <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-[#1E1B4B] via-[#2E1065] to-[#0F172A] border border-purple-500/25 p-5 sm:p-7 text-white shadow-xl">
         <div className="absolute top-0 right-0 -mr-10 -mt-10 w-48 h-48 bg-purple-500/15 rounded-full blur-2xl pointer-events-none" />

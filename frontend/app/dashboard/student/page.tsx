@@ -131,22 +131,35 @@ export default function StudentDashboard() {
     }
 
     if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const tabParam = params.get("tab");
-      if (tabParam === "certificates") {
-        setActivePortalTab("certificates");
-      } else if (tabParam === "company-tests") {
-        setActivePortalTab("company-tests");
-      } else if (tabParam === "mock-tests") {
-        setActivePortalTab("mock-tests");
-      } else if (tabParam === "study-materials" || tabParam === "study-material") {
-        setActivePortalTab("study-materials");
-      } else if (tabParam === "submissions") {
-        setActivePortalTab("submissions");
-      }
+      const handleUrlSync = () => {
+        const p = new URLSearchParams(window.location.search);
+        const tabParam = p.get("tab");
+        if (tabParam === "certificates") {
+          setActivePortalTab("certificates");
+        } else if (tabParam === "company-tests") {
+          setActivePortalTab("company-tests");
+        } else if (tabParam === "mock-tests") {
+          setActivePortalTab("mock-tests");
+        } else if (tabParam === "study-materials" || tabParam === "study-material") {
+          setActivePortalTab("study-materials");
+        } else if (tabParam === "submissions") {
+          setActivePortalTab("submissions");
+        } else if (tabParam === "progress") {
+          setActivePortalTab("progress");
+        } else {
+          setActivePortalTab("assigned");
+        }
+      };
+
+      handleUrlSync();
 
       const handleSwitchTab = (e: any) => {
-        if (e.detail === "company-tests") {
+        if (!e.detail || e.detail === "assigned" || e.detail === "overview" || e.detail === "all") {
+          setActivePortalTab("assigned");
+          setMobileViewingDetail(false);
+          setSelectedSubId(null);
+          setSelectedSubDetail(null);
+        } else if (e.detail === "company-tests") {
           setActivePortalTab("company-tests");
         } else if (e.detail === "mock-tests") {
           setActivePortalTab("mock-tests");
@@ -154,12 +167,21 @@ export default function StudentDashboard() {
           setActivePortalTab("certificates");
         } else if (e.detail === "study-materials" || e.detail === "study-material") {
           setActivePortalTab("study-materials");
-        } else if (e.detail === "assigned") {
-          setActivePortalTab("assigned");
+        } else if (e.detail === "submissions") {
+          setActivePortalTab("submissions");
+        } else if (e.detail === "progress") {
+          setActivePortalTab("progress");
         }
       };
+
+      window.addEventListener("popstate", handleUrlSync);
+      window.addEventListener("hashchange", handleUrlSync);
       window.addEventListener("switch-tab", handleSwitchTab);
-      return () => window.removeEventListener("switch-tab", handleSwitchTab);
+      return () => {
+        window.removeEventListener("popstate", handleUrlSync);
+        window.removeEventListener("hashchange", handleUrlSync);
+        window.removeEventListener("switch-tab", handleSwitchTab);
+      };
     }
   }, [token, selectedStudentFilter]);
 
@@ -422,24 +444,31 @@ export default function StudentDashboard() {
       )}
 
       {/* ═══════ COMPACT RETURN BAR FOR FEATURE PAGES ═══════ */}
-      {(activePortalTab === "mock-tests" || activePortalTab === "company-tests" || activePortalTab === "certificates" || activePortalTab === "study-materials") && (
+      {activePortalTab !== "assigned" && (
         <div className="flex items-center justify-between gap-3 pt-1">
           <button
             onClick={() => {
               setActivePortalTab("assigned");
+              setMobileViewingDetail(false);
+              setSelectedSubId(null);
+              setSelectedSubDetail(null);
               window.history.pushState(null, "", "/dashboard/student");
               window.dispatchEvent(new CustomEvent("switch-tab", { detail: "assigned" }));
+              window.scrollTo(0, 0);
             }}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-[#111C31] border border-slate-200/90 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-300 dark:hover:border-blue-700 shadow-2xs transition-all cursor-pointer group active:scale-95"
+            title="Return to Main Dashboard Overview"
           >
             <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5 text-slate-500 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400" />
-            <span>Back</span>
+            <span>Back to Dashboard</span>
           </button>
           <span className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400">
             {activePortalTab === "mock-tests" && "Mock Tests"}
             {activePortalTab === "company-tests" && "Placement Arena"}
             {activePortalTab === "certificates" && "Certificates"}
             {activePortalTab === "study-materials" && "Placement Study Materials & Notes"}
+            {activePortalTab === "submissions" && "Completed Tests & Score Reports"}
+            {activePortalTab === "progress" && "Learning Trends & Analytics"}
           </span>
         </div>
       )}

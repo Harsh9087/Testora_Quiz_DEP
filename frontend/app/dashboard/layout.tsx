@@ -480,8 +480,24 @@ export default function DashboardLayout({
 
   const navToTab = (tab: string) => {
     closeSidebarMobile();
-    const normalized = (tab === "all" || tab === "overview" || !tab) ? "overview" : tab;
+    const isStudent = role === "student" || pathname?.startsWith("/dashboard/student");
+    const normalized = (tab === "all" || tab === "overview" || tab === "assigned" || !tab) ? "overview" : tab;
     setCurrentTab(normalized);
+
+    if (isStudent) {
+      const studentTab = normalized === "overview" ? "assigned" : normalized;
+      const targetUrl = normalized === "overview" ? "/dashboard/student" : `/dashboard/student?tab=${studentTab}`;
+      const cleanPath = (pathname || "").replace(/\/$/, "");
+      if (cleanPath === "/dashboard/student") {
+        window.history.pushState(null, "", targetUrl);
+        window.scrollTo(0, 0);
+        window.dispatchEvent(new CustomEvent("switch-tab", { detail: studentTab }));
+      } else {
+        router.push(targetUrl);
+      }
+      return;
+    }
+
     const cleanPath = (pathname || "").replace(/\/$/, "");
     const targetUrl = normalized === "overview" ? "/dashboard/teacher" : `/dashboard/teacher?tab=${normalized}`;
     if (cleanPath === "/dashboard/teacher") {
@@ -1133,14 +1149,18 @@ export default function DashboardLayout({
                       closeSidebarMobile();
                       if (pathname === "/dashboard/student") {
                         e.preventDefault();
+                        window.history.pushState(null, "", "/dashboard/student");
                         window.dispatchEvent(new CustomEvent("switch-tab", { detail: "assigned" }));
                         setCurrentTab("overview");
+                        window.scrollTo(0, 0);
+                      } else {
+                        router.push("/dashboard/student");
                       }
                     }}
                     className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-xs font-semibold transition-all cursor-pointer ${
                       sidebarCollapsed ? "md:justify-center md:px-0" : ""
                     } ${
-                      pathname === "/dashboard/student" && currentTab !== "company-tests" && currentTab !== "mock-tests" && currentTab !== "certificates"
+                      pathname === "/dashboard/student" && (currentTab === "overview" || currentTab === "assigned" || !currentTab || (currentTab !== "company-tests" && currentTab !== "mock-tests" && currentTab !== "certificates" && currentTab !== "study-materials" && currentTab !== "submissions" && currentTab !== "progress"))
                         ? "bg-blue-50/90 text-[#2563EB] dark:bg-blue-950/60 dark:text-[#60A5FA] border border-blue-200/80 dark:border-blue-900/60 font-bold shadow-xs"
                         : "text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/60 border border-transparent"
                     }`}
@@ -1871,10 +1891,25 @@ export default function DashboardLayout({
 
             {/* Mobile Brand Logo */}
             <Link 
-              href="/" 
+              href={role === "student" ? "/dashboard/student" : role === "teacher" ? "/dashboard/teacher" : "/"} 
+              onClick={(e) => {
+                if (role === "student" && pathname === "/dashboard/student") {
+                  e.preventDefault();
+                  window.history.pushState(null, "", "/dashboard/student");
+                  window.dispatchEvent(new CustomEvent("switch-tab", { detail: "assigned" }));
+                  setCurrentTab("overview");
+                  window.scrollTo(0, 0);
+                } else if (role === "teacher" && pathname === "/dashboard/teacher") {
+                  e.preventDefault();
+                  window.history.pushState(null, "", "/dashboard/teacher");
+                  window.dispatchEvent(new CustomEvent("switch-tab", { detail: "overview" }));
+                  setCurrentTab("overview");
+                  window.scrollTo(0, 0);
+                }
+              }}
               className="md:hidden flex items-center shrink-0 transition-transform active:scale-95" 
-              aria-label="Testora Quiz Home"
-              title="Testora Quiz Home"
+              aria-label="Testora Quiz Dashboard"
+              title="Testora Quiz Dashboard"
             >
               <AppLogo variant="row" height={26} showBadge={false} />
             </Link>
