@@ -921,7 +921,7 @@ def export_printable_submission_response(
             score_awarded = q_eval.get("score_awarded", 0.0)
         elif q_eval is not None:
             selected_ans = str(q_eval)
-            is_correct = str(selected_ans).strip().lower() == str(correct_ans).strip().lower()
+            is_correct = selected_ans.strip().lower() == str(correct_ans or "").strip().lower()
             score_awarded = float(q.get("marks", 1.0)) if is_correct else 0.0
             ai_critique = None
         else:
@@ -1155,9 +1155,9 @@ from fastapi.responses import HTMLResponse
 @router.get("/submissions/{submission_id}/certificate-html")
 def get_submission_certificate_html(
     submission_id: str,
+    request: Request,
     token: Optional[str] = None,
     authorization: Optional[str] = Header(None),
-    request: Optional[Request] = None,
     db: Session = Depends(get_db)
 ):
     """Generates an official downloadable/printable Certificate of Completion."""
@@ -1417,9 +1417,9 @@ def get_submission_certificate_html(
 @router.get("/submissions/{submission_id}/report-card-html")
 def get_submission_report_card_html(
     submission_id: str,
+    request: Request,
     token: Optional[str] = None,
     authorization: Optional[str] = Header(None),
-    request: Optional[Request] = None,
     db: Session = Depends(get_db)
 ):
     """Generates an official itemized student performance report card."""

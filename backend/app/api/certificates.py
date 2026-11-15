@@ -392,9 +392,9 @@ def trigger_exam_certificate_generation(
 @router.get("/download/{certificate_id}")
 def download_certificate(
     certificate_id: str,
+    request: Request,
     token: Optional[str] = Query(None),
     authorization: Optional[str] = Header(None),
-    request: Optional[Request] = None,
     db: Session = Depends(get_db)
 ):
     """
@@ -580,8 +580,11 @@ def get_my_certificates(
     Auto-syncs accredited certificates for any passed submissions that do not have an IssuedCertificate yet.
     """
     try:
-        user_email = current_user.email.lower().strip() if current_user.email else ""
-        user_cand_ids = [c.id for c in db.query(ExamCandidate.id).filter(func.lower(ExamCandidate.email_snapshot) == user_email).all()] if user_email else []
+        user_email = (current_user.email or "").lower().strip()
+        user_cand_ids = []
+        if user_email:
+            user_cand_ids = [c.id for c in db.query(ExamCandidate.id).filter(func.lower(ExamCandidate.email_snapshot) == user_email).all()]
+
         sub_filters = [ExamSubmission.student_user_id == current_user.id]
         if user_cand_ids:
             sub_filters.append(ExamSubmission.candidate_id.in_(user_cand_ids))
@@ -598,9 +601,13 @@ def get_my_certificates(
     except Exception as e:
         logger.warning(f"Auto-minting certificates on my-certificates failed: {e}")
 
+    cert_filters = [IssuedCertificate.student_user_id == current_user.id]
+    user_email = (current_user.email or "").lower().strip()
+    if user_email:
+        cert_filters.append(func.lower(IssuedCertificate.recipient_email) == user_email)
+
     certs = db.query(IssuedCertificate).filter(
-        (IssuedCertificate.student_user_id == current_user.id) |
-        (func.lower(IssuedCertificate.recipient_email) == (current_user.email.lower().strip() if current_user.email else ""))
+        or_(*cert_filters)
     ).order_by(IssuedCertificate.issue_date.desc()).all()
 
     return certs

@@ -521,7 +521,7 @@ def update_study_material(
     if not material:
         raise HTTPException(status_code=404, detail="Study material not found.")
 
-    update_data = payload.dict(exclude_unset=True)
+    update_data = payload.model_dump(exclude_unset=True)
     if "is_paid" in update_data and not update_data["is_paid"]:
         material.credit_cost = 0
 

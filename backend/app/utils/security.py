@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from typing import Union, Any, Optional
-from jose import jwt
+from jose import jwt, JWTError
 from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer
@@ -64,7 +64,7 @@ def create_refresh_token(subject: Union[str, Any], expires_delta: Optional[timed
     return encoded_jwt
 
 def get_current_user(
-    request: Optional[Request] = None,
+    request: Request,
     db: Session = Depends(get_db),
     token: Optional[str] = Depends(oauth2_scheme_optional)
 ) -> User:
@@ -82,19 +82,14 @@ def get_current_user(
     try:
         # Cryptographically verify signature. verify_exp is False so authenticated sessions persist indefinitely until explicit logout.
         payload = jwt.decode(effective_token, settings.SECRET_KEY, algorithms=["HS256"], options={"verify_exp": False})
-        user_id: str = payload.get("sub")
-        token_type: str = payload.get("type")
-        if user_id is None or token_type != "access":
+        user_id: Optional[str] = payload.get("sub")
+        token_type: Optional[str] = payload.get("type")
+        if not user_id or token_type != "access":
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Could not validate credentials",
             )
-    except jwt.PyJWTError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
-        )
-    except Exception:
+    except (JWTError, Exception):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
@@ -108,7 +103,7 @@ def get_current_user(
     return user
 
 def get_optional_current_user(
-    request: Optional[Request] = None,
+    request: Request,
     db: Session = Depends(get_db),
     token: Optional[str] = Depends(oauth2_scheme_optional)
 ) -> Optional[User]:
@@ -120,9 +115,9 @@ def get_optional_current_user(
         return None
     try:
         payload = jwt.decode(effective_token, settings.SECRET_KEY, algorithms=["HS256"], options={"verify_exp": False})
-        user_id: str = payload.get("sub")
-        token_type: str = payload.get("type")
-        if user_id is None or token_type != "access":
+        user_id: Optional[str] = payload.get("sub")
+        token_type: Optional[str] = payload.get("type")
+        if not user_id or token_type != "access":
             return None
         user = db.query(User).filter(User.id == user_id, User.is_deleted == False).first()
         return user
