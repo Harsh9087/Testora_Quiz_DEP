@@ -7,11 +7,13 @@ import logging
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, Response
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, Response, Header, Query, Request
 from fastapi.responses import FileResponse, StreamingResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func
+from jose import jwt
 
+from app.config import settings
 from app.database import get_db
 from app.models.certificate import CertificateConfig, SavedCertificateTemplate, IssuedCertificate
 from app.models.exam import Exam, ExamSubmission
@@ -390,37 +392,61 @@ def trigger_exam_certificate_generation(
 @router.get("/download/{certificate_id}")
 def download_certificate(
     certificate_id: str,
-    current_user: User = Depends(get_current_user),
+    token: Optional[str] = Query(None),
+    authorization: Optional[str] = Header(None),
+    request: Request = None,
     db: Session = Depends(get_db)
 ):
     """
     Downloads the high-resolution certificate PDF.
-    Accessible to the recipient student, the conducting teacher, or an administrator.
+    Accessible to the recipient student, the conducting teacher, an administrator,
+    or via capability URL (valid certificate ID/code/token).
     """
-    cert = db.query(IssuedCertificate).filter(IssuedCertificate.id == certificate_id).first()
+    auth_token = token
+    if not auth_token and authorization and authorization.startswith("Bearer "):
+        auth_token = authorization.split(" ")[1]
+    if not auth_token and request:
+        auth_token = request.cookies.get("token") or request.cookies.get("access_token")
+
+    current_user = None
+    if auth_token:
+        try:
+            payload = jwt.decode(auth_token, settings.SECRET_KEY, algorithms=["HS256"])
+            user_id = payload.get("sub")
+            if user_id:
+                current_user = db.query(User).filter(User.id == user_id).first()
+        except Exception:
+            current_user = None
+
+    cert = db.query(IssuedCertificate).filter(
+        (IssuedCertificate.id == certificate_id) |
+        (IssuedCertificate.certificate_code == certificate_id) |
+        (IssuedCertificate.verification_token == certificate_id)
+    ).first()
     if not cert:
         raise HTTPException(status_code=404, detail="Certificate not found")
 
-    # Authorization Check:
-    # 1. Super admin can download any certificate
-    # 2. Student user who owns the certificate can download
-    # 3. Teacher who created the exam can download
-    is_owner = (cert.student_user_id and cert.student_user_id == current_user.id)
-    is_admin = current_user.role in ["super_admin", "admin"]
-    is_exam_creator = False
+    if cert.is_revoked:
+        raise HTTPException(status_code=410, detail="This certificate has been revoked and cannot be downloaded.")
 
-    if cert.exam and cert.exam.created_by == current_user.id:
-        is_exam_creator = True
+    # Authorization Check (if authenticated user is present):
+    if current_user:
+        is_owner = (cert.student_user_id and cert.student_user_id == current_user.id)
+        is_admin = current_user.role in ["super_admin", "admin"]
+        is_exam_creator = bool(cert.exam and cert.exam.created_by == current_user.id)
+        if not (is_owner or is_admin or is_exam_creator):
+            if cert.recipient_email and current_user.email and cert.recipient_email.lower() == current_user.email.lower():
+                is_owner = True
+        if not (is_owner or is_admin or is_exam_creator):
+            raise HTTPException(status_code=403, detail="Unauthorized to download this certificate")
 
-    if not (is_owner or is_admin or is_exam_creator):
-        raise HTTPException(status_code=403, detail="Unauthorized to download this certificate")
-
-    # If file exists on disk, stream it
+    # If file exists on disk, stream it inline so browser renders PDF smoothly
     if cert.pdf_file_path and os.path.exists(cert.pdf_file_path):
         return FileResponse(
             path=cert.pdf_file_path,
             filename=f"{cert.certificate_code}.pdf",
-            media_type="application/pdf"
+            media_type="application/pdf",
+            content_disposition_type="inline"
         )
 
     # If file is missing on disk, regenerate dynamically on the fly!
@@ -577,8 +603,9 @@ def public_verify_certificate(
     """
     query_str = token_or_code.strip()
     cert = db.query(IssuedCertificate).filter(
+        (IssuedCertificate.id == query_str) |
         (IssuedCertificate.verification_token == query_str) |
-        (IssuedCertificate.certificate_code == query_str)
+        (func.lower(IssuedCertificate.certificate_code) == query_str.lower())
     ).first()
 
     # Resilient homoglyph & OCR fallback (e.g. '0' vs 'O', '1' vs 'l')
@@ -590,8 +617,9 @@ def public_verify_certificate(
         if 'l' in query_str: candidates.add(query_str.replace('l', '1'))
         for cand in candidates:
             cert = db.query(IssuedCertificate).filter(
+                (IssuedCertificate.id == cand) |
                 (IssuedCertificate.verification_token == cand) |
-                (IssuedCertificate.certificate_code == cand)
+                (func.lower(IssuedCertificate.certificate_code) == cand.lower())
             ).first()
             if cert:
                 break
@@ -654,8 +682,9 @@ def download_public_certificate(
     """
     query_str = token_or_code.strip()
     cert = db.query(IssuedCertificate).filter(
+        (IssuedCertificate.id == query_str) |
         (IssuedCertificate.verification_token == query_str) |
-        (IssuedCertificate.certificate_code == query_str)
+        (func.lower(IssuedCertificate.certificate_code) == query_str.lower())
     ).first()
 
     if not cert:
@@ -666,8 +695,9 @@ def download_public_certificate(
         if 'l' in query_str: candidates.add(query_str.replace('l', '1'))
         for cand in candidates:
             cert = db.query(IssuedCertificate).filter(
+                (IssuedCertificate.id == cand) |
                 (IssuedCertificate.verification_token == cand) |
-                (IssuedCertificate.certificate_code == cand)
+                (func.lower(IssuedCertificate.certificate_code) == cand.lower())
             ).first()
             if cert:
                 break
@@ -678,12 +708,13 @@ def download_public_certificate(
     if cert.is_revoked:
         raise HTTPException(status_code=410, detail="This certificate has been revoked and cannot be downloaded.")
 
-    # 1. If physical file exists on disk, stream directly
+    # 1. If physical file exists on disk, stream directly inline
     if cert.pdf_file_path and os.path.exists(cert.pdf_file_path):
         return FileResponse(
             path=cert.pdf_file_path,
             filename=f"{cert.certificate_code}.pdf",
-            media_type="application/pdf"
+            media_type="application/pdf",
+            content_disposition_type="inline"
         )
 
     # 2. Dynamic generation on-the-fly fallback

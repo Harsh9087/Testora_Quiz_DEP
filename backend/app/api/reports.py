@@ -1,7 +1,7 @@
 import sqlalchemy as sa
 import json
 from datetime import datetime, timedelta
-from fastapi import APIRouter, Depends, HTTPException, Header, Query
+from fastapi import APIRouter, Depends, HTTPException, Header, Query, Request
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from typing import List, Dict, Any, Optional
@@ -1157,12 +1157,15 @@ def get_submission_certificate_html(
     submission_id: str,
     token: Optional[str] = None,
     authorization: Optional[str] = Header(None),
+    request: Request = None,
     db: Session = Depends(get_db)
 ):
     """Generates an official downloadable/printable Certificate of Completion."""
     auth_token = token
     if not auth_token and authorization and authorization.startswith("Bearer "):
         auth_token = authorization.split(" ")[1]
+    if not auth_token and request:
+        auth_token = request.cookies.get("token") or request.cookies.get("access_token")
         
     user = None
     if auth_token:
@@ -1178,28 +1181,47 @@ def get_submission_certificate_html(
     if not sub:
         raise HTTPException(status_code=404, detail="Submission not found")
 
-    if not user:
-        raise HTTPException(status_code=401, detail="Authentication required to view certificate")
-
-    # Check permissions
-    if user.role == "student":
-        student_owns = (
-            sub.credential and sub.credential.student and (
-                sub.credential.student.user_id == user.id or 
-                (sub.credential.student.user and sub.credential.student.user.email == user.email)
+    # If an authenticated user accessed this, enforce role ownership:
+    if user:
+        if user.role == "student":
+            student_owns = (
+                (sub.student_user_id and sub.student_user_id == user.id) or
+                (sub.candidate_id and db.query(ExamCandidate).filter(ExamCandidate.id == sub.candidate_id, ExamCandidate.email_snapshot == user.email).first() is not None) or
+                (sub.credential and sub.credential.student and (
+                    sub.credential.student.user_id == user.id or 
+                    (sub.credential.student.user and sub.credential.student.user.email == user.email)
+                ))
             )
-        )
-        if not student_owns:
-            raise HTTPException(status_code=403, detail="Access denied to this certificate")
-    elif user.role != "super_admin":
-        teacher_ws_ids = [m.workspace_id for m in db.query(WorkspaceMember).filter(WorkspaceMember.user_id == user.id).all()]
-        if not (sub.exam and (sub.exam.created_by == user.id or (sub.exam.workspace_id and sub.exam.workspace_id in teacher_ws_ids))):
-            raise HTTPException(status_code=403, detail="Access denied to this certificate")
-        
+            if not student_owns:
+                raise HTTPException(status_code=403, detail="Access denied to this certificate")
+        elif user.role not in ["super_admin", "admin"]:
+            teacher_ws_ids = [m.workspace_id for m in db.query(WorkspaceMember).filter(WorkspaceMember.user_id == user.id).all()]
+            if not (sub.exam and (sub.exam.created_by == user.id or (sub.exam.workspace_id and sub.exam.workspace_id in teacher_ws_ids))):
+                raise HTTPException(status_code=403, detail="Access denied to this certificate")
+    else:
+        # Capability URL: If opened without login, allow if submission is submitted/completed
+        if not sub.submitted_at and sub.status not in ["completed", "submitted", "graded", "evaluated"]:
+            raise HTTPException(status_code=401, detail="Authentication required to view certificate")
+
     exam = sub.exam
     student = sub.credential.student if sub.credential else None
-    student_name = student.user.full_name if (student and student.user) else "Academic Candidate"
-    student_roll = student.roll_number if student else "N/A"
+    student_name = "Academic Candidate"
+    student_roll = "N/A"
+
+    if sub.candidate_id:
+        cand = db.query(ExamCandidate).filter(ExamCandidate.id == sub.candidate_id).first()
+        if cand:
+            student_name = cand.name_snapshot or student_name
+            student_roll = cand.roll_number_snapshot or student_roll
+
+    if student_name == "Academic Candidate" and sub.student_user_id:
+        stu_user = db.query(User).filter(User.id == sub.student_user_id).first()
+        if stu_user and stu_user.full_name:
+            student_name = stu_user.full_name
+
+    if student_name == "Academic Candidate" and student and student.user:
+        student_name = student.user.full_name or student_name
+        student_roll = getattr(student, "roll_number", None) or student_roll
     exam_name = exam.name if exam else "Assessment"
     score_pct = round(sub.percentage, 1)
     pass_marks = exam.passing_marks if exam else 40
@@ -1380,12 +1402,15 @@ def get_submission_report_card_html(
     submission_id: str,
     token: Optional[str] = None,
     authorization: Optional[str] = Header(None),
+    request: Request = None,
     db: Session = Depends(get_db)
 ):
     """Generates an official itemized student performance report card."""
     auth_token = token
     if not auth_token and authorization and authorization.startswith("Bearer "):
         auth_token = authorization.split(" ")[1]
+    if not auth_token and request:
+        auth_token = request.cookies.get("token") or request.cookies.get("access_token")
         
     user = None
     if auth_token:
@@ -1401,28 +1426,47 @@ def get_submission_report_card_html(
     if not sub:
         raise HTTPException(status_code=404, detail="Submission not found")
 
-    if not user:
-        raise HTTPException(status_code=401, detail="Authentication required to view this report card")
-        
-    # Check permissions
-    if user.role == "student":
-        student_owns = (
-            sub.credential and sub.credential.student and (
-                sub.credential.student.user_id == user.id or 
-                (sub.credential.student.user and sub.credential.student.user.email == user.email)
+    # If authenticated, enforce ownership:
+    if user:
+        if user.role == "student":
+            student_owns = (
+                (sub.student_user_id and sub.student_user_id == user.id) or
+                (sub.candidate_id and db.query(ExamCandidate).filter(ExamCandidate.id == sub.candidate_id, ExamCandidate.email_snapshot == user.email).first() is not None) or
+                (sub.credential and sub.credential.student and (
+                    sub.credential.student.user_id == user.id or 
+                    (sub.credential.student.user and sub.credential.student.user.email == user.email)
+                ))
             )
-        )
-        if not student_owns:
-            raise HTTPException(status_code=403, detail="Access denied to this report card")
-    elif user.role != "super_admin":
-        teacher_ws_ids = [m.workspace_id for m in db.query(WorkspaceMember).filter(WorkspaceMember.user_id == user.id).all()]
-        if not (sub.exam and (sub.exam.created_by == user.id or (sub.exam.workspace_id and sub.exam.workspace_id in teacher_ws_ids))):
-            raise HTTPException(status_code=403, detail="Access denied to this report card")
+            if not student_owns:
+                raise HTTPException(status_code=403, detail="Access denied to this report card")
+        elif user.role not in ["super_admin", "admin"]:
+            teacher_ws_ids = [m.workspace_id for m in db.query(WorkspaceMember).filter(WorkspaceMember.user_id == user.id).all()]
+            if not (sub.exam and (sub.exam.created_by == user.id or (sub.exam.workspace_id and sub.exam.workspace_id in teacher_ws_ids))):
+                raise HTTPException(status_code=403, detail="Access denied to this report card")
+    else:
+        # Capability URL: If opened without login, allow if submission is submitted/completed
+        if not sub.submitted_at and sub.status not in ["completed", "submitted", "graded", "evaluated"]:
+            raise HTTPException(status_code=401, detail="Authentication required to view this report card")
 
     exam = sub.exam
     student = sub.credential.student if sub.credential else None
-    student_name = student.user.full_name if (student and student.user) else "Academic Candidate"
-    student_roll = student.roll_number if student else "N/A"
+    student_name = "Academic Candidate"
+    student_roll = "N/A"
+
+    if sub.candidate_id:
+        cand = db.query(ExamCandidate).filter(ExamCandidate.id == sub.candidate_id).first()
+        if cand:
+            student_name = cand.name_snapshot or student_name
+            student_roll = cand.roll_number_snapshot or student_roll
+
+    if student_name == "Academic Candidate" and sub.student_user_id:
+        stu_user = db.query(User).filter(User.id == sub.student_user_id).first()
+        if stu_user and stu_user.full_name:
+            student_name = stu_user.full_name
+
+    if student_name == "Academic Candidate" and student and student.user:
+        student_name = student.user.full_name or student_name
+        student_roll = getattr(student, "roll_number", None) or student_roll
     exam_name = exam.name if exam else "Assessment"
     score_pct = round(sub.percentage, 1)
     pass_marks = exam.passing_marks if exam else 40

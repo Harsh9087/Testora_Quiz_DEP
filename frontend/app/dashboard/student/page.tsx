@@ -796,7 +796,7 @@ export default function StudentDashboard() {
                         
                         {/* Certificate Button */}
                         <a
-                          href={`${API_V1}/reports/submissions/${selectedSubDetail.submission_id}/certificate-html`}
+                          href={`${API_V1}/reports/submissions/${selectedSubDetail.submission_id}/certificate-html${token ? `?token=${encodeURIComponent(token)}` : ""}`}
                           target="_blank"
                           rel="noreferrer"
                           className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30 hover:bg-amber-500/25 transition-all shadow-2xs"
@@ -809,7 +809,7 @@ export default function StudentDashboard() {
 
                         {/* Report Card Button */}
                         <a
-                          href={`${API_V1}/reports/submissions/${selectedSubDetail.submission_id}/report-card-html`}
+                          href={`${API_V1}/reports/submissions/${selectedSubDetail.submission_id}/report-card-html${token ? `?token=${encodeURIComponent(token)}` : ""}`}
                           target="_blank"
                           rel="noreferrer"
                           className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-blue-500/15 text-blue-800 dark:text-blue-300 border border-blue-500/30 hover:bg-blue-500/25 transition-all shadow-2xs"
@@ -1327,7 +1327,7 @@ export default function StudentDashboard() {
                   {/* Actions Bar */}
                   <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2">
                     <a
-                      href={`${API_V1}/certificates/download/${cert.id}`}
+                      href={`${API_V1}/certificates/download/${cert.id}${token ? `?token=${encodeURIComponent(token)}` : ""}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs cursor-pointer transition-all"
@@ -1339,7 +1339,7 @@ export default function StudentDashboard() {
                     <button
                       type="button"
                       onClick={() => {
-                        const url = `${window.location.origin}/verify-certificate/${cert.verification_token}`;
+                        const url = `${window.location.origin}/verify-certificate/${cert.certificate_code || cert.verification_token}`;
                         navigator.clipboard.writeText(url);
                         setCopiedCertId(cert.id);
                         setTimeout(() => setCopiedCertId(null), 2000);

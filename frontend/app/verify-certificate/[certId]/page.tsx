@@ -118,9 +118,16 @@ export default function PublicVerifyCertificatePage() {
               Certificate Not Found
             </h1>
             <p className="text-sm text-slate-600 dark:text-slate-400 max-w-md mx-auto">
-              The certificate token or ID <code className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded font-mono text-xs">{certId}</code> does not match any accredited certificate on Testora Quiz.
+              {data?.message || `The certificate token or ID "${certId}" does not match any accredited certificate on Testora Quiz.`}
             </p>
-            <div className="pt-2">
+            <div className="pt-2 flex items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={verifyCert}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
+              >
+                Retry Verification
+              </button>
               <Link
                 href="/"
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-xs shadow-xs hover:bg-blue-700 cursor-pointer"

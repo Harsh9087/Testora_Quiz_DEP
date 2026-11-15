@@ -258,7 +258,7 @@ export default function AdminCertificatesPage() {
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1.5">
                         <a
-                          href={`${API_V1}/certificates/download/${c.id}`}
+                          href={`${API_V1}/certificates/download/${c.id}${token ? `?token=${encodeURIComponent(token)}` : ""}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800"
