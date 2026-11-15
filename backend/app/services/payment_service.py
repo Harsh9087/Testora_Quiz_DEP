@@ -1076,6 +1076,21 @@ class PaymentService:
 
         logger.info(f"[WALLET_RECHARGED] User {fresh_user.id} credited {order.credits_added} credits. New balance: {fresh_user.credits_balance}")
 
+        # Dispatch Universal Notification for wallet recharge
+        try:
+            from app.services.notification_service import create_universal_notification
+            user_label = fresh_user.full_name or "A member"
+            create_universal_notification(
+                db=db,
+                title="Wallet Recharged: +Credits Unlocked",
+                message=f"{user_label} added +{order.credits_added:,} credits to their Testora wallet!",
+                notification_type="payment",
+                link="/dashboard",
+                author_user_id=fresh_user.id
+            )
+        except Exception as e:
+            logger.warning(f"Could not dispatch universal notification for recharge: {e}")
+
         return VerifyRechargePaymentResponse(
             success=True,
             message=f"Successfully credited {order.credits_added} credits to your wallet!",
@@ -1245,6 +1260,22 @@ class PaymentService:
         payment_record.razorpay_payment_id = razorpay_payment_id
         payment_record.razorpay_signature = razorpay_signature
         db.commit()
+
+        # Dispatch Universal Notification for subscription activation
+        try:
+            from app.services.notification_service import create_universal_notification
+            user_label = user.full_name or "A member"
+            create_universal_notification(
+                db=db,
+                title="Premium Plan Activated",
+                message=f"{user_label} activated the {payment_record.plan_id or 'Professional'} Plan!",
+                notification_type="payment",
+                link="/dashboard",
+                author_user_id=user.id
+            )
+        except Exception as e:
+            logger.warning(f"Could not dispatch universal notification for subscription: {e}")
+
         return {
             "success": True,
             "message": "Subscription activated successfully",

@@ -2600,6 +2600,21 @@ def submit_mock_test_answers(
     test.attempts_count = (test.attempts_count or 0) + 1
     db.commit()
 
+    # Dispatch Universal Notification for Mock Test Completion
+    try:
+        from app.services.notification_service import create_universal_notification
+        cand_name = current_user.full_name or "A candidate"
+        create_universal_notification(
+            db=db,
+            title=f"Mock Test Completed: {test.title}",
+            message=f"{cand_name} completed '{test.title}' with {round(percentage, 1)}% score ({score}/{max_score}).",
+            notification_type="mock_test",
+            link="/dashboard/student?tab=mock-tests",
+            author_user_id=current_user.id
+        )
+    except Exception as e:
+        logger.warning(f"Could not dispatch universal notification for mock test: {e}")
+
     return MockTestSubmitResult(
         score=score,
         max_score=max_score,

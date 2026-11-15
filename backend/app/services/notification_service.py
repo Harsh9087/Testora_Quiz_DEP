@@ -53,9 +53,58 @@ def create_notification(
         message=message,
         type=notification_type,
         is_read=False,
+        is_universal=False,
         link=link
     )
     db.add(notification)
     db.commit()
     db.refresh(notification)
     return notification
+
+
+def create_universal_notification(
+    db: Session,
+    title: str,
+    message: str,
+    notification_type: str = "system",
+    link: Optional[str] = None,
+    author_user_id: Optional[str] = None
+) -> Optional[Notification]:
+    """
+    Dispatches a broadcast notification visible to all students and instructors.
+    Universal notifications are dispatched for:
+    - Mock test completion
+    - Placement / assessment submission
+    - Premium plan / credit wallet recharge
+    """
+    import uuid
+    from app.models.user import User
+
+    if not author_user_id:
+        sys_admin = db.query(User).filter(User.role == "super_admin").first()
+        author_user_id = sys_admin.id if sys_admin else None
+
+    if not author_user_id:
+        first_user = db.query(User).first()
+        author_user_id = first_user.id if first_user else str(uuid.uuid4())
+
+    notification = Notification(
+        id=str(uuid.uuid4()),
+        user_id=author_user_id,
+        title=title,
+        message=message,
+        type=notification_type,
+        is_read=False,
+        is_universal=True,
+        link=link
+    )
+    db.add(notification)
+    try:
+        db.commit()
+        db.refresh(notification)
+        return notification
+    except Exception as e:
+        db.rollback()
+        logger_warn = f"Failed to commit universal notification: {e}"
+        print(logger_warn)
+        return None

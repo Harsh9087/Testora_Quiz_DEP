@@ -665,3 +665,21 @@ html[data-focus="high"] *:focus-visible {
   -ms-overflow-style: none !important;
   scrollbar-width: none !important;
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   MOBILE PERFORMANCE OPTIMIZATIONS (Prevent scroll freeze & GPU lag)
+   ══════════════════════════════════════════════════════════════════ */
+html, body {
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 768px) {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  main, .overflow-y-auto {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
+}

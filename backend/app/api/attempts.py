@@ -899,6 +899,30 @@ def process_exam_submission(sub: ExamSubmission, db: Session, auto_submitted: bo
             notification_type="grade",
             link="/dashboard/student"
         )
+
+    # Dispatch Universal Activity Notification across the platform
+    try:
+        from app.services.notification_service import create_universal_notification
+        cand_name = "A candidate"
+        if sub.candidate_id:
+            cand = db.query(ExamCandidate).filter(ExamCandidate.id == sub.candidate_id).first()
+            if cand and cand.name_snapshot:
+                cand_name = cand.name_snapshot
+        if cand_name == "A candidate" and sub.student_user_id:
+            stu_u = db.query(User).filter(User.id == sub.student_user_id).first()
+            if stu_u and stu_u.full_name:
+                cand_name = stu_u.full_name
+
+        create_universal_notification(
+            db=db,
+            title=f"Assessment Submitted: {exam.name}",
+            message=f"{cand_name} submitted assessment '{exam.name}' ({round(sub.percentage, 1)}% score).",
+            notification_type="exam",
+            link="/dashboard/student",
+            author_user_id=sub.student_user_id or exam.created_by
+        )
+    except Exception as e:
+        logger.warning(f"Could not dispatch universal notification for exam submission: {e}")
     
     return {
         "status": sub.status,

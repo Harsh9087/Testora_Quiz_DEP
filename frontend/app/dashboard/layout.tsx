@@ -50,9 +50,11 @@ import {
   Code2,
   Cloud,
   FolderOpen,
-  LayoutDashboard
+  LayoutDashboard,
+  Globe
 } from "lucide-react";
 import CreditRechargeModal from "./teacher/_components/CreditRechargeModal";
+import NotificationHistoryModal from "./_components/NotificationHistoryModal";
 import ThemeToggle from "../../components/ThemeToggle";
 import AppLogo from "../../components/AppLogo";
 import AIAgentGuideWidget from "../../components/AIAgentGuideWidget";
@@ -90,6 +92,7 @@ export default function DashboardLayout({
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [notifOpen, setNotifOpen] = useState<boolean>(false);
+  const [notifHistoryModalOpen, setNotifHistoryModalOpen] = useState<boolean>(false);
 
   // Real Database Counts for Sidebar Badges (No fake numbers)
   const [sidebarStats, setSidebarStats] = useState<{
@@ -234,7 +237,9 @@ export default function DashboardLayout({
     
     fetchNotifications();
     fetchUserCredits();
-    fetchSidebarStats();
+    if (role === "teacher" || role === "super_admin" || role === "admin" || role === "inst_admin") {
+      fetchSidebarStats();
+    }
 
     // Fetch and sync user profile to ensure avatar and name are fresh
     if (token) {
@@ -274,13 +279,28 @@ export default function DashboardLayout({
     };
     window.addEventListener("open-credit-recharge", handleOpenRecharge);
 
+    const handleVisibilityChange = () => {
+      if (typeof document !== "undefined" && document.visibilityState === "visible") {
+        fetchNotifications();
+        fetchUserCredits();
+      }
+    };
+    if (typeof document !== "undefined") {
+      document.addEventListener("visibilitychange", handleVisibilityChange);
+    }
+
+    // High performance background polling (45s, tab visible only, avoids CPU/network freezing on mobile)
     const interval = setInterval(() => {
+      if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
       fetchNotifications();
       fetchUserCredits();
-      fetchSidebarStats();
-    }, 20000);
+    }, 45000);
+
     return () => {
       clearInterval(interval);
+      if (typeof document !== "undefined") {
+        document.removeEventListener("visibilitychange", handleVisibilityChange);
+      }
       window.removeEventListener("refresh-sidebar-stats", handleRefreshStats);
       window.removeEventListener("avatar-updated", handleAvatarUpdated);
       window.removeEventListener("open-credit-recharge", handleOpenRecharge);
@@ -1678,6 +1698,32 @@ export default function DashboardLayout({
                 )}
               </button>
 
+              {/* Notification Feed & History */}
+              <button 
+                onClick={() => { closeSidebarMobile(); setNotifHistoryModalOpen(true); }}
+                className={`group relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-medium cursor-pointer transition-all ${
+                  notifHistoryModalOpen
+                    ? "bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-bold border border-blue-200/80 dark:border-blue-900/60 shadow-xs"
+                    : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60 border border-transparent"
+                } ${sidebarCollapsed ? "md:justify-center md:px-0" : ""}`}
+              >
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                  notifHistoryModalOpen
+                    ? "bg-blue-600 text-white shadow-xs"
+                    : "bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400"
+                }`}>
+                  <Bell className="h-4 w-4" />
+                </div>
+                <span className={`text-xs font-medium text-slate-700 dark:text-slate-200 truncate text-left flex-1 ${sidebarCollapsed ? "md:hidden" : ""}`}>
+                  Notification History
+                </span>
+                {!sidebarCollapsed && unreadCount > 0 && (
+                  <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-blue-600 text-white">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+
               {/* Help & Support */}
               <button 
                 onClick={() => { closeSidebarMobile(); router.push("/dashboard/support"); }}
@@ -1972,21 +2018,30 @@ export default function DashboardLayout({
                             !n.is_read ? "bg-[#EFF6FF] dark:bg-[#172B4D]/60 font-medium" : ""
                           }`}
                         >
-                          <div className="space-y-1 flex-1">
-                            <div className="flex items-center justify-between">
-                              <span className="font-semibold text-[#111827] dark:text-[#F1F5F9]">{n.title}</span>
-                              <span className="text-[10px] text-[#64748B] dark:text-[#A3B1C6]">
+                          <div className="space-y-1 flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-1">
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <span className="font-semibold text-[#111827] dark:text-[#F1F5F9] truncate">{n.title}</span>
+                                {n.is_universal && (
+                                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-full text-[8.5px] font-bold bg-sky-100 dark:bg-sky-950/80 text-sky-700 dark:text-sky-300 border border-sky-300/50 shrink-0">
+                                    <Globe className="w-2 h-2" />
+                                    <span>Live</span>
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-[10px] text-[#64748B] dark:text-[#A3B1C6] shrink-0">
                                 {n.created_at ? new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
                               </span>
                             </div>
-                            <p className="text-[11px] text-[#64748B] dark:text-[#A3B1C6] leading-relaxed">{n.message}</p>
+                            <p className="text-[11px] text-[#64748B] dark:text-[#A3B1C6] leading-relaxed break-words">{n.message}</p>
                             {n.link && (
                               <a 
                                 href={n.link}
                                 onClick={() => { markRead(n.id); setNotifOpen(false); }}
                                 className="inline-flex items-center gap-1 text-[11px] text-[#2563EB] hover:underline font-medium mt-1"
                               >
-                                View details &rarr;
+                                <span>View details</span>
+                                <ExternalLink className="w-2.5 h-2.5" />
                               </a>
                             )}
                           </div>
@@ -2000,6 +2055,20 @@ export default function DashboardLayout({
                         </div>
                       ))
                     )}
+                  </div>
+
+                  {/* Flyout Footer: Full Notification History Link */}
+                  <div className="p-2.5 bg-[#F8FAFC] dark:bg-[#0F172A] border-t border-[#E2E8F0] dark:border-[#263449] text-center">
+                    <button
+                      onClick={() => {
+                        setNotifOpen(false);
+                        setNotifHistoryModalOpen(true);
+                      }}
+                      className="w-full py-1.5 px-3 rounded-xl bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/60 dark:hover:bg-blue-900/60 text-[#2563EB] dark:text-[#60A5FA] text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer border border-blue-200/80 dark:border-blue-800"
+                    >
+                      <Bell className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                      <span>View Full Notification History →</span>
+                    </button>
                   </div>
                   </div>
                 </>
@@ -2054,6 +2123,14 @@ export default function DashboardLayout({
         onRechargeSuccess={(newBal) => {
           setUserCredits(newBal);
         }}
+      />
+
+      {/* Notification History Modal */}
+      <NotificationHistoryModal
+        isOpen={notifHistoryModalOpen}
+        onClose={() => setNotifHistoryModalOpen(false)}
+        token={token}
+        onNotificationRead={fetchNotifications}
       />
 
       {/* Floating Testora AI Assistant / Chatbot for Instant Guidance & Testing */}
