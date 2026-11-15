@@ -580,14 +580,15 @@ def get_my_certificates(
     Auto-syncs accredited certificates for any passed submissions that do not have an IssuedCertificate yet.
     """
     try:
-        user_cand_ids = [c.id for c in db.query(ExamCandidate.id).filter(ExamCandidate.email_snapshot == current_user.email).all()] if current_user.email else []
+        user_email = current_user.email.lower().strip() if current_user.email else ""
+        user_cand_ids = [c.id for c in db.query(ExamCandidate.id).filter(func.lower(ExamCandidate.email_snapshot) == user_email).all()] if user_email else []
         sub_filters = [ExamSubmission.student_user_id == current_user.id]
         if user_cand_ids:
             sub_filters.append(ExamSubmission.candidate_id.in_(user_cand_ids))
 
         unminted_subs = db.query(ExamSubmission).filter(
             or_(*sub_filters),
-            ExamSubmission.status.in_(["submitted", "auto_submitted", "graded"])
+            ExamSubmission.status.in_(["submitted", "auto_submitted", "graded", "completed", "evaluated"])
         ).all()
 
         for s in unminted_subs:
@@ -599,7 +600,7 @@ def get_my_certificates(
 
     certs = db.query(IssuedCertificate).filter(
         (IssuedCertificate.student_user_id == current_user.id) |
-        (IssuedCertificate.recipient_email == current_user.email)
+        (func.lower(IssuedCertificate.recipient_email) == (current_user.email.lower().strip() if current_user.email else ""))
     ).order_by(IssuedCertificate.issue_date.desc()).all()
 
     return certs

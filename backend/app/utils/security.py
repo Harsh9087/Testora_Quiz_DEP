@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from typing import Union, Any, Optional
 from jose import jwt
 from passlib.context import CryptContext
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from app.config import settings
@@ -63,10 +63,25 @@ def create_refresh_token(subject: Union[str, Any], expires_delta: Optional[timed
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm="HS256")
     return encoded_jwt
 
-def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)) -> User:
+def get_current_user(
+    request: Request = None,
+    db: Session = Depends(get_db),
+    token: Optional[str] = Depends(oauth2_scheme_optional)
+) -> User:
+    effective_token = token
+    if not effective_token and request:
+        effective_token = request.cookies.get("token") or request.cookies.get("access_token") or request.cookies.get("auth_token")
+
+    if not effective_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
     try:
         # Cryptographically verify signature. verify_exp is False so authenticated sessions persist indefinitely until explicit logout.
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"], options={"verify_exp": False})
+        payload = jwt.decode(effective_token, settings.SECRET_KEY, algorithms=["HS256"], options={"verify_exp": False})
         user_id: str = payload.get("sub")
         token_type: str = payload.get("type")
         if user_id is None or token_type != "access":
@@ -92,11 +107,19 @@ def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_
         )
     return user
 
-def get_optional_current_user(db: Session = Depends(get_db), token: Optional[str] = Depends(oauth2_scheme_optional)) -> Optional[User]:
-    if not token:
+def get_optional_current_user(
+    request: Request = None,
+    db: Session = Depends(get_db),
+    token: Optional[str] = Depends(oauth2_scheme_optional)
+) -> Optional[User]:
+    effective_token = token
+    if not effective_token and request:
+        effective_token = request.cookies.get("token") or request.cookies.get("access_token") or request.cookies.get("auth_token")
+
+    if not effective_token:
         return None
     try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"], options={"verify_exp": False})
+        payload = jwt.decode(effective_token, settings.SECRET_KEY, algorithms=["HS256"], options={"verify_exp": False})
         user_id: str = payload.get("sub")
         token_type: str = payload.get("type")
         if user_id is None or token_type != "access":

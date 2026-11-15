@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   BookOpen,
   Plus,
@@ -74,6 +75,7 @@ export default function AdminStudyMaterialsPage() {
   const [formTitle, setFormTitle] = useState("");
   const [formDescription, setFormDescription] = useState("");
   const [formCategory, setFormCategory] = useState("company_notes");
+  const [customCategoryName, setCustomCategoryName] = useState("");
   const [formFileUrl, setFormFileUrl] = useState("");
   const [formFileType, setFormFileType] = useState("pdf");
   const [formFileSize, setFormFileSize] = useState(2.5);
@@ -114,6 +116,7 @@ export default function AdminStudyMaterialsPage() {
     setFormTitle("");
     setFormDescription("");
     setFormCategory("company_notes");
+    setCustomCategoryName("");
     setFormFileUrl("");
     setFormFileType("pdf");
     setFormFileSize(2.5);
@@ -131,7 +134,14 @@ export default function AdminStudyMaterialsPage() {
     setEditingId(mat.id);
     setFormTitle(mat.title);
     setFormDescription(mat.description || "");
-    setFormCategory(mat.category);
+    const isStandard = CATEGORY_OPTIONS.some((c) => c.slug === mat.category);
+    if (isStandard) {
+      setFormCategory(mat.category);
+      setCustomCategoryName("");
+    } else {
+      setFormCategory("custom");
+      setCustomCategoryName(mat.category_display || mat.category);
+    }
     setFormFileUrl(mat.file_url || "");
     setFormFileType(mat.file_type || "pdf");
     setFormFileSize(mat.file_size_mb || 2.5);
@@ -206,6 +216,16 @@ export default function AdminStudyMaterialsPage() {
       return;
     }
 
+    const isCustom = formCategory === "custom";
+    if (isCustom && !customCategoryName.trim()) {
+      setFormError("Please enter a custom category name.");
+      return;
+    }
+    const finalCategory = isCustom
+      ? customCategoryName.trim().toLowerCase().replace(/[^a-z0-9]+/g, "_")
+      : formCategory;
+    const finalCategoryDisplay = isCustom ? customCategoryName.trim() : undefined;
+
     try {
       setSubmitting(true);
       setFormError(null);
@@ -213,7 +233,8 @@ export default function AdminStudyMaterialsPage() {
       const payload = {
         title: formTitle.trim(),
         description: formDescription.trim(),
-        category: formCategory,
+        category: finalCategory,
+        category_display: finalCategoryDisplay,
         file_url: formFileUrl.trim(),
         file_type: formFileType.toLowerCase(),
         file_size_mb: parseFloat(String(formFileSize)) || 1.5,
@@ -299,14 +320,24 @@ export default function AdminStudyMaterialsPage() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={openCreateModal}
-          className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold shadow-md shadow-purple-600/25 flex items-center gap-1.5 cursor-pointer self-start sm:self-auto active:scale-95 transition-all"
-        >
-          <Plus className="w-4 h-4" />
-          <span>+ Add Study Material</span>
-        </button>
+        <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+          <Link
+            href="/dashboard/study-material"
+            target="_blank"
+            className="px-3.5 py-2 rounded-xl bg-purple-50 dark:bg-purple-950/60 hover:bg-purple-100 dark:hover:bg-purple-900/60 text-purple-700 dark:text-purple-300 text-xs font-bold transition-all flex items-center gap-1.5 border border-purple-200 dark:border-purple-800"
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+            <span>View Student Portal</span>
+          </Link>
+          <button
+            type="button"
+            onClick={openCreateModal}
+            className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold shadow-md shadow-purple-600/25 flex items-center gap-1.5 cursor-pointer active:scale-95 transition-all"
+          >
+            <Plus className="w-4 h-4" />
+            <span>+ Add Study Material</span>
+          </button>
+        </div>
       </div>
 
       {/* Filter Toolbar */}
@@ -517,7 +548,23 @@ export default function AdminStudyMaterialsPage() {
                       {c.name}
                     </option>
                   ))}
+                  <option value="custom">✨ + Custom Category (Add New)</option>
                 </select>
+                {formCategory === "custom" && (
+                  <div className="mt-2 animate-in fade-in duration-150">
+                    <label className="text-[11px] font-bold text-purple-600 dark:text-purple-400 block mb-1">
+                      Enter Custom Category Name:
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={customCategoryName}
+                      onChange={(e) => setCustomCategoryName(e.target.value)}
+                      placeholder="e.g. DevOps & Docker, Machine Learning, GATE CSE..."
+                      className="w-full px-3 py-1.5 text-xs rounded-xl bg-purple-50/50 dark:bg-purple-950/40 border border-purple-300 dark:border-purple-800 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-purple-500 font-bold"
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Description */}

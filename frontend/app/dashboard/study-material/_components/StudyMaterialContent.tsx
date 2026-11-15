@@ -50,11 +50,11 @@ export interface StudyMaterialItem {
 }
 
 export const CATEGORY_TABS = [
-  { slug: "all", name: "All Study Materials", icon: FolderOpen },
-  { slug: "company_notes", name: "Company Notes (TCS, Wipro & More)", icon: Building2 },
-  { slug: "dsa", name: "DSA & Problem Solving", icon: Code2 },
-  { slug: "web_development", name: "Web Development", icon: Monitor },
-  { slug: "cloud_computing", name: "Cloud Computing", icon: Cloud },
+  { slug: "all", name: "All Study Materials", icon: "FolderOpen", badge: "FREE", badge_color: "green" },
+  { slug: "company_notes", name: "Company Notes (TCS, Wipro & More)", icon: "Building2", badge: "NEW", badge_color: "purple" },
+  { slug: "dsa", name: "DSA & Problem Solving", icon: "Code2", badge: "HOT", badge_color: "amber" },
+  { slug: "web_development", name: "Web Development", icon: "Monitor", badge: null, badge_color: null },
+  { slug: "cloud_computing", name: "Cloud Computing", icon: "Cloud", badge: null, badge_color: null },
 ];
 
 export function StudyMaterialContent() {
@@ -63,6 +63,7 @@ export function StudyMaterialContent() {
   const categoryParam = searchParams.get("category") || "all";
 
   const { token, role } = useAuthStore();
+  const [categoriesList, setCategoriesList] = useState<any[]>(CATEGORY_TABS);
   const [selectedCategory, setSelectedCategory] = useState<string>(categoryParam);
   const [paidFilter, setPaidFilter] = useState<"all" | "free" | "paid">("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -77,6 +78,25 @@ export function StudyMaterialContent() {
 
   // PDF Preview Modal State
   const [previewTarget, setPreviewTarget] = useState<StudyMaterialItem | null>(null);
+
+  // Fetch dynamic categories from backend
+  const fetchCategories = async () => {
+    try {
+      const res = await apiFetch("/study-materials/categories");
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          // Put "all" at the front or match order
+          const sorted = [...data].sort((a, b) => (a.slug === "all" ? -1 : b.slug === "all" ? 1 : 0));
+          setCategoriesList(sorted);
+        }
+      }
+    } catch {}
+  };
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
     setSelectedCategory(categoryParam);
@@ -286,9 +306,17 @@ export function StudyMaterialContent() {
       <div className="space-y-3">
         {/* Category Pills */}
         <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar pb-1">
-          {CATEGORY_TABS.map((tab) => {
-            const Icon = tab.icon;
+          {categoriesList.map((tab) => {
             const isSelected = selectedCategory === tab.slug;
+            const getIcon = () => {
+              if (tab.slug === "company_notes" || tab.icon === "Building2") return <Building2 className={`w-3.5 h-3.5 ${isSelected ? "text-white" : "text-purple-500"}`} />;
+              if (tab.slug === "dsa" || tab.icon === "Code2") return <Code2 className={`w-3.5 h-3.5 ${isSelected ? "text-white" : "text-amber-500"}`} />;
+              if (tab.slug === "web_development" || tab.icon === "Monitor") return <Monitor className={`w-3.5 h-3.5 ${isSelected ? "text-white" : "text-blue-500"}`} />;
+              if (tab.slug === "cloud_computing" || tab.icon === "Cloud") return <Cloud className={`w-3.5 h-3.5 ${isSelected ? "text-white" : "text-indigo-500"}`} />;
+              if (tab.slug === "all" || tab.icon === "FolderOpen") return <FolderOpen className={`w-3.5 h-3.5 ${isSelected ? "text-white" : "text-emerald-500"}`} />;
+              return <BookOpen className={`w-3.5 h-3.5 ${isSelected ? "text-white" : "text-purple-500"}`} />;
+            };
+
             return (
               <button
                 key={tab.slug}
@@ -300,8 +328,26 @@ export function StudyMaterialContent() {
                     : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800"
                 }`}
               >
-                <Icon className={`w-3.5 h-3.5 ${isSelected ? "text-white" : "text-purple-500"}`} />
+                {getIcon()}
                 <span>{tab.name}</span>
+                {tab.badge && (
+                  <span className={`px-1.5 py-0.2 rounded text-[9px] font-extrabold uppercase ${
+                    isSelected
+                      ? "bg-white/20 text-white"
+                      : tab.badge === "NEW" || tab.badge_color === "purple"
+                      ? "bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300"
+                      : tab.badge === "FREE" || tab.badge_color === "green"
+                      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
+                      : "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"
+                  }`}>
+                    {tab.badge}
+                  </span>
+                )}
+                {tab.count !== undefined && tab.count > 0 && (
+                  <span className={`text-[10px] opacity-75 font-mono ${isSelected ? "text-purple-100" : "text-slate-400"}`}>
+                    ({tab.count})
+                  </span>
+                )}
               </button>
             );
           })}

@@ -102,27 +102,65 @@ class StudyMaterialUpdate(BaseModel):
 
 @router.get("/categories")
 def get_categories(db: Session = Depends(get_db)):
-    """Returns available study material categories with published counts."""
+    """Returns available study material categories with published counts, including custom admin categories."""
     categories_result = []
     total_materials = db.query(StudyMaterial).filter(
         StudyMaterial.is_published == True,
         StudyMaterial.is_deleted == False
     ).count()
 
+    existing_slugs = {cat["slug"] for cat in STANDARD_CATEGORIES}
+
     for cat in STANDARD_CATEGORIES:
         if cat["slug"] == "all":
-            count = total_materials
-        else:
-            count = db.query(StudyMaterial).filter(
-                StudyMaterial.category == cat["slug"],
-                StudyMaterial.is_published == True,
-                StudyMaterial.is_deleted == False
-            ).count()
+            continue
+        count = db.query(StudyMaterial).filter(
+            StudyMaterial.category == cat["slug"],
+            StudyMaterial.is_published == True,
+            StudyMaterial.is_deleted == False
+        ).count()
 
         categories_result.append({
             **cat,
             "count": count
         })
+
+    # Fetch custom categories created by admin in DB
+    db_custom_cats = db.query(
+        StudyMaterial.category,
+        StudyMaterial.category_display
+    ).filter(
+        StudyMaterial.is_published == True,
+        StudyMaterial.is_deleted == False
+    ).distinct().all()
+
+    for cat_slug, cat_display in db_custom_cats:
+        if cat_slug and cat_slug not in existing_slugs and cat_slug != "all":
+            existing_slugs.add(cat_slug)
+            cnt = db.query(StudyMaterial).filter(
+                StudyMaterial.category == cat_slug,
+                StudyMaterial.is_published == True,
+                StudyMaterial.is_deleted == False
+            ).count()
+            categories_result.append({
+                "slug": cat_slug,
+                "name": cat_display or cat_slug.replace("_", " ").title(),
+                "icon": "BookOpen",
+                "badge": None,
+                "badge_color": "blue",
+                "count": cnt
+            })
+
+    # Finally add "All Study Materials"
+    categories_result.append({
+        "slug": "all",
+        "name": "All Study Materials",
+        "icon": "FolderOpen",
+        "badge": "FREE",
+        "badge_color": "green",
+        "count": total_materials
+    })
+
     return categories_result
 
 

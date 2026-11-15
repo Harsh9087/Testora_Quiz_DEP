@@ -1193,12 +1193,12 @@ def get_submission_certificate_html(
                     (sub.credential.student.user and sub.credential.student.user.email and sub.credential.student.user.email.lower().strip() == user.email.lower().strip())
                 ))
             )
-            if not student_owns and not (sub.status in ["completed", "submitted", "graded", "evaluated"] or sub.submitted_at):
+            if not student_owns and not (sub.status in ["completed", "submitted", "auto_submitted", "graded", "evaluated"] or sub.submitted_at):
                 raise HTTPException(status_code=403, detail="Access denied to this certificate")
         elif user.role not in ["super_admin", "admin"]:
             teacher_ws_ids = [m.workspace_id for m in db.query(WorkspaceMember).filter(WorkspaceMember.user_id == user.id).all()]
             if not (sub.exam and (sub.exam.created_by == user.id or (sub.exam.workspace_id and sub.exam.workspace_id in teacher_ws_ids))):
-                if not (sub.status in ["completed", "submitted", "graded", "evaluated"] or sub.submitted_at):
+                if not (sub.status in ["completed", "submitted", "auto_submitted", "graded", "evaluated"] or sub.submitted_at):
                     raise HTTPException(status_code=403, detail="Access denied to this certificate")
 
     exam = sub.exam
@@ -1455,12 +1455,12 @@ def get_submission_report_card_html(
                     (sub.credential.student.user and sub.credential.student.user.email and sub.credential.student.user.email.lower().strip() == user.email.lower().strip())
                 ))
             )
-            if not student_owns and not (sub.status in ["completed", "submitted", "graded", "evaluated"] or sub.submitted_at):
+            if not student_owns and not (sub.status in ["completed", "submitted", "auto_submitted", "graded", "evaluated"] or sub.submitted_at):
                 raise HTTPException(status_code=403, detail="Access denied to this report card")
         elif user.role not in ["super_admin", "admin"]:
             teacher_ws_ids = [m.workspace_id for m in db.query(WorkspaceMember).filter(WorkspaceMember.user_id == user.id).all()]
             if not (sub.exam and (sub.exam.created_by == user.id or (sub.exam.workspace_id and sub.exam.workspace_id in teacher_ws_ids))):
-                if not (sub.status in ["completed", "submitted", "graded", "evaluated"] or sub.submitted_at):
+                if not (sub.status in ["completed", "submitted", "auto_submitted", "graded", "evaluated"] or sub.submitted_at):
                     raise HTTPException(status_code=403, detail="Access denied to this report card")
 
     exam = sub.exam

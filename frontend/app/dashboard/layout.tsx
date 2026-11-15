@@ -111,6 +111,97 @@ export default function DashboardLayout({
     liveProctoring: null,
   });
 
+  const [currentStudyCategory, setCurrentStudyCategory] = useState<string>("all");
+  const [studyCategories, setStudyCategories] = useState<any[]>([
+    {
+      slug: "company_notes",
+      name: "Company Notes (TCS, Wipro & More)",
+      icon: "Building2",
+      badge: "NEW",
+      badge_color: "purple",
+      count: 2,
+    },
+    {
+      slug: "dsa",
+      name: "DSA & Problem Solving",
+      icon: "Code2",
+      badge: null,
+      badge_color: null,
+      count: 2,
+    },
+    {
+      slug: "web_development",
+      name: "Web Development",
+      icon: "Monitor",
+      badge: null,
+      badge_color: null,
+      count: 1,
+    },
+    {
+      slug: "cloud_computing",
+      name: "Cloud Computing",
+      icon: "Cloud",
+      badge: null,
+      badge_color: null,
+      count: 1,
+    },
+    {
+      slug: "all",
+      name: "All Study Materials",
+      icon: "FolderOpen",
+      badge: "FREE",
+      badge_color: "green",
+      count: 6,
+    },
+  ]);
+
+  const fetchStudyCategories = async () => {
+    try {
+      const res = await apiFetch("/study-materials/categories");
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          setStudyCategories(data);
+        }
+      }
+    } catch {}
+  };
+
+  useEffect(() => {
+    fetchStudyCategories();
+  }, []);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const cat = params.get("category");
+      if (cat) {
+        setCurrentStudyCategory(cat);
+      } else if (pathname === "/dashboard/study-material") {
+        setCurrentStudyCategory("all");
+      }
+    }
+  }, [pathname]);
+
+  const renderCategoryIcon = (iconName?: string, slug?: string) => {
+    if (slug === "company_notes" || iconName === "Building2") {
+      return <Building2 className="h-4 w-4" />;
+    }
+    if (slug === "dsa" || iconName === "Code2") {
+      return <Code2 className="h-4 w-4" />;
+    }
+    if (slug === "web_development" || iconName === "Monitor") {
+      return <Monitor className="h-4 w-4" />;
+    }
+    if (slug === "cloud_computing" || iconName === "Cloud") {
+      return <Cloud className="h-4 w-4" />;
+    }
+    if (slug === "all" || iconName === "FolderOpen") {
+      return <FolderOpen className="h-4 w-4" />;
+    }
+    return <BookOpen className="h-4 w-4" />;
+  };
+
   const fetchSidebarStats = async () => {
     const activeToken = token || (typeof window !== "undefined" ? localStorage.getItem("token") : null);
     if (!activeToken) return;
@@ -1216,14 +1307,18 @@ export default function DashboardLayout({
             </div>
           </div>
 
-          {/* SECTION: STUDY MATERIAL (Premium Resources & Placement Notes) */}
+          {/* SECTION: STUDY MATERIAL (Dynamic Categories from DB) */}
           <div className="space-y-1">
             <div className={`flex items-center justify-between px-2 mb-1.5 ${sidebarCollapsed ? "md:hidden" : ""}`}>
-              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                Study Material
-              </span>
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-purple-50 text-purple-700 dark:bg-purple-950/80 dark:text-purple-300 border border-purple-200/80 dark:border-purple-800/60">
-                <Crown className="w-2.5 h-2.5 text-purple-600 fill-purple-600" /> Premium Resources
+              <div className="flex items-center gap-1.5">
+                <Layers className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  STUDY MATERIAL
+                </span>
+              </div>
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-purple-50 text-purple-700 dark:bg-purple-950/80 dark:text-purple-300 border border-purple-200/80 dark:border-purple-800/60 shadow-2xs">
+                <Sparkles className="w-2.5 h-2.5 text-purple-600 dark:text-purple-400" />
+                <span>Premium Resources</span>
               </span>
             </div>
             {sidebarCollapsed && (
@@ -1231,139 +1326,63 @@ export default function DashboardLayout({
             )}
 
             <div className="space-y-1">
-              {/* 1. Company Notes (TCS, Wipro & More) */}
-              <Link
-                href="/dashboard/study-material?category=company_notes"
-                onClick={closeSidebarMobile}
-                className={`group relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                  sidebarCollapsed ? "md:justify-center md:px-0" : ""
-                } ${
-                  pathname === "/dashboard/study-material"
-                    ? "bg-purple-50/80 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 font-bold border-l-4 border-purple-600 shadow-2xs"
-                    : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60"
-                }`}
-              >
-                <div className="w-8 h-8 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105">
-                  <Building2 className="h-4 w-4" />
-                </div>
-                <span className={`truncate text-left flex-1 ${sidebarCollapsed ? "md:hidden" : ""}`}>
-                  Company Notes (TCS, Wipro &amp; More)
-                </span>
-                {!sidebarCollapsed && (
-                  <span className="px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-purple-100 text-purple-800 dark:bg-purple-950/80 dark:text-purple-300 shrink-0">
-                    NEW
-                  </span>
-                )}
-                {!sidebarCollapsed && (
-                  <ChevronRight className="h-3.5 w-3.5 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 dark:group-hover:text-slate-400 shrink-0 transition-transform group-hover:translate-x-0.5" />
-                )}
-                {sidebarCollapsed && (
-                  <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
-                    Company Notes (TCS, Wipro &amp; More)
-                  </span>
-                )}
-              </Link>
-
-              {/* 2. DSA & Problem Solving */}
-              <Link
-                href="/dashboard/study-material?category=dsa"
-                onClick={closeSidebarMobile}
-                className={`group relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                  sidebarCollapsed ? "md:justify-center md:px-0" : ""
-                } text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60`}
-              >
-                <div className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105">
-                  <Code2 className="h-4 w-4" />
-                </div>
-                <span className={`truncate text-left flex-1 ${sidebarCollapsed ? "md:hidden" : ""}`}>
-                  DSA &amp; Problem Solving
-                </span>
-                {!sidebarCollapsed && (
-                  <ChevronRight className="h-3.5 w-3.5 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 dark:group-hover:text-slate-400 shrink-0 transition-transform group-hover:translate-x-0.5" />
-                )}
-                {sidebarCollapsed && (
-                  <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
-                    DSA &amp; Problem Solving
-                  </span>
-                )}
-              </Link>
-
-              {/* 3. Web Development */}
-              <Link
-                href="/dashboard/study-material?category=web_development"
-                onClick={closeSidebarMobile}
-                className={`group relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                  sidebarCollapsed ? "md:justify-center md:px-0" : ""
-                } text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60`}
-              >
-                <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105">
-                  <Monitor className="h-4 w-4" />
-                </div>
-                <span className={`truncate text-left flex-1 ${sidebarCollapsed ? "md:hidden" : ""}`}>
-                  Web Development
-                </span>
-                {!sidebarCollapsed && (
-                  <ChevronRight className="h-3.5 w-3.5 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 dark:group-hover:text-slate-400 shrink-0 transition-transform group-hover:translate-x-0.5" />
-                )}
-                {sidebarCollapsed && (
-                  <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
-                    Web Development
-                  </span>
-                )}
-              </Link>
-
-              {/* 4. Cloud Computing */}
-              <Link
-                href="/dashboard/study-material?category=cloud_computing"
-                onClick={closeSidebarMobile}
-                className={`group relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                  sidebarCollapsed ? "md:justify-center md:px-0" : ""
-                } text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60`}
-              >
-                <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105">
-                  <Cloud className="h-4 w-4" />
-                </div>
-                <span className={`truncate text-left flex-1 ${sidebarCollapsed ? "md:hidden" : ""}`}>
-                  Cloud Computing
-                </span>
-                {!sidebarCollapsed && (
-                  <ChevronRight className="h-3.5 w-3.5 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 dark:group-hover:text-slate-400 shrink-0 transition-transform group-hover:translate-x-0.5" />
-                )}
-                {sidebarCollapsed && (
-                  <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
-                    Cloud Computing
-                  </span>
-                )}
-              </Link>
-
-              {/* 5. All Study Materials */}
-              <Link
-                href="/dashboard/study-material?category=all"
-                onClick={closeSidebarMobile}
-                className={`group relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                  sidebarCollapsed ? "md:justify-center md:px-0" : ""
-                } text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60`}
-              >
-                <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105">
-                  <FolderOpen className="h-4 w-4" />
-                </div>
-                <span className={`truncate text-left flex-1 ${sidebarCollapsed ? "md:hidden" : ""}`}>
-                  All Study Materials
-                </span>
-                {!sidebarCollapsed && (
-                  <span className="px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 shrink-0">
-                    FREE
-                  </span>
-                )}
-                {!sidebarCollapsed && (
-                  <ChevronRight className="h-3.5 w-3.5 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 dark:group-hover:text-slate-400 shrink-0 transition-transform group-hover:translate-x-0.5" />
-                )}
-                {sidebarCollapsed && (
-                  <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
-                    All Study Materials (Free)
-                  </span>
-                )}
-              </Link>
+              {studyCategories.map((cat) => {
+                const isSelected = pathname === "/dashboard/study-material" && currentStudyCategory === cat.slug;
+                return (
+                  <button
+                    key={cat.slug}
+                    type="button"
+                    onClick={() => {
+                      closeSidebarMobile();
+                      setCurrentStudyCategory(cat.slug);
+                      router.push(`/dashboard/study-material?category=${encodeURIComponent(cat.slug)}`);
+                    }}
+                    className={`group relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                      sidebarCollapsed ? "md:justify-center md:px-0" : ""
+                    } ${
+                      isSelected
+                        ? "bg-purple-50/90 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 font-bold border-l-4 border-purple-600 shadow-2xs"
+                        : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                    }`}
+                  >
+                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                      cat.slug === "company_notes"
+                        ? "bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400"
+                        : cat.slug === "dsa"
+                        ? "bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400"
+                        : cat.slug === "web_development"
+                        ? "bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400"
+                        : cat.slug === "cloud_computing"
+                        ? "bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400"
+                        : "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400"
+                    }`}>
+                      {renderCategoryIcon(cat.icon, cat.slug)}
+                    </div>
+                    <span className={`truncate text-left flex-1 ${sidebarCollapsed ? "md:hidden" : ""}`}>
+                      {cat.name}
+                    </span>
+                    {!sidebarCollapsed && cat.badge && (
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-extrabold uppercase shrink-0 ${
+                        cat.badge === "NEW" || cat.badge_color === "purple"
+                          ? "bg-purple-100 text-purple-800 dark:bg-purple-950/80 dark:text-purple-300"
+                          : cat.badge === "FREE" || cat.badge_color === "green"
+                          ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300"
+                          : "bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300"
+                      }`}>
+                        {cat.badge}
+                      </span>
+                    )}
+                    {!sidebarCollapsed && (
+                      <ChevronRight className="h-3.5 w-3.5 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 dark:group-hover:text-slate-400 shrink-0 transition-transform group-hover:translate-x-0.5" />
+                    )}
+                    {sidebarCollapsed && (
+                      <span className="hidden md:block absolute left-full ml-3 px-2.5 py-1 bg-[#0F172A] text-white text-xs font-medium rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
+                        {cat.name} {cat.badge ? `(${cat.badge})` : ""}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
