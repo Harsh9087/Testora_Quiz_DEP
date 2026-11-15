@@ -210,6 +210,9 @@ function LoginContent() {
       }
 
       setAuth(data.access_token, assignedRole, data.full_name, undefined, data.avatar_url);
+      if (typeof window !== "undefined") {
+        window.scrollTo(0, 0);
+      }
       router.push(resolveDestination(assignedRole));
     } catch (err: any) {
       setError(err.message);
@@ -320,6 +323,9 @@ function LoginContent() {
       }
 
       setAuth(data.access_token, data.role, data.full_name, undefined, data.avatar_url);
+      if (typeof window !== "undefined") {
+        window.scrollTo(0, 0);
+      }
       router.push(resolveDestination(data.role));
     } catch (err: any) {
       setError(err.message);
@@ -372,6 +378,9 @@ function LoginContent() {
       }
 
       setAuth(data.access_token, data.role, data.full_name, undefined, data.avatar_url);
+      if (typeof window !== "undefined") {
+        window.scrollTo(0, 0);
+      }
       router.push(resolveDestination(data.role));
     } catch (err: any) {
       setError(err.message);

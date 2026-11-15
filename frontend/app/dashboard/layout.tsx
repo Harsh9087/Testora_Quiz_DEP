@@ -513,18 +513,44 @@ export default function DashboardLayout({
     setSidebarOpen(false);
   };
 
+  // Lock body/window scroll while inside dashboard so internal layout scrolls smoothly
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+
+    const prevHtmlOverflow = document.documentElement.style.overflow;
+    const prevHtmlHeight = document.documentElement.style.height;
+    const prevBodyOverflow = document.body.style.overflow;
+    const prevBodyHeight = document.body.style.height;
+
+    document.documentElement.style.overflow = "hidden";
+    document.documentElement.style.height = "100%";
+    document.body.style.overflow = "hidden";
+    document.body.style.height = "100%";
+
+    return () => {
+      document.documentElement.style.overflow = prevHtmlOverflow;
+      document.documentElement.style.height = prevHtmlHeight;
+      document.body.style.overflow = prevBodyOverflow;
+      document.body.style.height = prevBodyHeight;
+    };
+  }, [pathname]);
+
   // Lock body scroll when mobile drawer is open
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     if (sidebarOpen && window.innerWidth < 768) {
       document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
     }
 
     return () => {
-      document.body.style.overflow = "";
+      if (!sidebarOpen) {
+        document.body.style.overflow = "hidden";
+      }
     };
   }, [sidebarOpen]);
 
@@ -720,7 +746,7 @@ export default function DashboardLayout({
   const parentItem = breadcrumbItems.length >= 2 ? breadcrumbItems[breadcrumbItems.length - 2] : null;
 
   return (
-    <div className="flex h-screen h-[100dvh] max-h-[100dvh] w-full bg-[#F8FAFC] dark:bg-[#0B1120] overflow-hidden text-[#111827] dark:text-[#F1F5F9]">
+    <div className="fixed inset-0 flex h-full w-full bg-[#F8FAFC] dark:bg-[#0B1120] overflow-hidden text-[#111827] dark:text-[#F1F5F9]">
       
       {/* Mobile Backdrop Overlay */}
       {sidebarOpen && (
@@ -1832,18 +1858,31 @@ export default function DashboardLayout({
           
           {/* Left Breadcrumb & Mobile Menu Toggle */}
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-            {/* Mobile Hamburger Drawer Toggle */}
+            {/* Mobile Hamburger Drawer Toggle (3 Horizontal Lines) */}
             <button 
+              type="button"
               onClick={() => setSidebarOpen(true)}
-              className="md:hidden p-2 rounded-xl text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700 cursor-pointer shrink-0 transition-colors shadow-2xs"
-              aria-label="Open Sidebar Menu"
+              className="md:hidden p-2 rounded-xl text-slate-700 hover:text-slate-950 dark:text-slate-200 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700 cursor-pointer shrink-0 transition-all shadow-2xs active:scale-95"
+              aria-label="Open Sidebar Navigation Menu"
+              title="Open Navigation Menu"
             >
-              <Menu className="h-5 w-5" />
+              <Menu className="h-5 w-5 stroke-[2.2]" />
             </button>
+
+            {/* Mobile Brand Logo */}
+            <Link 
+              href="/" 
+              className="md:hidden flex items-center shrink-0 transition-transform active:scale-95" 
+              aria-label="Testora Quiz Home"
+              title="Testora Quiz Home"
+            >
+              <AppLogo variant="row" height={26} showBadge={false} />
+            </Link>
 
             {/* Desktop Expand Sidebar button when sidebar is collapsed */}
             {sidebarCollapsed && (
               <button 
+                type="button"
                 onClick={toggleSidebarCollapsed}
                 className="hidden md:flex p-1.5 rounded-lg border border-slate-200 dark:border-[#263449] text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer shrink-0"
                 title="Expand Sidebar"
@@ -1852,20 +1891,8 @@ export default function DashboardLayout({
               </button>
             )}
 
-            {/* Mobile Page Title: Clean, single-line, bold label (no overlapping parent crumbs) */}
-            <div className="flex sm:hidden items-center min-w-0 truncate">
-              <span 
-                className="font-bold text-xs xs:text-sm text-slate-900 dark:text-white truncate max-w-[110px] xs:max-w-[140px]"
-                aria-current="page"
-              >
-                {leafItem?.label === "Overview" || leafItem?.label === "Main Dashboard"
-                  ? (isTeacher ? "Main Dashboard" : "Student Portal")
-                  : (leafItem?.label || "Dashboard")}
-              </span>
-            </div>
-
             {/* Desktop & Tablet Full Breadcrumb Hierarchy */}
-            <nav aria-label="Breadcrumb" className="hidden sm:flex items-center min-w-0">
+            <nav aria-label="Breadcrumb" className="hidden md:flex items-center min-w-0">
               <ol className="flex items-center gap-1.5 md:gap-2 text-xs md:text-[13px] text-slate-500 dark:text-slate-400 min-w-0 flex-nowrap">
                 {breadcrumbItems.map((item, idx) => {
                   const isLast = idx === breadcrumbItems.length - 1;
