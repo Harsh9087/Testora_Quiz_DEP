@@ -64,7 +64,7 @@ def create_refresh_token(subject: Union[str, Any], expires_delta: Optional[timed
     return encoded_jwt
 
 def get_current_user(
-    request: Request = None,
+    request: Optional[Request] = None,
     db: Session = Depends(get_db),
     token: Optional[str] = Depends(oauth2_scheme_optional)
 ) -> User:
@@ -108,7 +108,7 @@ def get_current_user(
     return user
 
 def get_optional_current_user(
-    request: Request = None,
+    request: Optional[Request] = None,
     db: Session = Depends(get_db),
     token: Optional[str] = Depends(oauth2_scheme_optional)
 ) -> Optional[User]:

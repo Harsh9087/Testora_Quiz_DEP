@@ -394,7 +394,7 @@ def download_certificate(
     certificate_id: str,
     token: Optional[str] = Query(None),
     authorization: Optional[str] = Header(None),
-    request: Request = None,
+    request: Optional[Request] = None,
     db: Session = Depends(get_db)
 ):
     """

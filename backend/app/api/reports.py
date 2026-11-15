@@ -1157,7 +1157,7 @@ def get_submission_certificate_html(
     submission_id: str,
     token: Optional[str] = None,
     authorization: Optional[str] = Header(None),
-    request: Request = None,
+    request: Optional[Request] = None,
     db: Session = Depends(get_db)
 ):
     """Generates an official downloadable/printable Certificate of Completion."""
@@ -1419,7 +1419,7 @@ def get_submission_report_card_html(
     submission_id: str,
     token: Optional[str] = None,
     authorization: Optional[str] = Header(None),
-    request: Request = None,
+    request: Optional[Request] = None,
     db: Session = Depends(get_db)
 ):
     """Generates an official itemized student performance report card."""
