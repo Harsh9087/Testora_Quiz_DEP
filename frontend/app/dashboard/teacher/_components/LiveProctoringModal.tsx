@@ -141,6 +141,9 @@ export default function LiveProctoringModal({
 
     if (c.status === "auto_submitted" || c.raw_status === "auto_submitted") {
       const reasonDisplay = c.auto_submit_reason ? c.auto_submit_reason.replace("_", " ").toUpperCase() : "TAB SWITCH";
+      const timeStr = c.submitted_at_ist
+        ? (c.submitted_at_ist.includes("IST") ? c.submitted_at_ist : `${c.submitted_at_ist} IST`)
+        : null;
       return (
         <div className="flex flex-col gap-0.5 shrink-0">
           <div className="flex items-center gap-1">
@@ -153,15 +156,18 @@ export default function LiveProctoringModal({
           <span className="text-[9px] font-bold text-rose-600 dark:text-rose-400">
             Reason: {reasonDisplay}
           </span>
-          {c.submitted_at_ist && (
+          {timeStr && (
             <span className="text-[9px] text-[#716D67] dark:text-[#A8A29E] font-mono">
-              {c.submitted_at_ist} IST
+              {timeStr}
             </span>
           )}
         </div>
       );
     }
     if (c.status === "submitted" || c.raw_status === "submitted") {
+      const timeStr = c.submitted_at_ist
+        ? (c.submitted_at_ist.includes("IST") ? c.submitted_at_ist : `${c.submitted_at_ist} IST`)
+        : null;
       return (
         <div className="flex flex-col gap-0.5 shrink-0">
           <div className="flex items-center gap-1">
@@ -171,9 +177,9 @@ export default function LiveProctoringModal({
             </span>
             {attemptBadge}
           </div>
-          {c.submitted_at_ist && (
+          {timeStr && (
             <span className="text-[9px] text-[#716D67] dark:text-[#A8A29E] font-mono">
-              {c.submitted_at_ist} IST
+              {timeStr}
             </span>
           )}
         </div>
@@ -227,7 +233,7 @@ export default function LiveProctoringModal({
       onClick={onClose}
     >
       <div 
-        className="bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl max-w-4xl w-full p-4 sm:p-6 shadow-2xl space-y-4 sm:space-y-5 max-h-[92dvh] flex flex-col"
+        className="bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl max-w-6xl w-full p-4 sm:p-6 shadow-2xl space-y-4 sm:space-y-5 max-h-[92dvh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -288,11 +294,11 @@ export default function LiveProctoringModal({
             <button
               type="button"
               onClick={() => setShowAddStudentModal(true)}
-              className="px-2.5 sm:px-3 py-1.5 bg-[#C84B18] hover:bg-[#A83D12] text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow-xs transition-all cursor-pointer"
+              className="px-2.5 sm:px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer whitespace-nowrap"
               title="Add a student to this deployed exam"
             >
               <UserPlus className="h-3.5 w-3.5" />
-              <span>+ Add Student</span>
+              <span>Add Student</span>
             </button>
 
             {/* Grant +10 Mins Button */}
@@ -300,10 +306,10 @@ export default function LiveProctoringModal({
               type="button"
               disabled={isExtending}
               onClick={() => handleExtendTime(10)}
-              className="px-2.5 sm:px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow-xs transition-all disabled:opacity-50 cursor-pointer"
+              className="px-2.5 sm:px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all disabled:opacity-50 cursor-pointer whitespace-nowrap"
               title="Add 10 extra minutes for all candidates"
             >
-              <Plus className="h-3.5 w-3.5" />
+              <Clock className="h-3.5 w-3.5" />
               <span>+10 Mins</span>
             </button>
 
@@ -546,16 +552,16 @@ export default function LiveProctoringModal({
               </div>
 
               {/* Desktop Table View (>= 768px) */}
-              <div className="hidden md:block">
-                <table className="w-full text-left text-xs border-collapse">
+              <div className="hidden md:block min-w-full">
+                <table className="w-full min-w-[880px] text-left text-xs border-collapse">
                   <thead className="bg-[#F7F4EF] dark:bg-[#141312] border-b border-[#E5E0D8] dark:border-[#292524] sticky top-0 z-10">
                     <tr>
-                      <th className="py-2.5 px-4 font-bold text-[#716D67]">Candidate</th>
-                      <th className="py-2.5 px-4 font-bold text-[#716D67]">Username / Roll</th>
-                      <th className="py-2.5 px-4 font-bold text-[#716D67]">Status</th>
-                      <th className="py-2.5 px-4 font-bold text-[#716D67]">Proctoring</th>
-                      <th className="py-2.5 px-4 font-bold text-[#716D67]">Progress</th>
-                      <th className="py-2.5 px-4 font-bold text-[#716D67] text-right">Score / Actions</th>
+                      <th className="py-2.5 px-4 font-bold text-[#716D67] min-w-[180px] text-left">Candidate</th>
+                      <th className="py-2.5 px-4 font-bold text-[#716D67] min-w-[160px] text-left">Username / Roll</th>
+                      <th className="py-2.5 px-4 font-bold text-[#716D67] min-w-[160px] text-left">Status</th>
+                      <th className="py-2.5 px-4 font-bold text-[#716D67] min-w-[110px] text-left">Proctoring</th>
+                      <th className="py-2.5 px-4 font-bold text-[#716D67] min-w-[150px] text-left">Progress</th>
+                      <th className="py-2.5 px-4 font-bold text-[#716D67] min-w-[140px] text-right whitespace-nowrap">Score &amp; Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#E5E0D8] dark:divide-[#292524]">
@@ -614,7 +620,7 @@ export default function LiveProctoringModal({
                             </div>
                           </td>
 
-                          <td className="py-3 px-4 text-right">
+                          <td className="py-3 px-4 text-right whitespace-nowrap">
                             <div className="font-bold text-[#242321] dark:text-[#F5F5F4]">
                               {c.score !== null ? `${c.score} pts` : "—"}
                             </div>
@@ -622,7 +628,7 @@ export default function LiveProctoringModal({
                               <button
                                 type="button"
                                 onClick={() => setSelectedCandidateForReattempt(c)}
-                                className="mt-1 px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-bold text-[11px] flex items-center gap-1 shadow-xs transition-all cursor-pointer ml-auto"
+                                className="mt-1 px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-bold text-[11px] inline-flex items-center gap-1 shadow-xs transition-all cursor-pointer ml-auto whitespace-nowrap"
                                 title="Authorize a controlled reattempt for tab-switch infraction"
                               >
                                 <RotateCcw className="h-3 w-3" />
@@ -633,7 +639,7 @@ export default function LiveProctoringModal({
                               <button
                                 type="button"
                                 onClick={() => setSelectedCandidateForAttempts(c)}
-                                className="mt-1 text-[10px] text-blue-600 dark:text-blue-400 font-semibold hover:underline flex items-center gap-1 ml-auto cursor-pointer"
+                                className="mt-1 text-[10px] text-blue-600 dark:text-blue-400 font-semibold hover:underline inline-flex items-center gap-1 ml-auto cursor-pointer whitespace-nowrap"
                               >
                                 <History className="h-3 w-3" />
                                 <span>{c.attempts_history.length} attempts</span>
@@ -651,14 +657,14 @@ export default function LiveProctoringModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between shrink-0 pt-3 border-t border-[#E5E0D8] dark:border-[#292524]">
-          <div className="text-[11px] text-[#716D67]">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 shrink-0 pt-3 border-t border-[#E5E0D8] dark:border-[#292524]">
+          <div className="text-[11px] text-[#716D67] text-center sm:text-left">
             Showing <b>{filteredCandidates.length}</b> candidates • Telemetry updates live
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl border border-[#E5E0D8] dark:border-[#292524] text-xs font-semibold text-[#716D67] hover:text-[#242321]"
+            className="w-full sm:w-auto px-4 py-2 rounded-xl border border-[#E5E0D8] dark:border-[#292524] text-xs font-semibold text-[#716D67] hover:text-[#242321] hover:bg-[#F7F4EF] dark:hover:bg-[#1D1B19] transition-colors cursor-pointer text-center"
           >
             Close Room
           </button>
