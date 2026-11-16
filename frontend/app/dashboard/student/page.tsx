@@ -7,7 +7,7 @@ import { useAuthStore } from "../../../store/authStore";
 import { 
   Award, Calendar, FileText, CheckCircle, TrendingUp, BookOpen, Download,
   Trophy, Target, BarChart3, XCircle, ChevronDown, ChevronUp, Medal,
-  RefreshCw, CheckCircle2, AlertCircle, Clock, Sparkles, User, ArrowRight, ArrowLeft,
+  RefreshCw, CheckCircle2, AlertCircle, Clock, Sparkles, User, Users, ArrowRight, ArrowLeft,
   BookMarked, HelpCircle, ShieldCheck, GraduationCap, Play, Key, Lock, Check,
   Timer, ChevronRight, ExternalLink, FileCode2, Building2
 } from "lucide-react";
@@ -233,8 +233,8 @@ export default function StudentDashboard() {
       {/* ═══════ TOP HEADER & SUMMARY BANNER (DASHBOARD ONLY) ═══════ */}
       {activePortalTab !== "mock-tests" && activePortalTab !== "company-tests" && activePortalTab !== "certificates" && (
       <div className="bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-2xl p-4 sm:p-5 shadow-xs space-y-3">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-start sm:items-center gap-3 min-w-0 flex-1">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
             <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-[#EFF6FF] text-[#1E3A8A] dark:bg-[#172B4D] dark:text-[#60A5FA] flex items-center justify-center font-bold text-lg border border-[#2563EB]/20 shrink-0">
               <GraduationCap className="h-5 w-5" />
             </div>
@@ -262,7 +262,7 @@ export default function StudentDashboard() {
                   </span>
                 )}
               </div>
-              <p className="text-[11.5px] text-[#64748B] dark:text-[#A3B1C6] mt-0.5 leading-snug">
+              <p className="text-[11.5px] text-[#64748B] dark:text-[#A3B1C6] mt-0.5 leading-snug line-clamp-1 sm:line-clamp-none">
                 {isTeacher 
                   ? "Instructor Preview: Inspect student assessments, passcodes & performance records."
                   : "Student Exams & Analytics Hub"}
@@ -270,14 +270,15 @@ export default function StudentDashboard() {
             </div>
           </div>
 
-          {/* Right Action Icons: Refresh icon positioned cleanly at top-right next to student name */}
-          <div className="flex items-center gap-1.5 shrink-0 pt-0.5">
+          {/* Right Action Icons: Filter on desktop + Refresh button */}
+          <div className="flex items-center gap-1.5 shrink-0">
             {isTeacher && studentsList.length > 0 && (
-              <div className="flex items-center gap-1 bg-[#F1F5F9] dark:bg-[#17243A] px-2 py-1 rounded-lg border border-[#E2E8F0] dark:border-[#263449] text-xs">
+              <div className="hidden sm:flex items-center gap-1.5 bg-[#F1F5F9] dark:bg-[#17243A] px-2.5 py-1.5 rounded-lg border border-[#E2E8F0] dark:border-[#263449] text-xs">
+                <Users className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
                 <select
                   value={selectedStudentFilter}
                   onChange={(e) => setSelectedStudentFilter(e.target.value)}
-                  className="bg-transparent text-xs font-semibold text-[#111827] dark:text-[#F1F5F9] focus:outline-none cursor-pointer max-w-[110px] truncate"
+                  className="bg-transparent text-xs font-semibold text-[#111827] dark:text-[#F1F5F9] focus:outline-none cursor-pointer max-w-[130px] truncate"
                 >
                   <option value="">All Students</option>
                   {studentsList.map((st) => (
@@ -299,6 +300,28 @@ export default function StudentDashboard() {
             </button>
           </div>
         </div>
+
+        {/* Mobile Dedicated Student Filter Bar for Teachers */}
+        {isTeacher && studentsList.length > 0 && (
+          <div className="flex sm:hidden items-center justify-between gap-2 bg-[#F1F5F9] dark:bg-[#17243A] px-3 py-1.5 rounded-xl border border-[#E2E8F0] dark:border-[#263449] text-xs">
+            <span className="text-[11px] font-medium text-[#64748B] dark:text-[#A3B1C6] flex items-center gap-1.5 shrink-0">
+              <Users className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+              <span>Inspect Student:</span>
+            </span>
+            <select
+              value={selectedStudentFilter}
+              onChange={(e) => setSelectedStudentFilter(e.target.value)}
+              className="bg-transparent text-xs font-semibold text-[#111827] dark:text-[#F1F5F9] focus:outline-none cursor-pointer flex-1 text-right max-w-[200px] truncate"
+            >
+              <option value="">All Students ({studentsList.length})</option>
+              {studentsList.map((st) => (
+                <option key={st.id} value={st.id}>
+                  {st.full_name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         {/* Portal View Switcher Tabs */}
         <div className="flex items-center gap-2 pt-3 border-t border-[#E2E8F0] dark:border-[#263449] overflow-x-auto pb-1 scrollbar-none touch-pan-x">
