@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { 
   Eye, Radio, StopCircle, Sparkles, Printer, Key, QrCode, Trash2, 
   Download, X, Play, Search, Copy, Check, ExternalLink, ShieldCheck, Mail, CopyPlus,
-  CreditCard, Share2, Receipt, MoreHorizontal, Plus, ArrowRight, ClipboardList, Calendar, Clock, Layers, Award, BarChart3
+  CreditCard, Share2, Receipt, MoreHorizontal, Plus, ArrowRight, ClipboardList, Calendar, Clock, Layers, Award, BarChart3,
+  FileText, Link2
 } from "lucide-react";
 import { API_V1, apiFetch, getFrontendBaseUrl } from "../../../../lib/api";
 import { parseUtcDate, formatLocalizedDate, formatISTDate, formatExamScheduleRange } from "../../../../lib/dateUtils";
@@ -80,6 +81,15 @@ export default function LiveAssessmentsTable({
   const [liveProctorExamId, setLiveProctorExamId] = useState<string | null>(null);
   const [cloningExamId, setCloningExamId] = useState<string | null>(null);
   const [activeDropdownExamId, setActiveDropdownExamId] = useState<string | null>(null);
+  const [copiedExamId, setCopiedExamId] = useState<string | null>(null);
+
+  const handleCopyCode = (examId: string, code: string) => {
+    if (!code) return;
+    navigator.clipboard.writeText(code);
+    setCopiedExamId(examId);
+    showToast("Exam code copied!", "success");
+    setTimeout(() => setCopiedExamId(null), 2000);
+  };
 
   useEffect(() => {
     const handleClickOutside = () => setActiveDropdownExamId(null);
@@ -281,32 +291,35 @@ export default function LiveAssessmentsTable({
     );
   }) || [];
 
+  const liveCount = exams.filter((e) => getExamScheduleInfo(e).status === "live").length;
+  const completedCount = exams.filter((e) => getExamScheduleInfo(e).status === "completed").length;
+  const totalCount = exams.length;
+
   return (
     <div className="bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-2xl overflow-hidden space-y-0 shadow-xs transition-colors">
       {/* Sleek, Cohesive Header (Mobile & Desktop Aligned) */}
       <div className="p-3.5 sm:p-5 border-b border-[#E2E8F0] dark:border-[#263449] flex items-center justify-between gap-2.5 bg-white dark:bg-[#111C31]">
         <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-          <div className="p-2 sm:p-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/40 shrink-0">
-            <ClipboardList className="h-4 w-4 sm:h-5 sm:w-5" />
-          </div>
+          <div className="w-1.5 h-6 rounded-full bg-blue-600 shrink-0" />
           <div className="min-w-0">
-            <h2 className="text-sm sm:text-base font-bold text-[#111827] dark:text-[#F1F5F9] truncate leading-tight">{title}</h2>
+            <h2 className="text-sm sm:text-base font-bold text-[#111827] dark:text-[#F1F5F9] truncate leading-tight">
+              {title || "Live Assessments"}
+            </h2>
             <p className="text-[11px] sm:text-xs text-[#64748B] dark:text-[#A3B1C6] truncate sm:whitespace-normal mt-0.5">
-              {description}
+              {description || "Manage and monitor your test sessions"}
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          {showCreateButton && onOpenCreate && (
+          {(showCreateButton || onOpenCreate) && onOpenCreate && (
             <button
               type="button"
               onClick={onOpenCreate}
-              className="bg-blue-600 hover:bg-blue-700 text-white text-[11px] sm:text-xs font-semibold px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl flex items-center gap-1.5 shadow-xs transition-all cursor-pointer shrink-0"
+              className="bg-blue-600 hover:bg-blue-700 text-white text-[11px] sm:text-xs font-bold px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl flex items-center gap-1.5 shadow-xs transition-all cursor-pointer shrink-0"
             >
-              <Plus className="h-3.5 w-3.5" />
-              <span className="hidden xs:inline">Create Assessment</span>
-              <span className="xs:hidden">Create</span>
+              <Plus className="h-3.5 w-3.5 stroke-[2.5]" />
+              <span>Create Test</span>
             </button>
           )}
 
@@ -316,11 +329,61 @@ export default function LiveAssessmentsTable({
               onClick={onViewAll}
               className="border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 text-[11px] sm:text-xs font-semibold px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl flex items-center gap-1 transition-all cursor-pointer shadow-2xs shrink-0 whitespace-nowrap"
             >
-              <span className="hidden xs:inline">View all assessments</span>
-              <span className="xs:hidden">View all</span>
+              <span className="hidden xs:inline">View all</span>
+              <span className="xs:hidden">All</span>
               <ArrowRight className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-slate-400" />
             </button>
           )}
+        </div>
+      </div>
+
+      {/* 3 Stat Cards Row */}
+      <div className="p-3 sm:p-4 bg-slate-50/60 dark:bg-slate-900/40 border-b border-[#E2E8F0] dark:border-[#263449]">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3">
+          {/* Active */}
+          <div className="bg-white dark:bg-[#152238] border border-blue-100 dark:border-blue-900/40 rounded-xl p-2 sm:p-2.5 flex items-center gap-2 sm:gap-2.5 shadow-2xs">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-blue-50 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+              <Play className="w-3.5 h-3.5 fill-blue-600/20" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-xs sm:text-sm font-extrabold text-[#111827] dark:text-[#F1F5F9] leading-none">
+                {String(liveCount).padStart(2, "0")}
+              </div>
+              <div className="text-[10px] sm:text-[11px] font-semibold text-[#64748B] dark:text-[#A3B1C6] truncate mt-0.5">
+                Active
+              </div>
+            </div>
+          </div>
+
+          {/* Completed */}
+          <div className="bg-white dark:bg-[#152238] border border-emerald-100 dark:border-emerald-900/40 rounded-xl p-2 sm:p-2.5 flex items-center gap-2 sm:gap-2.5 shadow-2xs">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+              <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-xs sm:text-sm font-extrabold text-[#111827] dark:text-[#F1F5F9] leading-none">
+                {String(completedCount).padStart(2, "0")}
+              </div>
+              <div className="text-[10px] sm:text-[11px] font-semibold text-[#64748B] dark:text-[#A3B1C6] truncate mt-0.5">
+                Completed
+              </div>
+            </div>
+          </div>
+
+          {/* Total Tests */}
+          <div className="bg-white dark:bg-[#152238] border border-purple-100 dark:border-purple-900/40 rounded-xl p-2 sm:p-2.5 flex items-center gap-2 sm:gap-2.5 shadow-2xs">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-purple-50 dark:bg-purple-950/80 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+              <Layers className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-xs sm:text-sm font-extrabold text-[#111827] dark:text-[#F1F5F9] leading-none">
+                {String(totalCount).padStart(2, "0")}
+              </div>
+              <div className="text-[10px] sm:text-[11px] font-semibold text-[#64748B] dark:text-[#A3B1C6] truncate mt-0.5">
+                Total Tests
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -378,6 +441,7 @@ export default function LiveAssessmentsTable({
             const sched   = getExamScheduleInfo(exam);
             const isLoadingCreds = loadingCredsExamId === exam.id;
             const qCount  = exam.questions_count ?? 0;
+            const examCode = exam.exam_code || exam.code || "";
 
             /* ── derive a single clean status label ── */
             type StatusKey = "draft_unpaid" | "draft_paid" | "scheduled" | "live" | "completed";
@@ -392,118 +456,139 @@ export default function LiveAssessmentsTable({
               draft_unpaid: { label: "Draft",     dot: "bg-amber-400",                        pill: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800/60" },
               draft_paid:   { label: "Draft",     dot: "bg-amber-400",                        pill: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800/60" },
               scheduled:    { label: "Scheduled", dot: "bg-blue-500",                         pill: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-800/60" },
-              live:         { label: "Live",      dot: "bg-emerald-500 animate-pulse",        pill: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800/60" },
+              live:         { label: "Live Active", dot: "bg-emerald-500 animate-pulse",     pill: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800/60" },
               completed:    { label: "Completed", dot: "bg-slate-400",                        pill: "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700" },
             };
             const ui = STATUS_UI[statusKey];
 
             return (
-              <div key={exam.id} className="px-4 py-4 space-y-3 hover:bg-[#F8FAFC] dark:hover:bg-[#17243A]/40 transition-colors">
+              <div key={exam.id} className="p-3.5 sm:p-4 space-y-3 bg-white dark:bg-[#111C31] hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
 
-                {/* ── Row 1: status pill + paid chip + QR ── */}
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    {/* single status */}
-                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold border ${ui.pill}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${ui.dot}`} />
-                      {ui.label}
-                    </span>
-
-                    {/* paid / unpaid chip */}
-                    {exam.is_paid ? (
-                      <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800/60">
-                        <Check className="h-2.5 w-2.5 stroke-[2.5]" /> Paid
+                {/* ── Top row: File Icon + Title & Tag + QR Code Button ── */}
+                <div className="flex items-start justify-between gap-2.5">
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                    <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-100 dark:border-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                      <FileText className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-bold text-[14px] sm:text-[15px] text-[#111827] dark:text-[#F1F5F9] leading-tight truncate">
+                        {exam.name}
+                      </h3>
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 mt-0.5 block">
+                        ASSESSMENT
                       </span>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => onOpenPaymentModal && onOpenPaymentModal(exam)}
-                        className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-800/60 cursor-pointer hover:opacity-80"
-                      >
-                        <CreditCard className="h-2.5 w-2.5" /> Unpaid
-                      </button>
-                    )}
+                    </div>
                   </div>
 
                   {/* QR icon */}
                   <button
                     type="button"
                     onClick={() => setQrModalExam(exam)}
-                    className="w-7 h-7 rounded-lg border border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center shrink-0 transition-colors cursor-pointer"
+                    className="w-8 h-8 rounded-xl border border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center shrink-0 transition-colors cursor-pointer shadow-2xs"
                     aria-label="QR Code"
+                    title="View QR Code Flyer"
                   >
-                    <QrCode className="h-3.5 w-3.5" />
+                    <QrCode className="h-4 w-4" />
                   </button>
                 </div>
 
-                {/* ── Row 2: name + code ── */}
-                <div className="space-y-1">
-                  <h3 className="font-bold text-[14px] text-[#111827] dark:text-[#F1F5F9] leading-snug break-words">
-                    {exam.name}
-                  </h3>
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-[11px] text-slate-400 dark:text-slate-500">Code:</span>
+                {/* ── Status & Payment Badges ── */}
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${ui.pill}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${ui.dot}`} />
+                    {ui.label}
+                  </span>
+
+                  {exam.is_paid ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800/60">
+                      <Check className="h-2.5 w-2.5 stroke-[2.5]" /> Paid
+                    </span>
+                  ) : (
                     <button
                       type="button"
-                      onClick={() => {
-                        const code = exam.exam_code || exam.code;
-                        if (code) { navigator.clipboard.writeText(code); showToast("Code copied!", "success"); }
-                      }}
-                      className="inline-flex items-center gap-1 font-mono font-bold text-[#2563EB] dark:text-[#60A5FA] bg-blue-50 dark:bg-blue-950/50 hover:bg-blue-100 dark:hover:bg-blue-900/50 px-1.5 py-0.5 rounded text-[11px] border border-blue-200/60 dark:border-blue-900/60 transition-colors cursor-pointer"
-                      title="Copy Exam Code"
+                      onClick={() => onOpenPaymentModal && onOpenPaymentModal(exam)}
+                      className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-800/60 cursor-pointer hover:opacity-85"
                     >
-                      {exam.exam_code || exam.code}
-                      <Copy className="h-2.5 w-2.5 opacity-50" />
+                      <CreditCard className="h-2.5 w-2.5" /> Unpaid
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => handleCopyDirectExamLink(exam.exam_code || exam.code)}
-                      className="inline-flex items-center gap-1 text-[10px] font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 px-1.5 py-0.5 rounded border border-slate-200/80 dark:border-slate-700 transition-colors cursor-pointer"
-                      title="Copy Direct Exam Link to Share"
-                    >
-                      <ExternalLink className="h-2.5 w-2.5 text-blue-500" />
-                      <span>Link</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleShareWhatsApp(exam)}
-                      className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/50 dark:hover:bg-emerald-900/50 px-1.5 py-0.5 rounded border border-emerald-200/80 dark:border-emerald-800 transition-colors cursor-pointer"
-                      title="Share Assessment on WhatsApp"
-                    >
-                      <Share2 className="h-2.5 w-2.5 text-emerald-600" />
-                      <span>WhatsApp</span>
-                    </button>
+                  )}
+                </div>
+
+                {/* ── Metadata Specs (Marks, Duration, Date) ── */}
+                <div className="flex items-center gap-2.5 text-[11px] sm:text-xs text-[#64748B] dark:text-[#A3B1C6] flex-wrap">
+                  <span className="inline-flex items-center gap-1">
+                    <ClipboardList className="h-3.5 w-3.5 text-slate-400" />
+                    <span className="font-medium">{exam.total_marks ?? 50} marks</span>
+                  </span>
+                  <span className="text-slate-300 dark:text-slate-700">•</span>
+                  <span className="inline-flex items-center gap-1">
+                    <Clock className="h-3.5 w-3.5 text-slate-400" />
+                    <span className="font-medium">{exam.duration_minutes} min</span>
+                  </span>
+                  <span className="text-slate-300 dark:text-slate-700">•</span>
+                  <span className="inline-flex items-center gap-1">
+                    <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                    <span className="font-medium">{exam.start_time ? formatISTDate(exam.start_time) : "Flexible"}</span>
+                  </span>
+                </div>
+
+                {/* ── Prominent Test Code Highlight Box ── */}
+                <div className="rounded-xl bg-[#F0F5FF] dark:bg-[#15223E] border border-blue-200/80 dark:border-blue-900/70 p-3 flex items-center justify-between gap-2 shadow-2xs">
+                  <div className="min-w-0">
+                    <div className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <span className="w-1 h-3 rounded-full bg-blue-600 dark:bg-blue-400 inline-block" />
+                      TEST CODE
+                    </div>
+                    <div className="text-base sm:text-lg font-mono font-extrabold text-blue-950 dark:text-blue-100 tracking-wider mt-0.5 truncate">
+                      {examCode}
+                    </div>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => handleCopyCode(exam.id, examCode)}
+                    className="p-2 rounded-lg bg-white dark:bg-slate-800 border border-blue-200 dark:border-blue-800/80 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/40 transition-colors shadow-2xs cursor-pointer shrink-0"
+                    title="Copy Test Code"
+                  >
+                    {copiedExamId === exam.id ? (
+                      <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </button>
                 </div>
 
-                {/* ── Row 3: metrics ── */}
-                <div className="flex flex-wrap gap-1.5 text-[11px]">
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-[#F1F5F9] dark:bg-[#17243A] text-[#475569] dark:text-[#94A3B8] border border-[#E2E8F0] dark:border-[#263449]">
-                    <ClipboardList className="h-3 w-3 opacity-60" />
-                    {qCount} Qs ({exam.total_marks ?? 0} pts)
-                  </span>
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-[#F1F5F9] dark:bg-[#17243A] text-[#475569] dark:text-[#94A3B8] border border-[#E2E8F0] dark:border-[#263449]">
-                    <Clock className="h-3 w-3 opacity-60" />
-                    {exam.duration_minutes} mins
-                  </span>
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-[#F1F5F9] dark:bg-[#17243A] text-[#475569] dark:text-[#94A3B8] border border-[#E2E8F0] dark:border-[#263449]">
-                    <Calendar className="h-3 w-3 opacity-60" />
-                    {exam.start_time ? formatISTDate(exam.start_time) : "Flexible"}
-                  </span>
+                {/* ── Quick Sharing Buttons Row ── */}
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleCopyDirectExamLink(examCode)}
+                    className="h-8.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-800 text-[11px] font-semibold text-slate-700 dark:text-slate-200 flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+                  >
+                    <Link2 className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                    <span>Copy Link</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleShareWhatsApp(exam)}
+                    className="h-8.5 rounded-lg border border-emerald-200 dark:border-emerald-800/80 bg-emerald-50/60 dark:bg-emerald-950/30 hover:bg-emerald-100/60 dark:hover:bg-emerald-900/50 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+                  >
+                    <Share2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                    <span>WhatsApp</span>
+                  </button>
                 </div>
 
-                {/* ── Row 4: action buttons ── */}
-                <div className="flex items-center gap-2 pt-1">
+                {/* ── Action Buttons Row ── */}
+                <div className="flex items-center gap-2 pt-0.5">
 
                   {/* PRIMARY action — depends on state */}
                   {sched.status === "live" ? (
                     <button
                       type="button"
                       onClick={() => setLiveProctorExamId(exam.id)}
-                      className="flex-1 h-9 rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-rose-100 dark:hover:bg-rose-950/60 transition-colors cursor-pointer"
+                      className="flex-1 h-9 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer"
                     >
                       <Radio className="h-3.5 w-3.5 animate-pulse shrink-0" />
-                      Live Monitor
+                      <span>Live Monitor</span>
                     </button>
                   ) : !exam.is_published ? (
                     <button
@@ -515,8 +600,8 @@ export default function LiveAssessmentsTable({
                       className="flex-1 h-9 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer"
                     >
                       {exam.is_paid
-                        ? <><Sparkles className="h-3.5 w-3.5 shrink-0" /> Publish</>
-                        : <><CreditCard className="h-3.5 w-3.5 shrink-0" /> Pay &amp; Publish</>
+                        ? <><Sparkles className="h-3.5 w-3.5 shrink-0" /> <span>Publish</span></>
+                        : <><CreditCard className="h-3.5 w-3.5 shrink-0" /> <span>Pay &amp; Publish</span></>
                       }
                     </button>
                   ) : (
@@ -524,22 +609,22 @@ export default function LiveAssessmentsTable({
                       type="button"
                       disabled={isLoadingCreds}
                       onClick={() => handleOpenCredentialsPreview(exam)}
-                      className="flex-1 h-9 rounded-xl border border-amber-200 dark:border-amber-800/70 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-amber-100 dark:hover:bg-amber-950/60 transition-colors cursor-pointer"
+                      className="flex-1 h-9 rounded-xl bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer disabled:opacity-50"
                     >
-                      <Key className="h-3.5 w-3.5 text-amber-600 shrink-0" />
-                      {isLoadingCreds ? "Loading…" : "Credentials"}
+                      <Key className="h-3.5 w-3.5 shrink-0" />
+                      <span>{isLoadingCreds ? "Loading…" : "Credentials"}</span>
                     </button>
                   )}
 
                   {/* SECONDARY — Test Run */}
                   <a
-                    href={`/exam/${exam.exam_code || exam.code}?mode=teacher_preview`}
+                    href={`/exam/${examCode}?mode=teacher_preview`}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex-1 h-9 rounded-xl border border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-[#17243A] text-[#475569] dark:text-[#94A3B8] text-xs font-semibold flex items-center justify-center gap-1.5 hover:bg-[#F1F5F9] dark:hover:bg-[#1E2D47] transition-colors"
+                    className="flex-1 h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-750 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors shadow-2xs"
                   >
-                    <Play className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                    Test Run
+                    <Play className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0 fill-emerald-600/20" />
+                    <span>Test Run</span>
                   </a>
 
                   {/* MORE ··· */}
