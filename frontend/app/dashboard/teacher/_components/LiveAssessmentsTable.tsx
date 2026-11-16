@@ -388,9 +388,9 @@ export default function LiveAssessmentsTable({
       </div>
 
       {/* ─── Mobile Card List (< md) ─── */}
-      <div className="block md:hidden divide-y divide-[#E2E8F0] dark:divide-[#263449]">
+      <div className="block md:hidden p-3 sm:p-4 bg-slate-50/70 dark:bg-[#0B132B]/50 space-y-3.5">
         {activeDraft && (
-          <div className="p-4 bg-amber-50/70 dark:bg-amber-950/20 border-l-4 border-l-amber-500 space-y-3">
+          <div className="p-4 bg-amber-50/80 dark:bg-amber-950/30 rounded-2xl border-l-4 border-l-amber-500 border border-amber-200/80 dark:border-amber-800/60 space-y-3 shadow-2xs">
             <div className="flex items-center justify-between gap-2">
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100/80 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
@@ -433,7 +433,7 @@ export default function LiveAssessmentsTable({
           </div>
         )}
         {exams.length === 0 ? (
-          <div className="py-10 px-4 text-center text-xs text-[#64748B] dark:text-[#A3B1C6]">
+          <div className="py-10 px-4 text-center text-xs text-[#64748B] dark:text-[#A3B1C6] bg-white dark:bg-[#111C31] rounded-2xl border border-slate-200 dark:border-slate-800">
             No assessments yet. Tap "Create Assessment" to generate your first exam.
           </div>
         ) : (
@@ -462,8 +462,10 @@ export default function LiveAssessmentsTable({
             const ui = STATUS_UI[statusKey];
 
             return (
-              <div key={exam.id} className="p-3.5 sm:p-4 space-y-3 bg-white dark:bg-[#111C31] hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
-
+              <div
+                key={exam.id}
+                className="p-4 space-y-3 rounded-2xl bg-white dark:bg-[#111C31] border border-slate-200/90 dark:border-slate-800 shadow-xs hover:border-blue-300 dark:hover:border-blue-800/60 transition-all"
+              >
                 {/* ── Top row: File Icon + Title & Tag + QR Code Button ── */}
                 <div className="flex items-start justify-between gap-2.5">
                   <div className="flex items-center gap-2.5 min-w-0 flex-1">
@@ -484,7 +486,7 @@ export default function LiveAssessmentsTable({
                   <button
                     type="button"
                     onClick={() => setQrModalExam(exam)}
-                    className="w-8 h-8 rounded-xl border border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center shrink-0 transition-colors cursor-pointer shadow-2xs"
+                    className="w-8 h-8 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-slate-50/80 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center shrink-0 transition-colors cursor-pointer shadow-2xs"
                     aria-label="QR Code"
                     title="View QR Code Flyer"
                   >
@@ -514,21 +516,19 @@ export default function LiveAssessmentsTable({
                   )}
                 </div>
 
-                {/* ── Metadata Specs (Marks, Duration, Date) ── */}
-                <div className="flex items-center gap-2.5 text-[11px] sm:text-xs text-[#64748B] dark:text-[#A3B1C6] flex-wrap">
-                  <span className="inline-flex items-center gap-1">
+                {/* ── Metadata Specs (Marks, Duration, Date) with Bordered Pills ── */}
+                <div className="flex items-center gap-2 text-xs flex-wrap">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-50 dark:bg-slate-800/70 text-slate-700 dark:text-slate-300 border border-slate-200/90 dark:border-slate-700/80 text-[11px] font-semibold">
                     <ClipboardList className="h-3.5 w-3.5 text-slate-400" />
-                    <span className="font-medium">{exam.total_marks ?? 50} marks</span>
+                    <span>{exam.total_marks ?? 50} marks</span>
                   </span>
-                  <span className="text-slate-300 dark:text-slate-700">•</span>
-                  <span className="inline-flex items-center gap-1">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-50 dark:bg-slate-800/70 text-slate-700 dark:text-slate-300 border border-slate-200/90 dark:border-slate-700/80 text-[11px] font-semibold">
                     <Clock className="h-3.5 w-3.5 text-slate-400" />
-                    <span className="font-medium">{exam.duration_minutes} min</span>
+                    <span>{exam.duration_minutes} min</span>
                   </span>
-                  <span className="text-slate-300 dark:text-slate-700">•</span>
-                  <span className="inline-flex items-center gap-1">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-50 dark:bg-slate-800/70 text-slate-700 dark:text-slate-300 border border-slate-200/90 dark:border-slate-700/80 text-[11px] font-semibold">
                     <Calendar className="h-3.5 w-3.5 text-slate-400" />
-                    <span className="font-medium">{exam.start_time ? formatISTDate(exam.start_time) : "Flexible"}</span>
+                    <span>{exam.start_time ? formatISTDate(exam.start_time) : "Flexible"}</span>
                   </span>
                 </div>
 
@@ -558,11 +558,11 @@ export default function LiveAssessmentsTable({
                 </div>
 
                 {/* ── Quick Sharing Buttons Row ── */}
-                <div className="grid grid-cols-2 gap-2">
+                <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={() => handleCopyDirectExamLink(examCode)}
-                    className="h-8.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-800 text-[11px] font-semibold text-slate-700 dark:text-slate-200 flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+                    className="flex-1 h-8.5 rounded-xl border border-blue-200/80 dark:border-blue-900/60 bg-blue-50/40 dark:bg-blue-950/30 hover:bg-blue-100/50 text-[11px] font-bold text-blue-700 dark:text-blue-300 flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
                   >
                     <Link2 className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
                     <span>Copy Link</span>
@@ -570,22 +570,29 @@ export default function LiveAssessmentsTable({
                   <button
                     type="button"
                     onClick={() => handleShareWhatsApp(exam)}
-                    className="h-8.5 rounded-lg border border-emerald-200 dark:border-emerald-800/80 bg-emerald-50/60 dark:bg-emerald-950/30 hover:bg-emerald-100/60 dark:hover:bg-emerald-900/50 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+                    className="flex-1 h-8.5 rounded-xl border border-emerald-200/80 dark:border-emerald-800/80 bg-emerald-50/50 dark:bg-emerald-950/30 hover:bg-emerald-100/50 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
                   >
                     <Share2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                     <span>WhatsApp</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setQrModalExam(exam)}
+                    className="w-8.5 h-8.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center shrink-0 transition-colors cursor-pointer shadow-2xs"
+                    title="QR Code & Flyer"
+                  >
+                    <QrCode className="h-3.5 w-3.5" />
                   </button>
                 </div>
 
                 {/* ── Action Buttons Row ── */}
                 <div className="flex items-center gap-2 pt-0.5">
-
                   {/* PRIMARY action — depends on state */}
                   {sched.status === "live" ? (
                     <button
                       type="button"
                       onClick={() => setLiveProctorExamId(exam.id)}
-                      className="flex-1 h-9 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                      className="flex-1 h-9.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer"
                     >
                       <Radio className="h-3.5 w-3.5 animate-pulse shrink-0" />
                       <span>Live Monitor</span>
@@ -597,7 +604,7 @@ export default function LiveAssessmentsTable({
                         if (!exam.is_paid && onOpenPaymentModal) onOpenPaymentModal(exam);
                         else onPublishExam(exam.id);
                       }}
-                      className="flex-1 h-9 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                      className="flex-1 h-9.5 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer"
                     >
                       {exam.is_paid
                         ? <><Sparkles className="h-3.5 w-3.5 shrink-0" /> <span>Publish</span></>
@@ -609,7 +616,7 @@ export default function LiveAssessmentsTable({
                       type="button"
                       disabled={isLoadingCreds}
                       onClick={() => handleOpenCredentialsPreview(exam)}
-                      className="flex-1 h-9 rounded-xl bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer disabled:opacity-50"
+                      className="flex-1 h-9.5 rounded-xl bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer disabled:opacity-50"
                     >
                       <Key className="h-3.5 w-3.5 shrink-0" />
                       <span>{isLoadingCreds ? "Loading…" : "Credentials"}</span>
@@ -621,7 +628,7 @@ export default function LiveAssessmentsTable({
                     href={`/exam/${examCode}?mode=teacher_preview`}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex-1 h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-750 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors shadow-2xs"
+                    className="flex-1 h-9.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-750 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors shadow-2xs"
                   >
                     <Play className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0 fill-emerald-600/20" />
                     <span>Test Run</span>
@@ -635,7 +642,7 @@ export default function LiveAssessmentsTable({
                         e.stopPropagation();
                         setActiveDropdownExamId(activeDropdownExamId === exam.id ? null : exam.id);
                       }}
-                      className="w-9 h-9 rounded-xl border border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-[#17243A] text-[#64748B] dark:text-[#94A3B8] hover:bg-[#F1F5F9] dark:hover:bg-[#1E2D47] flex items-center justify-center transition-colors cursor-pointer"
+                      className="w-9.5 h-9.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-750 flex items-center justify-center transition-colors cursor-pointer shadow-2xs"
                       aria-label="More options"
                     >
                       <MoreHorizontal className="h-4 w-4" />

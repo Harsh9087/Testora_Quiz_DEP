@@ -1961,8 +1961,8 @@ export default function TeacherDashboard() {
               onDiscardDraft={handleClearDraft}
               exams={exams}
               showCreateButton={false}
-              title="Live Class Assessments & Proctoring"
-              description="Manage active examination sessions, live anti-cheat monitoring, and candidate credentials."
+              title="Live Assessments"
+              description="Manage and monitor your test sessions"
               onOpenCreate={() => switchSectionTab("create")}
               onViewAll={() => switchSectionTab("exams")}
               onOpenCertificates={(exam) => setCertDrawerExam(exam)}
