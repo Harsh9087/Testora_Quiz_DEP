@@ -1164,6 +1164,7 @@ export default function MockTestLibrary() {
       {/* ═══════ MOCK TEST TAKING MODAL RUNNER ═══════ */}
       {activeTest && (
         <MockTestTakingModal
+          key={`${activeTest.id}_${takingTestMode}`}
           testId={activeTest.id}
           testTitle={activeTest.title}
           companyName={activeTest.company_name || "Testora National"}

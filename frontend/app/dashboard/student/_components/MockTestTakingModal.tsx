@@ -101,6 +101,7 @@ export default function MockTestTakingModal({
   initialMode = "exam",
 }: MockTestTakingModalProps) {
   const { token } = useAuthStore();
+  const [currentMode, setCurrentMode] = useState<"exam" | "solutions">(initialMode);
   const [loading, setLoading] = useState(true);
   const [questions, setQuestions] = useState<MockQuestion[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -135,6 +136,7 @@ export default function MockTestTakingModal({
   useEffect(() => {
     if (!isOpen || !testId) return;
 
+    setCurrentMode(initialMode);
     setLoading(true);
     setResult(null);
     setAnswers({});
@@ -181,7 +183,7 @@ export default function MockTestTakingModal({
 
   // Countdown timer
   useEffect(() => {
-    if (!isOpen || result || loading || timeLeftSeconds <= 0 || initialMode === "solutions") return;
+    if (!isOpen || result || loading || timeLeftSeconds <= 0 || currentMode === "solutions") return;
 
     const timer = setInterval(() => {
       setTimeLeftSeconds((prev) => {
@@ -195,7 +197,7 @@ export default function MockTestTakingModal({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isOpen, result, loading, timeLeftSeconds, initialMode]);
+  }, [isOpen, result, loading, timeLeftSeconds, currentMode]);
 
   if (!isOpen) return null;
 
@@ -228,7 +230,7 @@ export default function MockTestTakingModal({
   };
 
   const handleSafeClose = () => {
-    if (!result && initialMode !== "solutions" && questions.length > 0 && Object.keys(answers).length > 0) {
+    if (!result && currentMode !== "solutions" && questions.length > 0 && Object.keys(answers).length > 0) {
       const confirmExit = window.confirm(
         "You have an assessment in progress. Are you sure you want to exit? Your answers will not be scored until submitted."
       );
@@ -391,7 +393,7 @@ export default function MockTestTakingModal({
             <div className="w-full py-24 text-center space-y-3.5 flex-1">
               <div className="w-10 h-10 border-3 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" />
               <p className="text-xs font-bold text-slate-600 dark:text-slate-400">
-                {initialMode === "solutions" ? "Loading step-by-step solutions & scorecard..." : "Loading standardized examination questions..."}
+                {currentMode === "solutions" ? "Loading step-by-step solutions & scorecard..." : "Loading standardized examination questions..."}
               </p>
             </div>
           )}
@@ -402,7 +404,7 @@ export default function MockTestTakingModal({
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{errorMsg}</span>
               </div>
-              {initialMode === "solutions" && (
+              {currentMode === "solutions" && (
                 <button
                   type="button"
                   onClick={() => {
@@ -426,7 +428,7 @@ export default function MockTestTakingModal({
           )}
 
           {/* ═══════ ACTIVE TEST RUNNER (DESKTOP SPLIT / MOBILE SINGLE) ═══════ */}
-          {!loading && !result && initialMode !== "solutions" && questions.length > 0 && currentQ && (
+          {!loading && !result && currentMode !== "solutions" && questions.length > 0 && currentQ && (
             <>
               {/* Center / Main Examination Column (With Fixed Bottom Toolbar) */}
               <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
@@ -1045,6 +1047,7 @@ export default function MockTestTakingModal({
             <button
               type="button"
               onClick={() => {
+                setCurrentMode("exam");
                 setResult(null);
                 setAnswers({});
                 setMarkedForReview({});

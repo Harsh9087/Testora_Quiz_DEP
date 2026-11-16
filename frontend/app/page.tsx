@@ -1299,10 +1299,9 @@ export default function UnifiedHomePage() {
                       <Layers className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#0066FF] dark:text-[#38BDF8] shrink-0" />
                       <span>Mock Test</span>
                     </div>
-                    <div className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-[#FEF3C7]/90 dark:bg-amber-950/70 border border-amber-200/90 dark:border-amber-500/40 text-amber-700 dark:text-amber-400 text-[8.5px] sm:text-[10px] font-bold shadow-xs whitespace-nowrap">
+                    <div className="hidden sm:inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-[#FEF3C7]/90 dark:bg-amber-950/70 border border-amber-200/90 dark:border-amber-500/40 text-amber-700 dark:text-amber-400 text-[8.5px] sm:text-[10px] font-bold shadow-xs whitespace-nowrap">
                       <Zap className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-500 dark:text-amber-400 fill-amber-500 shrink-0" />
-                      <span className="hidden sm:inline">Practice &amp; Prepare</span>
-                      <span className="sm:hidden">Prepare</span>
+                      <span>Practice &amp; Prepare</span>
                     </div>
                   </div>
 
@@ -1422,10 +1421,9 @@ export default function UnifiedHomePage() {
                       <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#7C3AED] dark:text-[#C084FC] shrink-0" />
                       <span>AI Form Builder</span>
                     </div>
-                    <div className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-[#FAF5FF] dark:bg-violet-950/70 border border-violet-200/90 dark:border-violet-500/40 text-[#9333EA] dark:text-[#D8B4FE] text-[8.5px] sm:text-[10px] font-bold shadow-xs whitespace-nowrap">
+                    <div className="hidden sm:inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-[#FAF5FF] dark:bg-violet-950/70 border border-violet-200/90 dark:border-violet-500/40 text-[#9333EA] dark:text-[#D8B4FE] text-[8.5px] sm:text-[10px] font-bold shadow-xs whitespace-nowrap">
                       <Wand2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#9333EA] dark:text-[#D8B4FE] shrink-0" />
-                      <span className="hidden sm:inline">Create &amp; Collect</span>
-                      <span className="sm:hidden">Collect</span>
+                      <span>Create &amp; Collect</span>
                     </div>
                   </div>
 

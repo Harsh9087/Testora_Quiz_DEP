@@ -771,6 +771,7 @@ export default function CompanyPlacementTests() {
       {/* ═══════ INTERACTIVE IN-BROWSER TEST MODAL ═══════ */}
       {activeTest && (
         <MockTestTakingModal
+          key={`${activeTest.id}_${testMode}`}
           testId={activeTest.id}
           testTitle={activeTest.title}
           companyName={activeTest.company_name}
