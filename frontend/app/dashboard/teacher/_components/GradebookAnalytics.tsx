@@ -10,16 +10,29 @@ import { useToast } from "../../../../components/Toast";
 
 interface GradebookAnalyticsProps {
   exams: any[];
+  initialExamId?: string | null;
 }
 
-export default function GradebookAnalytics({ exams }: GradebookAnalyticsProps) {
+export default function GradebookAnalytics({ exams, initialExamId }: GradebookAnalyticsProps) {
   const { token } = useAuthStore();
   const { showToast } = useToast();
 
-  const [selectedReportExamId, setSelectedReportExamId] = useState<string | null>(null);
+  const [selectedReportExamId, setSelectedReportExamId] = useState<string | null>(initialExamId || null);
   const [reportAnalytics, setReportAnalytics] = useState<any | null>(null);
   const [loadingReport, setLoadingReport] = useState(false);
   const [studentAnswerModal, setStudentAnswerModal] = useState<any | null>(null);
+
+  useEffect(() => {
+    if (initialExamId) {
+      loadExamAnalytics(initialExamId);
+    } else if (typeof window !== "undefined") {
+      const p = new URLSearchParams(window.location.search);
+      const qExamId = p.get("examId");
+      if (qExamId) {
+        loadExamAnalytics(qExamId);
+      }
+    }
+  }, [initialExamId]);
 
   const loadExamAnalytics = async (examId: string) => {
     setSelectedReportExamId(examId);

@@ -212,6 +212,7 @@ export default function TeacherDashboard() {
   const [enableCertificate, setEnableCertificate] = useState(false);
   const [isCertStudioOpen, setIsCertStudioOpen] = useState(false);
   const [certDrawerExam, setCertDrawerExam] = useState<{ id: string; name: string } | null>(null);
+  const [selectedGradebookExamId, setSelectedGradebookExamId] = useState<string | null>(null);
   const [certificateConfig, setCertificateConfig] = useState<any>({
     template_id: "testora_default",
     passing_criteria_type: "percentage",
@@ -1929,6 +1930,10 @@ export default function TeacherDashboard() {
               onOpenCreate={() => switchSectionTab("create")}
               onViewAll={() => switchSectionTab("exams")}
               onOpenCertificates={(exam) => setCertDrawerExam(exam)}
+              onOpenGradebook={(exam) => {
+                setSelectedGradebookExamId(exam.id);
+                switchSectionTab("reports");
+              }}
               onPreviewExam={(exam) => setPreviewExam(exam)}
               onOpenLiveProctor={(exam) => {
                 setLiveProctorExam(exam);
@@ -1974,6 +1979,10 @@ export default function TeacherDashboard() {
           showCreateButton={true}
           onOpenCreate={() => switchSectionTab("create")}
           onOpenCertificates={(exam) => setCertDrawerExam(exam)}
+          onOpenGradebook={(exam) => {
+            setSelectedGradebookExamId(exam.id);
+            switchSectionTab("reports");
+          }}
           onPreviewExam={(exam) => setPreviewExam(exam)}
           onOpenLiveProctor={(exam) => {
             setLiveProctorExam(exam);
@@ -3885,7 +3894,7 @@ export default function TeacherDashboard() {
       {/* ═══════ SECTION 6: GENERALIZED CLASSROOM QUIZ ANALYTICS ═══════ */}
       {activeSectionTab === "reports" && (
       <section id="reports" className="scroll-mt-16 space-y-4">
-        <GradebookAnalytics exams={exams} />
+        <GradebookAnalytics exams={exams} initialExamId={selectedGradebookExamId} />
       </section>
       )}
 
