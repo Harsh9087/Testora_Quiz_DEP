@@ -425,7 +425,7 @@ export default function PaperStudioModal({
             </button>
 
             <a
-              href={`${API_V1}/exams/${exam.id}/pdf/printable`}
+              href={`${API_V1}/exams/${exam.id}/pdf/question-paper${token ? `?token=${encodeURIComponent(token)}` : ""}`}
               target="_blank"
               rel="noreferrer"
               className="px-3 py-2 rounded-md border border-[#E5E0D8] dark:border-[#292524] text-[#716D67] hover:text-[#242321] text-xs font-medium flex items-center gap-1.5 hover:bg-[#E5E0D8]/40"
@@ -435,7 +435,7 @@ export default function PaperStudioModal({
             </a>
 
             <a
-              href={`${API_V1}/exams/${exam.id}/pdf/answer-key`}
+              href={`${API_V1}/exams/${exam.id}/pdf/answer-key${token ? `?token=${encodeURIComponent(token)}` : ""}`}
               target="_blank"
               rel="noreferrer"
               className="px-3 py-2 rounded-md border border-[#E5E0D8] dark:border-[#292524] text-[#716D67] hover:text-[#242321] text-xs font-medium flex items-center gap-1.5 hover:bg-[#E5E0D8]/40"

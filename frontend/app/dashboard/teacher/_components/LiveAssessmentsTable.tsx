@@ -622,7 +622,7 @@ export default function LiveAssessmentsTable({
                             <span>QR Code Flyer</span>
                           </button>
                           <a
-                            href={`${API_V1}/exams/${exam.id}/pdf/question-paper`}
+                            href={`${API_V1}/exams/${exam.id}/pdf/question-paper${token ? `?token=${encodeURIComponent(token)}` : ""}`}
                             target="_blank"
                             rel="noreferrer"
                             onClick={() => setActiveDropdownExamId(null)}
@@ -1063,7 +1063,7 @@ export default function LiveAssessmentsTable({
                               {/* Section 2: Print & Receipts */}
                               <div className="p-1 space-y-0.5">
                                 <a
-                                  href={`${API_V1}/exams/${exam.id}/pdf/question-paper`}
+                                  href={`${API_V1}/exams/${exam.id}/pdf/question-paper${token ? `?token=${encodeURIComponent(token)}` : ""}`}
                                   target="_blank"
                                   rel="noreferrer"
                                   onClick={() => setActiveDropdownExamId(null)}

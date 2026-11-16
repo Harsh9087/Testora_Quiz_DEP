@@ -1478,6 +1478,7 @@ def regenerate_single_question(
 from fastapi.responses import HTMLResponse
 
 @router.get("/{exam_id}/pdf/question-paper", response_class=HTMLResponse)
+@router.get("/{exam_id}/pdf/printable", response_class=HTMLResponse)
 def export_printable_question_paper(
     exam_id: str,
     token: Optional[str] = None,
