@@ -1809,7 +1809,10 @@ def get_exam_live_monitor(
             if uc.student and uc.student.user:
                 cand = db.query(ExamCandidate).filter(
                     ExamCandidate.exam_id == exam.id,
-                    ExamCandidate.roll_number_snapshot == uc.student.roll_number
+                    or_(
+                        func.lower(ExamCandidate.email_snapshot) == uc.student.user.email.strip().lower(),
+                        ExamCandidate.roll_number_snapshot == uc.student.roll_number
+                    )
                 ).first()
                 if not cand:
                     cand = ExamCandidate(
@@ -1829,6 +1832,25 @@ def get_exam_live_monitor(
                 joinedload(ExamCandidate.credential),
                 selectinload(ExamCandidate.submissions)
             ).filter(ExamCandidate.exam_id == exam_id).order_by(ExamCandidate.created_at.asc()).all()
+
+    # Deduplicate candidates by student email so each distinct student appears only once
+    # Candidates with active submissions or credentials are prioritized as canonical
+    candidates = sorted(
+        candidates,
+        key=lambda c: (len(c.submissions or []), 1 if c.credential else 0),
+        reverse=True
+    )
+    deduped_candidates = []
+    seen_emails = set()
+    for c in candidates:
+        email_key = (c.email_snapshot or "").strip().lower()
+        if not email_key or "anonymous" in (c.name_snapshot or "").lower():
+            continue
+        if email_key in seen_emails:
+            continue
+        seen_emails.add(email_key)
+        deduped_candidates.append(c)
+    candidates = deduped_candidates
 
     now = now_utc()
     

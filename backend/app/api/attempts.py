@@ -4,7 +4,7 @@ from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field
 from fastapi import APIRouter, Depends, HTTPException, status, WebSocket, WebSocketDisconnect, Query, Header, Body
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from jose import jwt
 
 from app.database import get_db, SessionLocal
@@ -278,10 +278,29 @@ def login_student(login_in: ExamLogin, exam_code: str, db: Session = Depends(get
                 db.add(student)
                 db.commit()
                 db.refresh(student)
+
+            # Check if student is already enrolled as a candidate for this exam
+            existing_cand = db.query(ExamCandidate).filter(
+                ExamCandidate.exam_id == exam.id,
+                or_(
+                    func.lower(ExamCandidate.email_snapshot) == user.email.lower(),
+                    ExamCandidate.roll_number_snapshot == student.roll_number
+                )
+            ).first()
+
             cred = db.query(ExamCredential).filter(
                 ExamCredential.exam_id == exam.id,
-                ExamCredential.student_id == student.id
+                (ExamCredential.student_id == student.id) |
+                (ExamCredential.candidate_id == existing_cand.id if existing_cand else False)
             ).first()
+
+            if cred and not cred.student_id:
+                cred.student_id = student.id
+                db.commit()
+            if cred and existing_cand and not cred.candidate_id:
+                cred.candidate_id = existing_cand.id
+                db.commit()
+
             if not cred:
                 import secrets
                 clean_roll = "".join(c for c in (student.roll_number or user.email.split('@')[0]) if c.isalnum()).upper()[:16]
@@ -290,6 +309,7 @@ def login_student(login_in: ExamLogin, exam_code: str, db: Session = Depends(get
                     cand_username = f"{cand_username}-{secrets.token_hex(2).upper()}"
                 cred = ExamCredential(
                     exam_id=exam.id,
+                    candidate_id=existing_cand.id if existing_cand else None,
                     student_id=student.id,
                     username=cand_username,
                     password=raw_pass,
@@ -303,7 +323,8 @@ def login_student(login_in: ExamLogin, exam_code: str, db: Session = Depends(get
                     db.rollback()
                     cred = db.query(ExamCredential).filter(
                         ExamCredential.exam_id == exam.id,
-                        ExamCredential.student_id == student.id
+                        (ExamCredential.student_id == student.id) |
+                        (ExamCredential.candidate_id == existing_cand.id if existing_cand else False)
                     ).first()
         else:
             raise HTTPException(status_code=400, detail="Incorrect credentials for this exam. Please check your passcode or portal login.")
@@ -1045,8 +1066,10 @@ def direct_start_for_student(
     # 1. Resolve candidate for this exam
     cand = db.query(ExamCandidate).filter(
         ExamCandidate.exam_id == exam.id,
-        (ExamCandidate.email_snapshot == current_user.email) |
-        (ExamCandidate.roll_number_snapshot == student.roll_number)
+        or_(
+            func.lower(ExamCandidate.email_snapshot) == current_user.email.lower(),
+            ExamCandidate.roll_number_snapshot == student.roll_number
+        )
     ).first()
 
     cred = db.query(ExamCredential).filter(
