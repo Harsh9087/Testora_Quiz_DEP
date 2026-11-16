@@ -1352,28 +1352,34 @@ async def handle_violation_logic(sub: ExamSubmission, violation: ViolationReport
         cand_name = sub.credential.student.user.full_name
         roll_no = sub.credential.student.roll_number or ""
 
-    if new_count == 1:
-        # Policy: FIRST TAB SWITCH -> Warning only, remain ACTIVE
+    if new_count <= 3:
+        # Policy: TAB SWITCH #1, #2, #3 -> 3 Warnings allowed, remain ACTIVE
+        allowed_remaining = 3 - new_count
+        warning_msg = (
+            f"Warning ({new_count}/3): Tab switching is not allowed. {allowed_remaining} warning{'s' if allowed_remaining != 1 else ''} remaining before automatic exam submission."
+            if allowed_remaining > 0
+            else "FINAL WARNING (3/3): Tab switching is strictly prohibited! Your 4th tab switch will immediately auto-submit your exam."
+        )
         await manager.broadcast_proctor_alert(
             exam_id=sub.exam_id,
             message={
                 "student_name": cand_name,
                 "roll_number": roll_no,
                 "event_type": "tab_switch",
-                "event_details": "Warning: Tab switch #1 recorded. Allowed switches remaining: 0",
-                "violation_count": 1,
+                "event_details": f"Warning: Tab switch #{new_count} recorded. Warnings remaining: {allowed_remaining}",
+                "violation_count": new_count,
                 "timestamp": to_iso_utc(server_now)
             }
         )
         return {
             "action": "warn",
-            "violation_count": 1,
-            "warning": "Warning: Tab switching is not allowed. One more tab switch will automatically submit your exam.",
+            "violation_count": new_count,
+            "warning": warning_msg,
             "status": sub.status,
-            "allowed_switches_remaining": 0
+            "allowed_switches_remaining": allowed_remaining
         }
     else:
-        # Policy: SECOND TAB SWITCH -> Immediately AUTO_SUBMIT server-side
+        # Policy: 4TH TAB SWITCH -> Immediately AUTO_SUBMIT server-side
         # Atomic DB state transition row lock
         rows_updated = db.query(ExamSubmission).filter(
             ExamSubmission.id == sub.id,
@@ -1393,7 +1399,7 @@ async def handle_violation_logic(sub: ExamSubmission, violation: ViolationReport
                 "status": "auto_submitted",
                 "force_submit": True,
                 "reason": "TAB_SWITCH",
-                "message": "Exam automatically submitted due to tab switching.",
+                "message": "Exam automatically submitted due to excessive tab switching (exceeded 3 warnings).",
                 "result": eval_res
             }
         else:
@@ -1407,7 +1413,7 @@ async def handle_violation_logic(sub: ExamSubmission, violation: ViolationReport
                 "status": sub.status if sub else "auto_submitted",
                 "force_submit": True,
                 "reason": (sub.auto_submit_reason if sub else None) or "TAB_SWITCH",
-                "message": "Exam automatically submitted due to tab switching.",
+                "message": "Exam automatically submitted due to excessive tab switching (exceeded 3 warnings).",
                 "result": {
                     "status": sub.status if sub else "auto_submitted",
                     "score": sub.score if sub else 0.0,
@@ -1466,8 +1472,8 @@ async def student_heartbeat(
             "time_remaining_seconds": 0
         }
 
-    # Tab-switch policy enforcement check during heartbeat
-    if (sub.tab_switch_count or 0) >= 2:
+    # Tab-switch policy enforcement check during heartbeat: 4th switch auto-submits
+    if (sub.tab_switch_count or 0) >= 4:
         rows_updated = db.query(ExamSubmission).filter(
             ExamSubmission.id == sub.id,
             ExamSubmission.status.in_(["started", "in_progress", "submitting"])

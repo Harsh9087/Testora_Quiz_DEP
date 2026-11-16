@@ -1920,7 +1920,7 @@ def get_exam_live_monitor(
             sub and 
             sub.status == "auto_submitted" and 
             sub.auto_submit_reason == "TAB_SWITCH" and 
-            sub.tab_switch_count >= 2 and 
+            sub.tab_switch_count >= 1 and 
             total_attempts < 2 and
             (not exam_end_dt or now < exam_end_dt)
         )
@@ -2559,10 +2559,10 @@ def grant_candidate_reattempt(
         raise HTTPException(status_code=409, detail=f"Candidate already has an active attempt (Attempt #{active_attempt.attempt_number}) in progress")
 
     # Strict eligibility check:
-    # Must be auto_submitted AND auto_submit_reason == TAB_SWITCH AND tab_switch_count >= 2
+    # Must be auto_submitted AND auto_submit_reason == TAB_SWITCH AND tab_switch_count >= 1
     if not (latest_attempt.status == "auto_submitted" and 
             latest_attempt.auto_submit_reason == "TAB_SWITCH" and 
-            latest_attempt.tab_switch_count >= 2):
+            latest_attempt.tab_switch_count >= 1):
         raise HTTPException(
             status_code=400, 
             detail=f"Reattempt is only authorized for candidates whose attempt was auto-submitted due to tab switching. Current status: {latest_attempt.status} ({latest_attempt.auto_submit_reason or 'normal'})"

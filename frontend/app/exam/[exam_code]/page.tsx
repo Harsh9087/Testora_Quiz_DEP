@@ -477,16 +477,20 @@ export default function ExamPortal() {
           });
           if (res.ok) {
             const data = await res.json();
-            if (data.action === "warn" || data.violation_count === 1) {
-              setTabSwitchCount(1);
-              showToast(
-                "Warning: Tab switching is not allowed. One more tab switch will automatically submit your exam.",
-                "error"
+            if (data.action === "warn" || (data.violation_count && data.violation_count < 4)) {
+              const currentStrikes = data.violation_count || 1;
+              setTabSwitchCount(currentStrikes);
+              const remaining = data.allowed_switches_remaining ?? (3 - currentStrikes);
+              const warningMsg = data.warning || (
+                remaining > 0
+                  ? `Warning (${currentStrikes}/3): Tab switching detected! ${remaining} warning${remaining > 1 ? "s" : ""} remaining before automatic exam submission.`
+                  : `FINAL WARNING (3/3): Tab switching detected! Next tab switch will immediately auto-submit your exam!`
               );
-            } else if (data.action === "auto_submit" || data.status === "auto_submitted" || data.force_submit) {
-              setTabSwitchCount(2);
-              setAutoSubmitReason("Exam automatically submitted due to tab switching.");
-              showToast("Exam automatically submitted due to tab switching.", "error");
+              showToast(warningMsg, "error");
+            } else if (data.action === "auto_submit" || data.status === "auto_submitted" || data.force_submit || (data.violation_count && data.violation_count >= 4)) {
+              setTabSwitchCount(data.violation_count || 4);
+              setAutoSubmitReason("Exam automatically submitted due to excessive tab switching (exceeded 3 warnings).");
+              showToast("Exam automatically submitted due to excessive tab switching (exceeded 3 warnings).", "error");
               setSubmittedResult(data.result || {
                 status: "auto_submitted",
                 score: data.result?.score || 0,
@@ -735,7 +739,7 @@ export default function ExamPortal() {
             <ul className="list-disc pl-4 text-[11px] space-y-0.5 opacity-90">
               <li>Ensure stable Wi-Fi connection and full battery/power.</li>
               <li>Keep full screen open during the test to avoid proctor flags.</li>
-              <li>Strict Anti-Cheat: Only 1 tab switch is allowed. A second switch will auto-submit.</li>
+              <li>Strict Anti-Cheat: 3 tab switch warnings allowed. A 4th tab switch will immediately auto-submit your exam.</li>
               <li>Have your candidate PIN/passcode ready for instant login.</li>
             </ul>
           </div>
@@ -982,13 +986,15 @@ export default function ExamPortal() {
         totalQuestions={examStore.questions.length}
       />
 
-      {/* Tab Switch Strike 1 Warning Banner */}
-      {tabSwitchCount === 1 && (
+      {/* Tab Switch Warning Banner (Warnings 1 to 3) */}
+      {tabSwitchCount >= 1 && tabSwitchCount <= 3 && (
         <div className="bg-rose-600 text-white px-3 sm:px-4 py-2.5 sm:py-3 text-xs font-bold shadow-md animate-pulse border-b border-rose-700">
           <div className="flex items-center gap-2 max-w-7xl mx-auto w-full justify-center text-center">
             <ShieldAlert className="h-4 w-4 shrink-0" />
             <span>
-              Warning: Tab switching is not allowed. One more tab switch will automatically submit your exam.
+              {tabSwitchCount === 1 && "Warning (1/3): Tab switching is strictly prohibited. 2 warnings remaining before auto-submission."}
+              {tabSwitchCount === 2 && "Warning (2/3): Tab switching is strictly prohibited. 1 warning remaining before auto-submission."}
+              {tabSwitchCount === 3 && "FINAL WARNING (3/3): Tab switching strictly prohibited! 4th tab switch will permanently auto-submit your exam!"}
             </span>
           </div>
         </div>

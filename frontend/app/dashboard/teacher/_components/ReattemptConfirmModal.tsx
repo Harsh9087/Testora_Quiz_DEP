@@ -131,7 +131,7 @@ export default function ReattemptConfirmModal({
             <div className="flex justify-between items-center">
               <span className="text-[#716D67]">Tab Switch Violations</span>
               <span className="font-bold text-rose-600 dark:text-rose-400">
-                {candidate.proctor_flags_count || 2} strikes
+                {candidate.tab_switch_count ?? candidate.proctor_flags_count ?? 4} strikes (exceeded 3 warnings)
               </span>
             </div>
             <div className="flex justify-between items-center">

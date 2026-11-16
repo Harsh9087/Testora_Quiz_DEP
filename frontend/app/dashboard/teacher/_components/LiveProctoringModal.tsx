@@ -490,7 +490,7 @@ export default function LiveProctoringModal({
                             {c.proctor_flags_count > 0 ? (
                               <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 font-bold text-[10px] border border-rose-200 dark:border-rose-900">
                                 <ShieldAlert className="h-3 w-3 text-rose-600" />
-                                <span>{c.proctor_flags_count} flags</span>
+                                <span>{c.proctor_flags_count} {c.proctor_flags_count === 1 ? "flag" : "flags"}</span>
                               </span>
                             ) : (
                               <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
@@ -595,7 +595,7 @@ export default function LiveProctoringModal({
                             {c.proctor_flags_count > 0 ? (
                               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 font-bold text-[10px] border border-rose-200 dark:border-rose-900">
                                 <ShieldAlert className="h-3 w-3 text-rose-600" />
-                                <span>{c.proctor_flags_count} flags</span>
+                                <span>{c.proctor_flags_count} {c.proctor_flags_count === 1 ? "flag" : "flags"}</span>
                               </span>
                             ) : (
                               <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
