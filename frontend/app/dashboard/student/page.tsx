@@ -291,7 +291,7 @@ export default function StudentDashboard() {
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
       
       {/* ═══════ TOP NAVIGATION SWITCHER BAR ═══════ */}
-      <div className="bg-white dark:bg-[#111C31] border border-slate-200/90 dark:border-slate-800 rounded-2xl p-2.5 sm:p-3 shadow-xs space-y-2.5">
+      <div className="hidden sm:block bg-white dark:bg-[#111C31] border border-slate-200/90 dark:border-slate-800 rounded-2xl p-2.5 sm:p-3 shadow-xs space-y-2.5">
         <div className="flex items-center justify-between gap-2">
           {/* Portal View Switcher Tabs */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none touch-pan-x flex-1">
@@ -737,76 +737,6 @@ export default function StudentDashboard() {
             </div>
           )}
 
-          {/* Fast Direct Exam Jump Box */}
-          <div className="p-3 sm:p-3.5 bg-white dark:bg-[#111C31] rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-2xs">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-400">
-                <FileCode2 className="h-4 w-4" />
-              </div>
-              <div>
-                <div className="text-xs font-bold text-slate-900 dark:text-white">Have a Direct Assessment Code?</div>
-                <div className="text-[11px] text-slate-500 dark:text-slate-400">Enter the test code to jump straight into the assessment room</div>
-              </div>
-            </div>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (!directCodeInput.trim()) return;
-                const clean = directCodeInput.trim().replace(/^.*\/exam\//, "");
-                router.push(isTeacher ? `/exam/${clean}?mode=teacher_preview` : `/exam/${clean}`);
-              }}
-              className="flex items-center gap-2 w-full sm:w-auto"
-            >
-              <input
-                type="text"
-                value={directCodeInput}
-                onChange={(e) => setDirectCodeInput(e.target.value)}
-                placeholder="e.g. ex-com-1234"
-                className="px-3 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-mono text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500 w-full sm:w-44"
-              />
-              <button
-                type="submit"
-                className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer shadow-xs active:scale-95"
-              >
-                Join Room
-              </button>
-            </form>
-          </div>
-
-          {/* ═══════ FEATURED HIGH-YIELD TESTS CAROUSEL ═══════ */}
-          {assignedExams.length > 0 && (
-            <FeaturedHighYieldTests
-              isTeacher={isTeacher}
-              exams={assignedExams.map((e) => ({
-                exam_id: e.exam_id,
-                exam_code: e.exam_code,
-                name: e.name,
-                subject: e.subject_name || e.subject_id || "General",
-                description: e.description,
-                duration_minutes: e.duration_minutes ?? 30,
-                questions_count: e.questions_count ?? 0,
-                total_marks: e.total_marks ?? 0,
-                status: e.status as "active" | "scheduled" | "ended",
-                difficulty: e.difficulty ?? "medium",
-                access_type: e.has_submitted ? "enrolled" : (e.is_paid === false ? "free" : "enrolled"),
-                has_submitted: e.has_submitted,
-                submission_percentage: e.submission_percentage,
-                is_paid: e.is_paid,
-              }))}
-              onStartTest={(examCode) => {
-                const found = assignedExams.find((e) => e.exam_code === examCode);
-                if (found?.has_submitted && found?.submission_id) {
-                  setActivePortalTab("submissions");
-                  loadSubDetail(found.submission_id);
-                } else {
-                  window.location.href = isTeacher
-                    ? `/exam/${examCode}?mode=teacher_preview`
-                    : `/exam/${examCode}`;
-                }
-              }}
-            />
-          )}
-
           {/* ═══════ ASSESSMENT CARDS (MATCHES USER SCREENSHOT) ═══════ */}
           {filteredExams.length === 0 ? (
             <div className="bg-white dark:bg-[#111C31] border border-slate-200 dark:border-slate-800 rounded-2xl p-12 text-center space-y-3 shadow-xs">
@@ -1020,6 +950,78 @@ export default function StudentDashboard() {
                   </div>
                 );
               })}
+            </div>
+          )}
+
+          {/* Fast Direct Exam Jump Box */}
+          <div className="p-3 sm:p-3.5 bg-white dark:bg-[#111C31] rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-2xs mt-4">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-xl bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-400">
+                <FileCode2 className="h-4 w-4" />
+              </div>
+              <div>
+                <div className="text-xs font-bold text-slate-900 dark:text-white">Have a Direct Assessment Code?</div>
+                <div className="text-[11px] text-slate-500 dark:text-slate-400">Enter the test code to jump straight into the assessment room</div>
+              </div>
+            </div>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!directCodeInput.trim()) return;
+                const clean = directCodeInput.trim().replace(/^.*\/exam\//, "");
+                router.push(isTeacher ? `/exam/${clean}?mode=teacher_preview` : `/exam/${clean}`);
+              }}
+              className="flex items-center gap-2 w-full sm:w-auto"
+            >
+              <input
+                type="text"
+                value={directCodeInput}
+                onChange={(e) => setDirectCodeInput(e.target.value)}
+                placeholder="e.g. ex-com-1234"
+                className="px-3 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-mono text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500 w-full sm:w-44"
+              />
+              <button
+                type="submit"
+                className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer shadow-xs active:scale-95"
+              >
+                Join Room
+              </button>
+            </form>
+          </div>
+
+          {/* ═══════ FEATURED HIGH-YIELD TESTS CAROUSEL ═══════ */}
+          {assignedExams.length > 0 && (
+            <div className="pt-2">
+              <FeaturedHighYieldTests
+                isTeacher={isTeacher}
+                exams={assignedExams.map((e) => ({
+                  exam_id: e.exam_id,
+                  exam_code: e.exam_code,
+                  name: e.name,
+                  subject: e.subject_name || e.subject_id || "General",
+                  description: e.description,
+                  duration_minutes: e.duration_minutes ?? 30,
+                  questions_count: e.questions_count ?? 0,
+                  total_marks: e.total_marks ?? 0,
+                  status: e.status as "active" | "scheduled" | "ended",
+                  difficulty: e.difficulty ?? "medium",
+                  access_type: e.has_submitted ? "enrolled" : (e.is_paid === false ? "free" : "enrolled"),
+                  has_submitted: e.has_submitted,
+                  submission_percentage: e.submission_percentage,
+                  is_paid: e.is_paid,
+                }))}
+                onStartTest={(examCode) => {
+                  const found = assignedExams.find((e) => e.exam_code === examCode);
+                  if (found?.has_submitted && found?.submission_id) {
+                    setActivePortalTab("submissions");
+                    loadSubDetail(found.submission_id);
+                  } else {
+                    window.location.href = isTeacher
+                      ? `/exam/${examCode}?mode=teacher_preview`
+                      : `/exam/${examCode}`;
+                  }
+                }}
+              />
             </div>
           )}
         </div>
@@ -1744,6 +1746,78 @@ export default function StudentDashboard() {
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Fast Direct Exam Jump Box */}
+          <div className="p-3 sm:p-3.5 bg-white dark:bg-[#111C31] rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-2xs mt-4">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-xl bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-400">
+                <FileCode2 className="h-4 w-4" />
+              </div>
+              <div>
+                <div className="text-xs font-bold text-slate-900 dark:text-white">Have a Direct Assessment Code?</div>
+                <div className="text-[11px] text-slate-500 dark:text-slate-400">Enter the test code to jump straight into the assessment room</div>
+              </div>
+            </div>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!directCodeInput.trim()) return;
+                const clean = directCodeInput.trim().replace(/^.*\/exam\//, "");
+                router.push(isTeacher ? `/exam/${clean}?mode=teacher_preview` : `/exam/${clean}`);
+              }}
+              className="flex items-center gap-2 w-full sm:w-auto"
+            >
+              <input
+                type="text"
+                value={directCodeInput}
+                onChange={(e) => setDirectCodeInput(e.target.value)}
+                placeholder="e.g. ex-com-1234"
+                className="px-3 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-mono text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500 w-full sm:w-44"
+              />
+              <button
+                type="submit"
+                className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer shadow-xs active:scale-95"
+              >
+                Join Room
+              </button>
+            </form>
+          </div>
+
+          {/* ═══════ FEATURED HIGH-YIELD TESTS CAROUSEL ═══════ */}
+          {assignedExams.length > 0 && (
+            <div className="pt-2">
+              <FeaturedHighYieldTests
+                isTeacher={isTeacher}
+                exams={assignedExams.map((e) => ({
+                  exam_id: e.exam_id,
+                  exam_code: e.exam_code,
+                  name: e.name,
+                  subject: e.subject_name || e.subject_id || "General",
+                  description: e.description,
+                  duration_minutes: e.duration_minutes ?? 30,
+                  questions_count: e.questions_count ?? 0,
+                  total_marks: e.total_marks ?? 0,
+                  status: e.status as "active" | "scheduled" | "ended",
+                  difficulty: e.difficulty ?? "medium",
+                  access_type: e.has_submitted ? "enrolled" : (e.is_paid === false ? "free" : "enrolled"),
+                  has_submitted: e.has_submitted,
+                  submission_percentage: e.submission_percentage,
+                  is_paid: e.is_paid,
+                }))}
+                onStartTest={(examCode) => {
+                  const found = assignedExams.find((e) => e.exam_code === examCode);
+                  if (found?.has_submitted && found?.submission_id) {
+                    setActivePortalTab("submissions");
+                    loadSubDetail(found.submission_id);
+                  } else {
+                    window.location.href = isTeacher
+                      ? `/exam/${examCode}?mode=teacher_preview`
+                      : `/exam/${examCode}`;
+                  }
+                }}
+              />
             </div>
           )}
         </div>
