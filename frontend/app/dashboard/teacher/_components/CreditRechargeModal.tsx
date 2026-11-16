@@ -156,11 +156,18 @@ export default function CreditRechargeModal({
 
       if (isSimulated || !scriptLoaded) {
         const userConfirmed = window.confirm(
-          `[Razorpay Credit Recharge Simulation]\n\n` +
-          `Package: ${orderData.package_name}\n` +
-          `Credits to Add: +${orderData.credits_added.toLocaleString()} Credits\n` +
-          `Amount: ${orderData.formatted_amount}\n` +
-          `Order ID: ${orderData.order_id}\n\n` +
+          `[Razorpay Credit Recharge Simulation]
+
+` +
+          `Package: ${orderData.package_name}
+` +
+          `Credits to Add: +${orderData.credits_added.toLocaleString()} Credits
+` +
+          `Amount: ${orderData.formatted_amount}
+` +
+          `Order ID: ${orderData.order_id}
+
+` +
           `Click OK to simulate successful bank payment.`
         );
 
@@ -261,111 +268,118 @@ export default function CreditRechargeModal({
     window.open(`${API_V1}/payments/receipt/${successInfo.order_id}/html${token ? `?token=${encodeURIComponent(token)}` : ""}`, "_blank", "noopener,noreferrer");
   };
 
+  const selectedPkg = packages.find((p) => p.id === selectedPackageId);
+
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn"
+      className="fixed inset-0 z-[120] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
       onClick={() => {
         if (!processing) onClose();
       }}
     >
       <div 
-        className="w-full max-w-lg bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-scaleUp transition-colors"
+        className="w-full max-w-lg bg-white dark:bg-[#111C31] border-t sm:border border-slate-200 dark:border-slate-800 rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90dvh] sm:max-h-[85vh] animate-in slide-in-from-bottom sm:zoom-in-95 duration-200 transition-colors"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Mobile Drag Indicator */}
+        <div className="sm:hidden pt-2.5 pb-1 flex justify-center shrink-0">
+          <div className="w-10 h-1 bg-slate-300 dark:bg-slate-700 rounded-full" />
+        </div>
+
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#E2E8F0] dark:border-[#263449] bg-[#F8FAFC] dark:bg-[#17243A]">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172B4D] dark:text-[#60A5FA] border border-[#2563EB]/20">
-              <Coins className="h-5 w-5" />
+        <div className="flex items-center justify-between px-4 py-3 sm:px-6 sm:py-3.5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-[#17243A]/60 shrink-0">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="p-1.5 sm:p-2 rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 border border-blue-200 dark:border-blue-900/50 shrink-0">
+              <Coins className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
-            <div>
-              <h2 className="text-base font-bold text-[#111827] dark:text-[#F1F5F9] leading-tight">
+            <div className="min-w-0">
+              <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 leading-tight truncate">
                 Prepaid Credit Wallet
               </h2>
-              <p className="text-[11px] text-[#64748B] dark:text-[#A3B1C6]">
-                Recharge credits to unlock and publish assessments instantly
+              <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                1 credit = 1 candidate attempt • Instant access
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-[#64748B] hover:text-[#111827] dark:hover:text-[#F1F5F9] hover:bg-[#E2E8F0]/40 dark:hover:bg-[#263449] transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800 transition-colors cursor-pointer shrink-0 ml-2"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        {/* Body */}
-        <div className="p-6 overflow-y-auto space-y-5">
-          {/* Current Balance Bar */}
-          <div className="p-4 rounded-xl border border-[#2563EB]/30 bg-gradient-to-r from-[#EFF6FF] to-blue-50/60 dark:from-[#172B4D]/60 dark:to-[#17243A] flex items-center justify-between">
+        {/* Scrollable Body - flex-1 min-h-0 guarantees scrollability & avoids cutting off footer! */}
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-3.5 sm:p-5 space-y-3 touch-pan-y">
+          {/* Compact Current Balance Bar */}
+          <div className="p-3 sm:p-3.5 rounded-xl border border-blue-500/20 bg-gradient-to-r from-blue-50/80 via-indigo-50/40 to-blue-50/50 dark:from-[#172B4D]/50 dark:to-[#17243A] flex items-center justify-between">
             <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#2563EB] dark:text-[#60A5FA]">
+              <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
                 Current Available Balance
               </span>
-              <div className="text-2xl font-black text-[#111827] dark:text-[#F1F5F9] mt-0.5 flex items-baseline gap-1.5">
+              <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 mt-0.5 flex items-baseline gap-1.5">
                 <span>{currentBalance.toLocaleString()}</span>
-                <span className="text-xs font-semibold text-[#64748B] dark:text-[#A3B1C6]">credits</span>
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">credits</span>
               </div>
               {bonusCredits > 0 && (
-                <div className="mt-1 flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-                  <span className="px-1.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/70 border border-emerald-300 dark:border-emerald-700/60 text-[10px] font-bold">
+                <div className="mt-1 flex items-center gap-1.5 text-[10px] sm:text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                  <span className="px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/70 border border-emerald-300 dark:border-emerald-700/60 font-bold">
                     🎁 {bonusCredits.toLocaleString()} Welcome Bonus
                   </span>
-                  <span>• Expires in {bonusDaysRemaining} {bonusDaysRemaining === 1 ? "day" : "days"}</span>
+                  <span>• Expires in {bonusDaysRemaining}d</span>
                 </div>
               )}
             </div>
-            <div className="p-2.5 rounded-full bg-white dark:bg-[#111C31] shadow-sm text-[#2563EB] dark:text-[#60A5FA] border border-[#2563EB]/20">
-              <Sparkles className="h-5 w-5" />
+            <div className="p-2 rounded-full bg-white dark:bg-[#111C31] shadow-xs text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-900/40 shrink-0">
+              <Sparkles className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
           </div>
 
           {/* Success View */}
           {successInfo ? (
-            <div className="py-4 space-y-5 text-center">
-              <div className="w-14 h-14 rounded-full bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700 flex items-center justify-center mx-auto text-emerald-600 dark:text-emerald-400">
-                <CheckCircle2 className="h-8 w-8" />
+            <div className="py-4 space-y-4 text-center">
+              <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700 flex items-center justify-center mx-auto text-emerald-600 dark:text-emerald-400">
+                <CheckCircle2 className="h-7 w-7" />
               </div>
               <div className="space-y-1">
-                <h3 className="font-bold text-lg text-[#111827] dark:text-[#F1F5F9]">
+                <h3 className="font-bold text-base sm:text-lg text-slate-900 dark:text-slate-100">
                   Recharge Verified & Credited!
                 </h3>
-                <p className="text-xs text-[#64748B] dark:text-[#A3B1C6]">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   +{successInfo.credits_added.toLocaleString()} credits have been added to your wallet.
                 </p>
               </div>
 
-              <div className="p-3.5 rounded-xl border border-[#E2E8F0] dark:border-[#263449] bg-[#F8FAFC] dark:bg-[#17243A] text-left text-xs space-y-1.5">
+              <div className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 text-left text-xs space-y-1.5">
                 <div className="flex justify-between items-center">
-                  <span className="text-[#64748B] dark:text-[#A3B1C6]">Updated Total Balance:</span>
-                  <span className="font-bold text-base text-[#2563EB] dark:text-[#60A5FA]">
+                  <span className="text-slate-500 dark:text-slate-400">Updated Total Balance:</span>
+                  <span className="font-bold text-sm sm:text-base text-blue-600 dark:text-blue-400">
                     {successInfo.new_balance.toLocaleString()} Credits
                   </span>
                 </div>
                 {successInfo.invoice_number && (
-                  <div className="flex justify-between items-center text-[11px] pt-1 border-t border-[#E2E8F0] dark:border-[#263449]">
-                    <span className="text-[#64748B] dark:text-[#A3B1C6]">Tax Invoice:</span>
-                    <span className="font-mono font-medium text-[#111827] dark:text-[#F1F5F9]">
+                  <div className="flex justify-between items-center text-[11px] pt-1 border-t border-slate-200 dark:border-slate-800">
+                    <span className="text-slate-500 dark:text-slate-400">Tax Invoice:</span>
+                    <span className="font-mono font-medium text-slate-900 dark:text-slate-100">
                       {successInfo.invoice_number}
                     </span>
                   </div>
                 )}
               </div>
 
-              <div className="flex flex-col gap-2 pt-2">
+              <div className="flex flex-col gap-2 pt-1">
                 <button
                   type="button"
                   onClick={handlePrintReceipt}
-                  className="w-full py-2.5 px-4 rounded-xl border border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-[#111C31] hover:bg-[#F8FAFC] dark:hover:bg-[#17243A] text-[#111827] dark:text-[#F1F5F9] text-xs font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                  className="w-full py-2.5 px-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-900 dark:text-slate-100 text-xs font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
                 >
-                  <Printer className="h-4 w-4 text-[#2563EB] dark:text-[#60A5FA]" />
-                  <span>Download / Print Recharge Tax Invoice</span>
+                  <Printer className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  <span>Download / Print Tax Invoice</span>
                 </button>
                 <button
                   type="button"
                   onClick={onClose}
-                  className="w-full py-2.5 px-4 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold transition-all shadow-md cursor-pointer"
+                  className="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-md cursor-pointer"
                 >
                   Done / Return to Dashboard
                 </button>
@@ -374,58 +388,58 @@ export default function CreditRechargeModal({
           ) : (
             <>
               {loading ? (
-                <div className="py-12 flex flex-col items-center justify-center gap-3">
-                  <RefreshCw className="h-6 w-6 text-[#2563EB] dark:text-[#3B82F6] animate-spin" />
-                  <p className="text-xs text-[#64748B] dark:text-[#A3B1C6]">Loading packages...</p>
+                <div className="py-10 flex flex-col items-center justify-center gap-2.5">
+                  <RefreshCw className="h-6 w-6 text-blue-600 animate-spin" />
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Loading packages...</p>
                 </div>
               ) : errorMessage ? (
-                <div className="p-3.5 rounded-xl border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300 text-xs flex items-start gap-2">
+                <div className="p-3 rounded-xl border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300 text-xs flex items-start gap-2">
                   <AlertCircle className="h-4 w-4 text-red-600 mt-0.5 shrink-0" />
                   <div>
                     <span className="font-semibold">Notice:</span> {errorMessage}
                   </div>
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-[#111827] dark:text-[#F1F5F9]">
+                    <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
                       Select Credit Package
                     </span>
-                    <span className="text-[11px] text-[#64748B] dark:text-[#A3B1C6]">
+                    <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400">
                       1 credit = 1 student attempt
                     </span>
                   </div>
 
-                  {/* Package Cards */}
-                  <div className="space-y-2.5">
+                  {/* Compact High-Density Package Cards */}
+                  <div className="space-y-2">
                     {packages.map((pkg) => {
                       const isSelected = selectedPackageId === pkg.id;
                       return (
                         <div
                           key={pkg.id}
                           onClick={() => setSelectedPackageId(pkg.id)}
-                          className={`p-3.5 rounded-xl border cursor-pointer transition-all relative ${
+                          className={`p-2.5 sm:p-3 rounded-xl border cursor-pointer transition-all relative ${
                             isSelected
-                              ? "border-[#2563EB] dark:border-[#3B82F6] bg-[#EFF6FF]/60 dark:bg-[#172B4D]/60 shadow-sm ring-1 ring-[#2563EB]/40"
-                              : "border-[#E2E8F0] dark:border-[#263449] bg-white/70 dark:bg-[#17243A]/50 hover:border-[#2563EB]/40"
+                              ? "border-blue-600 dark:border-blue-500 bg-blue-50/70 dark:bg-blue-950/40 shadow-xs ring-1 ring-blue-500/30"
+                              : "border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/40 hover:border-blue-300 dark:hover:border-slate-700"
                           }`}
                         >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 min-w-0">
                               <div
-                                className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                                className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
                                   isSelected
-                                    ? "border-[#2563EB] bg-[#2563EB]"
-                                    : "border-[#94A3B8] dark:border-[#64748B]"
+                                    ? "border-blue-600 bg-blue-600"
+                                    : "border-slate-400 dark:border-slate-600"
                                 }`}
                               >
                                 {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                               </div>
-                              <span className="font-bold text-xs text-[#111827] dark:text-[#F1F5F9]">
+                              <span className="font-bold text-xs sm:text-sm text-slate-900 dark:text-slate-100 truncate">
                                 {pkg.name}
                               </span>
                               {pkg.badge && (
-                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                                <span className={`text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0 ${
                                   pkg.popular 
                                     ? "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300/40"
                                     : "bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-300/40"
@@ -435,23 +449,23 @@ export default function CreditRechargeModal({
                               )}
                             </div>
 
-                            <div className="text-right">
-                              <div className="text-sm font-bold text-[#2563EB] dark:text-[#60A5FA]">
+                            <div className="text-right shrink-0">
+                              <div className="text-xs sm:text-sm font-black text-blue-600 dark:text-blue-400">
                                 {pkg.formatted_amount}
                               </div>
-                              <div className="text-[10px] text-[#64748B] dark:text-[#A3B1C6]">
+                              <div className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400">
                                 {pkg.rate_per_credit} / credit
                               </div>
                             </div>
                           </div>
 
-                          <div className="mt-2 pt-2 border-t border-[#E2E8F0] dark:border-[#263449] flex items-center justify-between text-xs">
-                            <span className="font-semibold text-[#111827] dark:text-[#F1F5F9] flex items-center gap-1">
-                              <Zap className="h-3.5 w-3.5 text-amber-500" />
+                          <div className="mt-1.5 pt-1.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[11px]">
+                            <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1">
+                              <Zap className="h-3 w-3 text-amber-500 fill-amber-500" />
                               {pkg.credits.toLocaleString()} Credits
                             </span>
-                            <span className="text-[11px] text-[#64748B] dark:text-[#A3B1C6]">
-                              {pkg.description.split("•")[1] || pkg.description}
+                            <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-[200px] sm:max-w-none">
+                              {pkg.description.split("•")[1]?.trim() || pkg.description}
                             </span>
                           </div>
                         </div>
@@ -460,14 +474,14 @@ export default function CreditRechargeModal({
                   </div>
 
                   {/* Security notes */}
-                  <div className="flex items-center justify-center gap-4 text-[10px] text-[#64748B] dark:text-[#A3B1C6] pt-2">
+                  <div className="flex items-center justify-center gap-4 text-[10px] text-slate-500 dark:text-slate-400 pt-1.5">
                     <div className="flex items-center gap-1">
                       <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
                       <span>Razorpay Verified</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <Receipt className="h-3.5 w-3.5 text-[#2563EB]" />
-                      <span>Instant Tax Invoice Included</span>
+                      <Receipt className="h-3.5 w-3.5 text-blue-600" />
+                      <span>Instant Tax Invoice</span>
                     </div>
                   </div>
                 </div>
@@ -476,34 +490,52 @@ export default function CreditRechargeModal({
           )}
         </div>
 
-        {/* Footer */}
+        {/* Sticky Footer - Always Visible & Pinned on Mobile & Desktop */}
         {!successInfo && (
-          <div className="px-6 py-4 border-t border-[#E2E8F0] dark:border-[#263449] bg-[#F8FAFC]/80 dark:bg-[#17243A]/80 flex items-center justify-between gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={processing}
-              className="px-4 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#263449] text-xs font-medium text-[#64748B] hover:text-[#111827] dark:hover:text-[#F1F5F9] transition-colors cursor-pointer"
-            >
-              Cancel
-            </button>
-
-            <button
-              type="button"
-              disabled={loading || processing || !selectedPackageId}
-              onClick={handleRecharge}
-              className="px-5 py-2.5 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] disabled:opacity-50 text-white text-xs font-bold flex items-center gap-2 shadow-md cursor-pointer transition-all"
-            >
-              {processing ? (
-                <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <Coins className="h-3.5 w-3.5" />
+          <div className="shrink-0 px-4 py-3 sm:px-6 sm:py-3.5 border-t border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-[#111C31]/95 backdrop-blur-md flex items-center justify-between gap-3 shadow-lg z-20">
+            <div className="hidden sm:block">
+              {selectedPkg && (
+                <div className="text-left">
+                  <span className="text-[10px] text-slate-400 block font-medium">Selected Package</span>
+                  <div className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                    {selectedPkg.credits.toLocaleString()} Credits
+                    <span className="text-blue-600 dark:text-blue-400 ml-1.5 font-black">
+                      ({selectedPkg.formatted_amount})
+                    </span>
+                  </div>
+                </div>
               )}
-              <span>
-                {processing ? "Processing..." : `Recharge Now (${packages.find(p => p.id === selectedPackageId)?.formatted_amount || "..."})`}
-              </span>
-              {!processing && <ArrowRight className="h-3.5 w-3.5" />}
-            </button>
+            </div>
+
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={processing}
+                className="hidden sm:inline-flex px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                disabled={loading || processing || !selectedPackageId}
+                onClick={handleRecharge}
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-md hover:shadow-lg cursor-pointer transition-all active:scale-[0.98]"
+              >
+                {processing ? (
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Coins className="h-4 w-4" />
+                )}
+                <span>
+                  {processing
+                    ? "Processing..."
+                    : `Proceed to Pay • ${selectedPkg?.formatted_amount || "Select"}`}
+                </span>
+                {!processing && <ArrowRight className="h-4 w-4 ml-0.5" />}
+              </button>
+            </div>
           </div>
         )}
       </div>
