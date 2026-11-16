@@ -558,193 +558,227 @@ export default function LiveAssessmentsTable({
 
                     {activeDropdownExamId === exam.id && (
                       <div 
-                        onClick={(e) => e.stopPropagation()}
-                        className="absolute right-0 bottom-full mb-2 w-64 rounded-2xl bg-white dark:bg-[#111C31] border border-slate-200/90 dark:border-slate-700/80 shadow-2xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150 divide-y divide-slate-100 dark:divide-slate-800/80"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveDropdownExamId(null);
+                        }}
+                        className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-xs flex items-end justify-center p-0 animate-in fade-in duration-150"
                       >
-                        {/* Section 1: Performance & Results */}
-                        <div className="p-1 space-y-0.5">
-                          <div className="px-2.5 py-1 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                            Analytics &amp; Results
-                          </div>
-                          {onOpenGradebook && (
-                            <button
-                              type="button"
-                              onClick={() => { setActiveDropdownExamId(null); onOpenGradebook(exam); }}
-                              className="w-full px-2.5 py-2 text-xs font-semibold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 rounded-xl flex items-center gap-2.5 transition-colors cursor-pointer group"
-                            >
-                              <div className="w-6 h-6 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center shrink-0 text-emerald-600 dark:text-emerald-400 group-hover:scale-105 transition-transform">
-                                <BarChart3 className="h-3.5 w-3.5" />
+                        <div
+                          onClick={(e) => e.stopPropagation()}
+                          className="w-full max-w-lg bg-white dark:bg-[#111C31] rounded-t-3xl border-t border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col max-h-[82dvh] animate-in slide-in-from-bottom duration-200 overflow-hidden"
+                        >
+                          {/* Sheet Drag Handle & Header */}
+                          <div className="pt-3 pb-2.5 px-4 border-b border-slate-100 dark:border-slate-800 shrink-0">
+                            <div className="w-10 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mb-2.5" />
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="min-w-0 pr-2">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                                  Assessment Options
+                                </span>
+                                <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">
+                                  {exam.name}
+                                </h4>
                               </div>
-                              <span className="font-bold">Gradebook &amp; Results</span>
-                            </button>
-                          )}
-                          {exam.is_published && (
-                            <button
-                              type="button"
-                              onClick={() => { setActiveDropdownExamId(null); setLiveProctorExamId(exam.id); }}
-                              className="w-full px-2.5 py-2 text-xs font-semibold text-rose-700 dark:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded-xl flex items-center gap-2.5 transition-colors cursor-pointer group"
-                            >
-                              <div className="w-6 h-6 rounded-lg bg-rose-100 dark:bg-rose-900/50 flex items-center justify-center shrink-0 text-rose-600 dark:text-rose-400 group-hover:scale-105 transition-transform">
-                                <Radio className="h-3.5 w-3.5 animate-pulse" />
+                              <button
+                                type="button"
+                                onClick={() => setActiveDropdownExamId(null)}
+                                className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center shrink-0 cursor-pointer"
+                                aria-label="Close menu"
+                              >
+                                <X className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Scrollable Actions Container */}
+                          <div className="overflow-y-auto p-2.5 space-y-2 divide-y divide-slate-100 dark:divide-slate-800 overscroll-contain">
+                            {/* Section 1: Performance & Results */}
+                            <div className="space-y-1">
+                              <div className="px-2.5 py-1 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                                Analytics &amp; Results
                               </div>
-                              <span className="font-semibold">Live Proctor Room</span>
-                            </button>
-                          )}
-                        </div>
+                              {onOpenGradebook && (
+                                <button
+                                  type="button"
+                                  onClick={() => { setActiveDropdownExamId(null); onOpenGradebook(exam); }}
+                                  className="w-full px-3 py-2.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 rounded-xl flex items-center gap-3 transition-colors cursor-pointer group"
+                                >
+                                  <div className="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center shrink-0 text-emerald-600 dark:text-emerald-400 group-hover:scale-105 transition-transform">
+                                    <BarChart3 className="h-4 w-4" />
+                                  </div>
+                                  <span className="font-bold text-[13px]">Gradebook &amp; Results</span>
+                                </button>
+                              )}
+                              {exam.is_published && (
+                                <button
+                                  type="button"
+                                  onClick={() => { setActiveDropdownExamId(null); setLiveProctorExamId(exam.id); }}
+                                  className="w-full px-3 py-2.5 text-xs font-semibold text-rose-700 dark:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded-xl flex items-center gap-3 transition-colors cursor-pointer group"
+                                >
+                                  <div className="w-7 h-7 rounded-lg bg-rose-100 dark:bg-rose-900/50 flex items-center justify-center shrink-0 text-rose-600 dark:text-rose-400 group-hover:scale-105 transition-transform">
+                                    <Radio className="h-4 w-4 animate-pulse" />
+                                  </div>
+                                  <span className="font-semibold text-[13px]">Live Proctor Room</span>
+                                </button>
+                              )}
+                            </div>
 
-                        {/* Section 2: Manage & Studio */}
-                        <div className="p-1 space-y-0.5">
-                          <div className="px-2.5 py-1 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                            Manage &amp; Studio
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => { setActiveDropdownExamId(null); onPreviewExam(exam); }}
-                            className="w-full px-2.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-lg flex items-center gap-2.5 transition-colors cursor-pointer"
-                          >
-                            <Eye className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
-                            <span>Question Studio</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => { setActiveDropdownExamId(null); handleOpenCredentialsPreview(exam); }}
-                            className="w-full px-2.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-lg flex items-center gap-2.5 transition-colors cursor-pointer"
-                          >
-                            <Key className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-                            <span>Candidate Credentials</span>
-                          </button>
-                          <button
-                            type="button"
-                            disabled={cloningExamId === exam.id}
-                            onClick={() => { setActiveDropdownExamId(null); handleCloneExam(exam); }}
-                            className="w-full px-2.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-lg flex items-center gap-2.5 transition-colors cursor-pointer"
-                          >
-                            <CopyPlus className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400 shrink-0" />
-                            <span>Reuse / Clone Test</span>
-                          </button>
-                        </div>
+                            {/* Section 2: Manage & Studio */}
+                            <div className="pt-2 space-y-1">
+                              <div className="px-2.5 py-1 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                                Manage &amp; Studio
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => { setActiveDropdownExamId(null); onPreviewExam(exam); }}
+                                className="w-full px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-xl flex items-center gap-3 transition-colors cursor-pointer"
+                              >
+                                <Eye className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                                <span className="text-[13px]">Question Studio</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => { setActiveDropdownExamId(null); handleOpenCredentialsPreview(exam); }}
+                                className="w-full px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-xl flex items-center gap-3 transition-colors cursor-pointer"
+                              >
+                                <Key className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                                <span className="text-[13px]">Candidate Credentials</span>
+                              </button>
+                              <button
+                                type="button"
+                                disabled={cloningExamId === exam.id}
+                                onClick={() => { setActiveDropdownExamId(null); handleCloneExam(exam); }}
+                                className="w-full px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-xl flex items-center gap-3 transition-colors cursor-pointer"
+                              >
+                                <CopyPlus className="h-4 w-4 text-purple-600 dark:text-purple-400 shrink-0" />
+                                <span className="text-[13px]">Reuse / Clone Test</span>
+                              </button>
+                            </div>
 
-                        {/* Section 3: Share & Invite */}
-                        <div className="p-1 space-y-0.5">
-                          <div className="px-2.5 py-1 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                            Share &amp; Invite
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => { setActiveDropdownExamId(null); handleCopyDirectExamLink(exam.exam_code || exam.code); }}
-                            className="w-full px-2.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-lg flex items-center gap-2.5 transition-colors cursor-pointer"
-                          >
-                            <ExternalLink className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
-                            <span>Copy Direct Exam Link</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => { setActiveDropdownExamId(null); handleShareWhatsApp(exam); }}
-                            className="w-full px-2.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-lg flex items-center gap-2.5 transition-colors cursor-pointer"
-                          >
-                            <Share2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                            <span>WhatsApp Invitation</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => { setActiveDropdownExamId(null); setQrModalExam(exam); }}
-                            className="w-full px-2.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-lg flex items-center gap-2.5 transition-colors cursor-pointer"
-                          >
-                            <QrCode className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
-                            <span>QR Code Flyer</span>
-                          </button>
-                        </div>
+                            {/* Section 3: Share & Invite */}
+                            <div className="pt-2 space-y-1">
+                              <div className="px-2.5 py-1 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                                Share &amp; Invite
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => { setActiveDropdownExamId(null); handleCopyDirectExamLink(exam.exam_code || exam.code); }}
+                                className="w-full px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-xl flex items-center gap-3 transition-colors cursor-pointer"
+                              >
+                                <ExternalLink className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                                <span className="text-[13px]">Copy Direct Exam Link</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => { setActiveDropdownExamId(null); handleShareWhatsApp(exam); }}
+                                className="w-full px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-xl flex items-center gap-3 transition-colors cursor-pointer"
+                              >
+                                <Share2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                                <span className="text-[13px]">WhatsApp Invitation</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => { setActiveDropdownExamId(null); setQrModalExam(exam); }}
+                                className="w-full px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-xl flex items-center gap-3 transition-colors cursor-pointer"
+                              >
+                                <QrCode className="h-4 w-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                                <span className="text-[13px]">QR Code Flyer</span>
+                              </button>
+                            </div>
 
-                        {/* Section 4: Documents & Print */}
-                        <div className="p-1 space-y-0.5">
-                          <div className="px-2.5 py-1 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                            Documents &amp; Print
-                          </div>
-                          {onOpenCertificates && (
-                            <button
-                              type="button"
-                              onClick={() => { setActiveDropdownExamId(null); onOpenCertificates(exam); }}
-                              className="w-full px-2.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-lg flex items-center gap-2.5 transition-colors cursor-pointer"
-                            >
-                              <Award className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-                              <span>Certificates &amp; Delivery</span>
-                            </button>
-                          )}
-                          <a
-                            href={`${API_V1}/exams/${exam.id}/pdf/question-paper${token ? `?token=${encodeURIComponent(token)}` : ""}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            onClick={() => setActiveDropdownExamId(null)}
-                            className="w-full px-2.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-lg flex items-center gap-2.5 transition-colors"
-                          >
-                            <Printer className="h-3.5 w-3.5 text-slate-500 shrink-0" />
-                            <span>Print Paper PDF</span>
-                          </a>
-                          {exam.is_paid && (
-                            <a
-                              href={`${API_V1}/payments/receipt/${exam.id}/html${token ? `?token=${encodeURIComponent(token)}` : ""}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              onClick={() => setActiveDropdownExamId(null)}
-                              className="w-full px-2.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-lg flex items-center gap-2.5 transition-colors"
-                            >
-                              <Receipt className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400 shrink-0" />
-                              <span>Official Tax Invoice</span>
-                            </a>
-                          )}
-                        </div>
+                            {/* Section 4: Documents & Print */}
+                            <div className="pt-2 space-y-1">
+                              <div className="px-2.5 py-1 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                                Documents &amp; Print
+                              </div>
+                              {onOpenCertificates && (
+                                <button
+                                  type="button"
+                                  onClick={() => { setActiveDropdownExamId(null); onOpenCertificates(exam); }}
+                                  className="w-full px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-xl flex items-center gap-3 transition-colors cursor-pointer"
+                                >
+                                  <Award className="h-4 w-4 text-amber-500 shrink-0" />
+                                  <span className="text-[13px]">Certificates &amp; Delivery</span>
+                                </button>
+                              )}
+                              <a
+                                href={`${API_V1}/exams/${exam.id}/pdf/question-paper${token ? `?token=${encodeURIComponent(token)}` : ""}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                onClick={() => setActiveDropdownExamId(null)}
+                                className="w-full px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-xl flex items-center gap-3 transition-colors"
+                              >
+                                <Printer className="h-4 w-4 text-slate-500 shrink-0" />
+                                <span className="text-[13px]">Print Paper PDF</span>
+                              </a>
+                              {exam.is_paid && (
+                                <a
+                                  href={`${API_V1}/payments/receipt/${exam.id}/html${token ? `?token=${encodeURIComponent(token)}` : ""}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  onClick={() => setActiveDropdownExamId(null)}
+                                  className="w-full px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-xl flex items-center gap-3 transition-colors"
+                                >
+                                  <Receipt className="h-4 w-4 text-teal-600 dark:text-teal-400 shrink-0" />
+                                  <span className="text-[13px]">Official Tax Invoice</span>
+                                </a>
+                              )}
+                            </div>
 
-                        {/* Section 5: Lifecycle / Danger */}
-                        <div className="p-1 space-y-0.5">
-                          {exam.is_published && (!sched || sched.status === "live" || sched.status === "scheduled") && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setActiveDropdownExamId(null);
-                                onEndExamEarly(exam.id, exam.name);
-                              }}
-                              className="w-full px-2.5 py-1.5 text-xs font-semibold text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 rounded-lg flex items-center gap-2.5 transition-colors cursor-pointer"
-                            >
-                              <StopCircle className="h-3.5 w-3.5 text-amber-600 shrink-0" />
-                              <span>End Assessment Early</span>
-                            </button>
-                          )}
-                          {deleteConfirmId === exam.id ? (
-                            <div className="p-2 bg-rose-50 dark:bg-rose-950/50 rounded-xl border border-rose-200 dark:border-rose-900/60">
-                              <p className="text-[11px] font-semibold text-rose-700 dark:text-rose-300 mb-1.5">
-                                Delete permanently?
-                              </p>
-                              <div className="flex items-center gap-1.5">
+                            {/* Section 5: Lifecycle / Danger */}
+                            <div className="pt-2 pb-4 space-y-1">
+                              {exam.is_published && (!sched || sched.status === "live" || sched.status === "scheduled") && (
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    onDeleteExam(exam.id);
-                                    setDeleteConfirmId(null);
                                     setActiveDropdownExamId(null);
+                                    onEndExamEarly(exam.id, exam.name);
                                   }}
-                                  className="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded text-[10px] font-bold shadow-xs cursor-pointer"
+                                  className="w-full px-3 py-2 text-xs font-semibold text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 rounded-xl flex items-center gap-3 transition-colors cursor-pointer"
                                 >
-                                  Confirm
+                                  <StopCircle className="h-4 w-4 text-amber-600 shrink-0" />
+                                  <span className="text-[13px]">End Assessment Early</span>
                                 </button>
+                              )}
+                              {deleteConfirmId === exam.id ? (
+                                <div className="p-3 bg-rose-50 dark:bg-rose-950/50 rounded-2xl border border-rose-200 dark:border-rose-900/60 my-1">
+                                  <p className="text-xs font-semibold text-rose-700 dark:text-rose-300 mb-2">
+                                    Are you sure you want to delete this assessment permanently?
+                                  </p>
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        onDeleteExam(exam.id);
+                                        setDeleteConfirmId(null);
+                                        setActiveDropdownExamId(null);
+                                      }}
+                                      className="px-4 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer"
+                                    >
+                                      Confirm Delete
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setDeleteConfirmId(null)}
+                                      className="px-3 py-1.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold cursor-pointer"
+                                    >
+                                      Cancel
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
                                 <button
                                   type="button"
-                                  onClick={() => setDeleteConfirmId(null)}
-                                  className="px-2 py-1 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded text-[10px] font-semibold cursor-pointer"
+                                  onClick={() => setDeleteConfirmId(exam.id)}
+                                  className="w-full px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl flex items-center gap-3 cursor-pointer"
                                 >
-                                  Cancel
+                                  <Trash2 className="h-4 w-4 shrink-0" />
+                                  <span className="text-[13px]">Delete Assessment</span>
                                 </button>
-                              </div>
+                              )}
                             </div>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => setDeleteConfirmId(exam.id)}
-                              className="w-full px-2.5 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg flex items-center gap-2.5 cursor-pointer"
-                            >
-                              <Trash2 className="h-3.5 w-3.5 shrink-0" />
-                              <span>Delete Assessment</span>
-                            </button>
-                          )}
+                          </div>
                         </div>
                       </div>
                     )}
@@ -1037,7 +1071,7 @@ export default function LiveAssessmentsTable({
                               onClick={(e) => e.stopPropagation()}
                               className={`absolute right-0 ${
                                 isNearBottom ? "bottom-full mb-1.5" : "top-full mt-1.5"
-                              } w-64 rounded-2xl bg-white dark:bg-[#111C31] border border-slate-200/90 dark:border-slate-700/80 shadow-2xl py-1.5 z-50 text-left animate-in fade-in zoom-in-95 duration-150 divide-y divide-slate-100 dark:divide-slate-800/80`}
+                              } w-64 rounded-2xl bg-white dark:bg-[#111C31] border border-slate-200/90 dark:border-slate-700/80 shadow-2xl py-1.5 z-50 text-left animate-in fade-in zoom-in-95 duration-150 divide-y divide-slate-100 dark:divide-slate-800/80 max-h-[82vh] overflow-y-auto overscroll-contain`}
                             >
                               {/* Section 1: Performance & Results */}
                               <div className="p-1 space-y-0.5">
