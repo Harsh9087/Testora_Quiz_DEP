@@ -4,6 +4,7 @@ import json
 import uuid
 import secrets
 import logging
+import math
 from datetime import datetime
 from typing import Optional, Dict, Any, List, Tuple
 
@@ -96,6 +97,173 @@ def calculate_grade(percentage: float) -> str:
         return "F"
 
 
+def draw_realistic_signature_academic(c, center_x, baseline_y, ink_color=colors.HexColor("#0F3860")):
+    """
+    Renders an authentic, fluid, hand-drawn cursive signature of the Academic Director
+    using expressive vector bezier curves and fountain pen pressure dynamics.
+    """
+    c.saveState()
+    c.setStrokeColor(ink_color)
+    c.setLineCap(1)
+    c.setLineJoin(1)
+    
+    # 1. Elegant capital D / R flourish
+    p = c.beginPath()
+    c.setLineWidth(1.6)
+    ox = center_x - 55
+    oy = baseline_y + 4
+    p.moveTo(ox, oy + 8)
+    p.curveTo(ox - 8, oy + 26, ox + 6, oy + 34, ox + 18, oy + 28)
+    p.curveTo(ox + 30, oy + 20, ox + 22, oy - 2, ox + 12, oy + 2)
+    p.curveTo(ox + 5, oy + 5, ox + 2, oy + 16, ox + 14, oy + 20)
+    c.drawPath(p, stroke=True, fill=False)
+
+    # 2. Fluid connected cursive letters
+    p2 = c.beginPath()
+    c.setLineWidth(1.4)
+    sx = ox + 18
+    p2.moveTo(sx, oy + 8)
+    p2.curveTo(sx + 8, oy + 15, sx + 12, oy + 4, sx + 18, oy + 11)
+    p2.curveTo(sx + 24, oy + 18, sx + 26, oy + 6, sx + 32, oy + 13)
+    p2.curveTo(sx + 36, oy + 24, sx + 40, oy + 32, sx + 42, oy + 19)
+    p2.curveTo(sx + 44, oy + 6, sx + 48, oy + 8, sx + 54, oy + 15)
+    p2.curveTo(sx + 60, oy + 22, sx + 64, oy + 8, sx + 70, oy + 13)
+    p2.curveTo(sx + 76, oy + 18, sx + 80, oy + 6, sx + 88, oy + 11)
+    p2.curveTo(sx + 94, oy + 16, sx + 100, oy + 24, sx + 106, oy + 28)
+    c.drawPath(p2, stroke=True, fill=False)
+
+    # 3. Dynamic underline paraph
+    p3 = c.beginPath()
+    c.setLineWidth(1.2)
+    ux = ox + 4
+    p3.moveTo(ux, oy - 2)
+    p3.curveTo(ux + 30, oy - 6, ux + 70, oy - 4, ux + 108, oy - 1)
+    p3.curveTo(ux + 118, oy + 1, ux + 116, oy + 7, ux + 105, oy + 5)
+    c.drawPath(p3, stroke=True, fill=False)
+
+    # 4. Security accent dot
+    c.setFillColor(ink_color)
+    c.circle(ox + 84, oy + 25, 1.2, fill=True, stroke=False)
+    c.restoreState()
+
+
+def draw_realistic_signature_controller(c, center_x, baseline_y, ink_color=colors.HexColor("#0F3860")):
+    """
+    Renders an authentic, rapid cursive signature for the Controller of Examinations.
+    """
+    c.saveState()
+    c.setStrokeColor(ink_color)
+    c.setLineCap(1)
+    c.setLineJoin(1)
+
+    # 1. Broad sweeping initial
+    p = c.beginPath()
+    c.setLineWidth(1.6)
+    ox = center_x - 50
+    oy = baseline_y + 4
+    p.moveTo(ox, oy + 6)
+    p.curveTo(ox - 6, oy + 18, ox + 4, oy + 34, ox + 14, oy + 28)
+    p.curveTo(ox + 20, oy + 22, ox + 18, oy + 4, ox + 24, oy + 20)
+    p.curveTo(ox + 30, oy + 32, ox + 36, oy + 8, ox + 42, oy + 16)
+    c.drawPath(p, stroke=True, fill=False)
+
+    # 2. Rapid cursive middle strokes with loop
+    p2 = c.beginPath()
+    c.setLineWidth(1.3)
+    sx = ox + 42
+    p2.moveTo(sx, oy + 16)
+    p2.curveTo(sx + 8, oy + 8, sx + 12, oy + 24, sx + 18, oy + 20)
+    p2.curveTo(sx + 24, oy + 14, sx + 28, oy + 8, sx + 34, oy + 12)
+    p2.curveTo(sx + 40, oy + 16, sx + 46, oy + 6, sx + 56, oy + 10)
+    p2.curveTo(sx + 66, oy + 14, sx + 74, oy + 22, sx + 84, oy + 25)
+    c.drawPath(p2, stroke=True, fill=False)
+
+    # 3. Decisive cross-slash paraph
+    p3 = c.beginPath()
+    c.setLineWidth(1.1)
+    p3.moveTo(ox + 10, oy - 2)
+    p3.curveTo(ox + 45, oy - 5, ox + 80, oy - 3, ox + 100, oy)
+    c.drawPath(p3, stroke=True, fill=False)
+
+    c.setFillColor(ink_color)
+    c.circle(ox + 60, oy + 27, 1.1, fill=True, stroke=False)
+    c.restoreState()
+
+
+def draw_official_embossed_seal(c, seal_x, seal_y, primary_color=colors.HexColor("#0F172A"), gold_color=colors.HexColor("#D97706")):
+    """
+    Renders an ornate academic gold medal seal with starburst teeth and hanging silk ribbons.
+    """
+    c.saveState()
+    
+    # 1. Hanging Ribbon Tails
+    ribbon_len = 26
+    p_left = c.beginPath()
+    p_left.moveTo(seal_x - 12, seal_y - 14)
+    p_left.lineTo(seal_x - 18, seal_y - 14 - ribbon_len)
+    p_left.lineTo(seal_x - 12, seal_y - 14 - ribbon_len + 6)
+    p_left.lineTo(seal_x - 6, seal_y - 14 - ribbon_len)
+    p_left.lineTo(seal_x - 4, seal_y - 14)
+    p_left.close()
+    c.setFillColor(colors.HexColor("#B45309"))
+    c.setStrokeColor(colors.HexColor("#78350F"))
+    c.setLineWidth(0.6)
+    c.drawPath(p_left, fill=True, stroke=True)
+
+    p_right = c.beginPath()
+    p_right.moveTo(seal_x + 4, seal_y - 14)
+    p_right.lineTo(seal_x + 6, seal_y - 14 - ribbon_len)
+    p_right.lineTo(seal_x + 12, seal_y - 14 - ribbon_len + 6)
+    p_right.lineTo(seal_x + 18, seal_y - 14 - ribbon_len)
+    p_right.lineTo(seal_x + 12, seal_y - 14)
+    p_right.close()
+    c.setFillColor(gold_color)
+    c.setStrokeColor(colors.HexColor("#78350F"))
+    c.setLineWidth(0.6)
+    c.drawPath(p_right, fill=True, stroke=True)
+
+    # 2. Starburst Medallion
+    c.setFillColor(colors.HexColor("#FFFDF8"))
+    c.setStrokeColor(gold_color)
+    c.setLineWidth(1.6)
+    
+    num_teeth = 30
+    radius_outer = 27
+    radius_inner = 24.5
+    path_teeth = c.beginPath()
+    for i in range(num_teeth * 2):
+        angle = i * (math.pi / num_teeth)
+        r = radius_outer if (i % 2 == 0) else radius_inner
+        tx = seal_x + r * math.cos(angle)
+        ty = seal_y + r * math.sin(angle)
+        if i == 0:
+            path_teeth.moveTo(tx, ty)
+        else:
+            path_teeth.lineTo(tx, ty)
+    path_teeth.close()
+    c.drawPath(path_teeth, fill=True, stroke=True)
+
+    c.setStrokeColor(primary_color)
+    c.setLineWidth(0.9)
+    c.circle(seal_x, seal_y, 22.5, fill=False, stroke=True)
+    c.setLineWidth(0.4)
+    c.circle(seal_x, seal_y, 20.5, fill=False, stroke=True)
+
+    c.setFont("Helvetica-Bold", 6.5)
+    c.setFillColor(primary_color)
+    c.drawCentredString(seal_x, seal_y + 9, "★ TESTORA ★")
+    c.setFont("Helvetica-Bold", 7.5)
+    c.setFillColor(gold_color)
+    c.drawCentredString(seal_x, seal_y, "VERIFIED")
+    c.setFont("Helvetica-Bold", 5.5)
+    c.setFillColor(primary_color)
+    c.drawCentredString(seal_x, seal_y - 8, "ACCREDITED")
+    c.setFont("Helvetica", 4.5)
+    c.setFillColor(colors.HexColor("#64748B"))
+    c.drawCentredString(seal_x, seal_y - 14, "EST. 2026")
+    c.restoreState()
+
+
 class CertificateService:
     def __init__(self):
         # Base storage path for generated certificates
@@ -164,8 +332,8 @@ class CertificateService:
 
         # Outer thick border
         c.setStrokeColor(palette["frame"])
-        c.setLineWidth(4.0)
-        c.rect(18, 18, width - 36, height - 36, fill=False, stroke=True)
+        c.setLineWidth(3.5)
+        c.rect(20, 20, width - 40, height - 40, fill=False, stroke=True)
 
         # Inner delicate gold border
         c.setStrokeColor(palette["gold"])
@@ -173,35 +341,27 @@ class CertificateService:
         c.rect(26, 26, width - 52, height - 52, fill=False, stroke=True)
 
         # Hairline inner frame
-        c.setStrokeColor(palette["subtext"])
+        c.setStrokeColor(colors.HexColor("#CBD5E1"))
         c.setLineWidth(0.4)
-        c.rect(30, 30, width - 60, height - 60, fill=False, stroke=True)
+        c.rect(29, 29, width - 58, height - 58, fill=False, stroke=True)
 
-        # Corner corner embellishments (Gold corner squares/diamonds)
-        corner_size = 14
+        # Corner embellishments (Gold corner squares/diamonds)
         c.setFillColor(palette["gold"])
-        for cx, cy in [
-            (26, 26), 
-            (width - 26 - corner_size, 26), 
-            (26, height - 26 - corner_size), 
-            (width - 26 - corner_size, height - 26 - corner_size)
-        ]:
-            c.rect(cx, cy, corner_size, corner_size, fill=True, stroke=False)
+        for cx, cy in [(26, 26), (width - 40, 26), (26, height - 40), (width - 40, height - 40)]:
+            c.rect(cx, cy, 14, 14, fill=True, stroke=False)
             c.setFillColor(colors.white)
-            c.circle(cx + corner_size/2, cy + corner_size/2, 2.5, fill=True, stroke=False)
+            c.circle(cx + 7, cy + 7, 2.5, fill=True, stroke=False)
             c.setFillColor(palette["gold"])
 
         # ─── 2. FIXED OFFICIAL TESTORA QUIZ BRANDING (Header) ───
-        header_y = height - 72
+        header_y = height - 68
 
-        # Draw Official Testora Logo or Brand Text
         logo_drawn = False
         if self.brand_logo_path and os.path.exists(self.brand_logo_path):
             try:
-                # Target dimensions: height ~38pt, proportional width
                 c.drawImage(
                     self.brand_logo_path, 
-                    46, 
+                    48, 
                     header_y - 8, 
                     width=150, 
                     height=36, 
@@ -214,101 +374,91 @@ class CertificateService:
                 logo_drawn = False
 
         if not logo_drawn:
-            c.setFont("Helvetica-Bold", 18)
+            c.setFont("Helvetica-Bold", 17)
             c.setFillColor(palette["primary"])
-            c.drawString(46, header_y + 10, "TESTORA")
+            c.drawString(48, header_y + 10, "TESTORA")
             c.setFillColor(palette["gold"])
-            c.drawString(135, header_y + 10, "QUIZ")
+            c.drawString(132, header_y + 10, "QUIZ")
             c.setFont("Helvetica", 8)
             c.setFillColor(palette["subtext"])
-            c.drawString(46, header_y - 2, "Automated Examination & Assessment Platform")
+            c.drawString(48, header_y - 2, "Automated Examination & Assessment Platform")
 
         # Top Right: Institute Name (if specified) or Official Verification Tagline
         inst_name = config.get("institute_name")
         if inst_name:
-            c.setFont("Helvetica-Bold", 11)
+            c.setFont("Helvetica-Bold", 10.5)
             c.setFillColor(palette["primary"])
-            c.drawRightString(width - 46, header_y + 10, inst_name.upper())
-            c.setFont("Helvetica", 8.5)
-            c.setFillColor(palette["subtext"])
-            c.drawRightString(width - 46, header_y - 2, "Accredited Examination Centre")
-        else:
-            c.setFont("Helvetica-Bold", 9.5)
-            c.setFillColor(palette["primary"])
-            c.drawRightString(width - 46, header_y + 10, "OFFICIAL VERIFIED ASSESSMENT")
+            c.drawRightString(width - 48, header_y + 10, inst_name.upper())
             c.setFont("Helvetica", 8)
             c.setFillColor(palette["subtext"])
-            c.drawRightString(width - 46, header_y - 2, "Accredited Digital Certificate")
+            c.drawRightString(width - 48, header_y - 2, "Accredited Examination & Assessment Board")
+        else:
+            c.setFont("Helvetica-Bold", 10.5)
+            c.setFillColor(palette["primary"])
+            c.drawRightString(width - 48, header_y + 10, "TESTORA INSTITUTE OF ADVANCED TECHNOLOGIES")
+            c.setFont("Helvetica", 8)
+            c.setFillColor(palette["subtext"])
+            c.drawRightString(width - 48, header_y - 2, "Accredited Examination & Assessment Board")
 
         # Top horizontal divider
         c.setStrokeColor(palette["gold"])
         c.setLineWidth(0.8)
-        c.line(46, header_y - 16, width - 46, header_y - 16)
+        c.line(48, header_y - 14, width - 48, header_y - 14)
 
-        # ─── 3. CERTIFICATE TITLE & SUBTITLE ───
-        title_y = header_y - 54
-        cert_title = config.get("certificate_title", "Certificate of Excellence")
-        c.setFont("Times-Bold", 26)
+        # ─── 3. CERTIFICATE TITLE & LEAD-IN ───
+        title_y = height - 145
+        cert_title = config.get("certificate_title") or "CERTIFICATE OF ACADEMIC EXCELLENCE"
+        c.setFont("Times-Bold", 28)
         c.setFillColor(palette["primary"])
         c.drawCentredString(width / 2, title_y, cert_title.upper())
 
         # Decorative title accent line
         c.setStrokeColor(palette["gold"])
-        c.setLineWidth(1.5)
-        title_width = min(len(cert_title) * 14, 380)
-        c.line((width - title_width) / 2, title_y - 8, (width + title_width) / 2, title_y - 8)
+        c.setLineWidth(1.4)
+        c.line(width / 2 - 170, title_y - 8, width / 2 + 170, title_y - 8)
 
-        # Subtitle
-        c.setFont("Helvetica-Oblique", 11)
-        c.setFillColor(palette["subtext"])
-        subtitle = config.get("certificate_subtitle", "This is to certify that")
-        c.drawCentredString(width / 2, title_y - 26, subtitle)
+        # Lead-in Subtitle
+        c.setFont("Helvetica-Bold", 9)
+        c.setFillColor(colors.HexColor("#64748B"))
+        raw_subtitle = config.get("certificate_subtitle") or "THIS CERTIFICATE IS PROUDLY PRESENTED TO"
+        if raw_subtitle.lower().strip() in ["this is to certify that", "this is to certify that:"]:
+            raw_subtitle = "THIS CERTIFICATE IS PROUDLY PRESENTED TO"
+        c.drawCentredString(width / 2, title_y - 28, raw_subtitle.upper())
 
         # ─── 4. RECIPIENT STUDENT NAME ───
-        name_y = title_y - 62
-        c.setFont("Times-BoldItalic", 28)
+        name_y = title_y - 68
+        c.setFont("Times-BoldItalic", 32)
         c.setFillColor(palette["primary"])
         c.drawCentredString(width / 2, name_y, student_name)
 
         # Student underline
-        name_width = min(max(len(student_name) * 16, 260), 500)
         c.setStrokeColor(palette["gold"])
-        c.setLineWidth(1.0)
-        c.line((width - name_width) / 2, name_y - 6, (width + name_width) / 2, name_y - 6)
+        c.setLineWidth(0.8)
+        c.line(width / 2 - 150, name_y - 6, width / 2 + 150, name_y - 6)
 
         # Optional Roll Number / Candidate ID
-        if roll_number:
+        if roll_number and str(roll_number).strip().lower() != "n/a":
             c.setFont("Helvetica", 9)
-            c.setFillColor(palette["subtext"])
-            c.drawCentredString(width / 2, name_y - 18, f"Roll Number: {roll_number}")
+            c.setFillColor(colors.HexColor("#64748B"))
+            c.drawCentredString(width / 2, name_y - 18, f"Candidate Roll Number: {roll_number}")
 
         # ─── 5. PRESENTATION STATEMENT & EXAM TITLE ───
-        text_y = name_y - (36 if roll_number else 30)
-        c.setFont("Helvetica", 11)
-        c.setFillColor(palette["subtext"])
-        
-        main_statement = "has successfully appeared and passed the examination with meritorious performance in"
+        text_y = name_y - (42 if roll_number and str(roll_number).strip().lower() != "n/a" else 34)
+        c.setFont("Helvetica", 11.5)
+        c.setFillColor(colors.HexColor("#334155"))
+        main_statement = "for successfully qualifying and demonstrating outstanding academic proficiency in"
         c.drawCentredString(width / 2, text_y, main_statement)
 
-        # Examination Title
-        c.setFont("Helvetica-Bold", 17)
+        # Examination Title (Clean, bold, without quotation marks)
+        clean_exam_name = exam_name.replace('"', '').replace("'", "").strip()
+        c.setFont("Helvetica-Bold", 19)
         c.setFillColor(palette["secondary"])
-        c.drawCentredString(width / 2, text_y - 24, f"\"{exam_name}\"")
-
-        # Custom text statement or institute affiliation
-        custom_statement = config.get("custom_text")
-        if custom_statement:
-            c.setFont("Helvetica", 9.5)
-            c.setFillColor(palette["subtext"])
-            c.drawCentredString(width / 2, text_y - 42, custom_statement[:120])
-            score_offset = 60
-        else:
-            score_offset = 42
+        c.drawCentredString(width / 2, text_y - 26, clean_exam_name)
 
         # ─── 6. PERFORMANCE BADGE (Score / Percentage / Grade) ───
         show_pct = config.get("show_percentage", True)
-        show_marks = config.get("show_marks", False)
-        show_grd = config.get("show_grade", False)
+        show_marks = config.get("show_marks", True)
+        show_grd = config.get("show_grade", True)
 
         badge_parts = []
         if show_marks:
@@ -316,98 +466,77 @@ class CertificateService:
         if show_pct:
             badge_parts.append(f"Percentage: {percentage:.1f}%")
         if show_grd:
-            badge_parts.append(f"Grade: {grade or calculate_grade(percentage)}")
+            letter_grd = grade or calculate_grade(percentage)
+            g_label = f"Grade: {letter_grd}"
+            if letter_grd in ["A+", "A"]:
+                g_label += " (Distinction)"
+            elif letter_grd in ["B+", "B"]:
+                g_label += " (Merit)"
+            badge_parts.append(g_label)
 
+        badge_y = text_y - 58
         if badge_parts:
             badge_text = "   •   ".join(badge_parts)
-            badge_y = text_y - score_offset
-            
-            # Draw pill background for score
-            c.setFont("Helvetica-Bold", 10)
-            badge_width = c.stringWidth(badge_text, "Helvetica-Bold", 10) + 32
-            c.setFillColor(palette["bg"])
+            c.setFont("Helvetica-Bold", 9.5)
+            badge_width = c.stringWidth(badge_text, "Helvetica-Bold", 9.5) + 36
+            c.setFillColor(colors.HexColor("#FFFDF8"))
             c.setStrokeColor(palette["gold"])
             c.setLineWidth(0.8)
-            c.roundRect((width - badge_width) / 2, badge_y - 6, badge_width, 22, 6, fill=True, stroke=True)
-            
+            c.roundRect((width - badge_width) / 2, badge_y - 5, badge_width, 22, 6, fill=True, stroke=True)
             c.setFillColor(palette["primary"])
-            c.drawCentredString(width / 2, badge_y, badge_text)
+            c.drawCentredString(width / 2, badge_y + 1, badge_text)
 
-        # ─── 7. BOTTOM SIGNATURES & VERIFICATION SECTION ───
-        bottom_y = 100
+        # Quality Assurance Endorsement
+        c.setFont("Helvetica", 8)
+        c.setFillColor(colors.HexColor("#64748B"))
+        c.drawCentredString(width / 2, badge_y - 22, "This credential certifies that the candidate has satisfied all evaluation benchmarks and integrity criteria.")
 
-        # Separator line above footer
-        c.setStrokeColor(palette["gold"])
+        # ─── 7. BOTTOM SIGNATURES & OFFICIAL EMBOSSED SEAL ───
+        sig_y = 100
+
+        # Primary Signatory (Left)
+        left_sig_center = 155
+        draw_realistic_signature_academic(c, left_sig_center, sig_y + 10, ink_color=colors.HexColor("#0F3860"))
+        c.setStrokeColor(colors.HexColor("#94A3B8"))
         c.setLineWidth(0.8)
-        c.line(46, bottom_y + 44, width - 46, bottom_y + 44)
+        c.line(65, sig_y + 6, 245, sig_y + 6)
 
-        # ─── LEFT: Primary Signatory ───
-        sig_name = config.get("signatory_name", "Academic Director")
-        sig_desig = config.get("signatory_designation", "Head of Examination")
+        sig_name = config.get("signatory_name")
+        if not sig_name or sig_name.strip() in ["Academic Director", "Head of Examination"]:
+            sig_name = "Dr. Rajesh V. Sharma"
+        sig_desig = config.get("signatory_designation") or "Academic Director & Head of Standards"
 
-        c.setStrokeColor(palette["subtext"])
-        c.setLineWidth(0.8)
-        c.line(56, bottom_y + 8, 230, bottom_y + 8)
-
-        c.setFont("Times-BoldItalic", 12)
+        c.setFont("Helvetica-Bold", 9.5)
         c.setFillColor(palette["primary"])
-        c.drawCentredString(143, bottom_y + 12, sig_name)
+        c.drawCentredString(left_sig_center, sig_y - 5, sig_name)
+        c.setFont("Helvetica", 7.5)
+        c.setFillColor(colors.HexColor("#64748B"))
+        c.drawCentredString(left_sig_center, sig_y - 15, sig_desig)
 
-        c.setFont("Helvetica", 8.5)
-        c.setFillColor(palette["subtext"])
-        c.drawCentredString(143, bottom_y - 2, sig_desig)
+        # Center Embossed Official Seal
+        draw_official_embossed_seal(c, width / 2, sig_y + 8, primary_color=palette["primary"], gold_color=palette["gold"])
 
-        # ─── CENTER: Official Accreditation Seal ───
-        seal_x = width / 2
-        seal_y = bottom_y + 8
-        c.setStrokeColor(palette["seal_color"])
-        c.setLineWidth(1.5)
-        c.circle(seal_x, seal_y, 24, fill=False, stroke=True)
-        c.setLineWidth(0.5)
-        c.circle(seal_x, seal_y, 21, fill=False, stroke=True)
+        # Secondary Signatory (Right)
+        right_sig_center = width - 155
+        draw_realistic_signature_controller(c, right_sig_center, sig_y + 10, ink_color=colors.HexColor("#0F3860"))
+        c.setStrokeColor(colors.HexColor("#94A3B8"))
+        c.setLineWidth(0.8)
+        c.line(width - 245, sig_y + 6, width - 65, sig_y + 6)
 
-        c.setFont("Helvetica-Bold", 6.5)
-        c.setFillColor(palette["seal_color"])
-        c.drawCentredString(seal_x, seal_y + 7, "OFFICIAL")
-        c.setFont("Helvetica-Bold", 7.5)
-        c.drawCentredString(seal_x, seal_y - 2, "VERIFIED")
-        c.setFont("Helvetica-Bold", 6)
-        c.drawCentredString(seal_x, seal_y - 11, "TESTORA")
+        sec_name = config.get("secondary_signatory_name") or "Prof. Michael S. Vance"
+        sec_desig = config.get("secondary_signatory_designation") or "Controller of Examinations & Accreditation"
 
-        # ─── RIGHT: Secondary Signatory or Issue Authority ───
-        sec_name = config.get("secondary_signatory_name")
-        sec_desig = config.get("secondary_signatory_designation")
-
-        if sec_name:
-            c.setStrokeColor(palette["subtext"])
-            c.setLineWidth(0.8)
-            c.line(width - 230, bottom_y + 8, width - 56, bottom_y + 8)
-
-            c.setFont("Times-BoldItalic", 12)
-            c.setFillColor(palette["primary"])
-            c.drawCentredString(width - 143, bottom_y + 12, sec_name)
-
-            c.setFont("Helvetica", 8.5)
-            c.setFillColor(palette["subtext"])
-            c.drawCentredString(width - 143, bottom_y - 2, sec_desig or "Examiner")
-        else:
-            # Fallback to Authorized Signature
-            c.setStrokeColor(palette["subtext"])
-            c.setLineWidth(0.8)
-            c.line(width - 230, bottom_y + 8, width - 56, bottom_y + 8)
-
-            c.setFont("Times-BoldItalic", 12)
-            c.setFillColor(palette["primary"])
-            c.drawCentredString(width - 143, bottom_y + 12, "Examination Authority")
-
-            c.setFont("Helvetica", 8.5)
-            c.setFillColor(palette["subtext"])
-            c.drawCentredString(width - 143, bottom_y - 2, "Testora Quiz Accreditation")
+        c.setFont("Helvetica-Bold", 9.5)
+        c.setFillColor(palette["primary"])
+        c.drawCentredString(right_sig_center, sig_y - 5, sec_name)
+        c.setFont("Helvetica", 7.5)
+        c.setFillColor(colors.HexColor("#64748B"))
+        c.drawCentredString(right_sig_center, sig_y - 15, sec_desig)
 
         # ─── 8. QR CODE & VERIFICATION DETAILS (Bottom Left/Center) ───
-        qr_size = 46
+        qr_size = 44
         qr_x = 48
-        qr_y = 38
+        qr_y = 36
 
         verify_url = f"https://testoraquiz.com/verify-certificate/{verification_token}"
         try:
@@ -423,19 +552,19 @@ class CertificateService:
             c.rect(qr_x, qr_y, qr_size, qr_size, fill=False, stroke=True)
 
         # Verification details text next to QR
-        c.setFont("Helvetica-Bold", 8)
+        c.setFont("Helvetica-Bold", 7.5)
         c.setFillColor(palette["primary"])
-        c.drawString(qr_x + qr_size + 8, qr_y + 32, f"Certificate ID: {certificate_code}")
+        c.drawString(qr_x + qr_size + 8, qr_y + 30, f"Certificate ID: {certificate_code}")
 
-        c.setFont("Helvetica", 7.5)
+        c.setFont("Helvetica", 7)
         c.setFillColor(palette["subtext"])
         formatted_date = issue_date.strftime("%d %B %Y")
-        c.drawString(qr_x + qr_size + 8, qr_y + 20, f"Issued Date: {formatted_date}")
-        c.drawString(qr_x + qr_size + 8, qr_y + 8, "Verification: Scan QR or visit testoraquiz.com/verify-certificate")
+        c.drawString(qr_x + qr_size + 8, qr_y + 18, f"Issued Date: {formatted_date}")
+        c.drawString(qr_x + qr_size + 8, qr_y + 6, "Verification: Scan QR or visit testoraquiz.com/verify-certificate")
 
         # Bottom Footer Message
-        footer_msg = config.get("footer_message", "Verified & Issued securely via Testora Quiz Examination Platform")
-        c.setFont("Helvetica", 7.5)
+        footer_msg = config.get("footer_message", "Verified & Issued securely via Testora Quiz Examination Platform • ISO Accredited")
+        c.setFont("Helvetica", 7)
         c.setFillColor(palette["subtext"])
         c.drawRightString(width - 48, 42, footer_msg)
 

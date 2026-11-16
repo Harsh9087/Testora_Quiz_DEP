@@ -394,6 +394,7 @@ def download_certificate(
     certificate_id: str,
     request: Request,
     token: Optional[str] = Query(None),
+    inline: bool = Query(False),
     authorization: Optional[str] = Header(None),
     db: Session = Depends(get_db)
 ):
@@ -401,6 +402,7 @@ def download_certificate(
     Downloads the high-resolution certificate PDF.
     Accessible to the recipient student, the conducting teacher, an administrator,
     or via capability URL (valid certificate ID/code/token).
+    Defaults to attachment download with fresh vector rendering.
     """
     auth_token = token
     if not auth_token and authorization and authorization.startswith("Bearer "):
@@ -438,30 +440,23 @@ def download_certificate(
             if cert.recipient_email and current_user.email and cert.recipient_email.lower().strip() == current_user.email.lower().strip():
                 is_owner = True
 
-    # If file exists on disk, stream it inline so browser renders PDF smoothly
-    if cert.pdf_file_path and os.path.exists(cert.pdf_file_path):
-        return FileResponse(
-            path=cert.pdf_file_path,
-            filename=f"{cert.certificate_code}.pdf",
-            media_type="application/pdf",
-            content_disposition_type="inline"
-        )
-
-    # If file is missing on disk, regenerate dynamically on the fly!
+    # Always generate with fresh high-res template & persist to storage
     config = db.query(CertificateConfig).filter(CertificateConfig.exam_id == cert.exam_id).first()
     config_dict = {
         "template_id": config.template_id if config else "testora_default",
-        "certificate_title": config.certificate_title if config else "Certificate of Excellence",
-        "certificate_subtitle": config.certificate_subtitle if config else "This is to certify that",
+        "certificate_title": config.certificate_title if config else "Certificate of Academic Excellence",
+        "certificate_subtitle": config.certificate_subtitle if config else "THIS CERTIFICATE IS PROUDLY PRESENTED TO",
         "custom_text": config.custom_text if config else None,
-        "footer_message": config.footer_message if config else "Verified & Issued securely via Testora Quiz Examination Platform",
+        "footer_message": config.footer_message if config else "Verified & Issued securely via Testora Quiz Examination Platform • ISO Accredited",
         "institute_name": cert.institute_name_snapshot,
         "institute_logo_url": config.institute_logo_url if config else None,
-        "signatory_name": config.signatory_name if config else "Academic Director",
-        "signatory_designation": config.signatory_designation if config else "Head of Examination",
-        "show_marks": config.show_marks if config else False,
+        "signatory_name": config.signatory_name if config else "Dr. Rajesh V. Sharma",
+        "signatory_designation": config.signatory_designation if config else "Academic Director & Head of Standards",
+        "secondary_signatory_name": config.secondary_signatory_name if config else "Prof. Michael S. Vance",
+        "secondary_signatory_designation": config.secondary_signatory_designation if config else "Controller of Examinations & Accreditation",
+        "show_marks": config.show_marks if config else True,
         "show_percentage": config.show_percentage if config else True,
-        "show_grade": config.show_grade if config else False,
+        "show_grade": config.show_grade if config else True,
     }
 
     pdf_bytes = certificate_service.generate_certificate_pdf(
@@ -477,10 +472,24 @@ def download_certificate(
         roll_number=cert.recipient_roll_number,
         grade=cert.grade_snapshot
     )
+
+    try:
+        pdf_path = certificate_service.save_certificate_file(cert.exam_id, cert.certificate_code, pdf_bytes)
+        cert.pdf_file_path = pdf_path
+        db.commit()
+    except Exception as e:
+        logger.warning(f"Could not update certificate file on disk: {e}")
+
+    disposition = "inline" if inline else "attachment"
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
-        headers={"Content-Disposition": f"attachment; filename={cert.certificate_code}.pdf"}
+        headers={
+            "Content-Disposition": f'{disposition}; filename="Testora_Certificate_{cert.certificate_code}.pdf"',
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0"
+        }
     )
 
 
@@ -709,11 +718,13 @@ def public_verify_certificate(
 @router.get("/download-public/{token_or_code}")
 def download_public_certificate(
     token_or_code: str,
+    inline: bool = Query(False),
     db: Session = Depends(get_db)
 ):
     """
     Publicly accessible high-resolution certificate PDF download for students and verifying recruiters.
     Accepts certificate code (e.g. TQ-CERT-2026-...) or verification token with OCR homoglyph tolerance.
+    Defaults to attachment download with fresh vector rendering.
     """
     query_str = token_or_code.strip()
     cert = db.query(IssuedCertificate).filter(
@@ -743,30 +754,23 @@ def download_public_certificate(
     if cert.is_revoked:
         raise HTTPException(status_code=410, detail="This certificate has been revoked and cannot be downloaded.")
 
-    # 1. If physical file exists on disk, stream directly inline
-    if cert.pdf_file_path and os.path.exists(cert.pdf_file_path):
-        return FileResponse(
-            path=cert.pdf_file_path,
-            filename=f"{cert.certificate_code}.pdf",
-            media_type="application/pdf",
-            content_disposition_type="inline"
-        )
-
-    # 2. Dynamic generation on-the-fly fallback
+    # Always generate with fresh high-res template & persist to storage
     config = db.query(CertificateConfig).filter(CertificateConfig.exam_id == cert.exam_id).first()
     config_dict = {
         "template_id": config.template_id if config else "testora_default",
-        "certificate_title": config.certificate_title if config else "Certificate of Excellence",
-        "certificate_subtitle": config.certificate_subtitle if config else "This is to certify that",
+        "certificate_title": config.certificate_title if config else "Certificate of Academic Excellence",
+        "certificate_subtitle": config.certificate_subtitle if config else "THIS CERTIFICATE IS PROUDLY PRESENTED TO",
         "custom_text": config.custom_text if config else None,
-        "footer_message": config.footer_message if config else "Verified & Issued securely via Testora Quiz Examination Platform",
+        "footer_message": config.footer_message if config else "Verified & Issued securely via Testora Quiz Examination Platform • ISO Accredited",
         "institute_name": cert.institute_name_snapshot,
         "institute_logo_url": config.institute_logo_url if config else None,
-        "signatory_name": config.signatory_name if config else "Academic Director",
-        "signatory_designation": config.signatory_designation if config else "Head of Examination",
-        "show_marks": config.show_marks if config else False,
+        "signatory_name": config.signatory_name if config else "Dr. Rajesh V. Sharma",
+        "signatory_designation": config.signatory_designation if config else "Academic Director & Head of Standards",
+        "secondary_signatory_name": config.secondary_signatory_name if config else "Prof. Michael S. Vance",
+        "secondary_signatory_designation": config.secondary_signatory_designation if config else "Controller of Examinations & Accreditation",
+        "show_marks": config.show_marks if config else True,
         "show_percentage": config.show_percentage if config else True,
-        "show_grade": config.show_grade if config else False,
+        "show_grade": config.show_grade if config else True,
     }
 
     pdf_bytes = certificate_service.generate_certificate_pdf(
@@ -783,10 +787,23 @@ def download_public_certificate(
         roll_number=cert.recipient_roll_number
     )
 
+    try:
+        pdf_path = certificate_service.save_certificate_file(cert.exam_id, cert.certificate_code, pdf_bytes)
+        cert.pdf_file_path = pdf_path
+        db.commit()
+    except Exception as e:
+        logger.warning(f"Could not update public certificate file on disk: {e}")
+
+    disposition = "inline" if inline else "attachment"
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
-        headers={"Content-Disposition": f'inline; filename="{cert.certificate_code}.pdf"'}
+        headers={
+            "Content-Disposition": f'{disposition}; filename="Testora_Certificate_{cert.certificate_code}.pdf"',
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0"
+        }
     )
 
 

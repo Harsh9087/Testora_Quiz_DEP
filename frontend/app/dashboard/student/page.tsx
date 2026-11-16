@@ -1419,12 +1419,21 @@ export default function StudentDashboard() {
                   <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2">
                     <a
                       href={`${API_V1}/certificates/download/${cert.id}${effectiveToken ? `?token=${encodeURIComponent(effectiveToken)}` : ""}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs cursor-pointer transition-all"
+                      download={`Testora_Certificate_${cert.certificate_code || cert.id}.pdf`}
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs cursor-pointer transition-all active:scale-95"
                     >
                       <Download className="w-3.5 h-3.5" />
                       <span>Download PDF</span>
+                    </a>
+
+                    <a
+                      href={`${API_V1}/certificates/download/${cert.id}?inline=1${effectiveToken ? `&token=${encodeURIComponent(effectiveToken)}` : ""}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
+                      title="View / Print Certificate in Browser"
+                    >
+                      <FileText className="w-4 h-4" />
                     </a>
 
                     <button
