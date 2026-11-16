@@ -313,36 +313,49 @@ export default function TeacherProfilePage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-4 pb-12">
+    <div className="max-w-4xl mx-auto space-y-4 sm:space-y-5 pb-16 px-2.5 sm:px-4">
       {/* ══════════════════════════════════════════════════════
-          TOP SIMPLE HEADER (MAIN DASHBOARD SHORTCUT)
+          TOP NAVIGATION BAR (Responsive Return to Dashboard)
          ══════════════════════════════════════════════════════ */}
-      <div className="flex items-center justify-between pb-3 border-b border-[#E5E0D8] dark:border-[#292524]">
-        <Link 
-          href="/dashboard/teacher" 
-          className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold transition-all shadow-sm hover:shadow-md cursor-pointer"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          <LayoutDashboard className="h-4 w-4" />
-          <span>Go to Main Dashboard</span>
-        </Link>
-
+      <div className="flex items-center justify-between gap-3 pt-1">
         <button
-          onClick={loadData}
-          disabled={loading}
-          className="flex items-center gap-1.5 px-2.5 py-1 text-xs text-[#716D67] hover:text-[#242321] dark:hover:text-white transition-colors cursor-pointer"
+          type="button"
+          onClick={() => {
+            if (typeof window !== "undefined" && window.innerWidth < 768) {
+              window.dispatchEvent(new CustomEvent("open-sidebar-menu"));
+            } else {
+              router.push("/dashboard/teacher");
+            }
+          }}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-[#111C31] border border-slate-200/90 dark:border-[#263449] text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-300 dark:hover:border-blue-700 shadow-2xs transition-all cursor-pointer group active:scale-95"
+          title="Open Menu / Return to Dashboard"
         >
-          <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-          <span>Refresh</span>
+          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5 text-slate-500 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400" />
+          <span>Back</span>
         </button>
+
+        <div className="flex items-center gap-2">
+          <span className="hidden xs:inline text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400">
+            Teacher Profile &amp; Billing
+          </span>
+          <button
+            onClick={loadData}
+            disabled={loading}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-slate-200/90 dark:border-[#263449] bg-white dark:bg-[#111C31] text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-[#15233D] transition-colors cursor-pointer shadow-2xs"
+            title="Refresh Account Data"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin text-blue-600" : "text-slate-500"}`} />
+            <span className="hidden xs:inline">Refresh</span>
+          </button>
+        </div>
       </div>
 
       {/* ══════════════════════════════════════════════════════
           BLOCK 1: PERSONAL PROFILE (Essential Info)
          ══════════════════════════════════════════════════════ */}
-      <div className="bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl p-5 shadow-xs">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
+      <div className="bg-white dark:bg-[#111C31] border border-slate-200/90 dark:border-[#263449] rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xs transition-colors">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+          <div className="flex items-center gap-3.5 sm:gap-4 min-w-0 flex-1">
             {/* Avatar with fallback Person icon */}
             <div className="relative shrink-0">
               {getAvatarUrl(profile?.avatar_url) && !imgError ? (
@@ -350,20 +363,20 @@ export default function TeacherProfilePage() {
                   src={getAvatarUrl(profile?.avatar_url)!}
                   alt={profile?.full_name || "Profile"}
                   onError={() => setImgError(true)}
-                  className="w-16 h-16 rounded-2xl object-cover border-2 border-[#E5E0D8] dark:border-[#292524] shadow-xs bg-[#FAF8F5] dark:bg-[#141312]"
+                  className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-cover border-2 border-slate-200 dark:border-slate-700 shadow-xs bg-slate-50 dark:bg-slate-900"
                 />
               ) : (
                 <div 
-                  className="w-16 h-16 rounded-2xl bg-[#F5F2EB] dark:bg-[#201D1A] border-2 border-[#E5E0D8] dark:border-[#292524] flex items-center justify-center text-[#716D67] dark:text-[#A8A29E] shadow-xs"
-                  title="Person Icon"
+                  className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-blue-50 dark:bg-blue-950/60 border-2 border-blue-200/60 dark:border-blue-900/60 flex items-center justify-center text-blue-600 dark:text-blue-400 shadow-xs"
+                  title="Profile Avatar"
                 >
-                  <User className="w-8 h-8 text-[#8C827A] dark:text-[#A8A29E]" />
+                  <User className="w-7 h-7 sm:w-8 sm:h-8" />
                 </div>
               )}
 
               {/* Upload photo overlay button */}
               <label 
-                className="absolute -bottom-1 -right-1 bg-[#C84B18] hover:bg-[#b04013] text-white p-1 rounded-full shadow-md cursor-pointer transition-transform hover:scale-110 active:scale-95"
+                className="absolute -bottom-1 -right-1 bg-blue-600 hover:bg-blue-700 text-white p-1 rounded-full shadow-md cursor-pointer transition-transform hover:scale-110 active:scale-95"
                 title="Change Photo"
               >
                 {uploadingPhoto ? (
@@ -382,40 +395,42 @@ export default function TeacherProfilePage() {
             </div>
 
             {/* Profile Identity Details */}
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-lg font-black text-[#242321] dark:text-[#F5F5F4]">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-base sm:text-lg font-black text-slate-900 dark:text-white truncate">
                   {profile?.full_name || fullName || "Teacher"}
                 </h1>
-                <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-[#C84B18]/10 text-[#C84B18]">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-blue-50 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800/80">
                   {profile?.role || role || "Teacher"}
                 </span>
               </div>
-              <div className="text-xs text-[#716D67] dark:text-[#A8A29E] mt-0.5 flex items-center gap-1.5">
-                <Mail className="h-3.5 w-3.5" />
-                <span>{profile?.email}</span>
+              <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1.5 truncate">
+                <Mail className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                <span className="truncate">{profile?.email}</span>
               </div>
-              <div className="text-[11px] text-[#8C827A] mt-1 flex items-center gap-2">
-                <span>{profile?.institution_name || "Testora Quiz Academy"}</span>
+              <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1.5 flex-wrap">
+                <span className="font-medium text-slate-700 dark:text-slate-300 truncate max-w-[180px] xs:max-w-none">{profile?.institution_name || "Testora Quiz Academy"}</span>
                 <span>•</span>
-                <span>{profile?.department_name || "Academic Faculty"}</span>
+                <span className="truncate">{profile?.department_name || "Academic Faculty"}</span>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
             {!isEditing ? (
               <button
+                type="button"
                 onClick={() => setIsEditing(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#F7F4EF] dark:bg-[#201D1A] hover:bg-[#E5E0D8] dark:hover:bg-[#2A2624] text-xs font-bold text-[#242321] dark:text-[#F5F5F4] transition-all cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-bold text-slate-800 dark:text-slate-200 transition-all cursor-pointer shadow-2xs active:scale-95"
               >
                 <Edit2 className="h-3.5 w-3.5" />
                 <span>Edit Info</span>
               </button>
             ) : (
               <button
+                type="button"
                 onClick={() => setIsEditing(false)}
-                className="px-3 py-1.5 rounded-xl bg-gray-200 dark:bg-gray-800 text-xs font-semibold text-[#57534E] dark:text-[#A8A29E] cursor-pointer"
+                className="px-3 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 cursor-pointer"
               >
                 Close
               </button>
@@ -425,22 +440,22 @@ export default function TeacherProfilePage() {
 
         {/* Inline Edit Form */}
         {isEditing && (
-          <form onSubmit={handleSaveProfile} className="mt-4 pt-4 border-t border-[#E5E0D8] dark:border-[#292524] space-y-3">
+          <form onSubmit={handleSaveProfile} className="mt-4 pt-4 border-t border-slate-200 dark:border-[#263449] space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-[11px] font-bold text-[#716D67] uppercase mb-1">
+                <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-1">
                   Full Name
                 </label>
                 <input
                   type="text"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  className="w-full px-3 py-2 text-xs rounded-xl bg-[#FAF8F5] dark:bg-[#141312] border border-[#E5E0D8] dark:border-[#292524] text-[#242321] dark:text-[#F5F5F4] focus:outline-none focus:ring-1 focus:ring-[#C84B18]"
+                  className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-[#716D67] uppercase mb-1">
+                <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-1">
                   Image URL (Optional)
                 </label>
                 <input
@@ -451,14 +466,14 @@ export default function TeacherProfilePage() {
                     setImgError(false);
                   }}
                   placeholder="https://..."
-                  className="w-full px-3 py-2 text-xs rounded-xl bg-[#FAF8F5] dark:bg-[#141312] border border-[#E5E0D8] dark:border-[#292524] text-[#242321] dark:text-[#F5F5F4] focus:outline-none focus:ring-1 focus:ring-[#C84B18]"
+                  className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
               <div className="flex items-center gap-2">
-                <label className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#C84B18] text-white text-xs font-bold hover:bg-[#b04013] transition-all cursor-pointer">
+                <label className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 transition-all cursor-pointer active:scale-95 shadow-xs">
                   <Upload className="h-3 w-3" />
                   <span>{uploadingPhoto ? "Uploading..." : "Upload Photo"}</span>
                   <input
@@ -475,7 +490,7 @@ export default function TeacherProfilePage() {
                     type="button"
                     onClick={handleRemovePhoto}
                     disabled={saving}
-                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-red-300 dark:border-red-900/60 text-red-600 dark:text-red-400 text-xs font-semibold hover:bg-red-50 dark:hover:bg-red-950/20 cursor-pointer"
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-red-300 dark:border-red-900/60 text-red-600 dark:text-red-400 text-xs font-semibold hover:bg-red-50 dark:hover:bg-red-950/20 cursor-pointer active:scale-95"
                   >
                     <Trash2 className="h-3 w-3" />
                     <span>Remove Photo</span>
@@ -487,14 +502,14 @@ export default function TeacherProfilePage() {
                 <button
                   type="button"
                   onClick={() => setIsEditing(false)}
-                  className="px-3 py-1.5 rounded-xl text-xs font-semibold text-[#716D67]"
+                  className="px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-[#C84B18] text-white text-xs font-bold hover:bg-[#b04013] cursor-pointer"
+                  className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 cursor-pointer shadow-xs active:scale-95"
                 >
                   {saving ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
                   <span>Save</span>
@@ -508,98 +523,108 @@ export default function TeacherProfilePage() {
       {/* ══════════════════════════════════════════════════════
           BLOCK 2: CREDIT WALLET (Collapsible / Expandable)
          ══════════════════════════════════════════════════════ */}
-      <div className="bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl overflow-hidden shadow-xs">
+      <div className="bg-white dark:bg-[#111C31] border border-slate-200/90 dark:border-[#263449] rounded-2xl sm:rounded-3xl overflow-hidden shadow-xs transition-colors">
         {/* Clickable Header Block */}
         <div 
           onClick={() => setExpandWallet(!expandWallet)}
-          className="flex items-center justify-between gap-3 p-3.5 sm:p-4 cursor-pointer hover:bg-[#FAF8F5] dark:hover:bg-[#201D1A]/50 transition-colors select-none"
+          className="flex items-center justify-between gap-3 p-3.5 sm:p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-[#15233D]/60 transition-colors select-none"
         >
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
-            <div className="h-9 w-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+            <div className="h-9 w-9 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
               <Coins className="h-5 w-5" />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-xs sm:text-sm font-bold text-[#242321] dark:text-[#F5F5F4] truncate">
-                Credits & Balance
+              <div className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
+                Credits &amp; Balance
               </div>
-              <div className="text-[10px] sm:text-[11px] text-[#716D67] dark:text-[#A8A29E] truncate">
+              <div className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 truncate">
                 1 Credit = 1 Student Attempt per Question
               </div>
             </div>
           </div>
 
           <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
-            <span className="px-2.5 py-1 rounded-full text-xs font-black bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-300/60 dark:border-amber-800/60 shrink-0 whitespace-nowrap shadow-xs">
+            <span className="px-2.5 py-1 rounded-full text-[11px] sm:text-xs font-black bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-300/60 dark:border-amber-800/60 shrink-0 whitespace-nowrap shadow-xs">
               {profile?.credits_balance !== undefined ? profile.credits_balance.toLocaleString() : "0"} Credits
             </span>
             {expandWallet ? (
-              <ChevronUp className="h-4 w-4 text-[#716D67] shrink-0" />
+              <ChevronUp className="h-4 w-4 text-slate-400 shrink-0" />
             ) : (
-              <ChevronDown className="h-4 w-4 text-[#716D67] shrink-0" />
+              <ChevronDown className="h-4 w-4 text-slate-400 shrink-0" />
             )}
           </div>
         </div>
 
         {/* Expandable Body */}
         {expandWallet && (
-          <div className="p-4 pt-0 border-t border-[#E5E0D8] dark:border-[#292524] space-y-4 mt-2">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-[#FAF8F5] dark:bg-[#141312] border border-[#E5E0D8] dark:border-[#292524]">
-              <div>
-                <div className="text-xs font-bold text-[#242321] dark:text-[#F5F5F4]">
+          <div className="p-3.5 sm:p-5 pt-0 border-t border-slate-100 dark:border-[#263449] space-y-3.5 sm:space-y-4 mt-1">
+            {/* Balance Highlight Box */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent border border-amber-200/80 dark:border-amber-800/50">
+              <div className="space-y-1">
+                <div className="text-xs font-bold text-slate-600 dark:text-slate-400">
                   Current Available Balance
                 </div>
-                <div className="text-2xl font-black text-amber-700 dark:text-amber-400 mt-0.5">
+                <div className="text-2xl sm:text-3xl font-black text-amber-600 dark:text-amber-400">
                   {profile?.credits_balance !== undefined ? profile.credits_balance.toLocaleString() : "0"} Credits
                 </div>
                 {profile?.bonus_credits !== undefined && profile.bonus_credits > 0 && (
-                  <div className="mt-1 flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                  <div className="pt-0.5 flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 flex-wrap">
                     <span className="px-1.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/70 border border-emerald-300 dark:border-emerald-700/60 text-[10px] font-bold">
                       🎁 {profile.bonus_credits.toLocaleString()} Welcome Bonus
                     </span>
                     <span>• {profile.bonus_days_remaining} {profile.bonus_days_remaining === 1 ? "day" : "days"} validity remaining</span>
                   </div>
                 )}
-                <div className="text-[10px] text-[#8C827A] mt-1">
+                <div className="text-[10px] text-slate-500 dark:text-slate-400 pt-0.5">
                   Prepaid credits can be used for 1-click test publishing without entering card details.
                 </div>
               </div>
 
               <button
+                type="button"
                 onClick={() => setRechargeModalOpen(true)}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#C84B18] hover:bg-[#b04013] text-white text-xs font-bold transition-all cursor-pointer shrink-0 shadow-xs"
+                className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all cursor-pointer shrink-0 shadow-xs active:scale-95"
               >
-                <Zap className="h-3.5 w-3.5" />
+                <Zap className="h-3.5 w-3.5 fill-current" />
                 <span>Recharge Credits</span>
               </button>
             </div>
 
-            {/* Quick Packages Preview */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div 
-                onClick={() => setRechargeModalOpen(true)}
-                className="p-3 rounded-xl border border-[#E5E0D8] dark:border-[#292524] bg-white dark:bg-[#171615] hover:border-amber-400 cursor-pointer transition-all"
-              >
-                <div className="text-xs font-bold text-[#242321] dark:text-[#F5F5F4]">Starter</div>
-                <div className="text-lg font-black text-[#242321] dark:text-[#F5F5F4] mt-1">₹100</div>
-                <div className="text-[11px] text-amber-700 dark:text-amber-400 font-bold">1,000 Credits</div>
+            {/* Quick Packages Preview - 3 Columns Responsive Grid */}
+            <div>
+              <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                Quick Top-Up Packages
               </div>
+              <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                <div 
+                  onClick={() => setRechargeModalOpen(true)}
+                  className="p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C31] hover:border-amber-400 dark:hover:border-amber-500 cursor-pointer transition-all shadow-2xs group text-center"
+                >
+                  <div className="text-[11px] sm:text-xs font-bold text-slate-700 dark:text-slate-300 truncate">Starter</div>
+                  <div className="text-sm sm:text-lg font-black text-slate-900 dark:text-white mt-0.5">₹100</div>
+                  <div className="text-[10px] sm:text-[11px] text-amber-600 dark:text-amber-400 font-bold mt-0.5 truncate">1,000 Qs</div>
+                </div>
 
-              <div 
-                onClick={() => setRechargeModalOpen(true)}
-                className="p-3 rounded-xl border-2 border-amber-500/60 bg-white dark:bg-[#171615] hover:border-amber-500 cursor-pointer transition-all relative overflow-hidden"
-              >
-                <div className="text-xs font-bold text-[#242321] dark:text-[#F5F5F4]">Growth (+10%)</div>
-                <div className="text-lg font-black text-[#242321] dark:text-[#F5F5F4] mt-1">₹200</div>
-                <div className="text-[11px] text-amber-700 dark:text-amber-400 font-bold">2,200 Credits</div>
-              </div>
+                <div 
+                  onClick={() => setRechargeModalOpen(true)}
+                  className="p-2.5 sm:p-3 rounded-xl border-2 border-amber-500 bg-amber-50/40 dark:bg-amber-950/20 hover:border-amber-600 cursor-pointer transition-all shadow-xs relative text-center"
+                >
+                  <span className="absolute -top-2 left-1/2 -translate-x-1/2 px-1.5 py-0.2 rounded text-[8px] sm:text-[9px] font-black uppercase bg-amber-500 text-white shadow-2xs">
+                    Popular
+                  </span>
+                  <div className="text-[11px] sm:text-xs font-bold text-amber-900 dark:text-amber-200 truncate">Growth</div>
+                  <div className="text-sm sm:text-lg font-black text-slate-900 dark:text-white mt-0.5">₹200</div>
+                  <div className="text-[10px] sm:text-[11px] text-amber-600 dark:text-amber-400 font-bold mt-0.5 truncate">2,200 (+10%)</div>
+                </div>
 
-              <div 
-                onClick={() => setRechargeModalOpen(true)}
-                className="p-3 rounded-xl border border-[#E5E0D8] dark:border-[#292524] bg-white dark:bg-[#171615] hover:border-amber-400 cursor-pointer transition-all"
-              >
-                <div className="text-xs font-bold text-[#242321] dark:text-[#F5F5F4]">Institutional (+20%)</div>
-                <div className="text-lg font-black text-[#242321] dark:text-[#F5F5F4] mt-1">₹500</div>
-                <div className="text-[11px] text-amber-700 dark:text-amber-400 font-bold">6,000 Credits</div>
+                <div 
+                  onClick={() => setRechargeModalOpen(true)}
+                  className="p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C31] hover:border-amber-400 dark:hover:border-amber-500 cursor-pointer transition-all shadow-2xs text-center"
+                >
+                  <div className="text-[11px] sm:text-xs font-bold text-slate-700 dark:text-slate-300 truncate">Pro</div>
+                  <div className="text-sm sm:text-lg font-black text-slate-900 dark:text-white mt-0.5">₹500</div>
+                  <div className="text-[10px] sm:text-[11px] text-amber-600 dark:text-amber-400 font-bold mt-0.5 truncate">6,000 (+20%)</div>
+                </div>
               </div>
             </div>
           </div>
@@ -609,99 +634,149 @@ export default function TeacherProfilePage() {
       {/* ══════════════════════════════════════════════════════
           BLOCK 3: TAX INVOICES & ORDERS (Collapsible / Expandable)
          ══════════════════════════════════════════════════════ */}
-      <div className="bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl overflow-hidden shadow-xs">
+      <div className="bg-white dark:bg-[#111C31] border border-slate-200/90 dark:border-[#263449] rounded-2xl sm:rounded-3xl overflow-hidden shadow-xs transition-colors">
         {/* Clickable Header Block */}
         <div 
           onClick={() => setExpandInvoices(!expandInvoices)}
-          className="flex items-center justify-between p-4 cursor-pointer hover:bg-[#FAF8F5] dark:hover:bg-[#201D1A]/50 transition-colors"
+          className="flex items-center justify-between p-3.5 sm:p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-[#15233D]/60 transition-colors select-none"
         >
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+            <div className="h-9 w-9 rounded-xl bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
               <Receipt className="h-5 w-5" />
             </div>
-            <div>
-              <div className="text-sm font-bold text-[#242321] dark:text-[#F5F5F4]">
-                Payment Invoices & Receipts
+            <div className="min-w-0 flex-1">
+              <div className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
+                Payment Invoices &amp; Receipts
               </div>
-              <div className="text-[11px] text-[#716D67] dark:text-[#A8A29E]">
+              <div className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 truncate">
                 Official tax receipts with GST and Razorpay references
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-[#716D67] font-semibold">
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+            <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
               {payments.length} {payments.length === 1 ? "invoice" : "invoices"}
             </span>
             {expandInvoices ? (
-              <ChevronUp className="h-4 w-4 text-[#716D67]" />
+              <ChevronUp className="h-4 w-4 text-slate-400 shrink-0" />
             ) : (
-              <ChevronDown className="h-4 w-4 text-[#716D67]" />
+              <ChevronDown className="h-4 w-4 text-slate-400 shrink-0" />
             )}
           </div>
         </div>
 
         {/* Expandable Body */}
         {expandInvoices && (
-          <div className="p-4 pt-0 border-t border-[#E5E0D8] dark:border-[#292524] mt-2">
+          <div className="p-3.5 sm:p-5 pt-0 border-t border-slate-100 dark:border-[#263449] mt-1">
             {payments.length === 0 ? (
-              <div className="py-6 text-center text-xs text-[#716D67]">
+              <div className="py-8 text-center text-xs text-slate-500 dark:text-slate-400">
                 No payment invoices found yet.
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="border-b border-[#E5E0D8] dark:border-[#292524] text-[10px] font-bold text-[#716D67] uppercase">
-                      <th className="py-2 px-3">Date</th>
-                      <th className="py-2 px-3">Description</th>
-                      <th className="py-2 px-3">Amount</th>
-                      <th className="py-2 px-3">Status</th>
-                      <th className="py-2 px-3 text-right">Receipt</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#E5E0D8] dark:divide-[#292524]">
-                    {payments.map((p) => {
-                      const isPaid = p.status === "paid";
-                      return (
-                        <tr key={p.id} className="hover:bg-[#FAF8F5] dark:hover:bg-[#201D1A]/50">
-                          <td className="py-2.5 px-3 text-[#716D67] whitespace-nowrap">
+              <>
+                {/* Mobile Responsive Cards (sm:hidden) */}
+                <div className="sm:hidden space-y-2.5 pt-2">
+                  {payments.map((p) => {
+                    const isPaid = p.status === "paid";
+                    return (
+                      <div 
+                        key={p.id} 
+                        className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/40 space-y-2"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[11px] text-slate-500 dark:text-slate-400">
                             {new Date(p.created_at).toLocaleDateString("en-IN", {
                               day: "2-digit",
                               month: "short",
                               year: "numeric",
                             })}
-                          </td>
-                          <td className="py-2.5 px-3 font-semibold text-[#242321] dark:text-[#F5F5F4]">
+                          </span>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                            isPaid ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-red-500/10 text-red-600"
+                          }`}>
+                            {p.status}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
                             {p.exam_name || (p.order_type === "CREDIT_RECHARGE" ? "Credit Recharge" : "Exam Publishing")}
-                          </td>
-                          <td className="py-2.5 px-3 font-bold text-[#242321] dark:text-[#F5F5F4] whitespace-nowrap">
+                          </span>
+                          <span className="text-xs font-black text-slate-900 dark:text-white shrink-0">
                             ₹{(p.amount / 100).toFixed(2)}
-                          </td>
-                          <td className="py-2.5 px-3 whitespace-nowrap">
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                              isPaid ? "bg-emerald-500/10 text-emerald-600" : "bg-red-500/10 text-red-600"
-                            }`}>
-                              {p.status}
-                            </span>
-                          </td>
-                          <td className="py-2.5 px-3 text-right whitespace-nowrap">
-                            {isPaid && (
-                              <button
-                                onClick={() => handleDownloadReceipt(p.id)}
-                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-[#E5E0D8] dark:border-[#292524] text-[11px] font-bold text-[#C84B18] hover:bg-[#C84B18] hover:text-white transition-all cursor-pointer"
-                              >
-                                <Download className="h-3 w-3" />
-                                <span>PDF</span>
-                              </button>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                          </span>
+                        </div>
+                        {isPaid && (
+                          <button
+                            type="button"
+                            onClick={() => handleDownloadReceipt(p.id)}
+                            className="w-full mt-1 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-[11px] font-bold text-blue-600 dark:text-blue-400 flex items-center justify-center gap-1.5 shadow-2xs active:scale-95"
+                          >
+                            <Download className="h-3 w-3" />
+                            <span>Download Tax Receipt PDF</span>
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Tablet/Desktop Table View (hidden sm:block) */}
+                <div className="hidden sm:block overflow-x-auto pt-2">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="border-b border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-500 uppercase">
+                        <th className="py-2.5 px-3">Date</th>
+                        <th className="py-2.5 px-3">Description</th>
+                        <th className="py-2.5 px-3">Amount</th>
+                        <th className="py-2.5 px-3">Status</th>
+                        <th className="py-2.5 px-3 text-right">Receipt</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                      {payments.map((p) => {
+                        const isPaid = p.status === "paid";
+                        return (
+                          <tr key={p.id} className="hover:bg-slate-50/80 dark:hover:bg-[#15233D]/50 transition-colors">
+                            <td className="py-2.5 px-3 text-slate-500 whitespace-nowrap">
+                              {new Date(p.created_at).toLocaleDateString("en-IN", {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                              })}
+                            </td>
+                            <td className="py-2.5 px-3 font-semibold text-slate-800 dark:text-slate-200">
+                              {p.exam_name || (p.order_type === "CREDIT_RECHARGE" ? "Credit Recharge" : "Exam Publishing")}
+                            </td>
+                            <td className="py-2.5 px-3 font-bold text-slate-900 dark:text-white whitespace-nowrap">
+                              ₹{(p.amount / 100).toFixed(2)}
+                            </td>
+                            <td className="py-2.5 px-3 whitespace-nowrap">
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                                isPaid ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-red-500/10 text-red-600"
+                              }`}>
+                                {p.status}
+                              </span>
+                            </td>
+                            <td className="py-2.5 px-3 text-right whitespace-nowrap">
+                              {isPaid && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleDownloadReceipt(p.id)}
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-900/60 bg-blue-50 dark:bg-blue-950/40 text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white transition-all cursor-pointer shadow-2xs"
+                                >
+                                  <Download className="h-3 w-3" />
+                                  <span>PDF</span>
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
           </div>
         )}
@@ -710,88 +785,126 @@ export default function TeacherProfilePage() {
       {/* ══════════════════════════════════════════════════════
           BLOCK 4: CREDIT USAGE LEDGER (Collapsible / Expandable)
          ══════════════════════════════════════════════════════ */}
-      <div className="bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl overflow-hidden shadow-xs">
+      <div className="bg-white dark:bg-[#111C31] border border-slate-200/90 dark:border-[#263449] rounded-2xl sm:rounded-3xl overflow-hidden shadow-xs transition-colors">
         {/* Clickable Header Block */}
         <div 
           onClick={() => setExpandLedger(!expandLedger)}
-          className="flex items-center justify-between p-4 cursor-pointer hover:bg-[#FAF8F5] dark:hover:bg-[#201D1A]/50 transition-colors"
+          className="flex items-center justify-between p-3.5 sm:p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-[#15233D]/60 transition-colors select-none"
         >
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+            <div className="h-9 w-9 rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
               <Clock className="h-5 w-5" />
             </div>
-            <div>
-              <div className="text-sm font-bold text-[#242321] dark:text-[#F5F5F4]">
+            <div className="min-w-0 flex-1">
+              <div className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
                 Credit Usage Ledger
               </div>
-              <div className="text-[11px] text-[#716D67] dark:text-[#A8A29E]">
-                Record of all credit additions, test deductions, and remaining balances
+              <div className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                Record of credit additions, test deductions, and remaining balance
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-[#716D67] font-semibold">
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+            <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
               {creditTx.length} {creditTx.length === 1 ? "entry" : "entries"}
             </span>
             {expandLedger ? (
-              <ChevronUp className="h-4 w-4 text-[#716D67]" />
+              <ChevronUp className="h-4 w-4 text-slate-400 shrink-0" />
             ) : (
-              <ChevronDown className="h-4 w-4 text-[#716D67]" />
+              <ChevronDown className="h-4 w-4 text-slate-400 shrink-0" />
             )}
           </div>
         </div>
 
         {/* Expandable Body */}
         {expandLedger && (
-          <div className="p-4 pt-0 border-t border-[#E5E0D8] dark:border-[#292524] mt-2">
+          <div className="p-3.5 sm:p-5 pt-0 border-t border-slate-100 dark:border-[#263449] mt-1">
             {creditTx.length === 0 ? (
-              <div className="py-6 text-center text-xs text-[#716D67]">
+              <div className="py-8 text-center text-xs text-slate-500 dark:text-slate-400">
                 No credit activity logged yet.
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="border-b border-[#E5E0D8] dark:border-[#292524] text-[10px] font-bold text-[#716D67] uppercase">
-                      <th className="py-2 px-3">Date</th>
-                      <th className="py-2 px-3">Type</th>
-                      <th className="py-2 px-3">Description</th>
-                      <th className="py-2 px-3 text-right">Change</th>
-                      <th className="py-2 px-3 text-right">Balance</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#E5E0D8] dark:divide-[#292524]">
-                    {creditTx.map((tx) => {
-                      const isAddition = tx.amount_credits > 0;
-                      return (
-                        <tr key={tx.id} className="hover:bg-[#FAF8F5] dark:hover:bg-[#201D1A]/50">
-                          <td className="py-2.5 px-3 text-[#716D67] whitespace-nowrap">
+              <>
+                {/* Mobile Responsive Cards (sm:hidden) */}
+                <div className="sm:hidden space-y-2.5 pt-2">
+                  {creditTx.map((tx) => {
+                    const isAddition = tx.amount_credits > 0;
+                    return (
+                      <div 
+                        key={tx.id} 
+                        className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/40 space-y-1.5"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                            {tx.transaction_type.replace(/_/g, " ")}
+                          </span>
+                          <span className={`text-xs font-black ${isAddition ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}`}>
+                            {isAddition ? `+${tx.amount_credits}` : tx.amount_credits} Credits
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-700 dark:text-slate-300 leading-snug">
+                          {tx.description}
+                        </p>
+                        <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1 border-t border-slate-200/50 dark:border-slate-800/50">
+                          <span>
                             {new Date(tx.created_at).toLocaleDateString("en-IN", {
                               day: "2-digit",
                               month: "short",
+                              year: "numeric",
                             })}
-                          </td>
-                          <td className="py-2.5 px-3 whitespace-nowrap font-semibold">
-                            {tx.transaction_type.replace(/_/g, " ")}
-                          </td>
-                          <td className="py-2.5 px-3 text-[#716D67] max-w-xs truncate">
-                            {tx.description}
-                          </td>
-                          <td className={`py-2.5 px-3 text-right font-black whitespace-nowrap ${
-                            isAddition ? "text-emerald-600" : "text-amber-600"
-                          }`}>
-                            {isAddition ? `+${tx.amount_credits}` : tx.amount_credits}
-                          </td>
-                          <td className="py-2.5 px-3 text-right font-bold text-[#242321] dark:text-[#F5F5F4] whitespace-nowrap">
-                            {tx.balance_after}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                          </span>
+                          <span>Balance: <strong className="text-slate-800 dark:text-slate-200 font-bold">{tx.balance_after}</strong></span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Tablet/Desktop Table View (hidden sm:block) */}
+                <div className="hidden sm:block overflow-x-auto pt-2">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="border-b border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-500 uppercase">
+                        <th className="py-2.5 px-3">Date</th>
+                        <th className="py-2.5 px-3">Type</th>
+                        <th className="py-2.5 px-3">Description</th>
+                        <th className="py-2.5 px-3 text-right">Change</th>
+                        <th className="py-2.5 px-3 text-right">Balance</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                      {creditTx.map((tx) => {
+                        const isAddition = tx.amount_credits > 0;
+                        return (
+                          <tr key={tx.id} className="hover:bg-slate-50/80 dark:hover:bg-[#15233D]/50 transition-colors">
+                            <td className="py-2.5 px-3 text-slate-500 whitespace-nowrap">
+                              {new Date(tx.created_at).toLocaleDateString("en-IN", {
+                                day: "2-digit",
+                                month: "short",
+                              })}
+                            </td>
+                            <td className="py-2.5 px-3 whitespace-nowrap font-semibold text-slate-700 dark:text-slate-300">
+                              {tx.transaction_type.replace(/_/g, " ")}
+                            </td>
+                            <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400 max-w-xs truncate">
+                              {tx.description}
+                            </td>
+                            <td className={`py-2.5 px-3 text-right font-black whitespace-nowrap ${
+                              isAddition ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"
+                            }`}>
+                              {isAddition ? `+${tx.amount_credits}` : tx.amount_credits}
+                            </td>
+                            <td className="py-2.5 px-3 text-right font-bold text-slate-900 dark:text-white whitespace-nowrap">
+                              {tx.balance_after}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
           </div>
         )}
@@ -800,21 +913,21 @@ export default function TeacherProfilePage() {
       {/* ══════════════════════════════════════════════════════
           BLOCK 5: ACCOUNT SETTINGS & PREFERENCES (Collapsible)
          ══════════════════════════════════════════════════════ */}
-      <div className="bg-white dark:bg-[#171615] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl overflow-hidden shadow-xs">
+      <div className="bg-white dark:bg-[#111C31] border border-slate-200/90 dark:border-[#263449] rounded-2xl sm:rounded-3xl overflow-hidden shadow-xs transition-colors">
         {/* Clickable Header Block */}
         <div 
           onClick={() => setExpandSettings(!expandSettings)}
-          className="flex items-center justify-between p-4 cursor-pointer hover:bg-[#FAF8F5] dark:hover:bg-[#201D1A]/50 transition-colors"
+          className="flex items-center justify-between p-3.5 sm:p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-[#15233D]/60 transition-colors select-none"
         >
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl bg-gray-500/10 text-gray-600 dark:text-gray-400 flex items-center justify-center shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+            <div className="h-9 w-9 rounded-xl bg-slate-500/15 text-slate-600 dark:text-slate-400 flex items-center justify-center shrink-0">
               <Sliders className="h-5 w-5" />
             </div>
-            <div>
-              <div className="text-sm font-bold text-[#242321] dark:text-[#F5F5F4]">
+            <div className="min-w-0 flex-1">
+              <div className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
                 Account Settings
               </div>
-              <div className="text-[11px] text-[#716D67] dark:text-[#A8A29E]">
+              <div className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 truncate">
                 Theme appearance, platform settings, and sign out
               </div>
             </div>
@@ -822,16 +935,16 @@ export default function TeacherProfilePage() {
 
           <div>
             {expandSettings ? (
-              <ChevronUp className="h-4 w-4 text-[#716D67]" />
+              <ChevronUp className="h-4 w-4 text-slate-400" />
             ) : (
-              <ChevronDown className="h-4 w-4 text-[#716D67]" />
+              <ChevronDown className="h-4 w-4 text-slate-400" />
             )}
           </div>
         </div>
 
         {/* Expandable Body */}
         {expandSettings && (
-          <div className="p-4 pt-0 border-t border-[#E5E0D8] dark:border-[#292524] space-y-4 mt-2">
+          <div className="p-3.5 sm:p-5 pt-0 border-t border-slate-100 dark:border-[#263449] space-y-4 mt-1">
             {/* Embedded Platform Feature Guides, Route Diagnostics & Preferences */}
             <PlatformSettingsAndGuide
               currentRole="teacher"
@@ -847,7 +960,7 @@ export default function TeacherProfilePage() {
                   logout();
                   router.push("/login");
                 }}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-red-300 dark:border-red-900/60 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 text-xs font-bold transition-all cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-red-300 dark:border-red-900/60 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 text-xs font-bold transition-all cursor-pointer shadow-2xs active:scale-95"
               >
                 <LogOut className="h-3.5 w-3.5" />
                 <span>Sign Out Account</span>
