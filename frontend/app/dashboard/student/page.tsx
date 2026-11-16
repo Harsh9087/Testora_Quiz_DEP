@@ -9,7 +9,8 @@ import {
   Trophy, Target, BarChart3, XCircle, ChevronDown, ChevronUp, Medal,
   RefreshCw, CheckCircle2, AlertCircle, Clock, Sparkles, User, Users, ArrowRight, ArrowLeft,
   BookMarked, HelpCircle, ShieldCheck, GraduationCap, Play, Key, Lock, Check,
-  Timer, ChevronRight, ExternalLink, FileCode2, Building2, Copy, Search, Filter, Layers
+  Timer, ChevronRight, ExternalLink, FileCode2, Building2, Copy, Search, Filter, Layers,
+  ClipboardList, SlidersHorizontal
 } from "lucide-react";
 import MathText from "../../../components/MathText";
 import FeaturedHighYieldTests from "../../../components/FeaturedHighYieldTests";
@@ -47,16 +48,19 @@ export default function StudentDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "ongoing" | "upcoming" | "ended">("all");
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
-  const [copiedExamId, setCopiedExamId] = useState<string | null>(null);
+  const [copiedUserExamId, setCopiedUserExamId] = useState<string | null>(null);
+  const [copiedPassExamId, setCopiedPassExamId] = useState<string | null>(null);
 
-  const copyCredentials = (examId: string, creds: any) => {
-    if (!creds) return;
-    const text = `User: ${creds.username}\nPass: ${creds.password}`;
-    navigator.clipboard.writeText(text);
-    setCopiedExamId(examId);
-    setTimeout(() => {
-      setCopiedExamId(null);
-    }, 2000);
+  const copySingleCred = (type: "user" | "pass", examId: string, value: string) => {
+    if (!value) return;
+    navigator.clipboard.writeText(value);
+    if (type === "user") {
+      setCopiedUserExamId(examId);
+      setTimeout(() => setCopiedUserExamId(null), 2000);
+    } else {
+      setCopiedPassExamId(examId);
+      setTimeout(() => setCopiedPassExamId(null), 2000);
+    }
   };
 
   // Certificates State
@@ -525,117 +529,30 @@ export default function StudentDashboard() {
       {activePortalTab === "assigned" && (
         <div className="space-y-4">
           
-          {/* ═══════ HERO BANNER (MATCHES USER SCREENSHOT) ═══════ */}
-          <div className="bg-gradient-to-br from-[#1C2462] via-[#242A6B] to-[#151945] text-white rounded-2xl p-4 sm:p-6 shadow-md relative overflow-hidden border border-indigo-900/40">
-            {/* Background subtle radial glow / decorative shapes */}
-            <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-radial from-white/5 to-transparent pointer-events-none" />
-            
-            <div className="flex items-start justify-between gap-3 relative z-10">
-              <div className="space-y-1">
-                <h1 className="text-lg sm:text-xl md:text-2xl font-bold tracking-tight text-white">
+          {/* ═══════ LIGHT CLEAN HEADER (OPTION 1) ═══════ */}
+          <div className="flex items-center justify-between py-1 bg-transparent">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/60 flex items-center justify-center shrink-0 shadow-2xs">
+                <ClipboardList className="w-5 h-5" />
+              </div>
+              <div>
+                <h1 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-tight">
                   Available & Scheduled Examinations
                 </h1>
-                <p className="text-xs sm:text-sm text-blue-200/80">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   Manage your upcoming and completed assessments
                 </p>
               </div>
-
-              {/* 3D Paper / Exam Illustration Badge */}
-              <div className="flex w-12 h-14 sm:w-14 sm:h-16 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 items-center justify-center shadow-lg shrink-0">
-                <div className="w-8 h-10 bg-white rounded-lg shadow-sm flex flex-col justify-between p-1.5">
-                  <div className="flex items-center gap-1">
-                    <div className="w-1.5 h-1.5 rounded-full bg-blue-600" />
-                    <div className="h-1 flex-1 bg-slate-200 rounded" />
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-600" />
-                    <div className="h-1 flex-1 bg-slate-200 rounded" />
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <div className="w-1.5 h-1.5 rounded-full bg-purple-600" />
-                    <div className="h-1 w-2/3 bg-slate-200 rounded" />
-                  </div>
-                </div>
-              </div>
             </div>
 
-            {/* 4 Stat Cards Grid inside the Hero Card */}
-            <div className="grid grid-cols-4 gap-2 sm:gap-3 mt-4 pt-4 border-t border-white/15 relative z-10">
-              {/* Total */}
-              <button
-                type="button" 
-                onClick={() => setStatusFilter("all")}
-                className={`bg-white dark:bg-slate-900/90 rounded-xl p-2 sm:p-2.5 text-center flex flex-col items-center justify-center shadow-xs border transition-all cursor-pointer ${
-                  statusFilter === "all" ? "ring-2 ring-blue-400 border-white" : "border-white/10 hover:border-white/40"
-                }`}
-              >
-                <div className="flex items-center gap-1 mb-0.5">
-                  <Calendar className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-                  <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-                    {examStats.total}
-                  </span>
-                </div>
-                <span className="text-[10px] sm:text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                  Total
-                </span>
-              </button>
-
-              {/* Upcoming */}
-              <button
-                type="button"
-                onClick={() => setStatusFilter("upcoming")}
-                className={`bg-white dark:bg-slate-900/90 rounded-xl p-2 sm:p-2.5 text-center flex flex-col items-center justify-center shadow-xs border transition-all cursor-pointer ${
-                  statusFilter === "upcoming" ? "ring-2 ring-emerald-400 border-white" : "border-white/10 hover:border-white/40"
-                }`}
-              >
-                <div className="flex items-center gap-1 mb-0.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                  <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-                    {examStats.upcoming}
-                  </span>
-                </div>
-                <span className="text-[10px] sm:text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                  Upcoming
-                </span>
-              </button>
-
-              {/* Ongoing */}
-              <button
-                type="button"
-                onClick={() => setStatusFilter("ongoing")}
-                className={`bg-white dark:bg-slate-900/90 rounded-xl p-2 sm:p-2.5 text-center flex flex-col items-center justify-center shadow-xs border transition-all cursor-pointer ${
-                  statusFilter === "ongoing" ? "ring-2 ring-blue-400 border-white" : "border-white/10 hover:border-white/40"
-                }`}
-              >
-                <div className="flex items-center gap-1 mb-0.5">
-                  <Play className="w-3 h-3 text-blue-500 fill-blue-500" />
-                  <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-                    {examStats.ongoing}
-                  </span>
-                </div>
-                <span className="text-[10px] sm:text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                  Ongoing
-                </span>
-              </button>
-
-              {/* Ended */}
-              <button
-                type="button"
-                onClick={() => setStatusFilter("ended")}
-                className={`bg-white dark:bg-slate-900/90 rounded-xl p-2 sm:p-2.5 text-center flex flex-col items-center justify-center shadow-xs border transition-all cursor-pointer ${
-                  statusFilter === "ended" ? "ring-2 ring-purple-400 border-white" : "border-white/10 hover:border-white/40"
-                }`}
-              >
-                <div className="flex items-center gap-1 mb-0.5">
-                  <CheckCircle className="w-3.5 h-3.5 text-purple-500" />
-                  <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-                    {examStats.ended}
-                  </span>
-                </div>
-                <span className="text-[10px] sm:text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                  Ended
-                </span>
-              </button>
+            {/* Total Count Badge */}
+            <div className="text-right shrink-0">
+              <div className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white">
+                {assignedExams.length} Total
+              </div>
+              <div className="text-[11px] font-medium text-slate-400 dark:text-slate-500">
+                Assessments
+              </div>
             </div>
           </div>
 
@@ -647,7 +564,7 @@ export default function StudentDashboard() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by code, title or instructor..."
+                placeholder="Search by code, title or organizer..."
                 className="w-full pl-9 pr-8 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C31] text-xs font-medium text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-2xs transition-all"
               />
               {searchQuery && (
@@ -668,12 +585,12 @@ export default function StudentDashboard() {
                 onClick={() => setShowFilterDropdown(!showFilterDropdown)}
                 className={`p-2.5 rounded-xl border transition-all cursor-pointer shadow-2xs flex items-center justify-center ${
                   statusFilter !== "all"
-                    ? "bg-indigo-50 dark:bg-indigo-950/60 border-indigo-300 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400"
+                    ? "bg-blue-50 dark:bg-blue-950/60 border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400"
                     : "bg-white dark:bg-[#111C31] border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
                 }`}
                 title="Filter Assessments"
               >
-                <Filter className="w-4 h-4" />
+                <SlidersHorizontal className="w-4 h-4" />
               </button>
 
               {showFilterDropdown && (
@@ -691,7 +608,7 @@ export default function StudentDashboard() {
                       }}
                       className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-between transition-colors cursor-pointer ${
                         statusFilter === filter
-                          ? "bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 font-bold"
+                          ? "bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 font-bold"
                           : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
                       }`}
                     >
@@ -764,28 +681,35 @@ export default function StudentDashboard() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredExams.map((exam) => {
+              {filteredExams.map((exam, idx) => {
                 const isLive = exam.status === "active";
                 const isEnded = exam.status === "ended";
                 const hasCompleted = exam.has_submitted;
+                const isEven = idx % 2 === 0;
 
                 return (
                   <div
                     key={exam.exam_id}
-                    className="bg-white dark:bg-[#111C31] border border-slate-200/90 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs space-y-3.5 hover:border-indigo-400/60 dark:hover:border-indigo-500/60 transition-all flex flex-col justify-between"
+                    className="bg-white dark:bg-[#111C31] border border-slate-200/90 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs space-y-3.5 hover:border-blue-400/60 dark:hover:border-blue-500/60 hover:shadow-sm transition-all flex flex-col justify-between"
                   >
                     <div className="space-y-3">
                       {/* Card Header: Icon + Code + Title + Instructor + Status */}
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-start gap-3 min-w-0 flex-1">
-                          {/* Purple Box Icon */}
-                          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-purple-50 dark:bg-purple-950/60 border border-purple-100 dark:border-purple-900/60 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+                          {/* Colored Document Icon Box (Alternating sky/purple) */}
+                          <div
+                            className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shrink-0 border ${
+                              isEven
+                                ? "bg-sky-50 dark:bg-sky-950/50 text-sky-600 dark:text-sky-400 border-sky-100 dark:border-sky-900/50"
+                                : "bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 border-purple-100 dark:border-purple-900/50"
+                            }`}
+                          >
                             <FileText className="w-5 h-5" />
                           </div>
 
                           {/* Text block */}
                           <div className="min-w-0 flex-1">
-                            <div className="text-[11px] font-mono font-bold tracking-wider text-indigo-600 dark:text-indigo-400 uppercase">
+                            <div className="text-[11px] font-mono font-bold tracking-wider text-blue-600 dark:text-blue-400 uppercase">
                               {exam.exam_code}
                             </div>
                             <h3 className="font-bold text-base sm:text-lg text-slate-900 dark:text-white truncate" title={exam.name}>
@@ -830,28 +754,28 @@ export default function StudentDashboard() {
                         </div>
                       </div>
 
-                      {/* Specs Row (3 Columns) */}
+                      {/* Specs Row: Duration, Questions, Total Marks */}
                       <div className="grid grid-cols-3 gap-2 py-2.5 border-y border-slate-100 dark:border-slate-800/80">
                         <div className="flex items-center gap-2">
                           <Clock className="w-4 h-4 text-purple-500 shrink-0" />
                           <div className="min-w-0">
-                            <div className="text-xs font-bold text-slate-900 dark:text-white">
-                              {exam.duration_minutes}m
-                            </div>
                             <div className="text-[10px] text-slate-400 font-medium">
                               Duration
+                            </div>
+                            <div className="text-xs font-bold text-slate-900 dark:text-white">
+                              {exam.duration_minutes}m
                             </div>
                           </div>
                         </div>
 
                         <div className="flex items-center gap-2">
-                          <Layers className="w-4 h-4 text-blue-500 shrink-0" />
+                          <HelpCircle className="w-4 h-4 text-blue-500 shrink-0" />
                           <div className="min-w-0">
-                            <div className="text-xs font-bold text-slate-900 dark:text-white">
-                              {exam.questions_count} Qs
-                            </div>
                             <div className="text-[10px] text-slate-400 font-medium">
                               Questions
+                            </div>
+                            <div className="text-xs font-bold text-slate-900 dark:text-white">
+                              {exam.questions_count}
                             </div>
                           </div>
                         </div>
@@ -859,44 +783,62 @@ export default function StudentDashboard() {
                         <div className="flex items-center gap-2">
                           <Trophy className="w-4 h-4 text-amber-500 shrink-0" />
                           <div className="min-w-0">
-                            <div className="text-xs font-bold text-slate-900 dark:text-white">
-                              {exam.total_marks}
-                            </div>
                             <div className="text-[10px] text-slate-400 font-medium">
                               Total Marks
+                            </div>
+                            <div className="text-xs font-bold text-slate-900 dark:text-white">
+                              {exam.total_marks}
                             </div>
                           </div>
                         </div>
                       </div>
 
-                      {/* Credentials Display Card (Matches Screenshot) */}
+                      {/* Passcode Credentials Box with Separate User & Pass Copy Buttons */}
                       {exam.credentials && (
-                        <div className="bg-[#F4F6FF] dark:bg-[#15203A] border border-[#E0E7FF] dark:border-indigo-900/60 rounded-xl p-3 space-y-1.5">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-900 dark:text-indigo-200">
-                              <Key className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 rotate-45" />
-                              <span>Your Passcode Credentials</span>
-                            </div>
+                        <div className="bg-[#F8FAFC] dark:bg-[#15203A] border border-slate-200/80 dark:border-slate-700/80 rounded-xl p-3 space-y-2">
+                          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+                            <Key className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 rotate-45" />
+                            <span>Your Passcode Credentials</span>
+                          </div>
+                          
+                          {/* Username row with copy button */}
+                          <div className="flex items-center justify-between text-xs gap-2">
+                            <span className="text-slate-500 dark:text-slate-400 font-medium shrink-0">User:</span>
+                            <span className="font-mono font-bold text-slate-800 dark:text-slate-200 truncate flex-1 text-right">
+                              {exam.credentials.username}
+                            </span>
                             <button
                               type="button"
-                              onClick={() => copyCredentials(exam.exam_id, exam.credentials)}
-                              className="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 p-1 rounded-md hover:bg-indigo-100/60 dark:hover:bg-indigo-900/50 transition-colors cursor-pointer"
-                              title="Copy User & Pass"
+                              onClick={() => copySingleCred("user", exam.exam_id, exam.credentials.username)}
+                              className="text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 p-1 rounded-md hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer shrink-0"
+                              title="Copy Username"
                             >
-                              {copiedExamId === exam.exam_id ? (
+                              {copiedUserExamId === exam.exam_id ? (
                                 <Check className="w-3.5 h-3.5 text-emerald-600" />
                               ) : (
                                 <Copy className="w-3.5 h-3.5" />
                               )}
                             </button>
                           </div>
-                          <div className="flex items-center justify-between text-xs font-mono">
-                            <span className="text-slate-500 dark:text-slate-400 font-sans">User:</span>
-                            <span className="font-bold text-slate-800 dark:text-slate-200">{exam.credentials.username}</span>
-                          </div>
-                          <div className="flex items-center justify-between text-xs font-mono">
-                            <span className="text-slate-500 dark:text-slate-400 font-sans">Pass:</span>
-                            <span className="font-bold text-indigo-600 dark:text-indigo-400">{exam.credentials.password}</span>
+
+                          {/* Password row with copy button */}
+                          <div className="flex items-center justify-between text-xs gap-2">
+                            <span className="text-slate-500 dark:text-slate-400 font-medium shrink-0">Pass:</span>
+                            <span className="font-mono font-bold text-blue-600 dark:text-blue-400 flex-1 text-right">
+                              {exam.credentials.password}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => copySingleCred("pass", exam.exam_id, exam.credentials.password)}
+                              className="text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 p-1 rounded-md hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer shrink-0"
+                              title="Copy Password"
+                            >
+                              {copiedPassExamId === exam.exam_id ? (
+                                <Check className="w-3.5 h-3.5 text-emerald-600" />
+                              ) : (
+                                <Copy className="w-3.5 h-3.5" />
+                              )}
+                            </button>
                           </div>
                         </div>
                       )}
@@ -929,15 +871,15 @@ export default function StudentDashboard() {
                       ) : isLive ? (
                         <a
                           href={isTeacher ? `/exam/${exam.exam_code}?mode=teacher_preview` : `/exam/${exam.exam_code}`}
-                          className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-md shadow-blue-600/20 active:scale-95 text-center"
+                          className="w-full py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-md shadow-blue-600/20 active:scale-95 text-center cursor-pointer"
                         >
                           <Play className="w-3.5 h-3.5 fill-current" />
                           <span>{isTeacher ? "Launch Simulator Preview" : "Enter Exam Room"}</span>
                           <ArrowRight className="w-3.5 h-3.5" />
                         </a>
                       ) : isEnded ? (
-                        <div className="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 text-center text-xs font-semibold text-slate-500 dark:text-slate-400 flex items-center justify-center gap-1.5 border border-slate-200/60 dark:border-slate-700/60">
-                          <AlertCircle className="w-3.5 h-3.5" />
+                        <div className="w-full py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-center text-xs font-medium text-slate-500 dark:text-slate-400 flex items-center justify-center gap-1.5 border border-slate-200/60 dark:border-slate-700/60">
+                          <Check className="w-3.5 h-3.5 text-slate-400" />
                           <span>Assessment Window Closed</span>
                         </div>
                       ) : (
