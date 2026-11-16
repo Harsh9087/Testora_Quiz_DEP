@@ -425,7 +425,19 @@ export default function TeacherDashboard() {
           return;
         }
 
-        if (d && (d.examName || d.examSubject || d.step1AiPrompt || (d.createStep && d.createStep > 1))) {
+        // Only restore draft if it has a real name, prompt, or advanced step
+        const isLegitDraft = Boolean(
+          (d && d.createStep && d.createStep > 1) ||
+          (d && d.examName && d.examName.trim().length > 0) ||
+          (d && d.step1AiPrompt && d.step1AiPrompt.trim().length > 0)
+        );
+        if (!isLegitDraft) {
+          localStorage.removeItem("testora_create_assessment_draft");
+          setIsDraftLoaded(true);
+          return;
+        }
+
+        if (d) {
           if (d.expiresAt) setDraftExpiresAt(d.expiresAt);
           if (d.examName !== undefined) setExamName(d.examName);
           if (d.examSubject !== undefined) setExamSubject(d.examSubject);
@@ -469,13 +481,16 @@ export default function TeacherDashboard() {
   useEffect(() => {
     if (!isDraftLoaded || typeof window === "undefined") return;
     const hasMeaningfulContent = Boolean(
-      examName.trim() ||
-      examSubject ||
-      step1AiPrompt.trim() ||
       createStep > 1 ||
-      (customPromptInstructions && customPromptInstructions.trim())
+      (examName && examName.trim().length > 0) ||
+      (step1AiPrompt && step1AiPrompt.trim().length > 0)
     );
-    if (!hasMeaningfulContent) return;
+    if (!hasMeaningfulContent) {
+      try {
+        localStorage.removeItem("testora_create_assessment_draft");
+      } catch {}
+      return;
+    }
 
     const handler = setTimeout(() => {
       const nowIso = new Date().toISOString();
@@ -554,14 +569,21 @@ export default function TeacherDashboard() {
 
   const activeDraftInfo = useMemo(() => {
     if (!mounted || typeof window === "undefined") return null;
-    const hasContent = Boolean(
-      examName.trim() ||
-      examSubject ||
-      step1AiPrompt.trim() ||
+    const hasMeaningfulContent = Boolean(
       createStep > 1 ||
-      (customPromptInstructions && customPromptInstructions.trim())
+      (examName && examName.trim().length > 0) ||
+      (step1AiPrompt && step1AiPrompt.trim().length > 0)
     );
-    if (!hasContent) return null;
+    if (!hasMeaningfulContent) return null;
+
+    // Never show draft if this exam already exists in the exams list
+    if (examName && examName.trim()) {
+      const cleanName = examName.trim().toLowerCase();
+      const alreadyPublished = exams.some(
+        (e) => e.name && e.name.trim().toLowerCase() === cleanName
+      );
+      if (alreadyPublished) return null;
+    }
 
     const expiryTime = draftExpiresAt 
       ? new Date(draftExpiresAt).getTime() 
@@ -710,6 +732,15 @@ export default function TeacherDashboard() {
       const res = await apiFetch(`/exams/${examId}/publish`, { token, method: "POST" });
       if (res.ok) {
         showToast("Assessment published live to eligible candidates!", "success");
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("testora_create_assessment_draft");
+        }
+        setExamName("");
+        setExamSubject("");
+        setStep1AiPrompt("");
+        setDraftSavedAt(null);
+        setDraftExpiresAt(null);
+        setCreateStep(1);
         fetchData();
       } else {
         if (res.status === 402) {
@@ -952,11 +983,16 @@ export default function TeacherDashboard() {
         if (typeof window !== "undefined") {
           localStorage.removeItem("testora_create_assessment_draft");
         }
+        setExamName("");
+        setExamSubject("");
+        setExamTopic("General");
+        setStep1AiPrompt("");
+        setCustomPromptInstructions("");
         setDraftSavedAt(null);
+        setDraftExpiresAt(null);
         setIsDraftRestored(false);
         setCreateStep(1);
         setExpandedStep(1);
-        setExamName("");
         setActiveSectionTab("exams");
         if (typeof window !== "undefined") {
           window.location.hash = "exams";
