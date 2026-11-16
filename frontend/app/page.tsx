@@ -52,10 +52,13 @@ import {
   Wand2,
   ListChecks,
   Share2,
+  Sun,
+  Moon,
+  Bot,
 } from "lucide-react";
 import { useAuthStore } from "../store/authStore";
 import { apiFetch, getApiBase } from "../lib/api";
-import ThemeToggle from "../components/ThemeToggle";
+import ThemeToggle, { applyThemePreference } from "../components/ThemeToggle";
 import AppLogo from "../components/AppLogo";
 import AIAgentGuideWidget from "../components/AIAgentGuideWidget";
 import PromoDashboardPlayer from "../components/PromoDashboardPlayer";
@@ -130,6 +133,19 @@ export default function UnifiedHomePage() {
 
   // Mobile navbar open state
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [themeMode, setThemeMode] = useState<"light" | "dark">("light");
+
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      const isDark = document.documentElement.classList.contains("dark") || localStorage.getItem("theme_mode") === "dark";
+      setThemeMode(isDark ? "dark" : "light");
+    }
+    const onThemeChanged = (e: any) => {
+      if (e.detail?.mode) setThemeMode(e.detail.mode);
+    };
+    window.addEventListener("testora_theme_changed", onThemeChanged);
+    return () => window.removeEventListener("testora_theme_changed", onThemeChanged);
+  }, []);
 
   // User profile dropdown menu in navbar
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -745,133 +761,296 @@ export default function UnifiedHomePage() {
                 </div>
               </div>
             )}
-            {/* Mobile PWA Install Button */}
+            {/* ═══════ HERO MINI BANNER CARD (PREMIUM REDESIGN) ═══════ */}
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white p-3.5 sm:p-4 shadow-md">
+              <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-radial from-white/10 to-transparent pointer-events-none" />
+              <div className="flex items-center justify-between gap-3 relative z-10">
+                <div className="space-y-1.5 min-w-0">
+                  <div>
+                    <h4 className="text-sm sm:text-base font-extrabold tracking-tight text-white leading-tight">
+                      TestoraQuiz
+                    </h4>
+                    <p className="text-[11px] text-blue-100 font-medium">
+                      AI-Powered Assessment Platform
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/15 backdrop-blur-xs text-[10px] font-bold text-white">
+                      <CheckCircle2 className="w-2.5 h-2.5 text-blue-200" />
+                      <span>Create Tests</span>
+                    </span>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/15 backdrop-blur-xs text-[10px] font-bold text-white">
+                      <BarChart3 className="w-2.5 h-2.5 text-indigo-200" />
+                      <span>Assess</span>
+                    </span>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/15 backdrop-blur-xs text-[10px] font-bold text-white">
+                      <Sparkles className="w-2.5 h-2.5 text-amber-300" />
+                      <span>Analyze</span>
+                    </span>
+                  </div>
+                </div>
+
+                {/* 3D Laptop with Cap Graphic */}
+                <div className="shrink-0 flex items-center justify-center">
+                  <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-2xl bg-white/15 backdrop-blur-md border border-white/25 flex flex-col items-center justify-center shadow-lg relative">
+                    <GraduationCap className="w-6 h-6 text-amber-300 drop-shadow" />
+                    <div className="flex items-end gap-1 mt-1">
+                      <div className="w-1.5 h-2 bg-blue-300 rounded-xs" />
+                      <div className="w-1.5 h-3.5 bg-white rounded-xs" />
+                      <div className="w-1.5 h-2 bg-amber-300 rounded-xs" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ═══════ INSTALL MOBILE APP CARD ═══════ */}
             <button
               type="button"
               onClick={() => {
                 setMobileMenuOpen(false);
                 window.dispatchEvent(new CustomEvent('open-install-pwa'));
               }}
-              className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 font-bold cursor-pointer"
+              className="w-full flex items-center justify-between p-2.5 rounded-2xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-900/60 text-blue-700 dark:text-blue-300 hover:bg-blue-100/70 transition-all cursor-pointer shadow-2xs group"
             >
-              <span className="flex items-center gap-2">
-                <Smartphone className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                <span>Install Mobile App (Android &amp; iOS)</span>
-              </span>
-              <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-blue-600 text-white">
-                App
-              </span>
+              <div className="flex items-center gap-2.5">
+                <Smartphone className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                <span className="text-xs font-bold">Install Mobile App (Android &amp; iOS)</span>
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <span className="text-[10px] uppercase font-extrabold tracking-wider px-2 py-0.5 rounded-full bg-blue-600 text-white">
+                  App
+                </span>
+                <ChevronRight className="w-4 h-4 text-blue-400 group-hover:translate-x-0.5 transition-transform" />
+              </div>
             </button>
 
-            <button
-              type="button"
-              onClick={() => {
-                setMobileMenuOpen(false);
-                scrollTo("portals");
-              }}
-              className="block w-full text-left px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
-            >
-              Portals (Teacher &amp; Student)
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setMobileMenuOpen(false);
-                scrollTo("mock-tests");
-              }}
-              className="block w-full text-left px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer flex items-center justify-between"
-            >
-              <span>Mock Test Library</span>
-              <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold">
-                100% Free
-              </span>
-            </button>
-            <Link
-              href="/dashboard/study-material"
-              onClick={() => setMobileMenuOpen(false)}
-              className="w-full text-left px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer flex items-center justify-between"
-            >
-              <span>Study Material</span>
-              <span className="px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 text-[10px] font-bold">
-                New
-              </span>
-            </Link>
-            <button
-              type="button"
-              onClick={() => {
-                setMobileMenuOpen(false);
-                scrollTo("certificates");
-              }}
-              className="block w-full text-left px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
-            >
-              Certificate Management
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setMobileMenuOpen(false);
-                scrollTo("form-builder");
-              }}
-              className="block w-full text-left px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer flex items-center justify-between"
-            >
-              <span>AI Form Studio</span>
-              <span className="px-2 py-0.5 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 text-white text-[10px] font-black tracking-wider">
-                AI
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setMobileMenuOpen(false);
-                scrollTo("capabilities");
-              }}
-              className="block w-full text-left px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
-            >
-              Platform Capabilities
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setMobileMenuOpen(false);
-                scrollTo("how-it-works");
-              }}
-              className="block w-full text-left px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
-            >
-              How It Works
-            </button>
-            <button
-              type="button"
-              onClick={() => scrollTo("fdp-solutions")}
-              className="block w-full text-left px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
-            >
-              Institutions &amp; FDP Vouchers
-            </button>
-            <button
-              type="button"
-              onClick={() => scrollTo("pricing")}
-              className="block w-full text-left px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
-            >
-              Pricing &amp; Credits
-            </button>
-            <button
-              type="button"
-              onClick={() => scrollTo("faq")}
-              className="block w-full text-left px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
-            >
-              FAQ
-            </button>
+            {/* ═══════ NAVIGATION ITEMS LIST (8 ITEMS WITH SUBTITLES & ICONS) ═══════ */}
+            <div className="space-y-1 pt-1">
+              {/* 1. Portals */}
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  scrollTo("portals");
+                }}
+                className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors cursor-pointer group text-left"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                    <Users className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                      Portals
+                    </div>
+                    <div className="text-[10.5px] text-slate-500 dark:text-slate-400 truncate">
+                      Teacher &amp; Student Dashboards
+                    </div>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 transition-colors shrink-0" />
+              </button>
 
-            {/* Mobile Bottom Quick Actions */}
-            <div className="pt-2.5 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2">
+              {/* 2. Mock Test Library */}
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  scrollTo("mock-tests");
+                }}
+                className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors cursor-pointer group text-left"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                    <Layers className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                      Mock Test Library
+                    </div>
+                    <div className="text-[10.5px] text-slate-500 dark:text-slate-400 truncate">
+                      Practice with curated test series
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold">
+                    100% Free
+                  </span>
+                  <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 transition-colors" />
+                </div>
+              </button>
+
+              {/* 3. Study Material */}
+              <Link
+                href="/dashboard/study-material"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors cursor-pointer group text-left"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-8 h-8 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+                    <BookOpen className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                      Study Material
+                    </div>
+                    <div className="text-[10.5px] text-slate-500 dark:text-slate-400 truncate">
+                      DSA, Notes &amp; Company Resources
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className="px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 text-[10px] font-bold">
+                    New
+                  </span>
+                  <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 transition-colors" />
+                </div>
+              </Link>
+
+              {/* 4. Certificate Management */}
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  scrollTo("certificates");
+                }}
+                className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors cursor-pointer group text-left"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                    <Award className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                      Certificate Management
+                    </div>
+                    <div className="text-[10.5px] text-slate-500 dark:text-slate-400 truncate">
+                      Create, verify and manage certificates
+                    </div>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 transition-colors shrink-0" />
+              </button>
+
+              {/* 5. AI Form Studio */}
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  scrollTo("form-builder");
+                }}
+                className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors cursor-pointer group text-left"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                    <Bot className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                      AI Form Studio
+                    </div>
+                    <div className="text-[10.5px] text-slate-500 dark:text-slate-400 truncate">
+                      Generate forms &amp; assessments with AI
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className="px-2 py-0.5 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 text-white text-[10px] font-black tracking-wider">
+                    AI
+                  </span>
+                  <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 transition-colors" />
+                </div>
+              </button>
+
+              {/* 6. Institutions & FDP Vouchers */}
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  scrollTo("fdp-solutions");
+                }}
+                className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors cursor-pointer group text-left"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                    <Building2 className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                      Institutions &amp; FDP Vouchers
+                    </div>
+                    <div className="text-[10.5px] text-slate-500 dark:text-slate-400 truncate">
+                      For colleges, institutes &amp; faculty development
+                    </div>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 transition-colors shrink-0" />
+              </button>
+
+              {/* 7. Pricing & Credits */}
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  scrollTo("pricing");
+                }}
+                className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors cursor-pointer group text-left"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                    <Coins className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                      Pricing &amp; Credits
+                    </div>
+                    <div className="text-[10.5px] text-slate-500 dark:text-slate-400 truncate">
+                      Plans, credits and offers
+                    </div>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 transition-colors shrink-0" />
+              </button>
+
+              {/* 8. FAQ */}
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  scrollTo("faq");
+                }}
+                className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors cursor-pointer group text-left"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800/90 text-slate-600 dark:text-slate-400 flex items-center justify-center shrink-0">
+                    <HelpCircle className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                      FAQ
+                    </div>
+                    <div className="text-[10.5px] text-slate-500 dark:text-slate-400 truncate">
+                      Find answers to common questions
+                    </div>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 transition-colors shrink-0" />
+              </button>
+            </div>
+
+            {/* ═══════ MOBILE QUICK ACTIONS (ASK AI GUIDE & ENTER CODE) ═══════ */}
+            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200/80 dark:border-slate-800/80">
               <button
                 type="button"
                 onClick={() => {
                   setShowGuideWidget(true);
                   setMobileMenuOpen(false);
                 }}
-                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-purple-600 text-white text-xs font-bold"
+                className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-xs font-bold shadow-xs active:scale-95 transition-all cursor-pointer"
               >
-                <Sparkles className="w-3.5 h-3.5" />
+                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
                 <span>Ask AI Guide</span>
               </button>
               <button
@@ -880,28 +1059,62 @@ export default function UnifiedHomePage() {
                   setShowCodeModal(true);
                   setMobileMenuOpen(false);
                 }}
-                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold"
+                className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs active:scale-95 transition-all cursor-pointer"
               >
                 <KeyRound className="w-3.5 h-3.5" />
                 <span>Enter Code</span>
               </button>
             </div>
 
-            {/* Mobile Theme Toggle Row (Since theme toggle is hidden from top navbar on mobile mode) */}
-            <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-100/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/60">
-              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                Appearance (Light / Dark)
-              </span>
-              <ThemeToggle className="h-8 w-8 rounded-lg border border-slate-200 dark:border-slate-700" />
+            {/* ═══════ APPEARANCE (LIGHT / DARK) SEGMENTED SWITCH ═══════ */}
+            <div className="flex items-center justify-between p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800/80">
+              <div className="flex items-center gap-2">
+                <Moon className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                  Appearance
+                </span>
+              </div>
+              <div className="flex items-center p-0.5 rounded-xl bg-slate-200/70 dark:bg-slate-800 border border-slate-300/60 dark:border-slate-700">
+                <button
+                  type="button"
+                  onClick={() => {
+                    applyThemePreference("light");
+                    setThemeMode("light");
+                  }}
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    themeMode === "light"
+                      ? "bg-white text-blue-600 shadow-2xs"
+                      : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                  }`}
+                >
+                  <Sun className="w-3.5 h-3.5 text-amber-500" />
+                  <span>Light</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    applyThemePreference("dark");
+                    setThemeMode("dark");
+                  }}
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    themeMode === "dark"
+                      ? "bg-slate-900 text-blue-400 shadow-2xs"
+                      : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                  }`}
+                >
+                  <Moon className="w-3.5 h-3.5 text-blue-400" />
+                  <span>Dark</span>
+                </button>
+              </div>
             </div>
 
-            {/* If not logged in on mobile, show Get Started Free button full-width */}
+            {/* ═══════ GET STARTED FREE BUTTON ═══════ */}
             {(!mounted || !token) && (
-              <div className="pt-2">
+              <div className="pt-1">
                 <Link
                   href="/login?mode=signup"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#2563EB] text-white text-xs font-bold shadow-sm"
+                  className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold shadow-sm active:scale-95 transition-all cursor-pointer"
                 >
                   <span>Get Started Free</span>
                   <ArrowRight className="w-3.5 h-3.5" />
