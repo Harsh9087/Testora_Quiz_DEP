@@ -634,16 +634,17 @@ def get_exam_info(
     settings_dict = json.loads(exam.settings_json) if exam.settings_json else {}
 
     student_questions = []
-    for q in questions:
+    for idx, q in enumerate(questions):
+        q_id = q.get("id") or str(q.get("question_id", f"q_{idx+1}"))
         opts = list(q.get("options")) if (q.get("options") and isinstance(q.get("options"), list)) else q.get("options")
         # Deterministic option shuffling per candidate if enabled
         if settings_dict.get("shuffle_options") and isinstance(opts, list):
             import random
-            opt_rng = random.Random(f"{sub.id}_{q['id']}")
+            opt_rng = random.Random(f"{sub.id}_{q_id}")
             opt_rng.shuffle(opts)
 
         student_questions.append({
-            "id": q.get("id") or str(q.get("question_id", "q")),
+            "id": q_id,
             "question_text": q.get("question_text") or q.get("question", "Question"),
             "question_type": q.get("question_type") or q.get("type", "mcq"),
             "options": opts,
@@ -652,8 +653,10 @@ def get_exam_info(
             "code_language": q.get("code_language")
         })
 
-    # Deterministic question order shuffling per candidate if enabled
-    if settings_dict.get("shuffle_questions") and student_questions:
+    # Deterministic question order shuffling per candidate (default: True for anti-cheating protection)
+    # Allows each student to receive a unique randomized question sequence, preventing side-by-side copying
+    should_shuffle_questions = settings_dict.get("shuffle_questions") if "shuffle_questions" in settings_dict else True
+    if should_shuffle_questions and student_questions:
         import random
         q_rng = random.Random(sub.id)
         q_rng.shuffle(student_questions)
@@ -969,7 +972,28 @@ def create_teacher_preview_session(
     }
     sim_token = jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
     
-    questions = json.loads(exam.questions_json) if exam.questions_json else []
+    raw_questions = json.loads(exam.questions_json) if exam.questions_json else []
+    settings_dict = json.loads(exam.settings_json) if exam.settings_json else {}
+
+    questions = []
+    for idx, q in enumerate(raw_questions):
+        q_id = q.get("id") or str(q.get("question_id", f"q_{idx+1}"))
+        questions.append({
+            "id": q_id,
+            "question_text": q.get("question_text") or q.get("question", "Question"),
+            "question_type": q.get("question_type") or q.get("type", "mcq"),
+            "options": list(q.get("options")) if (q.get("options") and isinstance(q.get("options"), list)) else q.get("options"),
+            "marks": q.get("marks", 1),
+            "code_snippet": q.get("code_snippet"),
+            "code_language": q.get("code_language")
+        })
+
+    # In Teacher Sandbox Simulation, also randomize order so teacher can preview the student shuffle experience
+    should_shuffle_questions = settings_dict.get("shuffle_questions") if "shuffle_questions" in settings_dict else True
+    if should_shuffle_questions and questions:
+        import random
+        sim_rng = random.Random(sim_token)
+        sim_rng.shuffle(questions)
     
     return {
         "session_token": sim_token,

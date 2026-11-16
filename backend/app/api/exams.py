@@ -435,7 +435,8 @@ def generate_exam_from_kb(
             is_published=False,
             is_paid=False,
             blueprint_json=json.dumps(req.blueprint) if req.blueprint else None,
-            questions_json=json.dumps(compiled)
+            questions_json=json.dumps(compiled),
+            settings_json=json.dumps({"shuffle_questions": True, "shuffle_options": False})
         )
         db.add(exam)
         db.flush()
@@ -648,7 +649,7 @@ def create_exam(
         exam_code=exam_code,
         blueprint_json=json.dumps([s.model_dump() for s in exam_in.blueprint]) if exam_in.blueprint else None,
         questions_json=json.dumps(compiled_questions),
-        settings_json=json.dumps(exam_in.settings or {})
+        settings_json=json.dumps({**(exam_in.settings or {}), "shuffle_questions": (exam_in.settings or {}).get("shuffle_questions", True)})
     )
     db.add(exam)
     db.commit()

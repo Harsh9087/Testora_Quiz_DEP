@@ -649,14 +649,15 @@ export default function PreExamInstructionsPage() {
           <div className="p-4 rounded-xl bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/40 space-y-2 text-xs leading-relaxed text-rose-900 dark:text-rose-200">
             <div className="font-bold text-sm flex items-center gap-2 text-rose-700 dark:text-rose-300">
               <AlertTriangle className="h-4 w-4 shrink-0" />
-              Tab-Switch & Window Focus Policy (2-Strike Rule)
+              Tab-Switch &amp; Focus Integrity Policy (3 Warnings, 4th Auto-Submits)
             </div>
             <p>
-              This assessment enforces strict automated window proctoring:
+              This assessment enforces strict automated window proctoring and sequence anti-cheat protection:
             </p>
             <ul className="list-disc list-inside space-y-1 pl-1">
-              <li><b>1st Tab Switch / Window Blur:</b> A prominent warning modal appears on your screen, and 1 violation strike is recorded on your proctoring log.</li>
-              <li><b>2nd Tab Switch:</b> Your examination will be <b>IMMEDIATELY AUTO-SUBMITTED</b> by the server for violation of examination conduct rules.</li>
+              <li><b>Dynamic Question Sequence:</b> Questions are randomly shuffled per candidate to ensure anti-cheating integrity and fair assessment.</li>
+              <li><b>1st, 2nd &amp; 3rd Tab Switch / Blur:</b> A warning modal appears on your screen and records a violation strike on the proctoring log.</li>
+              <li><b>4th Tab Switch:</b> The examination will be <b>IMMEDIATELY AUTO-SUBMITTED</b> by the server for violation of examination conduct rules.</li>
               <li>Do NOT switch tabs, minimize the browser, open secondary windows, or use split-screen mode during the exam.</li>
               <li>Stay in Fullscreen mode throughout the test for optimal focus.</li>
             </ul>

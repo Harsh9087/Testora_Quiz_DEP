@@ -60,6 +60,9 @@ export default function ExamHeaderHUD({
           <div className="flex items-center gap-1.5 sm:gap-2 font-semibold truncate">
             <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-600 dark:text-amber-400 shrink-0" />
             <span className="truncate">Teacher Sandbox Simulation Mode</span>
+            <span className="hidden sm:inline-flex items-center gap-1 ml-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-300/80 dark:border-blue-800">
+              Anti-Cheat Active • Randomized Question Sequence
+            </span>
           </div>
           {onExitSimulation && (
             <button
