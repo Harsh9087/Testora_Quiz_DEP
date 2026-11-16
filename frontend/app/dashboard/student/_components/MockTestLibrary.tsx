@@ -645,7 +645,7 @@ export default function MockTestLibrary() {
       </div>
 
       {/* ═══════ 2. DYNAMIC CATEGORY NAVIGATION (SECTION 2: HIDE EMPTY) ═══════ */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none text-xs">
+      <div id="mock-tests-category-filters" className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none text-xs">
         {categoryPills.map((pill) => (
           <button
             key={pill.id}
