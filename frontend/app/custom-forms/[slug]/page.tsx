@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { 
   Sparkles, 
   CheckCircle2, 
@@ -12,7 +12,9 @@ import {
   HelpCircle,
   ShieldCheck,
   FileText,
-  ImageIcon
+  ImageIcon,
+  GraduationCap,
+  ArrowRight
 } from "lucide-react";
 import { API_V1 } from "../../../lib/api";
 import ThemeToggle from "../../../components/ThemeToggle";
@@ -46,6 +48,7 @@ interface CustomFormMeta {
 }
 
 export default function PublicCustomFormPage() {
+  const router = useRouter();
   const params = useParams();
   const slug = params?.slug as string;
 
@@ -58,6 +61,19 @@ export default function PublicCustomFormPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submittedSuccess, setSubmittedSuccess] = useState(false);
+  const [countdown, setCountdown] = useState(3);
+
+  useEffect(() => {
+    if (!submittedSuccess) return;
+    if (countdown <= 0) {
+      router.push("/dashboard/student");
+      return;
+    }
+    const timer = setTimeout(() => {
+      setCountdown((prev) => prev - 1);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [submittedSuccess, countdown, router]);
 
   useEffect(() => {
     if (!slug) return;
@@ -142,6 +158,7 @@ export default function PublicCustomFormPage() {
       });
 
       if (res.ok) {
+        setCountdown(3);
         setSubmittedSuccess(true);
       } else {
         const err = await res.json().catch(() => ({}));
@@ -213,15 +230,37 @@ export default function PublicCustomFormPage() {
             <p className={`text-xs ${theme.mutedTextColor}`}>
               Thank you for taking the time to complete this form.
             </p>
-            <button
-              onClick={() => {
-                setSubmittedSuccess(false);
-                setResponses({});
-              }}
-              className={`text-xs font-semibold ${theme.accentText} hover:underline cursor-pointer`}
-            >
-              Submit another response
-            </button>
+
+            {/* Direct Student Portal CTA & Auto Redirect Indicator */}
+            <div className="pt-2 space-y-3">
+              <button
+                type="button"
+                onClick={() => router.push("/dashboard/student")}
+                className="w-full py-3.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 active:scale-[0.98] transition-all cursor-pointer"
+              >
+                <GraduationCap className="w-5 h-5" />
+                <span>Go to Student Portal Now</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+
+              <div className="flex items-center justify-between text-xs px-1">
+                <span className={theme.mutedTextColor}>
+                  Redirecting to portal in{" "}
+                  <strong className="text-blue-600 dark:text-blue-400 font-bold">{countdown}s</strong>...
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSubmittedSuccess(false);
+                    setCountdown(3);
+                    setResponses({});
+                  }}
+                  className={`font-semibold ${theme.accentText} hover:underline cursor-pointer`}
+                >
+                  Submit another response
+                </button>
+              </div>
+            </div>
           </div>
         ) : (
           /* Form Fill Container */
