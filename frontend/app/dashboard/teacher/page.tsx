@@ -997,9 +997,17 @@ export default function TeacherDashboard() {
         setIsDraftRestored(false);
         setCreateStep(1);
         setExpandedStep(1);
-        setActiveSectionTab("exams");
+
+        // Clean up URL and navigate immediately to the Main Dashboard overview
         if (typeof window !== "undefined") {
-          window.location.hash = "exams";
+          window.history.pushState(null, "", "/dashboard/teacher");
+        }
+        setActiveSectionTab("overview");
+        router.replace("/dashboard/teacher");
+        window.dispatchEvent(new CustomEvent("switch-tab", { detail: "overview" }));
+        window.dispatchEvent(new CustomEvent("refresh-sidebar-stats"));
+        if (typeof window !== "undefined") {
+          window.scrollTo({ top: 0, behavior: "smooth" });
         }
         fetchData();
       } else {

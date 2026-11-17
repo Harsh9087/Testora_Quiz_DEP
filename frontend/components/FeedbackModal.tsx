@@ -343,8 +343,7 @@ export default function FeedbackModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 overflow-y-auto overscroll-contain p-0 sm:p-5 bg-slate-950/80"
-      style={{ WebkitOverflowScrolling: "touch" }}
+      className="fixed inset-0 z-50 overflow-y-auto p-0 sm:p-5 bg-slate-950/80"
       onClick={handleAttemptClose}
     >
       <div className="min-h-full flex items-end sm:items-center justify-center">

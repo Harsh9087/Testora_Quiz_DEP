@@ -688,7 +688,7 @@ export default function UnifiedHomePage() {
             />
 
             {/* Sliding Drawer Container */}
-            <div className="fixed top-0 left-0 bottom-0 z-50 w-[300px] xs:w-[320px] max-w-[82vw] h-[100dvh] bg-white dark:bg-[#0A1124] border-r border-slate-200/90 dark:border-slate-800 shadow-2xl flex flex-col justify-between overflow-hidden animate-in slide-in-from-left duration-200">
+            <div className="fixed top-0 left-0 bottom-0 z-50 w-[280px] xs:w-[295px] max-w-[78vw] h-[100dvh] bg-white dark:bg-[#0A1124] border-r border-slate-200/90 dark:border-slate-800 shadow-2xl flex flex-col justify-between overflow-hidden animate-in slide-in-from-left duration-200">
               {/* Drawer Header with Logo & Close Button */}
               <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800 shrink-0">
                 <AppLogo variant="row" height={30} showBadge={false} />

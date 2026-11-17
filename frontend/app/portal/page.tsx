@@ -26,8 +26,21 @@ export default function PortalSelectionPage() {
   const [examCode, setExamCode] = useState("");
   const [codeError, setCodeError] = useState("");
 
-  const handleContinue = () => {
-    router.push(`/login?role=${selectedMode}`);
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("selected_login_role") as "teacher" | "student" | null;
+      if (saved === "student" || saved === "teacher") {
+        setSelectedMode(saved);
+      }
+    }
+  }, []);
+
+  const handleContinue = (modeOverride?: "teacher" | "student" | React.MouseEvent) => {
+    const finalMode = (typeof modeOverride === "string" ? modeOverride : null) || selectedMode;
+    if (typeof window !== "undefined") {
+      localStorage.setItem("selected_login_role", finalMode);
+    }
+    router.push(`/login?role=${finalMode}`);
   };
 
   const handleDirectExamSubmit = (e: React.FormEvent) => {
@@ -133,7 +146,11 @@ export default function PortalSelectionPage() {
             {/* 1. TEACHER MODE CARD */}
             <button
               type="button"
-              onClick={() => setSelectedMode("teacher")}
+              onClick={() => {
+                setSelectedMode("teacher");
+                if (typeof window !== "undefined") localStorage.setItem("selected_login_role", "teacher");
+              }}
+              onDoubleClick={() => handleContinue("teacher")}
               className={`group relative rounded-2xl p-2 sm:p-2.5 pb-3.5 text-left transition-all duration-200 cursor-pointer flex flex-col ${
                 selectedMode === "teacher"
                   ? "bg-white dark:bg-[#121E36] border-2 border-[#1765F5] shadow-lg shadow-blue-500/10 ring-2 ring-blue-500/10"
@@ -188,7 +205,11 @@ export default function PortalSelectionPage() {
             {/* 2. STUDENT MODE CARD */}
             <button
               type="button"
-              onClick={() => setSelectedMode("student")}
+              onClick={() => {
+                setSelectedMode("student");
+                if (typeof window !== "undefined") localStorage.setItem("selected_login_role", "student");
+              }}
+              onDoubleClick={() => handleContinue("student")}
               className={`group relative rounded-2xl p-2 sm:p-2.5 pb-3.5 text-left transition-all duration-200 cursor-pointer flex flex-col ${
                 selectedMode === "student"
                   ? "bg-white dark:bg-[#121E36] border-2 border-[#1765F5] shadow-lg shadow-blue-500/10 ring-2 ring-blue-500/10"

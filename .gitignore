@@ -41,3 +41,7 @@ client_secret*.json
 *.tsbuildinfo
 
 scratch/
+
+*.tar.gz
+*.zip
+

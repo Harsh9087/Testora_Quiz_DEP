@@ -454,14 +454,14 @@ export default function DashboardLayout({
   }, [mounted, token, router]);
 
   useEffect(() => {
-    const storedRole = typeof window !== "undefined" ? localStorage.getItem("role") : null;
-    const activeRole = role || storedRole;
-    if (mounted && activeRole === "student" && pathname?.startsWith("/dashboard/teacher")) {
-      if (storedRole === "teacher" || storedRole === "super_admin" || storedRole === "inst_admin") {
-        useAuthStore.getState().syncFromStorage();
-        return;
-      }
+    if (!mounted) return;
+    const effectiveRole = role || (typeof window !== "undefined" ? (localStorage.getItem("role") || localStorage.getItem("selected_login_role")) : null);
+    if (!effectiveRole) return;
+
+    if (effectiveRole === "student" && pathname?.startsWith("/dashboard/teacher")) {
       router.replace("/dashboard/student");
+    } else if ((effectiveRole === "teacher" || effectiveRole === "inst_admin" || effectiveRole === "super_admin") && pathname === "/dashboard/student") {
+      router.replace(effectiveRole === "teacher" ? "/dashboard/teacher" : "/admin");
     }
   }, [mounted, role, pathname, router]);
 

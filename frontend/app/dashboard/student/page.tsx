@@ -254,9 +254,10 @@ export default function StudentDashboard() {
     let ended = 0;
 
     assignedExams.forEach((exam) => {
-      if (exam.status === "active" && !exam.has_submitted) {
+      const isSub = exam.has_submitted || exam.attempt_status === "submitted" || exam.attempt_status === "auto_submitted";
+      if (!isSub && (exam.status === "active" || exam.status === "ongoing" || exam.status === "live")) {
         ongoing++;
-      } else if (exam.status === "scheduled") {
+      } else if (!isSub && (exam.status === "scheduled" || exam.status === "upcoming")) {
         upcoming++;
       } else {
         ended++;
@@ -278,14 +279,16 @@ export default function StudentDashboard() {
 
       if (!matchesSearch) return false;
 
+      const isSub = exam.has_submitted || exam.attempt_status === "submitted" || exam.attempt_status === "auto_submitted";
+
       if (statusFilter === "ongoing") {
-        return exam.status === "active" && !exam.has_submitted;
+        return !isSub && (exam.status === "active" || exam.status === "ongoing" || exam.status === "live");
       }
       if (statusFilter === "upcoming") {
-        return exam.status === "scheduled";
+        return !isSub && (exam.status === "scheduled" || exam.status === "upcoming");
       }
       if (statusFilter === "ended") {
-        return exam.status === "ended" || exam.has_submitted;
+        return isSub || exam.status === "ended" || exam.status === "closed" || exam.status === "completed";
       }
       return true;
     });

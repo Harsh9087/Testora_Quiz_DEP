@@ -84,43 +84,29 @@ function LoginContent() {
   const [forgotError, setForgotError] = useState<string | null>(null);
 
   const resolveDestination = (userRole: string) => {
-    if (userRole === "super_admin") {
-      if (targetDestination && targetDestination.startsWith("/") && !targetDestination.startsWith("/dashboard/student")) {
-        return targetDestination;
-      }
-      return "/admin";
-    }
-
-    if (userRole === "inst_admin") {
+    if (userRole === "super_admin" || userRole === "inst_admin") {
       if (targetDestination && targetDestination.startsWith("/admin")) {
         return targetDestination;
       }
       return "/admin";
     }
 
-    const savedRole = typeof window !== "undefined" ? localStorage.getItem("selected_login_role") : null;
-    const chosenRole = regRoleRef.current || regRole || savedRole;
-    if (chosenRole === "teacher") {
-      if (targetDestination && targetDestination.startsWith("/") && !targetDestination.startsWith("/dashboard/student") && !targetDestination.startsWith("/admin")) {
-        return targetDestination;
-      }
-      return "/dashboard/teacher";
-    }
-
-    if (chosenRole === "student") {
+    if (userRole === "student") {
       if (targetDestination && targetDestination.startsWith("/exam/")) {
         return targetDestination;
       }
       return "/dashboard/student";
     }
 
-    if (targetDestination) {
-      if (targetDestination === "student_dashboard") return "/dashboard/student";
-      if (targetDestination === "teacher_dashboard") return "/dashboard/teacher";
-      if (targetDestination.startsWith("/dashboard/teacher")) return "/dashboard/teacher";
-      if (targetDestination.startsWith("/")) return targetDestination;
+    if (userRole === "teacher") {
+      if (targetDestination && targetDestination.startsWith("/") && !targetDestination.startsWith("/dashboard/student") && !targetDestination.startsWith("/admin")) {
+        return targetDestination;
+      }
+      return "/dashboard/teacher";
     }
-    return chosenRole === "teacher" ? "/dashboard/teacher" : "/dashboard/student";
+
+    const effectiveRole = userRole || (typeof window !== "undefined" ? localStorage.getItem("selected_login_role") : null);
+    return effectiveRole === "student" ? "/dashboard/student" : "/dashboard/teacher";
   };
 
   useEffect(() => {
@@ -204,9 +190,9 @@ function LoginContent() {
         throw new Error(data.detail || "Google authentication failed");
       }
 
-      const assignedRole = data.role === "super_admin" 
-        ? "super_admin" 
-        : (selectedRole || data.role);
+      const assignedRole = (data.role === "super_admin" || data.role === "inst_admin")
+        ? data.role 
+        : (selectedRole || data.role || "teacher");
 
       if (data.workspace_id) {
         localStorage.setItem("workspaceId", data.workspace_id);
@@ -217,6 +203,7 @@ function LoginContent() {
       if (typeof window !== "undefined") {
         localStorage.setItem("role", assignedRole);
         localStorage.setItem("token", data.access_token);
+        localStorage.setItem("selected_login_role", assignedRole);
         window.scrollTo(0, 0);
       }
       router.push(resolveDestination(assignedRole));
@@ -324,9 +311,9 @@ function LoginContent() {
         throw new Error(data.detail || "Incorrect email or password");
       }
 
-      const assignedRole = data.role === "super_admin"
-        ? "super_admin"
-        : (selectedRole || data.role);
+      const assignedRole = (data.role === "super_admin" || data.role === "inst_admin")
+        ? data.role
+        : (selectedRole || data.role || "teacher");
 
       if (data.workspace_id) {
         localStorage.setItem("workspaceId", data.workspace_id);
@@ -337,6 +324,7 @@ function LoginContent() {
       if (typeof window !== "undefined") {
         localStorage.setItem("role", assignedRole);
         localStorage.setItem("token", data.access_token);
+        localStorage.setItem("selected_login_role", assignedRole);
         window.scrollTo(0, 0);
       }
       router.push(resolveDestination(assignedRole));
@@ -390,14 +378,15 @@ function LoginContent() {
         localStorage.setItem("workspaceName", data.workspace_name || "Personal Workspace");
       }
 
-      const assignedRole = data.role === "super_admin"
-        ? "super_admin"
-        : (regRole || data.role);
+      const assignedRole = (data.role === "super_admin" || data.role === "inst_admin")
+        ? data.role
+        : (regRole || data.role || "teacher");
 
       setAuth(data.access_token, assignedRole, data.full_name, undefined, data.avatar_url);
       if (typeof window !== "undefined") {
         localStorage.setItem("role", assignedRole);
         localStorage.setItem("token", data.access_token);
+        localStorage.setItem("selected_login_role", assignedRole);
         window.scrollTo(0, 0);
       }
       router.push(resolveDestination(assignedRole));
@@ -795,7 +784,15 @@ function LoginContent() {
               {/* Step 1 Actions: Continue Button */}
               <button
                 type="button"
-                onClick={() => setCurrentStep(2)}
+                onClick={() => {
+                  regRoleRef.current = regRole;
+                  setTargetDestination(regRole === "teacher" ? "teacher_dashboard" : "student_dashboard");
+                  if (typeof window !== "undefined") {
+                    window.history.replaceState(null, "", `/login?role=${regRole}`);
+                    localStorage.setItem("selected_login_role", regRole);
+                  }
+                  setCurrentStep(2);
+                }}
                 className="w-full bg-[#1765F5] hover:bg-[#1253CE] text-white font-bold rounded-xl py-3 sm:py-3.5 text-xs sm:text-sm shadow-md shadow-blue-500/20 flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-[0.99]"
               >
                 <span>Continue to {authMode === "signup" ? "Account Details" : "Sign In"}</span>

@@ -13,13 +13,15 @@ export default function DashboardIndexPage() {
   }, [syncFromStorage]);
 
   useEffect(() => {
-    if (!token) {
+    const activeToken = token || (typeof window !== "undefined" ? localStorage.getItem("token") : null);
+    const activeRole = role || (typeof window !== "undefined" ? (localStorage.getItem("role") || localStorage.getItem("selected_login_role")) : null);
+    if (!activeToken) {
       router.replace("/login");
       return;
     }
-    if (role === "student") {
+    if (activeRole === "student") {
       router.replace("/dashboard/student");
-    } else if (role === "super_admin" || role === "inst_admin") {
+    } else if (activeRole === "super_admin" || activeRole === "inst_admin") {
       router.replace("/admin");
     } else {
       router.replace("/dashboard/teacher");

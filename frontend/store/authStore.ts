@@ -91,15 +91,23 @@ export const useAuthStore = create<AuthState>()(
           // Explicit manual user logout: purge storage and cookies
           localStorage.removeItem('token');
           localStorage.removeItem('role');
+          localStorage.removeItem('selected_login_role');
           localStorage.removeItem('fullName');
           localStorage.removeItem('institutionId');
           localStorage.removeItem('workspaceId');
           localStorage.removeItem('workspaceName');
           localStorage.removeItem('avatarUrl');
+          localStorage.removeItem('testora-quiz-auth');
 
           removeCookie('token');
           removeCookie('role');
+          removeCookie('selected_login_role');
           removeCookie('fullName');
+
+          // Revoke backend session & clear httpOnly refresh token cookie asynchronously
+          try {
+            fetch('/api/v1/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => {});
+          } catch {}
         }
         set({ token: null, role: null, fullName: null, institutionId: null, avatarUrl: null });
       },
