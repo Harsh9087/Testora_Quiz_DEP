@@ -361,9 +361,6 @@ export default function UnifiedHomePage() {
               className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer py-1 flex items-center gap-1"
             >
               <span>Study Material</span>
-              <span className="px-1.5 py-0.2 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 text-[9px] font-black uppercase tracking-wider">
-                New
-              </span>
             </Link>
             <button
               type="button"
@@ -943,9 +940,6 @@ export default function UnifiedHomePage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">
-                    <span className="px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950/90 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60 text-[9.5px] font-black">
-                      New
-                    </span>
                     <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-purple-500 transition-colors" />
                   </div>
                 </Link>
