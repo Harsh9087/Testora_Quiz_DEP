@@ -16,8 +16,6 @@ import {
   Cpu,
   Layers,
   Lock,
-  Volume2,
-  VolumeX,
   Film
 } from "lucide-react";
 
@@ -110,14 +108,7 @@ export default function PromoDashboardPlayer() {
     setIsPlaying(true);
   };
 
-  const toggleMute = () => {
-    if (videoRef.current) {
-      videoRef.current.muted = !videoRef.current.muted;
-      setIsMuted(videoRef.current.muted);
-    } else {
-      setIsMuted((prev) => !prev);
-    }
-  };
+
 
   // If a real MP4 video file is placed by the user, render video player with custom frame badges
   if (videoAvailable && !forcePreview) {
@@ -149,7 +140,7 @@ export default function PromoDashboardPlayer() {
             src="/videos/hero-section-video.mp4"
             autoPlay
             loop
-            muted={isMuted}
+            muted={true}
             playsInline
             onError={() => setVideoAvailable(false)}
             className="w-full h-full object-cover block"
@@ -157,26 +148,6 @@ export default function PromoDashboardPlayer() {
             <source src="/videos/hero-section-video.mp4" type="video/mp4" />
             Your browser does not support the video tag.
           </video>
-
-          {/* Bottom-Left Audio Toggle Control Button */}
-          <button
-            type="button"
-            onClick={toggleMute}
-            className="absolute bottom-3.5 sm:bottom-4 left-3.5 sm:left-4 z-20 inline-flex items-center gap-2 px-3 sm:px-3.5 py-1.5 rounded-full bg-black/65 hover:bg-black/85 backdrop-blur-md text-white text-xs font-medium border border-white/20 transition-all shadow-lg active:scale-95 cursor-pointer"
-            title={isMuted ? "Turn on sound" : "Turn off sound"}
-          >
-            {isMuted ? (
-              <>
-                <VolumeX className="w-3.5 h-3.5 text-slate-300" />
-                <span>Turn on sound</span>
-              </>
-            ) : (
-              <>
-                <Volume2 className="w-3.5 h-3.5 text-blue-400 animate-pulse" />
-                <span>Sound on</span>
-              </>
-            )}
-          </button>
         </div>
       </div>
     );
