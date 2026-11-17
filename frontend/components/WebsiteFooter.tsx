@@ -608,6 +608,16 @@ export default function WebsiteFooter({
                 <span>Terms</span>
               </Link>
 
+              {/* Developed by Dpramp.com */}
+              <a
+                href="https://dpramp.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-[11px] sm:text-xs shadow-md transition-all cursor-pointer"
+              >
+                <span>Developed by Dpramp.com</span>
+              </a>
+
               {/* Social Media Icons */}
               <div className="hidden sm:flex items-center gap-2 pl-2 border-l border-[#DCE5F2] dark:border-[#263957]">
                 <a
