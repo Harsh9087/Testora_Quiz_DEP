@@ -529,30 +529,128 @@ export default function StudentDashboard() {
       {activePortalTab === "assigned" && (
         <div className="space-y-4">
           
-          {/* ═══════ LIGHT CLEAN HEADER (OPTION 1) ═══════ */}
-          <div className="flex items-center justify-between py-1 bg-transparent">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/60 flex items-center justify-center shrink-0 shadow-2xs">
-                <ClipboardList className="w-5 h-5" />
-              </div>
-              <div>
-                <h1 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-tight">
-                  Available & Scheduled Examinations
+          {/* ═══════ INDIGO HERO BANNER WITH 4 CLICKABLE METRIC CARDS ═══════ */}
+          <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-[#172554] via-[#1E3A8A] to-[#1E1B4B] p-4 sm:p-6 text-white shadow-xl border border-indigo-700/40">
+            {/* Background glowing ambient light */}
+            <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-blue-500/20 blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-12 -left-12 w-48 h-48 rounded-full bg-indigo-500/20 blur-3xl pointer-events-none" />
+
+            {/* Top Row: Title, Subtitle & 3D Tilted Exam Sheet Illustration */}
+            <div className="flex items-start justify-between gap-3 relative z-10">
+              <div className="space-y-1 max-w-lg">
+                <h1 className="text-lg sm:text-2xl font-black tracking-tight text-white leading-tight">
+                  Available &amp; Scheduled Examinations
                 </h1>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
+                <p className="text-xs sm:text-sm text-indigo-200/90 font-medium">
                   Manage your upcoming and completed assessments
                 </p>
               </div>
+
+              {/* Tilted Floating Exam Document Illustration */}
+              <div className="shrink-0 hidden xs:flex items-center justify-center">
+                <div className="relative w-16 h-20 sm:w-20 sm:h-24 rounded-xl bg-white/95 dark:bg-slate-900/95 shadow-2xl border border-white/40 p-2 transform rotate-6 hover:rotate-0 transition-transform duration-300">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-1">
+                      <div className="w-2.5 h-2.5 rounded-full bg-indigo-600 flex items-center justify-center">
+                        <Check className="w-1.5 h-1.5 text-white stroke-[3]" />
+                      </div>
+                      <div className="h-1.5 w-7 bg-indigo-200 dark:bg-indigo-900 rounded-full" />
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-2.5 h-2.5 rounded-full bg-indigo-600 flex items-center justify-center">
+                        <Check className="w-1.5 h-1.5 text-white stroke-[3]" />
+                      </div>
+                      <div className="h-1.5 w-9 bg-slate-200 dark:bg-slate-700 rounded-full" />
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-2.5 h-2.5 rounded-full bg-indigo-600 flex items-center justify-center">
+                        <Check className="w-1.5 h-1.5 text-white stroke-[3]" />
+                      </div>
+                      <div className="h-1.5 w-6 bg-slate-200 dark:bg-slate-700 rounded-full" />
+                    </div>
+                    <div className="flex items-center gap-1 pt-0.5">
+                      <div className="w-2.5 h-2.5 rounded-full bg-indigo-300 flex items-center justify-center">
+                        <div className="w-1 h-1 rounded-full bg-indigo-700" />
+                      </div>
+                      <div className="h-1.5 w-8 bg-slate-200 dark:bg-slate-700 rounded-full" />
+                    </div>
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-gradient-to-tr from-amber-400 to-orange-500 shadow-md flex items-center justify-center text-[10px] font-black text-white">
+                    ★
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* Total Count Badge */}
-            <div className="text-right shrink-0">
-              <div className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white">
-                {assignedExams.length} Total
-              </div>
-              <div className="text-[11px] font-medium text-slate-400 dark:text-slate-500">
-                Assessments
-              </div>
+            {/* 4 Clickable Filter Cards Row inside Hero Banner */}
+            <div className="grid grid-cols-4 gap-2 sm:gap-3 mt-4 relative z-10">
+              {/* Card 1: Total */}
+              <button
+                type="button"
+                onClick={() => setStatusFilter("all")}
+                className={`p-2 sm:p-3 rounded-xl sm:rounded-2xl transition-all cursor-pointer flex flex-col items-center justify-center text-center shadow-xs ${
+                  statusFilter === "all"
+                    ? "bg-white text-slate-900 ring-2 ring-blue-400 shadow-md scale-[1.02]"
+                    : "bg-white/90 hover:bg-white text-slate-800 border border-white/30 backdrop-blur-md"
+                }`}
+              >
+                <div className="flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-600" />
+                  <span className="text-sm sm:text-lg font-black leading-none">{examStats.total}</span>
+                </div>
+                <span className="text-[10px] sm:text-xs font-bold text-slate-600 mt-1">Total</span>
+              </button>
+
+              {/* Card 2: Upcoming */}
+              <button
+                type="button"
+                onClick={() => setStatusFilter("upcoming")}
+                className={`p-2 sm:p-3 rounded-xl sm:rounded-2xl transition-all cursor-pointer flex flex-col items-center justify-center text-center shadow-xs ${
+                  statusFilter === "upcoming"
+                    ? "bg-white text-slate-900 ring-2 ring-emerald-400 shadow-md scale-[1.02]"
+                    : "bg-white/90 hover:bg-white text-slate-800 border border-white/30 backdrop-blur-md"
+                }`}
+              >
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />
+                  <span className="text-sm sm:text-lg font-black leading-none">{examStats.upcoming}</span>
+                </div>
+                <span className="text-[10px] sm:text-xs font-bold text-slate-600 mt-1">Upcoming</span>
+              </button>
+
+              {/* Card 3: Ongoing */}
+              <button
+                type="button"
+                onClick={() => setStatusFilter("ongoing")}
+                className={`p-2 sm:p-3 rounded-xl sm:rounded-2xl transition-all cursor-pointer flex flex-col items-center justify-center text-center shadow-xs ${
+                  statusFilter === "ongoing"
+                    ? "bg-white text-slate-900 ring-2 ring-blue-500 shadow-md scale-[1.02]"
+                    : "bg-white/90 hover:bg-white text-slate-800 border border-white/30 backdrop-blur-md"
+                }`}
+              >
+                <div className="flex items-center gap-1.5">
+                  <Play className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 fill-blue-600" />
+                  <span className="text-sm sm:text-lg font-black leading-none">{examStats.ongoing}</span>
+                </div>
+                <span className="text-[10px] sm:text-xs font-bold text-slate-600 mt-1">Ongoing</span>
+              </button>
+
+              {/* Card 4: Ended */}
+              <button
+                type="button"
+                onClick={() => setStatusFilter("ended")}
+                className={`p-2 sm:p-3 rounded-xl sm:rounded-2xl transition-all cursor-pointer flex flex-col items-center justify-center text-center shadow-xs ${
+                  statusFilter === "ended"
+                    ? "bg-white text-slate-900 ring-2 ring-purple-400 shadow-md scale-[1.02]"
+                    : "bg-white/90 hover:bg-white text-slate-800 border border-white/30 backdrop-blur-md"
+                }`}
+              >
+                <div className="flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-600" />
+                  <span className="text-sm sm:text-lg font-black leading-none">{examStats.ended}</span>
+                </div>
+                <span className="text-[10px] sm:text-xs font-bold text-slate-600 mt-1">Ended</span>
+              </button>
             </div>
           </div>
 
@@ -564,7 +662,7 @@ export default function StudentDashboard() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by code, title or organizer..."
+                placeholder="Search by code, title or instructor..."
                 className="w-full pl-9 pr-8 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C31] text-xs font-medium text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-2xs transition-all"
               />
               {searchQuery && (
@@ -754,16 +852,16 @@ export default function StudentDashboard() {
                         </div>
                       </div>
 
-                      {/* Specs Row: Duration, Questions, Total Marks */}
+                      {/* Specs Row: Duration, Questions, Total Marks (Value Top, Label Bottom) */}
                       <div className="grid grid-cols-3 gap-2 py-2.5 border-y border-slate-100 dark:border-slate-800/80">
                         <div className="flex items-center gap-2">
                           <Clock className="w-4 h-4 text-purple-500 shrink-0" />
                           <div className="min-w-0">
+                            <div className="text-xs font-bold text-slate-900 dark:text-white leading-tight">
+                              {exam.duration_minutes ? `${exam.duration_minutes}m` : "Untimed"}
+                            </div>
                             <div className="text-[10px] text-slate-400 font-medium">
                               Duration
-                            </div>
-                            <div className="text-xs font-bold text-slate-900 dark:text-white">
-                              {exam.duration_minutes}m
                             </div>
                           </div>
                         </div>
@@ -771,11 +869,11 @@ export default function StudentDashboard() {
                         <div className="flex items-center gap-2">
                           <HelpCircle className="w-4 h-4 text-blue-500 shrink-0" />
                           <div className="min-w-0">
+                            <div className="text-xs font-bold text-slate-900 dark:text-white leading-tight">
+                              {exam.questions_count ?? 0} Qs
+                            </div>
                             <div className="text-[10px] text-slate-400 font-medium">
                               Questions
-                            </div>
-                            <div className="text-xs font-bold text-slate-900 dark:text-white">
-                              {exam.questions_count}
                             </div>
                           </div>
                         </div>
@@ -783,11 +881,11 @@ export default function StudentDashboard() {
                         <div className="flex items-center gap-2">
                           <Trophy className="w-4 h-4 text-amber-500 shrink-0" />
                           <div className="min-w-0">
+                            <div className="text-xs font-bold text-slate-900 dark:text-white leading-tight">
+                              {exam.total_marks ?? 50}
+                            </div>
                             <div className="text-[10px] text-slate-400 font-medium">
                               Total Marks
-                            </div>
-                            <div className="text-xs font-bold text-slate-900 dark:text-white">
-                              {exam.total_marks}
                             </div>
                           </div>
                         </div>

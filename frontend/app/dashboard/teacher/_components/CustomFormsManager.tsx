@@ -520,6 +520,29 @@ export default function CustomFormsManager({ token }: CustomFormsManagerProps) {
     });
   };
 
+  const handleUpdateOption = (fieldIndex: number, optionIndex: number, newValue: string) => {
+    setBuilderFields((prev) => {
+      const copy = [...prev];
+      if (copy[fieldIndex].options) {
+        const oldOpt = copy[fieldIndex].options![optionIndex];
+        const nextOpts = [...copy[fieldIndex].options!];
+        nextOpts[optionIndex] = newValue;
+        copy[fieldIndex].options = nextOpts;
+
+        if (copy[fieldIndex].option_images && oldOpt in copy[fieldIndex].option_images!) {
+          const nextOptImages = { ...copy[fieldIndex].option_images };
+          const imgUrl = nextOptImages[oldOpt];
+          delete nextOptImages[oldOpt];
+          if (newValue) {
+            nextOptImages[newValue] = imgUrl;
+          }
+          copy[fieldIndex].option_images = nextOptImages;
+        }
+      }
+      return copy;
+    });
+  };
+
   const handleRemoveOption = (fieldIndex: number, optionIndex: number) => {
     setBuilderFields((prev) => {
       const copy = [...prev];
@@ -1432,10 +1455,10 @@ export default function CustomFormsManager({ token }: CustomFormsManagerProps) {
                                   className={`flex items-center justify-between gap-1.5 p-2 rounded-xl border text-xs transition-all ${
                                     hasOptImg 
                                       ? "bg-blue-50/50 dark:bg-blue-950/30 border-blue-300 dark:border-blue-800" 
-                                      : "bg-[#FAF8F5] dark:bg-[#201D1A] border-[#E5E0D8] dark:border-[#292524]"
+                                      : "bg-[#FAF8F5] dark:bg-[#201D1A] border-[#E5E0D8] dark:border-[#292524] focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500"
                                   }`}
                                 >
-                                  <div className="flex items-center gap-1.5 min-w-0">
+                                  <div className="flex items-center gap-1.5 min-w-0 flex-1">
                                     {hasOptImg ? (
                                       <img
                                         src={hasOptImg}
@@ -1445,7 +1468,13 @@ export default function CustomFormsManager({ token }: CustomFormsManagerProps) {
                                     ) : (
                                       <span className="w-2 h-2 rounded-full bg-stone-400 shrink-0" />
                                     )}
-                                    <span className="truncate font-medium">{opt}</span>
+                                    <input
+                                      type="text"
+                                      value={opt}
+                                      onChange={(e) => handleUpdateOption(idx, optIdx, e.target.value)}
+                                      className="w-full bg-transparent border-0 p-0 text-xs font-semibold text-stone-800 dark:text-stone-100 focus:outline-none placeholder-stone-400"
+                                      placeholder={`Option ${optIdx + 1}`}
+                                    />
                                   </div>
 
                                   <div className="flex items-center gap-1 shrink-0">

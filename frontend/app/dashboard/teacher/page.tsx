@@ -114,8 +114,12 @@ export default function TeacherDashboard() {
   const isOverview = activeSectionTab === "all" || activeSectionTab === "overview" || !activeSectionTab;
 
   useEffect(() => {
-    const activeRole = role || (typeof window !== "undefined" ? localStorage.getItem("role") : null);
+    const storedRole = typeof window !== "undefined" ? localStorage.getItem("role") : null;
+    const activeRole = role || storedRole;
     if (activeRole === "student") {
+      if (storedRole === "teacher" || storedRole === "super_admin" || storedRole === "inst_admin") {
+        return;
+      }
       router.replace("/dashboard/student");
     }
   }, [role, router]);
@@ -1960,7 +1964,7 @@ export default function TeacherDashboard() {
               onResumeDraft={() => switchSectionTab("create")}
               onDiscardDraft={handleClearDraft}
               exams={exams}
-              showCreateButton={false}
+              showCreateButton={true}
               title="Live Assessments"
               description="Manage and monitor your test sessions"
               onOpenCreate={() => switchSectionTab("create")}

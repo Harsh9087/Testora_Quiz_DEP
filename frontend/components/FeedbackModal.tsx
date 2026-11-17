@@ -343,13 +343,21 @@ export default function FeedbackModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/70 backdrop-blur-sm overflow-y-auto overscroll-contain animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 overflow-y-auto overscroll-contain p-0 sm:p-5 bg-slate-950/80"
+      style={{ WebkitOverflowScrolling: "touch" }}
       onClick={handleAttemptClose}
     >
-      <div
-        className="relative w-full max-w-xl max-h-[90vh] sm:max-h-[92vh] flex flex-col rounded-3xl bg-white dark:bg-[#0B132B] border border-slate-200/90 dark:border-slate-800 shadow-2xl overflow-hidden my-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="min-h-full flex items-end sm:items-center justify-center">
+        <div
+          className="relative w-full max-w-xl rounded-t-[28px] sm:rounded-3xl bg-white dark:bg-[#0B132B] border-t sm:border border-slate-200/90 dark:border-slate-800 shadow-2xl my-0 sm:my-8"
+          style={{ transform: "none", WebkitTransform: "none" }}
+          onClick={(e) => e.stopPropagation()}
+        >
+        {/* Mobile Drag Indicator */}
+        <div className="sm:hidden pt-2.5 pb-1 flex justify-center shrink-0">
+          <div className="w-10 h-1 bg-slate-300 dark:bg-slate-700 rounded-full" />
+        </div>
+
         {/* Modal Header */}
         <div className="px-5 sm:px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/60 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
@@ -419,7 +427,7 @@ export default function FeedbackModal({
         )}
 
         {/* Modal Body */}
-        <div className="overflow-y-auto px-5 sm:px-6 py-5 flex-1 space-y-4">
+        <div className="px-5 sm:px-6 py-5 space-y-4">
           {successCode ? (
             /* Success Confirmation Screen */
             <div className="py-6 sm:py-8 text-center space-y-5 animate-in zoom-in-95 duration-200">
@@ -492,7 +500,8 @@ export default function FeedbackModal({
                       placeholder="e.g. Dr. Jane Sharma"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2 text-[16px] sm:text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      style={{ fontSize: "16px" }}
+                      className="w-full h-11 pl-9 pr-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 leading-normal"
                     />
                   </div>
                 </div>
@@ -509,7 +518,8 @@ export default function FeedbackModal({
                       placeholder="e.g. jane@institution.edu"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2 text-[16px] sm:text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      style={{ fontSize: "16px" }}
+                      className="w-full h-11 pl-9 pr-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 leading-normal"
                     />
                   </div>
                 </div>
@@ -524,7 +534,7 @@ export default function FeedbackModal({
                   <select
                     value={userType}
                     onChange={(e) => setUserType(e.target.value)}
-                    className="w-full px-3 py-2 text-[16px] sm:text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full h-11 px-3 text-[16px] sm:text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     {USER_ROLES.map((r) => (
                       <option key={r.id} value={r.id}>
@@ -542,7 +552,7 @@ export default function FeedbackModal({
                     <select
                       value={severity}
                       onChange={(e) => setSeverity(e.target.value)}
-                      className="w-full px-3 py-2 text-[16px] sm:text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
+                      className="w-full h-11 px-3 text-[16px] sm:text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
                     >
                       <option value="Low">Low — Minor cosmetic issue</option>
                       <option value="Normal">Normal — Standard functional problem</option>
@@ -593,7 +603,8 @@ export default function FeedbackModal({
                   placeholder={activeConfig.titlePlaceholder}
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
-                  className="w-full px-3 py-2 text-[16px] sm:text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  style={{ fontSize: "16px" }}
+                  className="w-full h-11 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 leading-normal"
                 />
               </div>
 
@@ -613,7 +624,8 @@ export default function FeedbackModal({
                   placeholder={activeConfig.messagePlaceholder}
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  className="w-full px-3 py-2 text-[16px] sm:text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none leading-relaxed"
+                  style={{ fontSize: "16px" }}
+                  className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none leading-relaxed"
                 />
               </div>
 
@@ -698,6 +710,7 @@ export default function FeedbackModal({
               </div>
             </form>
           )}
+        </div>
         </div>
       </div>
     </div>

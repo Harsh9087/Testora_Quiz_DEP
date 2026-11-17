@@ -677,10 +677,34 @@ export default function UnifiedHomePage() {
           </div>
         </div>
 
-        {/* Mobile Dropdown Menu */}
+        {/* Mobile Off-Canvas Sliding Drawer (Compact Responsive Menu) */}
         {mobileMenuOpen && (
-          <div className="lg:hidden pt-3 pb-3 border-t border-slate-200 dark:border-slate-800 mt-2.5 space-y-2 text-xs font-semibold animate-in fade-in duration-150">
-            {/* If logged in on mobile, show User Account Card */}
+          <div className="lg:hidden">
+            {/* Backdrop Dimming Overlay */}
+            <div
+              className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs transition-opacity"
+              onClick={() => setMobileMenuOpen(false)}
+              aria-hidden="true"
+            />
+
+            {/* Sliding Drawer Container */}
+            <div className="fixed top-0 left-0 bottom-0 z-50 w-[300px] xs:w-[320px] max-w-[82vw] h-[100dvh] bg-white dark:bg-[#0A1124] border-r border-slate-200/90 dark:border-slate-800 shadow-2xl flex flex-col justify-between overflow-hidden animate-in slide-in-from-left duration-200">
+              {/* Drawer Header with Logo & Close Button */}
+              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800 shrink-0">
+                <AppLogo variant="row" height={30} showBadge={false} />
+                <button
+                  type="button"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                  aria-label="Close menu"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Drawer Scrollable Content */}
+              <div className="flex-1 overflow-y-auto px-3.5 py-3 space-y-2 text-xs font-semibold">
+                {/* If logged in on mobile, show User Account Card */}
             {mounted && token && (
               <div className="p-3 rounded-2xl bg-slate-100 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-2.5 mb-2">
                 <div className="flex items-center gap-3">
@@ -804,240 +828,297 @@ export default function UnifiedHomePage() {
               </div>
             </div>
 
-            {/* ═══════ INSTALL MOBILE APP CARD ═══════ */}
+            {/* ═══════ INSTALL MOBILE APP CARD (ULTRA PREMIUM) ═══════ */}
             <button
               type="button"
               onClick={() => {
                 setMobileMenuOpen(false);
                 window.dispatchEvent(new CustomEvent('open-install-pwa'));
               }}
-              className="w-full flex items-center justify-between p-2.5 rounded-2xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-900/60 text-blue-700 dark:text-blue-300 hover:bg-blue-100/70 transition-all cursor-pointer shadow-2xs group"
+              className="w-full flex items-center justify-between p-3 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white shadow-md shadow-blue-600/20 hover:shadow-lg hover:shadow-blue-600/30 transition-all cursor-pointer group relative overflow-hidden"
             >
-              <div className="flex items-center gap-2.5">
-                <Smartphone className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
-                <span className="text-xs font-bold">Install Mobile App (Android &amp; iOS)</span>
+              <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-white/10 to-transparent pointer-events-none" />
+              <div className="flex items-center gap-3 relative z-10 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center shrink-0">
+                  <Smartphone className="w-4.5 h-4.5 text-white" />
+                </div>
+                <div className="text-left min-w-0">
+                  <div className="text-xs font-black text-white tracking-tight flex items-center gap-1.5 truncate">
+                    <span>Install Mobile App</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  </div>
+                  <div className="text-[10.5px] text-blue-100 font-medium truncate">
+                    Fast CBT exams on Android &amp; iOS
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center gap-1.5 shrink-0">
-                <span className="text-[10px] uppercase font-extrabold tracking-wider px-2 py-0.5 rounded-full bg-blue-600 text-white">
-                  App
+              <div className="flex items-center gap-1 shrink-0 relative z-10">
+                <span className="text-[9.5px] uppercase font-black tracking-wider px-2 py-0.5 rounded-full bg-white text-blue-700 shadow-2xs">
+                  FREE APP
                 </span>
-                <ChevronRight className="w-4 h-4 text-blue-400 group-hover:translate-x-0.5 transition-transform" />
+                <ChevronRight className="w-4 h-4 text-white/80 group-hover:translate-x-0.5 transition-transform" />
               </div>
             </button>
 
-            {/* ═══════ NAVIGATION ITEMS LIST (8 ITEMS WITH SUBTITLES & ICONS) ═══════ */}
-            <div className="space-y-1 pt-1">
-              {/* 1. Portals */}
-              <button
-                type="button"
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  scrollTo("portals");
-                }}
-                className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors cursor-pointer group text-left"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
-                    <Users className="w-4 h-4" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                      Portals
-                    </div>
-                    <div className="text-[10.5px] text-slate-500 dark:text-slate-400 truncate">
-                      Teacher &amp; Student Dashboards
-                    </div>
-                  </div>
+            {/* ═══════ CATEGORIZED NAVIGATION ITEMS (PREMIUM CARDS) ═══════ */}
+            <div className="space-y-3 pt-1">
+              {/* Category 1: Workspaces & Practice */}
+              <div className="space-y-1">
+                <div className="px-2 py-0.5 text-[9.5px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                  Workspaces &amp; Practice
                 </div>
-                <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 transition-colors shrink-0" />
-              </button>
 
-              {/* 2. Mock Test Library */}
-              <button
-                type="button"
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  scrollTo("mock-tests");
-                }}
-                className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors cursor-pointer group text-left"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                    <Layers className="w-4 h-4" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                      Mock Test Library
+                {/* 1. Portals */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    scrollTo("portals");
+                  }}
+                  className="w-full flex items-center justify-between p-2.5 rounded-xl bg-slate-50/70 dark:bg-[#111C31]/70 border border-slate-200/70 dark:border-slate-800/80 hover:bg-blue-50/60 dark:hover:bg-blue-950/40 hover:border-blue-300 dark:hover:border-blue-800/60 transition-all cursor-pointer group text-left"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                      <Users className="w-4.5 h-4.5" />
                     </div>
-                    <div className="text-[10.5px] text-slate-500 dark:text-slate-400 truncate">
-                      Practice with curated test series
+                    <div className="min-w-0">
+                      <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                        Portals (Teacher &amp; Student)
+                      </div>
+                      <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                        Dedicated educator &amp; candidate dashboards
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold">
-                    100% Free
-                  </span>
-                  <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 transition-colors" />
-                </div>
-              </button>
+                  <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-blue-500 transition-colors shrink-0" />
+                </button>
 
-              {/* 3. Study Material */}
-              <Link
-                href="/dashboard/study-material"
-                onClick={() => setMobileMenuOpen(false)}
-                className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors cursor-pointer group text-left"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-8 h-8 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
-                    <BookOpen className="w-4 h-4" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                      Study Material
+                {/* 2. Mock Test Library */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    scrollTo("mock-tests");
+                  }}
+                  className="w-full flex items-center justify-between p-2.5 rounded-xl bg-slate-50/70 dark:bg-[#111C31]/70 border border-slate-200/70 dark:border-slate-800/80 hover:bg-emerald-50/60 dark:hover:bg-emerald-950/40 hover:border-emerald-300 dark:hover:border-emerald-800/60 transition-all cursor-pointer group text-left"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                      <Layers className="w-4.5 h-4.5" />
                     </div>
-                    <div className="text-[10.5px] text-slate-500 dark:text-slate-400 truncate">
-                      DSA, Notes &amp; Company Resources
+                    <div className="min-w-0">
+                      <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                        Mock Test Library
+                      </div>
+                      <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                        TCS, Wipro, Infosys &amp; Aptitude tests
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <span className="px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 text-[10px] font-bold">
-                    New
-                  </span>
-                  <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 transition-colors" />
-                </div>
-              </Link>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/90 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 text-[9.5px] font-black">
+                      100% Free
+                    </span>
+                    <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-emerald-500 transition-colors" />
+                  </div>
+                </button>
 
-              {/* 4. Certificate Management */}
-              <button
-                type="button"
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  scrollTo("certificates");
-                }}
-                className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors cursor-pointer group text-left"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-                    <Award className="w-4 h-4" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                      Certificate Management
+                {/* 3. Study Material */}
+                <Link
+                  href="/dashboard/study-material"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full flex items-center justify-between p-2.5 rounded-xl bg-slate-50/70 dark:bg-[#111C31]/70 border border-slate-200/70 dark:border-slate-800/80 hover:bg-purple-50/60 dark:hover:bg-purple-950/40 hover:border-purple-300 dark:hover:border-purple-800/60 transition-all cursor-pointer group text-left"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-xl bg-purple-100 dark:bg-purple-950/80 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                      <BookOpen className="w-4.5 h-4.5" />
                     </div>
-                    <div className="text-[10.5px] text-slate-500 dark:text-slate-400 truncate">
-                      Create, verify and manage certificates
+                    <div className="min-w-0">
+                      <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                        Study Material
+                      </div>
+                      <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                        DSA sheets, subject notes &amp; resources
+                      </div>
                     </div>
                   </div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 transition-colors shrink-0" />
-              </button>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className="px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950/90 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60 text-[9.5px] font-black">
+                      New
+                    </span>
+                    <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-purple-500 transition-colors" />
+                  </div>
+                </Link>
+              </div>
 
-              {/* 5. AI Form Studio */}
-              <button
-                type="button"
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  scrollTo("form-builder");
-                }}
-                className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors cursor-pointer group text-left"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
-                    <Bot className="w-4 h-4" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                      AI Form Studio
-                    </div>
-                    <div className="text-[10.5px] text-slate-500 dark:text-slate-400 truncate">
-                      Generate forms &amp; assessments with AI
-                    </div>
-                  </div>
+              {/* Category 2: AI & Credentialing */}
+              <div className="space-y-1">
+                <div className="px-2 py-0.5 text-[9.5px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                  AI &amp; Credentials
                 </div>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <span className="px-2 py-0.5 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 text-white text-[10px] font-black tracking-wider">
-                    AI
-                  </span>
-                  <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 transition-colors" />
-                </div>
-              </button>
 
-              {/* 6. Institutions & FDP Vouchers */}
-              <button
-                type="button"
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  scrollTo("fdp-solutions");
-                }}
-                className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors cursor-pointer group text-left"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
-                    <Building2 className="w-4 h-4" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                      Institutions &amp; FDP Vouchers
+                {/* 4. Certificate Management */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    scrollTo("certificates");
+                  }}
+                  className="w-full flex items-center justify-between p-2.5 rounded-xl bg-slate-50/70 dark:bg-[#111C31]/70 border border-slate-200/70 dark:border-slate-800/80 hover:bg-amber-50/60 dark:hover:bg-amber-950/40 hover:border-amber-300 dark:hover:border-amber-800/60 transition-all cursor-pointer group text-left"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                      <Award className="w-4.5 h-4.5" />
                     </div>
-                    <div className="text-[10.5px] text-slate-500 dark:text-slate-400 truncate">
-                      For colleges, institutes &amp; faculty development
+                    <div className="min-w-0">
+                      <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                        Certificate Management
+                      </div>
+                      <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                        Automated verifiable certificates with QR
+                      </div>
                     </div>
                   </div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 transition-colors shrink-0" />
-              </button>
+                  <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-amber-500 transition-colors shrink-0" />
+                </button>
 
-              {/* 7. Pricing & Credits */}
-              <button
-                type="button"
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  scrollTo("pricing");
-                }}
-                className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors cursor-pointer group text-left"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                    <Coins className="w-4 h-4" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                      Pricing &amp; Credits
+                {/* 5. AI Form Studio */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    scrollTo("form-builder");
+                  }}
+                  className="w-full flex items-center justify-between p-2.5 rounded-xl bg-slate-50/70 dark:bg-[#111C31]/70 border border-slate-200/70 dark:border-slate-800/80 hover:bg-orange-50/60 dark:hover:bg-orange-950/40 hover:border-orange-300 dark:hover:border-orange-800/60 transition-all cursor-pointer group text-left"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500/20 to-orange-500/20 text-orange-600 dark:text-orange-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                      <Bot className="w-4.5 h-4.5 text-orange-500" />
                     </div>
-                    <div className="text-[10.5px] text-slate-500 dark:text-slate-400 truncate">
-                      Plans, credits and offers
+                    <div className="min-w-0">
+                      <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                        AI Form Studio
+                      </div>
+                      <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                        Prompt to registration form in 5 seconds
+                      </div>
                     </div>
                   </div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 transition-colors shrink-0" />
-              </button>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className="px-2 py-0.5 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 text-white text-[9.5px] font-black tracking-wider shadow-2xs">
+                      AI
+                    </span>
+                    <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-orange-500 transition-colors" />
+                  </div>
+                </button>
 
-              {/* 8. FAQ */}
-              <button
-                type="button"
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  scrollTo("faq");
-                }}
-                className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors cursor-pointer group text-left"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800/90 text-slate-600 dark:text-slate-400 flex items-center justify-center shrink-0">
-                    <HelpCircle className="w-4 h-4" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                      FAQ
+                {/* 6. Platform Capabilities */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    scrollTo("capabilities");
+                  }}
+                  className="w-full flex items-center justify-between p-2.5 rounded-xl bg-slate-50/70 dark:bg-[#111C31]/70 border border-slate-200/70 dark:border-slate-800/80 hover:bg-cyan-50/60 dark:hover:bg-cyan-950/40 hover:border-cyan-300 dark:hover:border-cyan-800/60 transition-all cursor-pointer group text-left"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-xl bg-cyan-100 dark:bg-cyan-950/80 text-cyan-600 dark:text-cyan-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                      <ShieldCheck className="w-4.5 h-4.5" />
                     </div>
-                    <div className="text-[10.5px] text-slate-500 dark:text-slate-400 truncate">
-                      Find answers to common questions
+                    <div className="min-w-0">
+                      <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                        Platform Capabilities
+                      </div>
+                      <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                        Anti-cheat radar, auto-grading &amp; live stats
+                      </div>
                     </div>
                   </div>
+                  <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-cyan-500 transition-colors shrink-0" />
+                </button>
+              </div>
+
+              {/* Category 3: Solutions & FAQ */}
+              <div className="space-y-1">
+                <div className="px-2 py-0.5 text-[9.5px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                  Solutions &amp; Support
                 </div>
-                <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 transition-colors shrink-0" />
-              </button>
+
+                {/* 7. Institutions & FDP Vouchers */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    scrollTo("fdp-solutions");
+                  }}
+                  className="w-full flex items-center justify-between p-2.5 rounded-xl bg-slate-50/70 dark:bg-[#111C31]/70 border border-slate-200/70 dark:border-slate-800/80 hover:bg-blue-50/60 dark:hover:bg-blue-950/40 hover:border-blue-300 dark:hover:border-blue-800/60 transition-all cursor-pointer group text-left"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-xl bg-indigo-100 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                      <Building2 className="w-4.5 h-4.5" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                        Institutions &amp; FDP Vouchers
+                      </div>
+                      <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                        Campus licencing &amp; faculty workshops
+                      </div>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-indigo-500 transition-colors shrink-0" />
+                </button>
+
+                {/* 8. Pricing & Credits */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    scrollTo("pricing");
+                  }}
+                  className="w-full flex items-center justify-between p-2.5 rounded-xl bg-slate-50/70 dark:bg-[#111C31]/70 border border-slate-200/70 dark:border-slate-800/80 hover:bg-emerald-50/60 dark:hover:bg-emerald-950/40 hover:border-emerald-300 dark:hover:border-emerald-800/60 transition-all cursor-pointer group text-left"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                      <Coins className="w-4.5 h-4.5" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                        Pricing &amp; Credits
+                      </div>
+                      <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                        Transparent credits, discounts &amp; offers
+                      </div>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-emerald-500 transition-colors shrink-0" />
+                </button>
+
+                {/* 9. FAQ */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    scrollTo("faq");
+                  }}
+                  className="w-full flex items-center justify-between p-2.5 rounded-xl bg-slate-50/70 dark:bg-[#111C31]/70 border border-slate-200/70 dark:border-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer group text-left"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-xl bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                      <HelpCircle className="w-4.5 h-4.5" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                        FAQ
+                      </div>
+                      <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                        Common questions &amp; answers
+                      </div>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-slate-900 dark:group-hover:text-white transition-colors shrink-0" />
+                </button>
+              </div>
             </div>
 
             {/* ═══════ MOBILE QUICK ACTIONS (ASK AI GUIDE & ENTER CODE) ═══════ */}
@@ -1114,7 +1195,7 @@ export default function UnifiedHomePage() {
                 <Link
                   href="/login?mode=signup"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold shadow-sm active:scale-95 transition-all cursor-pointer"
+                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 hover:opacity-95 text-white text-xs font-black shadow-md shadow-blue-600/25 active:scale-98 transition-all cursor-pointer"
                 >
                   <span>Get Started Free</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -1122,21 +1203,23 @@ export default function UnifiedHomePage() {
               </div>
             )}
 
-            {/* Mobile Sign Out Button when logged in */}
-            {mounted && token && (
-              <div className="pt-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    logout();
-                  }}
-                  className="w-full py-2 px-3 rounded-xl border border-red-200 dark:border-red-900/60 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 text-xs font-bold text-center transition-colors cursor-pointer"
-                >
-                  Sign Out
-                </button>
+                {/* Mobile Sign Out Button when logged in */}
+                {mounted && token && (
+                  <div className="pt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        logout();
+                      }}
+                      className="w-full py-2 px-3 rounded-xl border border-red-200 dark:border-red-900/60 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 text-xs font-bold text-center transition-colors cursor-pointer"
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
         )}
       </header>

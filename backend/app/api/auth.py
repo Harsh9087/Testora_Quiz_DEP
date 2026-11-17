@@ -141,17 +141,62 @@ def login(login_in: UserLogin, response: Response, db: Session = Depends(get_db)
     user = None
     if login_in.role:
         # Explicit role selection: disambiguate separate Teacher and Student accounts with matching emails
+        target_roles = [login_in.role]
+        if login_in.role == "teacher":
+            target_roles = ["teacher", "super_admin", "inst_admin"]
         user = db.query(User).filter(
             User.email == clean_email,
-            User.role == login_in.role,
+            User.role.in_(target_roles),
             User.is_deleted == False
         ).first()
         if not user:
             user = db.query(User).filter(
                 (User.email.ilike(clean_email)) | (User.full_name.ilike(clean_identifier)),
-                User.role == login_in.role,
+                User.role.in_(target_roles),
                 User.is_deleted == False
             ).first()
+
+        # If user account was registered under the other role, verify password and auto-provision the requested role
+        if not user:
+            fallback_user = db.query(User).filter(
+                (User.email.ilike(clean_email)) | (User.full_name.ilike(clean_identifier)),
+                User.is_deleted == False
+            ).first()
+            if fallback_user and verify_password(login_in.password, fallback_user.hashed_password):
+                if login_in.role == "teacher" and fallback_user.role == "student":
+                    from app.services.coupon_service import CouponService
+                    signup_bonus, bonus_days = CouponService.get_signup_bonus_config(db)
+                    user = User(
+                        email=fallback_user.email,
+                        full_name=fallback_user.full_name,
+                        hashed_password=fallback_user.hashed_password,
+                        role="teacher",
+                        is_verified=True,
+                        is_active=True,
+                        auth_provider=fallback_user.auth_provider,
+                        avatar_url=fallback_user.avatar_url,
+                        last_login_at=now_utc(),
+                        bonus_credits=signup_bonus,
+                        bonus_credits_expires_at=now_utc() + timedelta(days=bonus_days)
+                    )
+                    db.add(user)
+                    db.commit()
+                    db.refresh(user)
+                elif login_in.role == "student" and fallback_user.role in ["teacher", "inst_admin", "super_admin"]:
+                    user = User(
+                        email=fallback_user.email,
+                        full_name=fallback_user.full_name,
+                        hashed_password=fallback_user.hashed_password,
+                        role="student",
+                        is_verified=True,
+                        is_active=True,
+                        auth_provider=fallback_user.auth_provider,
+                        avatar_url=fallback_user.avatar_url,
+                        last_login_at=now_utc()
+                    )
+                    db.add(user)
+                    db.commit()
+                    db.refresh(user)
     else:
         # No explicit role provided: find matching candidates and pick the one matching the password
         candidates = db.query(User).filter(
@@ -305,18 +350,21 @@ def google_auth(
         raise HTTPException(status_code=400, detail="Google authentication did not provide a valid email address")
 
     assigned_role = payload.role if (payload.role and payload.role in ["teacher", "student"]) else "teacher"
+    target_roles = [assigned_role]
+    if assigned_role == "teacher":
+        target_roles = ["teacher", "super_admin", "inst_admin"]
 
     user = None
     if google_sub:
         user = db.query(User).filter(
             User.google_subject == google_sub,
-            User.role == assigned_role,
+            User.role.in_(target_roles),
             User.is_deleted == False
         ).first()
     if not user and email:
         user = db.query(User).filter(
             User.email == email,
-            User.role == assigned_role,
+            User.role.in_(target_roles),
             User.is_deleted == False
         ).first()
     

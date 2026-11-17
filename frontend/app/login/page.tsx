@@ -84,13 +84,6 @@ function LoginContent() {
   const [forgotError, setForgotError] = useState<string | null>(null);
 
   const resolveDestination = (userRole: string) => {
-    if (userRole === "student") {
-      if (targetDestination && targetDestination.startsWith("/exam/")) {
-        return targetDestination;
-      }
-      return "/dashboard/student";
-    }
-
     if (userRole === "super_admin") {
       if (targetDestination && targetDestination.startsWith("/") && !targetDestination.startsWith("/dashboard/student")) {
         return targetDestination;
@@ -105,11 +98,20 @@ function LoginContent() {
       return "/admin";
     }
 
-    if (userRole === "teacher") {
+    const savedRole = typeof window !== "undefined" ? localStorage.getItem("selected_login_role") : null;
+    const chosenRole = regRoleRef.current || regRole || savedRole;
+    if (chosenRole === "teacher") {
       if (targetDestination && targetDestination.startsWith("/") && !targetDestination.startsWith("/dashboard/student") && !targetDestination.startsWith("/admin")) {
         return targetDestination;
       }
       return "/dashboard/teacher";
+    }
+
+    if (chosenRole === "student") {
+      if (targetDestination && targetDestination.startsWith("/exam/")) {
+        return targetDestination;
+      }
+      return "/dashboard/student";
     }
 
     if (targetDestination) {
@@ -118,7 +120,7 @@ function LoginContent() {
       if (targetDestination.startsWith("/dashboard/teacher")) return "/dashboard/teacher";
       if (targetDestination.startsWith("/")) return targetDestination;
     }
-    return "/dashboard/student";
+    return chosenRole === "teacher" ? "/dashboard/teacher" : "/dashboard/student";
   };
 
   useEffect(() => {
@@ -187,7 +189,7 @@ function LoginContent() {
   const handleGoogleCredentialResponse = async (response: any) => {
     setError(null);
     setLoading(true);
-    const selectedRole = regRoleRef.current;
+    const selectedRole = regRoleRef.current || regRole;
     try {
       const res = await apiFetch("/auth/google", {
         method: "POST",
@@ -202,7 +204,9 @@ function LoginContent() {
         throw new Error(data.detail || "Google authentication failed");
       }
 
-      const assignedRole = data.role || selectedRole;
+      const assignedRole = data.role === "super_admin" 
+        ? "super_admin" 
+        : (selectedRole || data.role);
 
       if (data.workspace_id) {
         localStorage.setItem("workspaceId", data.workspace_id);
@@ -211,6 +215,8 @@ function LoginContent() {
 
       setAuth(data.access_token, assignedRole, data.full_name, undefined, data.avatar_url);
       if (typeof window !== "undefined") {
+        localStorage.setItem("role", assignedRole);
+        localStorage.setItem("token", data.access_token);
         window.scrollTo(0, 0);
       }
       router.push(resolveDestination(assignedRole));
@@ -306,9 +312,10 @@ function LoginContent() {
         localStorage.removeItem("eduquiz_remember_email");
       }
 
+      const selectedRole = regRoleRef.current || regRole;
       const response = await apiFetch("/auth/login", {
         method: "POST",
-        body: JSON.stringify({ email, password, role: regRole }),
+        body: JSON.stringify({ email, password, role: selectedRole }),
       });
 
       const data = await response.json();
@@ -317,16 +324,22 @@ function LoginContent() {
         throw new Error(data.detail || "Incorrect email or password");
       }
 
+      const assignedRole = data.role === "super_admin"
+        ? "super_admin"
+        : (selectedRole || data.role);
+
       if (data.workspace_id) {
         localStorage.setItem("workspaceId", data.workspace_id);
         localStorage.setItem("workspaceName", data.workspace_name || "Personal Workspace");
       }
 
-      setAuth(data.access_token, data.role, data.full_name, undefined, data.avatar_url);
+      setAuth(data.access_token, assignedRole, data.full_name, undefined, data.avatar_url);
       if (typeof window !== "undefined") {
+        localStorage.setItem("role", assignedRole);
+        localStorage.setItem("token", data.access_token);
         window.scrollTo(0, 0);
       }
-      router.push(resolveDestination(data.role));
+      router.push(resolveDestination(assignedRole));
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -377,11 +390,17 @@ function LoginContent() {
         localStorage.setItem("workspaceName", data.workspace_name || "Personal Workspace");
       }
 
-      setAuth(data.access_token, data.role, data.full_name, undefined, data.avatar_url);
+      const assignedRole = data.role === "super_admin"
+        ? "super_admin"
+        : (regRole || data.role);
+
+      setAuth(data.access_token, assignedRole, data.full_name, undefined, data.avatar_url);
       if (typeof window !== "undefined") {
+        localStorage.setItem("role", assignedRole);
+        localStorage.setItem("token", data.access_token);
         window.scrollTo(0, 0);
       }
-      router.push(resolveDestination(data.role));
+      router.push(resolveDestination(assignedRole));
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -558,6 +577,11 @@ function LoginContent() {
                     setRegRole("teacher");
                     regRoleRef.current = "teacher";
                     setTargetDestination("teacher_dashboard");
+                    if (typeof window !== "undefined") {
+                      window.history.replaceState(null, "", "/login?role=teacher");
+                      localStorage.setItem("selected_login_role", "teacher");
+                    }
+                    setCurrentStep(2);
                   }}
                   className={`group relative rounded-2xl p-1.5 xs:p-2 sm:p-2.5 pb-2.5 xs:pb-3 sm:pb-3.5 text-left transition-all duration-200 cursor-pointer flex flex-col ${
                     regRole === "teacher"
@@ -620,6 +644,11 @@ function LoginContent() {
                     setRegRole("student");
                     regRoleRef.current = "student";
                     setTargetDestination("student_dashboard");
+                    if (typeof window !== "undefined") {
+                      window.history.replaceState(null, "", "/login?role=student");
+                      localStorage.setItem("selected_login_role", "student");
+                    }
+                    setCurrentStep(2);
                   }}
                   className={`group relative rounded-2xl p-1.5 xs:p-2 sm:p-2.5 pb-2.5 xs:pb-3 sm:pb-3.5 text-left transition-all duration-200 cursor-pointer flex flex-col ${
                     regRole === "student"
@@ -826,7 +855,12 @@ function LoginContent() {
               <div className="flex items-center justify-between">
                 <button
                   type="button"
-                  onClick={() => setCurrentStep(1)}
+                  onClick={() => {
+                    setCurrentStep(1);
+                    if (typeof window !== "undefined") {
+                      window.history.replaceState(null, "", `/login?role=${regRole}`);
+                    }
+                  }}
                   className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors cursor-pointer py-1.5 px-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />

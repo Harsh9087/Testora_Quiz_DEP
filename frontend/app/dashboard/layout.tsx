@@ -454,8 +454,13 @@ export default function DashboardLayout({
   }, [mounted, token, router]);
 
   useEffect(() => {
-    const activeRole = role || (typeof window !== "undefined" ? localStorage.getItem("role") : null);
+    const storedRole = typeof window !== "undefined" ? localStorage.getItem("role") : null;
+    const activeRole = role || storedRole;
     if (mounted && activeRole === "student" && pathname?.startsWith("/dashboard/teacher")) {
+      if (storedRole === "teacher" || storedRole === "super_admin" || storedRole === "inst_admin") {
+        useAuthStore.getState().syncFromStorage();
+        return;
+      }
       router.replace("/dashboard/student");
     }
   }, [mounted, role, pathname, router]);
@@ -787,7 +792,7 @@ export default function DashboardLayout({
           SIDEBAR NAVIGATION (Expanded: 260px | Collapsed: 72px)
          ══════════════════════════════════════════════════════ */}
       <aside 
-        className={`fixed md:static inset-y-0 left-0 z-50 bg-white dark:bg-[#0F172A] border-r border-slate-200 dark:border-[#263449] flex flex-col shrink-0 transition-all duration-300 ease-in-out shadow-lg md:shadow-none w-72 max-w-[85vw] ${
+        className={`fixed md:static inset-y-0 left-0 z-50 bg-white dark:bg-[#0F172A] border-r border-slate-200 dark:border-[#263449] flex flex-col shrink-0 transition-all duration-300 ease-in-out shadow-lg md:shadow-none w-[300px] xs:w-[315px] sm:w-72 max-w-[85vw] ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         } ${sidebarCollapsed ? "md:!w-[72px]" : "md:w-64"}`}
       >
@@ -1152,7 +1157,7 @@ export default function DashboardLayout({
                   </button>
                 </>
               ) : (
-                <div className="space-y-1.5">
+                <div className="space-y-1">
                   {/* Dashboard (Student) */}
                   <a
                     href="/dashboard/student"
@@ -1168,7 +1173,7 @@ export default function DashboardLayout({
                         router.push("/dashboard/student");
                       }
                     }}
-                    className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-xs font-semibold transition-all cursor-pointer ${
+                    className={`group relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                       sidebarCollapsed ? "md:justify-center md:px-0" : ""
                     } ${
                       pathname === "/dashboard/student" && (currentTab === "overview" || currentTab === "assigned" || !currentTab || (currentTab !== "company-tests" && currentTab !== "mock-tests" && currentTab !== "certificates" && currentTab !== "study-materials" && currentTab !== "submissions" && currentTab !== "progress"))
@@ -1176,18 +1181,18 @@ export default function DashboardLayout({
                         : "text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/60 border border-transparent"
                     }`}
                   >
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
                       pathname === "/dashboard/student" && currentTab !== "company-tests" && currentTab !== "mock-tests" && currentTab !== "certificates"
                         ? "bg-blue-600 text-white shadow-xs shadow-blue-500/25"
                         : "bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400"
                     }`}>
-                      <LayoutDashboard className="h-4.5 w-4.5" />
+                      <LayoutDashboard className="h-4 w-4" />
                     </div>
                     <div className={`flex flex-col text-left flex-1 min-w-0 ${sidebarCollapsed ? "md:hidden" : ""}`}>
-                      <span className="text-[13px] font-bold text-slate-800 dark:text-slate-100">
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">
                         Dashboard
                       </span>
-                      <span className="text-[10.5px] text-slate-400 dark:text-slate-500 font-medium truncate">
+                      <span className="text-[9.5px] text-slate-400 dark:text-slate-500 font-medium truncate">
                         Active Tests &amp; Overview
                       </span>
                     </div>
@@ -1213,7 +1218,7 @@ export default function DashboardLayout({
                         setCurrentTab("mock-tests");
                       }
                     }}
-                    className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-xs font-semibold transition-all cursor-pointer ${
+                    className={`group relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                       sidebarCollapsed ? "md:justify-center md:px-0" : ""
                     } ${
                       pathname === "/dashboard/student" && currentTab === "mock-tests"
@@ -1221,23 +1226,23 @@ export default function DashboardLayout({
                         : "text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/60 border border-transparent"
                     }`}
                   >
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
                       pathname === "/dashboard/student" && currentTab === "mock-tests"
                         ? "bg-blue-600 text-white shadow-xs shadow-blue-500/25"
                         : "bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400"
                     }`}>
-                      <GraduationCap className="h-4.5 w-4.5" />
+                      <GraduationCap className="h-4 w-4" />
                     </div>
                     <div className={`flex flex-col text-left flex-1 min-w-0 ${sidebarCollapsed ? "md:hidden" : ""}`}>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[13px] font-bold text-slate-800 dark:text-slate-100 truncate">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">
                           Mock Test Library
                         </span>
-                        <span className="px-1.5 py-0.5 rounded-full text-[9.5px] font-extrabold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60 shrink-0">
+                        <span className="px-1.5 py-0.2 rounded text-[9px] font-extrabold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 shrink-0">
                           100% Free
                         </span>
                       </div>
-                      <span className="text-[10.5px] text-slate-400 dark:text-slate-500 font-medium truncate">
+                      <span className="text-[9.5px] text-slate-400 dark:text-slate-500 font-medium truncate">
                         JEE, NEET, Engineering, PYQs
                       </span>
                     </div>
@@ -1263,7 +1268,7 @@ export default function DashboardLayout({
                         setCurrentTab("certificates");
                       }
                     }}
-                    className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-xs font-semibold transition-all cursor-pointer ${
+                    className={`group relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                       sidebarCollapsed ? "md:justify-center md:px-0" : ""
                     } ${
                       pathname === "/dashboard/student" && currentTab === "certificates"
@@ -1271,23 +1276,23 @@ export default function DashboardLayout({
                         : "text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/60 border border-transparent"
                     }`}
                   >
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
                       pathname === "/dashboard/student" && currentTab === "certificates"
                         ? "bg-amber-500 text-white shadow-xs shadow-amber-500/25"
                         : "bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400"
                     }`}>
-                      <Award className="h-4.5 w-4.5" />
+                      <Award className="h-4 w-4" />
                     </div>
                     <div className={`flex flex-col text-left flex-1 min-w-0 ${sidebarCollapsed ? "md:hidden" : ""}`}>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[13px] font-bold text-slate-800 dark:text-slate-100 truncate">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">
                           My Certificates
                         </span>
-                        <span className="px-1.5 py-0.5 rounded-full text-[9.5px] font-extrabold bg-amber-50 text-amber-700 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/60 shrink-0">
+                        <span className="px-1.5 py-0.2 rounded text-[9px] font-extrabold bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 shrink-0">
                           Verified
                         </span>
                       </div>
-                      <span className="text-[10.5px] text-slate-400 dark:text-slate-500 font-medium truncate">
+                      <span className="text-[9.5px] text-slate-400 dark:text-slate-500 font-medium truncate">
                         Passing &amp; Merit Credentials
                       </span>
                     </div>
@@ -1313,7 +1318,7 @@ export default function DashboardLayout({
                         setCurrentTab("company-tests");
                       }
                     }}
-                    className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-xs font-semibold transition-all cursor-pointer ${
+                    className={`group relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                       sidebarCollapsed ? "md:justify-center md:px-0" : ""
                     } ${
                       pathname === "/dashboard/student" && currentTab === "company-tests"
@@ -1321,23 +1326,23 @@ export default function DashboardLayout({
                         : "text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/60 border border-transparent"
                     }`}
                   >
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
                       pathname === "/dashboard/student" && currentTab === "company-tests"
                         ? "bg-emerald-600 text-white shadow-xs shadow-emerald-500/25"
                         : "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400"
                     }`}>
-                      <Building2 className="h-4.5 w-4.5" />
+                      <Building2 className="h-4 w-4" />
                     </div>
                     <div className={`flex flex-col text-left flex-1 min-w-0 ${sidebarCollapsed ? "md:hidden" : ""}`}>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[13px] font-bold text-slate-800 dark:text-slate-100 truncate">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">
                           Placement Tests
                         </span>
-                        <span className="px-1.5 py-0.5 rounded-full text-[9.5px] font-extrabold bg-blue-50 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800/60 shrink-0">
-                          99 Credits / Free
+                        <span className="px-1.5 py-0.2 rounded text-[9px] font-extrabold bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300 shrink-0">
+                          Free
                         </span>
                       </div>
-                      <span className="text-[10.5px] text-slate-400 dark:text-slate-500 font-medium truncate">
+                      <span className="text-[9.5px] text-slate-400 dark:text-slate-500 font-medium truncate">
                         TCS, Infosys, HCL, Wipro
                       </span>
                     </div>
@@ -1590,11 +1595,11 @@ export default function DashboardLayout({
                     }`}>
                       {renderCategoryIcon(cat.icon, cat.slug)}
                     </div>
-                    <span className={`truncate text-left flex-1 ${sidebarCollapsed ? "md:hidden" : ""}`}>
-                      {cat.name}
+                    <span className={`truncate text-left flex-1 text-xs font-semibold ${sidebarCollapsed ? "md:hidden" : ""}`}>
+                      {cat.slug === "company_notes" ? "Company Notes" : cat.slug === "dsa" ? "DSA & Problem Solving" : cat.name}
                     </span>
                     {!sidebarCollapsed && cat.badge && (
-                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-extrabold uppercase shrink-0 ${
+                      <span className={`px-1.5 py-0.2 rounded text-[9px] font-extrabold uppercase shrink-0 ${
                         cat.badge === "NEW" || cat.badge_color === "purple"
                           ? "bg-purple-100 text-purple-800 dark:bg-purple-950/80 dark:text-purple-300"
                           : cat.badge === "FREE" || cat.badge_color === "green"

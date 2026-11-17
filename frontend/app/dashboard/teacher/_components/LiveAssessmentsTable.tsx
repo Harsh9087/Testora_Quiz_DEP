@@ -3,7 +3,7 @@ import {
   Eye, Radio, StopCircle, Sparkles, Printer, Key, QrCode, Trash2, 
   Download, X, Play, Search, Copy, Check, ExternalLink, ShieldCheck, Mail, CopyPlus,
   CreditCard, Share2, Receipt, MoreHorizontal, Plus, ArrowRight, ClipboardList, Calendar, Clock, Layers, Award, BarChart3,
-  FileText, Link2
+  FileText, Link2, MessageCircle
 } from "lucide-react";
 import { API_V1, apiFetch, getFrontendBaseUrl } from "../../../../lib/api";
 import { parseUtcDate, formatLocalizedDate, formatISTDate, formatExamScheduleRange } from "../../../../lib/dateUtils";
@@ -572,7 +572,7 @@ export default function LiveAssessmentsTable({
                     onClick={() => handleShareWhatsApp(exam)}
                     className="flex-1 h-8.5 rounded-xl border border-emerald-200/80 dark:border-emerald-800/80 bg-emerald-50/50 dark:bg-emerald-950/30 hover:bg-emerald-100/50 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
                   >
-                    <Share2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                    <MessageCircle className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 fill-emerald-600/20" />
                     <span>WhatsApp</span>
                   </button>
                   <button
@@ -883,7 +883,7 @@ export default function LiveAssessmentsTable({
       </div>
 
       {/* Desktop Table View (>= 768px) */}
-      <div className="hidden md:block overflow-x-auto min-h-[380px]">
+      <div className="hidden md:block overflow-x-auto min-h-[380px] pb-28">
         <table className="w-full text-left text-xs border-collapse">
           <thead>
             <tr className="border-b border-slate-200/90 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/60 text-slate-500 dark:text-slate-400 text-[11px] font-bold tracking-wider uppercase">
@@ -962,7 +962,7 @@ export default function LiveAssessmentsTable({
               exams.map((exam, idx) => {
                 const sched = getExamScheduleInfo(exam);
                 const isLoadingCreds = loadingCredsExamId === exam.id;
-                const isNearBottom = exams.length > 2 && idx >= exams.length - 2;
+                const isNearBottom = idx >= Math.max(0, exams.length - 2);
 
                 return (
                   <tr
@@ -1163,7 +1163,7 @@ export default function LiveAssessmentsTable({
                               onClick={(e) => e.stopPropagation()}
                               className={`absolute right-0 ${
                                 isNearBottom ? "bottom-full mb-1.5" : "top-full mt-1.5"
-                              } w-64 rounded-2xl bg-white dark:bg-[#111C31] border border-slate-200/90 dark:border-slate-700/80 shadow-2xl py-1.5 z-50 text-left animate-in fade-in zoom-in-95 duration-150 divide-y divide-slate-100 dark:divide-slate-800/80 max-h-[82vh] overflow-y-auto overscroll-contain`}
+                              } w-64 rounded-2xl bg-white dark:bg-[#111C31] border border-slate-200/90 dark:border-slate-700/80 shadow-2xl py-1.5 z-50 text-left animate-in fade-in zoom-in-95 duration-150 divide-y divide-slate-100 dark:divide-slate-800/80 max-h-[270px] sm:max-h-[290px] overflow-y-auto overscroll-contain [scrollbar-width:thin]`}
                             >
                               {/* Section 1: Performance & Results */}
                               <div className="p-1 space-y-0.5">
