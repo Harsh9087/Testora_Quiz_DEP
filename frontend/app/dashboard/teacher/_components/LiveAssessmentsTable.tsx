@@ -82,6 +82,7 @@ export default function LiveAssessmentsTable({
   const [cloningExamId, setCloningExamId] = useState<string | null>(null);
   const [activeDropdownExamId, setActiveDropdownExamId] = useState<string | null>(null);
   const [copiedExamId, setCopiedExamId] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "completed">("all");
 
   const handleCopyCode = (examId: string, code: string) => {
     if (!code) return;
@@ -308,6 +309,18 @@ export default function LiveAssessmentsTable({
   const completedCount = exams.filter((e) => getExamScheduleInfo(e).status === "completed").length;
   const totalCount = exams.length;
 
+  const displayedExams = exams.filter((exam) => {
+    if (statusFilter === "all") return true;
+    const sched = getExamScheduleInfo(exam);
+    if (statusFilter === "active") {
+      return sched.status === "live" || sched.status === "scheduled";
+    }
+    if (statusFilter === "completed") {
+      return sched.status === "completed";
+    }
+    return true;
+  });
+
   return (
     <div className="bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-2xl overflow-hidden space-y-0 shadow-xs transition-colors">
       {/* Sleek, Cohesive Header (Mobile & Desktop Aligned) */}
@@ -350,11 +363,20 @@ export default function LiveAssessmentsTable({
         </div>
       </div>
 
-      {/* 3 Stat Cards Row */}
+      {/* 3 Interactive Stat Filter Cards Row */}
       <div className="p-3 sm:p-4 bg-slate-50/60 dark:bg-slate-900/40 border-b border-[#E2E8F0] dark:border-[#263449]">
         <div className="grid grid-cols-3 gap-2 sm:gap-3">
-          {/* Active */}
-          <div className="bg-white dark:bg-[#152238] border border-blue-100 dark:border-blue-900/40 rounded-xl p-2 sm:p-2.5 flex items-center gap-2 sm:gap-2.5 shadow-2xs">
+          {/* Active Filter Button */}
+          <button
+            type="button"
+            onClick={() => setStatusFilter(statusFilter === "active" ? "all" : "active")}
+            className={`rounded-xl p-2 sm:p-2.5 flex items-center gap-2 sm:gap-2.5 shadow-2xs transition-all cursor-pointer text-left select-none ${
+              statusFilter === "active"
+                ? "bg-blue-50/90 dark:bg-blue-950/70 border-2 border-blue-500 ring-2 ring-blue-500/20 shadow-xs"
+                : "bg-white dark:bg-[#152238] border border-blue-100 dark:border-blue-900/40 hover:bg-blue-50/50 dark:hover:bg-blue-950/40"
+            }`}
+            title="Click to filter Active assessments"
+          >
             <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-blue-50 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
               <Play className="w-3.5 h-3.5 fill-blue-600/20" />
             </div>
@@ -362,14 +384,26 @@ export default function LiveAssessmentsTable({
               <div className="text-xs sm:text-sm font-extrabold text-[#111827] dark:text-[#F1F5F9] leading-none">
                 {String(liveCount).padStart(2, "0")}
               </div>
-              <div className="text-[10px] sm:text-[11px] font-semibold text-[#64748B] dark:text-[#A3B1C6] truncate mt-0.5">
-                Active
+              <div className="text-[10px] sm:text-[11px] font-semibold text-[#64748B] dark:text-[#A3B1C6] truncate mt-0.5 flex items-center gap-1">
+                <span>Active</span>
+                {statusFilter === "active" && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
+                )}
               </div>
             </div>
-          </div>
+          </button>
 
-          {/* Completed */}
-          <div className="bg-white dark:bg-[#152238] border border-emerald-100 dark:border-emerald-900/40 rounded-xl p-2 sm:p-2.5 flex items-center gap-2 sm:gap-2.5 shadow-2xs">
+          {/* Completed Filter Button */}
+          <button
+            type="button"
+            onClick={() => setStatusFilter(statusFilter === "completed" ? "all" : "completed")}
+            className={`rounded-xl p-2 sm:p-2.5 flex items-center gap-2 sm:gap-2.5 shadow-2xs transition-all cursor-pointer text-left select-none ${
+              statusFilter === "completed"
+                ? "bg-emerald-50/90 dark:bg-emerald-950/70 border-2 border-emerald-500 ring-2 ring-emerald-500/20 shadow-xs"
+                : "bg-white dark:bg-[#152238] border border-emerald-100 dark:border-emerald-900/40 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/40"
+            }`}
+            title="Click to filter Completed assessments"
+          >
             <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
               <Check className="w-3.5 h-3.5 stroke-[2.5]" />
             </div>
@@ -377,14 +411,26 @@ export default function LiveAssessmentsTable({
               <div className="text-xs sm:text-sm font-extrabold text-[#111827] dark:text-[#F1F5F9] leading-none">
                 {String(completedCount).padStart(2, "0")}
               </div>
-              <div className="text-[10px] sm:text-[11px] font-semibold text-[#64748B] dark:text-[#A3B1C6] truncate mt-0.5">
-                Completed
+              <div className="text-[10px] sm:text-[11px] font-semibold text-[#64748B] dark:text-[#A3B1C6] truncate mt-0.5 flex items-center gap-1">
+                <span>Completed</span>
+                {statusFilter === "completed" && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
+                )}
               </div>
             </div>
-          </div>
+          </button>
 
-          {/* Total Tests */}
-          <div className="bg-white dark:bg-[#152238] border border-purple-100 dark:border-purple-900/40 rounded-xl p-2 sm:p-2.5 flex items-center gap-2 sm:gap-2.5 shadow-2xs">
+          {/* Total Tests Filter Button */}
+          <button
+            type="button"
+            onClick={() => setStatusFilter("all")}
+            className={`rounded-xl p-2 sm:p-2.5 flex items-center gap-2 sm:gap-2.5 shadow-2xs transition-all cursor-pointer text-left select-none ${
+              statusFilter === "all"
+                ? "bg-purple-50/90 dark:bg-purple-950/70 border-2 border-purple-500 ring-2 ring-purple-500/20 shadow-xs"
+                : "bg-white dark:bg-[#152238] border border-purple-100 dark:border-purple-900/40 hover:bg-purple-50/50 dark:hover:bg-purple-950/40"
+            }`}
+            title="Click to view All assessments"
+          >
             <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-purple-50 dark:bg-purple-950/80 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
               <Layers className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
             </div>
@@ -392,12 +438,31 @@ export default function LiveAssessmentsTable({
               <div className="text-xs sm:text-sm font-extrabold text-[#111827] dark:text-[#F1F5F9] leading-none">
                 {String(totalCount).padStart(2, "0")}
               </div>
-              <div className="text-[10px] sm:text-[11px] font-semibold text-[#64748B] dark:text-[#A3B1C6] truncate mt-0.5">
-                Total Tests
+              <div className="text-[10px] sm:text-[11px] font-semibold text-[#64748B] dark:text-[#A3B1C6] truncate mt-0.5 flex items-center gap-1">
+                <span>Total Tests</span>
+                {statusFilter === "all" && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-purple-600" />
+                )}
               </div>
             </div>
-          </div>
+          </button>
         </div>
+
+        {/* Active Filter Indication Banner */}
+        {statusFilter !== "all" && (
+          <div className="mt-2.5 flex items-center justify-between text-[11px] px-3 py-1.5 rounded-xl bg-blue-50/80 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-900 text-blue-700 dark:text-blue-300">
+            <span>
+              Showing <b>{statusFilter === "active" ? "Active" : "Completed"}</b> tests ({displayedExams.length} of {totalCount})
+            </span>
+            <button
+              type="button"
+              onClick={() => setStatusFilter("all")}
+              className="font-bold underline hover:text-blue-900 dark:hover:text-blue-100 cursor-pointer"
+            >
+              Reset / View All
+            </button>
+          </div>
+        )}
       </div>
 
       {/* ─── Mobile Card List (< md) ─── */}
@@ -445,12 +510,25 @@ export default function LiveAssessmentsTable({
             </div>
           </div>
         )}
-        {exams.length === 0 ? (
-          <div className="py-10 px-4 text-center text-xs text-[#64748B] dark:text-[#A3B1C6] bg-white dark:bg-[#111C31] rounded-2xl border border-slate-200 dark:border-slate-800">
-            No assessments yet. Tap "Create Assessment" to generate your first exam.
+        {displayedExams.length === 0 ? (
+          <div className="py-10 px-4 text-center text-xs text-[#64748B] dark:text-[#A3B1C6] bg-white dark:bg-[#111C31] rounded-2xl border border-slate-200 dark:border-slate-800 space-y-2">
+            <div>
+              {statusFilter !== "all" 
+                ? `No ${statusFilter} assessments found.`
+                : 'No assessments yet. Tap "Create Assessment" to generate your first exam.'}
+            </div>
+            {statusFilter !== "all" && (
+              <button
+                type="button"
+                onClick={() => setStatusFilter("all")}
+                className="px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 font-bold text-xs hover:bg-blue-100 border border-blue-200 dark:border-blue-800 transition-colors cursor-pointer"
+              >
+                View All Assessments
+              </button>
+            )}
           </div>
         ) : (
-          exams.map((exam) => {
+          displayedExams.map((exam) => {
             const sched   = getExamScheduleInfo(exam);
             const isLoadingCreds = loadingCredsExamId === exam.id;
             const qCount  = exam.questions_count ?? 0;
@@ -978,14 +1056,16 @@ export default function LiveAssessmentsTable({
                 </td>
               </tr>
             )}
-            {exams.length === 0 ? (
+            {displayedExams.length === 0 ? (
               <tr>
                 <td colSpan={6} className="py-12 text-center text-xs text-[#64748B] dark:text-[#A3B1C6]">
-                  No assessments created yet. Click "Create Assessment" to synthesize a new examination.
+                  {statusFilter !== "all" 
+                    ? `No ${statusFilter} assessments found.`
+                    : 'No assessments created yet. Click "Create Assessment" to synthesize a new examination.'}
                 </td>
               </tr>
             ) : (
-              exams.map((exam, idx) => {
+              displayedExams.map((exam, idx) => {
                 const sched = getExamScheduleInfo(exam);
                 const isLoadingCreds = loadingCredsExamId === exam.id;
                 const isNearBottom = idx >= Math.max(0, exams.length - 2);
