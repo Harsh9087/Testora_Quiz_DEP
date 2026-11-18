@@ -262,14 +262,14 @@ export default function LiveProctoringModal({
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
                   <h3 className="font-bold text-xs sm:text-base text-slate-900 dark:text-slate-100 truncate">
-                    Live Monitor: {telemetry?.exam?.name || exam?.name || "Assessment"}
+                    Live Monitor: {telemetry?.exam?.name || exam?.name || exam?.title || "Assessment"}
                   </h3>
                   <span className="px-1.5 py-0.2 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 text-[8px] sm:text-[9px] font-extrabold uppercase tracking-wider shrink-0">
                     LIVE
                   </span>
                 </div>
                 <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 truncate">
-                  Code: <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{telemetry?.exam?.exam_code || exam?.exam_code || exam?.code || "—"}</span> • Real-time focus tracking
+                  Code: <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{telemetry?.exam?.exam_code || exam?.exam_code || exam?.code || exam?.id || targetExamId || "—"}</span> • Real-time focus tracking
                 </p>
               </div>
             </div>

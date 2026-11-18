@@ -1836,7 +1836,7 @@ def get_exam_live_monitor(
             candidates = db.query(ExamCandidate).options(
                 joinedload(ExamCandidate.credential),
                 selectinload(ExamCandidate.submissions)
-            ).filter(ExamCandidate.exam_id == exam_id).order_by(ExamCandidate.created_at.asc()).all()
+            ).filter(ExamCandidate.exam_id == actual_exam_id).order_by(ExamCandidate.created_at.asc()).all()
 
     # Deduplicate candidates by student email so each distinct student appears only once
     # Candidates with active submissions or credentials are prioritized as canonical
@@ -1863,7 +1863,7 @@ def get_exam_live_monitor(
     proctor_counts = dict(
         db.query(ProctoringLog.submission_id, func.count(ProctoringLog.id))
         .join(ExamSubmission, ProctoringLog.submission_id == ExamSubmission.id)
-        .filter(ExamSubmission.exam_id == exam_id)
+        .filter(ExamSubmission.exam_id == actual_exam_id)
         .group_by(ProctoringLog.submission_id)
         .all()
     )

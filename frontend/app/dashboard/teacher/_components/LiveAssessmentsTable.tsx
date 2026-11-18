@@ -591,7 +591,13 @@ export default function LiveAssessmentsTable({
                   {sched.status === "live" ? (
                     <button
                       type="button"
-                      onClick={() => setLiveProctorExamId(exam.id)}
+                      onClick={() => {
+                        if (onOpenLiveProctor) {
+                          onOpenLiveProctor(exam);
+                        } else {
+                          setLiveProctorExamId(exam.id);
+                        }
+                      }}
                       className="flex-1 h-9.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer"
                     >
                       <Radio className="h-3.5 w-3.5 animate-pulse shrink-0" />
@@ -705,7 +711,14 @@ export default function LiveAssessmentsTable({
                               {exam.is_published && (
                                 <button
                                   type="button"
-                                  onClick={() => { setActiveDropdownExamId(null); setLiveProctorExamId(exam.id); }}
+                                  onClick={() => {
+                                    setActiveDropdownExamId(null);
+                                    if (onOpenLiveProctor) {
+                                      onOpenLiveProctor(exam);
+                                    } else {
+                                      setLiveProctorExamId(exam.id);
+                                    }
+                                  }}
                                   className="w-full px-3 py-2.5 text-xs font-semibold text-rose-700 dark:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded-xl flex items-center gap-3 transition-colors cursor-pointer group"
                                 >
                                   <div className="w-7 h-7 rounded-lg bg-rose-100 dark:bg-rose-900/50 flex items-center justify-center shrink-0 text-rose-600 dark:text-rose-400 group-hover:scale-105 transition-transform">
@@ -1086,7 +1099,13 @@ export default function LiveAssessmentsTable({
                         {exam.is_published && sched.status === "live" ? (
                           <button
                             type="button"
-                            onClick={() => setLiveProctorExamId(exam.id)}
+                            onClick={() => {
+                              if (onOpenLiveProctor) {
+                                onOpenLiveProctor(exam);
+                              } else {
+                                setLiveProctorExamId(exam.id);
+                              }
+                            }}
                             className="h-8 px-3 rounded-lg border border-rose-300 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/60 transition-all flex items-center gap-1.5 text-xs font-bold cursor-pointer shadow-xs"
                             title="Open Real-time Live Proctoring Room"
                           >
@@ -1193,7 +1212,11 @@ export default function LiveAssessmentsTable({
                                     type="button"
                                     onClick={() => {
                                       setActiveDropdownExamId(null);
-                                      setLiveProctorExamId(exam.id);
+                                      if (onOpenLiveProctor) {
+                                        onOpenLiveProctor(exam);
+                                      } else {
+                                        setLiveProctorExamId(exam.id);
+                                      }
                                     }}
                                     className="w-full px-2.5 py-2 text-xs font-semibold text-rose-700 dark:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded-xl flex items-center gap-2.5 transition-colors cursor-pointer group"
                                   >
@@ -1786,8 +1809,9 @@ export default function LiveAssessmentsTable({
       {liveProctorExamId && (
         <LiveProctoringModal
           examId={liveProctorExamId}
-          exam={exams.find((e) => e.id === liveProctorExamId || e.exam_id === liveProctorExamId)}
+          exam={exams.find((e) => e.id === liveProctorExamId || e.exam_id === liveProctorExamId || e.exam_code === liveProctorExamId || e.code === liveProctorExamId)}
           onClose={() => setLiveProctorExamId(null)}
+          onEndExamEarly={onEndExamEarly}
         />
       )}
     </div>

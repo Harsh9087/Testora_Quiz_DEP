@@ -999,11 +999,7 @@ export default function TeacherDashboard() {
         setExpandedStep(1);
 
         // Clean up URL and navigate immediately to the Main Dashboard overview
-        if (typeof window !== "undefined") {
-          window.history.replaceState(null, "", "/dashboard/teacher");
-        }
-        setActiveSectionTab("overview");
-        window.dispatchEvent(new CustomEvent("switch-tab", { detail: "overview" }));
+        switchSectionTab("overview");
         window.dispatchEvent(new CustomEvent("refresh-sidebar-stats"));
         try {
           router.replace("/dashboard/teacher");

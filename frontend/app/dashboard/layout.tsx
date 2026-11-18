@@ -1862,7 +1862,11 @@ export default function DashboardLayout({
               onClick={() => {
                 closeSidebarMobile();
                 logout();
-                router.replace("/login");
+                if (typeof window !== "undefined") {
+                  window.location.href = "/login";
+                } else {
+                  router.replace("/login");
+                }
               }}
               className="w-full mt-2.5 py-2.5 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/30 dark:hover:bg-rose-950/50 text-rose-600 dark:text-rose-400 text-xs font-semibold border border-rose-200/60 dark:border-rose-900/40 flex items-center justify-center gap-2 transition-all cursor-pointer shadow-2xs"
             >
@@ -1874,7 +1878,11 @@ export default function DashboardLayout({
               onClick={() => {
                 closeSidebarMobile();
                 logout();
-                router.replace("/login");
+                if (typeof window !== "undefined") {
+                  window.location.href = "/login";
+                } else {
+                  router.replace("/login");
+                }
               }}
               className="w-full mt-2 py-2 flex items-center justify-center rounded-xl text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
               title="Sign Out"

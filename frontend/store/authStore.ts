@@ -106,7 +106,10 @@ export const useAuthStore = create<AuthState>()(
 
           // Revoke backend session & clear httpOnly refresh token cookie asynchronously
           try {
-            fetch('/api/v1/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => {});
+            const apiBase = typeof window !== 'undefined' && window.location.hostname.includes('testoraquiz.com')
+              ? 'https://api.testoraquiz.com'
+              : '';
+            fetch(`${apiBase}/api/v1/auth/logout`, { method: 'POST', credentials: 'include' }).catch(() => {});
           } catch {}
         }
         set({ token: null, role: null, fullName: null, institutionId: null, avatarUrl: null });

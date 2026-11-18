@@ -636,10 +636,10 @@ export default function AIAgentGuideWidget({
     const isMobile = window.innerWidth < 640;
     if (isMobile) {
       return {
-        bottom: "84px",
-        left: "12px",
-        right: "12px",
-        maxHeight: "calc(100vh - 100px)",
+        bottom: "0px",
+        left: "0px",
+        right: "0px",
+        maxHeight: "90dvh",
       };
     }
 
@@ -709,20 +709,31 @@ export default function AIAgentGuideWidget({
         </button>
       </div>
 
-      {/* ═══════ UPGRADED FLOATING AI AGENT POPUP WINDOW ═══════ */}
+      {/* ═══════ UPGRADED FLOATING AI AGENT POPUP WINDOW / BOTTOM SHEET ═══════ */}
       {isOpen && (
-        <div
-          ref={widgetRef}
-          style={getWidgetPositionStyles()}
-          className="fixed z-50 w-[calc(100vw-24px)] sm:w-[440px] md:w-[460px] h-[610px] max-h-[calc(100vh-100px)] rounded-3xl bg-[#090F1E] text-slate-100 border border-slate-700/70 shadow-2xl shadow-black/80 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-3 duration-200 ring-1 ring-white/10 select-none backdrop-blur-xl"
-        >
-          {/* ── 1. HEADER (Deep Sapphire Navy + Orange AI Bot + LIVE + Close) ── */}
-          <div className="px-4 py-3 bg-[#070D1B] text-white flex items-center justify-between border-b border-slate-800/90 shrink-0">
-            <div className="flex items-center gap-2.5 min-w-0">
-              {/* Vibrant Orange AI Avatar */}
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#EA580C] via-[#F97316] to-[#FB923C] flex items-center justify-center text-white shadow-md shadow-orange-600/30 ring-1 ring-white/20 shrink-0">
-                <Bot className="w-4 h-4" />
-              </div>
+        <>
+          {/* Mobile Backdrop Overlay */}
+          <div
+            onClick={() => setIsOpen(false)}
+            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs sm:hidden animate-in fade-in duration-200"
+            aria-hidden="true"
+          />
+
+          <div
+            ref={widgetRef}
+            style={getWidgetPositionStyles()}
+            className="fixed z-50 w-full sm:w-[440px] md:w-[460px] h-[90dvh] sm:h-[610px] sm:max-h-[calc(100vh-100px)] rounded-t-[28px] sm:rounded-3xl bg-[#090F1E] text-slate-100 border-t sm:border border-slate-700/70 shadow-2xl shadow-black/80 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200 ring-1 ring-white/10 select-none backdrop-blur-xl"
+          >
+            {/* Mobile Sheet Handle Bar */}
+            <div className="w-12 h-1 bg-slate-600/70 rounded-full mx-auto mt-2.5 mb-1 sm:hidden shrink-0" />
+
+            {/* ── 1. HEADER (Deep Sapphire Navy + Orange AI Bot + LIVE + Close) ── */}
+            <div className="px-4 py-3 bg-[#070D1B] text-white flex items-center justify-between border-b border-slate-800/90 shrink-0">
+              <div className="flex items-center gap-2.5 min-w-0">
+                {/* Vibrant Orange AI Avatar */}
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#EA580C] via-[#F97316] to-[#FB923C] flex items-center justify-center text-white shadow-md shadow-orange-600/30 ring-1 ring-white/20 shrink-0">
+                  <Bot className="w-4 h-4" />
+                </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <h3 className="text-xs sm:text-sm font-bold text-white tracking-tight truncate">
@@ -947,34 +958,47 @@ export default function AIAgentGuideWidget({
 
               {/* Numbered Step Cards */}
               <div className="space-y-2">
-                {selectedTopic.steps.map((step, idx) => (
-                  <div
-                    key={idx}
-                    className="group relative flex items-start gap-3 p-3.5 rounded-2xl bg-[#0D182E] border border-slate-700/70 text-xs sm:text-[13px] text-slate-200 leading-relaxed shadow-sm hover:border-blue-500/50 hover:bg-[#101E39] transition-all"
-                  >
-                    {/* Royal Blue Step Badge matching reference */}
-                    <span className="w-6 h-6 rounded-full bg-[#1765F5] text-white font-extrabold text-xs flex items-center justify-center shrink-0 mt-0.5 shadow-md shadow-blue-600/30">
-                      {idx + 1}
-                    </span>
-                    <span className="flex-1 pt-0.5 font-normal leading-relaxed text-slate-200">
-                      {step}
-                    </span>
-                    
-                    {/* Copy step button */}
-                    <button
-                      type="button"
-                      onClick={() => handleCopyStep(step, idx)}
-                      className="opacity-0 group-hover:opacity-100 p-1 rounded-md text-slate-400 hover:text-white hover:bg-slate-700/50 transition-opacity cursor-pointer shrink-0"
-                      title="Copy step instruction"
+                {selectedTopic.steps.map((step, idx) => {
+                  const colonIndex = step.indexOf(":");
+                  const hasPrefix = colonIndex > 0 && colonIndex < 40;
+                  const stepTitle = hasPrefix ? step.substring(0, colonIndex).trim() : null;
+                  const stepBody = hasPrefix ? step.substring(colonIndex + 1).trim() : step;
+                  return (
+                    <div
+                      key={idx}
+                      className="group relative flex items-start gap-3 p-3 sm:p-3.5 rounded-2xl bg-[#0D182E] border border-slate-700/70 text-xs sm:text-[13px] text-slate-200 leading-relaxed shadow-xs hover:border-blue-500/50 hover:bg-[#101E39] transition-all"
                     >
-                      {copiedStepIdx === idx ? (
-                        <Check className="w-3.5 h-3.5 text-emerald-400" />
-                      ) : (
-                        <Copy className="w-3.5 h-3.5" />
-                      )}
-                    </button>
-                  </div>
-                ))}
+                      {/* Royal Blue Step Badge */}
+                      <span className="w-6 h-6 rounded-full bg-[#1765F5] text-white font-extrabold text-xs flex items-center justify-center shrink-0 mt-0.5 shadow-md shadow-blue-600/30">
+                        {idx + 1}
+                      </span>
+                      <div className="flex-1 min-w-0 pt-0.5">
+                        {stepTitle && (
+                          <div className="font-bold text-white text-xs sm:text-[13px] mb-0.5 flex items-center gap-1.5">
+                            {stepTitle}
+                          </div>
+                        )}
+                        <p className="text-slate-300 font-normal leading-relaxed text-[11.5px] sm:text-xs">
+                          {stepBody}
+                        </p>
+                      </div>
+                      
+                      {/* Copy step button */}
+                      <button
+                        type="button"
+                        onClick={() => handleCopyStep(step, idx)}
+                        className="opacity-70 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all cursor-pointer shrink-0"
+                        title="Copy step instruction"
+                      >
+                        {copiedStepIdx === idx ? (
+                          <Check className="w-3.5 h-3.5 text-emerald-400" />
+                        ) : (
+                          <Copy className="w-3.5 h-3.5" />
+                        )}
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
@@ -1028,7 +1052,8 @@ export default function AIAgentGuideWidget({
                   value={userQuestion}
                   onChange={(e) => setUserQuestion(e.target.value)}
                   placeholder="Ask a question (e.g. how to create quiz, proctoring)..."
-                  className="w-full pl-8 pr-3 py-2 text-xs rounded-xl bg-[#0F182F] border border-slate-700 text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  enterKeyHint="search"
+                  className="w-full pl-8 pr-3 py-2 text-sm sm:text-xs rounded-xl bg-[#0F182F] border border-slate-700 text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                 />
               </div>
               <button
@@ -1043,7 +1068,8 @@ export default function AIAgentGuideWidget({
             </form>
           </div>
 
-        </div>
+          </div>
+        </>
       )}
     </>
   );
