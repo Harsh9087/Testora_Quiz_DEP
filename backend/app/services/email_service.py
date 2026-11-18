@@ -9,6 +9,7 @@ from typing import Optional, Union
 from datetime import datetime
 from app.config import settings
 from app.utils.timezone import format_ist_datetime, format_ist_time
+from urllib.parse import quote
 
 logger = logging.getLogger(__name__)
 
@@ -176,44 +177,44 @@ class EmailService:
         verify_url = f"{settings.FRONTEND_URL}/verify-student?token={verification_token}"
         subject = "Action Required: Authorize Your Testora Quiz Student Account"
         
-        html_content = f"""
-        <!DOCTYPE html>
-        <html>
-        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #F7F4EF; padding: 24px; color: #242321;">
-            <div style="max-width: 580px; margin: 0 auto; background: #ffffff; border-radius: 12px; padding: 32px; border: 1px solid #E5E0D8;">
-                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
-                    <div style="background-color: #C84B18; color: #ffffff; padding: 8px 12px; border-radius: 8px; font-weight: bold; font-size: 16px;">Testora Quiz</div>
-                    <span style="font-size: 12px; color: #716D67;">Academic Authorization Portal</span>
-                </div>
+        html_content = f"""<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"></head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #F8FAFC; padding: 24px 12px; color: #0F172A; margin: 0;">
+    <div style="max-width: 580px; margin: 0 auto; background: #ffffff; border-radius: 16px; padding: 32px; border: 1px solid #E2E8F0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
+            <div style="background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%); color: #ffffff; padding: 8px 14px; border-radius: 10px; font-weight: 800; font-size: 16px;">Testora Quiz</div>
+            <span style="font-size: 12px; color: #64748B; font-weight: 500;">Academic Student Authorization</span>
+        </div>
 
-                <h2 style="color: #242321; margin-top: 0; font-size: 20px; font-weight: 700;">Authorize Your Student Account</h2>
-                <p style="font-size: 14px; line-height: 1.6;">Hello <b>{student_name}</b>,</p>
-                <p style="font-size: 14px; line-height: 1.6;">Your teacher has enrolled you into the institutional student directory. Please authorize your email to activate your account and generate your secure portal access password.</p>
-                
-                <div style="background-color: #F0ECE4; border: 1px solid #E5E0D8; border-radius: 8px; padding: 16px; margin: 20px 0; font-size: 13px;">
-                    <p style="margin: 4px 0;"><b>Enrolled Email:</b> <span style="color: #C84B18; font-family: monospace;">{email}</span></p>
-                    {f'<p style="margin: 4px 0;"><b>Roll Number:</b> {roll_number}</p>' if roll_number else ''}
-                    <p style="margin: 4px 0;"><b>Status:</b> <span style="color: #D97706; font-weight: 600;">Pending Authorization</span></p>
-                </div>
-                
-                <div style="margin: 28px 0; text-align: center;">
-                    <a href="{verify_url}" style="display: inline-block; background-color: #C84B18; color: #ffffff; padding: 12px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px; margin-bottom: 12px;">Authorize Student Account</a>
-                    <div style="margin-top: 8px;">
-                        <span style="font-size: 12px; color: #716D67;">or authorize instantly with your Google Workspace account:</span>
-                    </div>
-                    <a href="{verify_url}&provider=google" style="display: inline-block; background-color: #ffffff; color: #374151; padding: 10px 20px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 13px; border: 1px solid #D1D5DB; margin-top: 8px;">
-                        Sign in & Authorize with Google
-                    </a>
-                </div>
-                
-                <p style="font-size: 12px; color: #716D67; line-height: 1.5;">Once authorized, a unique secure password will automatically be generated and delivered to your inbox for direct email sign-in.</p>
-                
-                <hr style="border: none; border-top: 1px solid #E5E0D8; margin-top: 28px;" />
-                <p style="font-size: 11px; color: #716D67; margin-bottom: 0;">Testora Quiz Autonomous Examination System • Verification Request</p>
+        <h2 style="color: #0F172A; margin-top: 0; font-size: 20px; font-weight: 800;">Authorize Your Student Account</h2>
+        <p style="font-size: 14px; line-height: 1.6; color: #334155;">Hello <strong>{student_name}</strong>,</p>
+        <p style="font-size: 14px; line-height: 1.6; color: #334155;">Your instructor has enrolled you into the institutional student directory. Please authorize your email to activate your account and generate your secure portal access password.</p>
+        
+        <div style="background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 16px 20px; margin: 20px 0; font-size: 13px;">
+            <p style="margin: 5px 0;"><strong>Enrolled Email:</strong> <span style="color: #2563EB; font-family: monospace; font-weight: 600;">{email}</span></p>
+            {f'<p style="margin: 5px 0;"><strong>Roll Number:</strong> {roll_number}</p>' if roll_number else ''}
+            <p style="margin: 5px 0;"><strong>Status:</strong> <span style="color: #D97706; font-weight: 700;">Pending Authorization</span></p>
+        </div>
+        
+        <div style="margin: 28px 0; text-align: center;">
+            <a href="{verify_url}" style="display: inline-block; background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%); color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 10px; font-weight: 700; font-size: 14px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); margin-bottom: 12px;">Authorize Student Account</a>
+            <div style="margin-top: 10px;">
+                <span style="font-size: 12px; color: #64748B;">or authorize instantly with Google Workspace:</span>
             </div>
-        </body>
-        </html>
-        """
+            <a href="{verify_url}&provider=google" style="display: inline-block; background-color: #ffffff; color: #334155; padding: 10px 22px; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 13px; border: 1px solid #CBD5E1; margin-top: 8px;">
+                Sign in &amp; Authorize with Google
+            </a>
+        </div>
+        
+        <p style="font-size: 12px; color: #64748B; line-height: 1.5;">Once authorized, a unique secure password will automatically be generated and delivered to your inbox for direct email sign-in.</p>
+        
+        <hr style="border: none; border-top: 1px solid #E2E8F0; margin-top: 28px;" />
+        <p style="font-size: 11px; color: #94A3B8; margin-bottom: 0;">Testora Quiz Autonomous Examination System &bull; Verification Request</p>
+    </div>
+</body>
+</html>
+"""
         
         logger.info(f"📧 [AUTHORIZATION EMAIL] Sent authorization email to {student_name} (email={email})")
         self._send_smtp_email(email, subject, html_content)
@@ -223,37 +224,37 @@ class EmailService:
         portal_url = settings.FRONTEND_URL
         subject = "Your Testora Quiz Student Portal Password & Credentials"
         
-        html_content = f"""
-        <!DOCTYPE html>
-        <html>
-        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #F7F4EF; padding: 24px; color: #242321;">
-            <div style="max-width: 580px; margin: 0 auto; background: #ffffff; border-radius: 12px; padding: 32px; border: 1px solid #E5E0D8;">
-                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
-                    <div style="background-color: #059669; color: #ffffff; padding: 8px 12px; border-radius: 8px; font-weight: bold; font-size: 16px;">Verified</div>
-                    <span style="font-size: 12px; color: #716D67;">Testora Quiz Student Portal</span>
-                </div>
+        html_content = f"""<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"></head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #F8FAFC; padding: 24px 12px; color: #0F172A; margin: 0;">
+    <div style="max-width: 580px; margin: 0 auto; background: #ffffff; border-radius: 16px; padding: 32px; border: 1px solid #E2E8F0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
+            <div style="background-color: #059669; color: #ffffff; padding: 6px 14px; border-radius: 9999px; font-weight: 800; font-size: 13px;">✓ Verified</div>
+            <span style="font-size: 12px; color: #64748B; font-weight: 600;">Testora Quiz Student Portal</span>
+        </div>
 
-                <h2 style="color: #242321; margin-top: 0; font-size: 20px; font-weight: 700;">Account Authorized Successfully!</h2>
-                <p style="font-size: 14px; line-height: 1.6;">Hello <b>{student_name}</b>,</p>
-                <p style="font-size: 14px; line-height: 1.6;">Your student account is now fully verified. Your secure student portal password has been generated below:</p>
-                
-                <div style="background-color: #F0ECE4; border: 1px solid #E5E0D8; border-radius: 8px; padding: 20px; margin: 20px 0; font-size: 14px;">
-                    <p style="margin: 6px 0;"><b>Portal Login Email:</b> <span style="color: #C84B18; font-family: monospace; font-size: 15px;">{email}</span></p>
-                    <p style="margin: 6px 0;"><b>Generated Password:</b> <span style="color: #047857; font-family: monospace; font-size: 17px; font-weight: bold; background: #ECFDF5; padding: 3px 8px; border-radius: 4px; border: 1px solid #A7F3D0;">{password}</span></p>
-                </div>
-                
-                <p style="font-size: 13px; line-height: 1.6;">You can sign in anytime using your email and generated password, or by clicking <b>"Continue with Google"</b> with your authorized email address:</p>
-                
-                <div style="margin: 24px 0; text-align: center;">
-                    <a href="{portal_url}" style="display: inline-block; background-color: #C84B18; color: #ffffff; padding: 12px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;">Sign in to Student Portal</a>
-                </div>
-                
-                <hr style="border: none; border-top: 1px solid #E5E0D8; margin-top: 28px;" />
-                <p style="font-size: 11px; color: #716D67; margin-bottom: 0;">Testora Quiz Autonomous Examination System • Confidential Access Credentials</p>
-            </div>
-        </body>
-        </html>
-        """
+        <h2 style="color: #0F172A; margin-top: 0; font-size: 20px; font-weight: 800;">Account Authorized Successfully!</h2>
+        <p style="font-size: 14px; line-height: 1.6; color: #334155;">Hello <strong>{student_name}</strong>,</p>
+        <p style="font-size: 14px; line-height: 1.6; color: #334155;">Your student account is now fully verified. Your secure student portal password has been generated below:</p>
+        
+        <div style="background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 20px; margin: 20px 0; font-size: 14px;">
+            <p style="margin: 6px 0;"><strong>Portal Login Email:</strong> <span style="color: #2563EB; font-family: monospace; font-size: 15px; font-weight: 600;">{email}</span></p>
+            <p style="margin: 10px 0 6px 0;"><strong>Generated Password:</strong> <span style="color: #047857; font-family: monospace; font-size: 18px; font-weight: bold; background: #ECFDF5; padding: 4px 12px; border-radius: 6px; border: 1px solid #A7F3D0;">{password}</span></p>
+        </div>
+        
+        <p style="font-size: 13px; line-height: 1.6; color: #475569;">You can sign in anytime using your email and generated password, or by clicking <strong>"Continue with Google"</strong> with your authorized email address:</p>
+        
+        <div style="margin: 26px 0; text-align: center;">
+            <a href="{portal_url}" style="display: inline-block; background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%); color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 10px; font-weight: 700; font-size: 14px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);">Sign in to Student Portal</a>
+        </div>
+        
+        <hr style="border: none; border-top: 1px solid #E2E8F0; margin-top: 28px;" />
+        <p style="font-size: 11px; color: #94A3B8; margin-bottom: 0;">Testora Quiz Autonomous Examination System &bull; Confidential Access Credentials</p>
+    </div>
+</body>
+</html>
+"""
         
         logger.info(f"📧 [CREDENTIALS EMAIL] Dispatched generated credentials to {student_name} (email={email})")
         self._send_smtp_email(email, subject, html_content)
@@ -263,33 +264,32 @@ class EmailService:
         reset_url = f"{settings.FRONTEND_URL}/reset-password?token={reset_token}"
         subject = "Testora Quiz — Password Reset Request"
         
-        html_content = f"""
-        <!DOCTYPE html>
-        <html>
-        <head><meta charset="utf-8"></head>
-        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #F7F4EF; padding: 24px; color: #242321;">
-            <div style="max-width: 580px; margin: 0 auto; background: #ffffff; border-radius: 12px; padding: 32px; border: 1px solid #E5E0D8;">
-                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
-                    <div style="background-color: #C84B18; color: #ffffff; padding: 8px 12px; border-radius: 8px; font-weight: bold; font-size: 16px;">Testora Quiz</div>
-                    <span style="font-size: 12px; color: #716D67;">Password Recovery</span>
-                </div>
+        html_content = f"""<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"></head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #F8FAFC; padding: 24px 12px; color: #0F172A; margin: 0;">
+    <div style="max-width: 580px; margin: 0 auto; background: #ffffff; border-radius: 16px; padding: 32px; border: 1px solid #E2E8F0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
+            <div style="background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%); color: #ffffff; padding: 8px 14px; border-radius: 10px; font-weight: 800; font-size: 16px;">Testora Quiz</div>
+            <span style="font-size: 12px; color: #64748B; font-weight: 600;">Password Recovery</span>
+        </div>
 
-                <h2 style="color: #242321; margin-top: 0; font-size: 20px; font-weight: 700;">Password Reset Request</h2>
-                <p style="font-size: 14px; line-height: 1.6;">Hello <b>{user_name}</b>,</p>
-                <p style="font-size: 14px; line-height: 1.6;">We received a request to reset your password. Click the secure button below to set a new password for your account:</p>
-                
-                <div style="margin: 24px 0; text-align: center;">
-                    <a href="{reset_url}" style="display: inline-block; background-color: #C84B18; color: #ffffff; padding: 12px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;">Reset Account Password</a>
-                </div>
-                
-                <p style="font-size: 12px; color: #716D67;">Or copy and paste this link in your browser: <br/><span style="font-family: monospace; font-size: 11px; word-break: break-all;">{reset_url}</span></p>
-                
-                <hr style="border: none; border-top: 1px solid #E5E0D8; margin-top: 28px;" />
-                <p style="font-size: 11px; color: #716D67; margin-bottom: 0;">Testora Quiz Autonomous Examination System • If you did not request this, please ignore this email.</p>
-            </div>
-        </body>
-        </html>
-        """
+        <h2 style="color: #0F172A; margin-top: 0; font-size: 20px; font-weight: 800;">Password Reset Request</h2>
+        <p style="font-size: 14px; line-height: 1.6; color: #334155;">Hello <strong>{user_name}</strong>,</p>
+        <p style="font-size: 14px; line-height: 1.6; color: #334155;">We received a request to reset your password. Click the secure button below to set a new password for your account:</p>
+        
+        <div style="margin: 26px 0; text-align: center;">
+            <a href="{reset_url}" style="display: inline-block; background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%); color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 10px; font-weight: 700; font-size: 14px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);">Reset Account Password</a>
+        </div>
+        
+        <p style="font-size: 12px; color: #64748B;">Or copy and paste this link in your browser: <br/><span style="font-family: monospace; font-size: 11px; word-break: break-all; color: #2563EB;">{reset_url}</span></p>
+        
+        <hr style="border: none; border-top: 1px solid #E2E8F0; margin-top: 28px;" />
+        <p style="font-size: 11px; color: #94A3B8; margin-bottom: 0;">Testora Quiz Autonomous Examination System &bull; If you did not request this, please ignore this email.</p>
+    </div>
+</body>
+</html>
+"""
         
         logger.info(f"📧 [PASSWORD RESET EMAIL] Dispatched reset link email to {user_name} (email={email})")
         self._send_smtp_email(email, subject, html_content)
@@ -311,46 +311,177 @@ class EmailService:
     ):
         """Dispatches an automated email to student containing test link, exam username, passcode PIN, and IST schedule."""
         exam_link = f"{settings.FRONTEND_URL}/exam/{exam_code}"
-        subject = f"Exam Notification & Access Credentials — {exam_name}"
+        exam_link_with_creds = f"{settings.FRONTEND_URL}/exam/{exam_code}?user={quote(username)}&pin={quote(password)}"
+        subject = f"[Testora Quiz] Secured Exam Credentials & Access Passcode — {exam_name}"
         
         schedule_html = ""
         if start_time:
             start_str = format_ist_datetime(start_time)
             end_str = format_ist_datetime(end_time) if end_time else None
             schedule_html = f"""
-            <div style="background-color: #FEF3C7; border: 1px solid #FDE68A; border-radius: 8px; padding: 12px 16px; margin: 15px 0; font-size: 13px;">
-                <p style="margin: 3px 0; color: #92400E; font-weight: bold;">Official Schedule (Indian Standard Time - IST):</p>
-                <p style="margin: 3px 0; color: #78350F;"><b>Starts:</b> {start_str}</p>
-                {f'<p style="margin: 3px 0; color: #78350F;"><b>Ends:</b> {end_str}</p>' if end_str else ''}
+            <div style="background-color: #EFF6FF; border: 1px solid #BFDBFE; border-left: 4px solid #2563EB; border-radius: 12px; padding: 16px 20px; margin: 20px 0;">
+                <div style="font-size: 11px; font-weight: 800; color: #1E40AF; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">
+                    📅 Official Examination Schedule (IST)
+                </div>
+                <div style="font-size: 14px; color: #1E3A8A; line-height: 1.6;">
+                    <div><strong>Starts:</strong> {start_str}</div>
+                    {f'<div><strong>Ends:</strong> {end_str}</div>' if end_str else ''}
+                </div>
+                <div style="font-size: 11px; color: #3B82F6; margin-top: 6px; font-weight: 500;">
+                    Please join 5-10 minutes prior to complete camera & environment verification.
+                </div>
             </div>
             """
         
-        html_content = f"""
-        <!DOCTYPE html>
-        <html>
-        <body style="font-family: Arial, sans-serif; background-color: #FAF7F2; padding: 20px; color: #1C1917;">
-            <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; padding: 30px; border: 1px solid #E7E0D3;">
-                <h2 style="color: #9A3412; margin-top: 0;">Secured Exam Credentials & Portal Link</h2>
-                <p>Hello <b>{student_name}</b>,</p>
-                <p>You have been enrolled for the examination: <b>{exam_name}</b> (Code: <b style="color: #9A3412;">{exam_code}</b>).</p>
-                
-                {schedule_html}
+        html_content = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Secured Exam Access &amp; Credentials — Testora Quiz</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #F8FAFC; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; color: #0F172A;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #F8FAFC; padding: 24px 12px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; background-color: #FFFFFF; border-radius: 20px; overflow: hidden; border: 1px solid #E2E8F0; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08);">
+          
+          <!-- Gradient Top Brand Header -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%); padding: 32px 28px; text-align: left;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td>
+                    <div style="display: inline-block; background: rgba(255, 255, 255, 0.16); border: 1px solid rgba(255, 255, 255, 0.25); color: #FFFFFF; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; padding: 5px 12px; border-radius: 9999px; margin-bottom: 12px;">
+                      🛡️ Secure Examination Gateway
+                    </div>
+                    <h1 style="color: #FFFFFF; margin: 0 0 6px 0; font-size: 22px; font-weight: 800; line-height: 1.3;">
+                      Official Exam Access &amp; Credentials
+                    </h1>
+                    <p style="color: #DBEAFE; margin: 0; font-size: 13px; font-weight: 500;">
+                      Candidate Admit &bull; Confidential Single-Session Passcode
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
 
-                <div style="background-color: #FBF9F5; border: 1px solid #E7E0D3; border-radius: 12px; padding: 20px; margin: 20px 0;">
-                    <p style="margin: 5px 0;"><b>Exam Session Username:</b> <span style="color: #9A3412; font-family: monospace; font-size: 16px;">{username}</span></p>
-                    <p style="margin: 5px 0;"><b>Exam Passcode / PIN:</b> <span style="color: #047857; font-family: monospace; font-size: 16px; background: #ECFDF5; padding: 2px 8px; border-radius: 4px;">{password}</span></p>
-                    <p style="margin: 5px 0;"><b>Exam Code:</b> {exam_code}</p>
+          <!-- Main Body Content -->
+          <tr>
+            <td style="padding: 28px 24px;">
+              
+              <p style="font-size: 15px; line-height: 1.6; margin: 0 0 14px 0; color: #0F172A;">
+                Hello <strong>{student_name}</strong>,
+              </p>
+              <p style="font-size: 14px; line-height: 1.6; color: #334155; margin: 0 0 20px 0;">
+                You are officially registered for the following examination on <strong>Testora Quiz</strong>. Your exclusive proctored gateway session credentials, schedule details, and one-click entry link are provided below:
+              </p>
+
+              <!-- Examination Overview Card -->
+              <div style="background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 14px; padding: 18px 20px; margin-bottom: 20px;">
+                <div style="font-size: 11px; font-weight: 800; color: #64748B; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px;">
+                  Examination Title
                 </div>
-                
-                <p>Click the link below to enter the secure exam gateway when your exam window opens:</p>
-                <p><a href="{exam_link}" style="display: inline-block; background: #9A3412; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 10px; font-weight: bold;">Open Exam Portal Link</a></p>
-                
-                <hr style="border: none; border-top: 1px solid #E7E0D3; margin-top: 30px;" />
-                <p style="font-size: 11px; color: #78716C;">Testora Quiz Proctoring Portal • Confidential Student Credentials • All Times in Indian Standard Time (IST)</p>
-            </div>
-        </body>
-        </html>
-        """
+                <div style="font-size: 17px; font-weight: 800; color: #0F172A; margin-bottom: 10px; line-height: 1.3;">
+                  {exam_name}
+                </div>
+                <div style="display: inline-block; background-color: #EFF6FF; border: 1px solid #BFDBFE; color: #1E40AF; font-size: 12px; font-weight: 700; font-family: 'SFMono-Regular', Consolas, monospace; padding: 4px 10px; border-radius: 6px;">
+                  TEST CODE: {exam_code}
+                </div>
+              </div>
+
+              <!-- Schedule Window -->
+              {schedule_html}
+
+              <!-- Credentials Box -->
+              <div style="background: linear-gradient(180deg, #F8FAFC 0%, #F1F5F9 100%); border: 2px solid #E2E8F0; border-radius: 16px; padding: 22px; margin: 22px 0;">
+                <div style="font-size: 12px; font-weight: 800; color: #1E3A8A; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px;">
+                  🔑 Secured Candidate Credentials
+                </div>
+
+                <!-- Username Card -->
+                <div style="background-color: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 10px; padding: 12px 16px; margin-bottom: 14px;">
+                  <div style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 5px;">
+                    Exam Session Username
+                  </div>
+                  <div style="font-family: 'SFMono-Regular', Consolas, Menlo, monospace; font-size: 15px; font-weight: 700; color: #1E3A8A; word-break: break-all; word-wrap: break-word;">
+                    {username}
+                  </div>
+                </div>
+
+                <!-- Passcode / PIN Card -->
+                <div style="background-color: #ECFDF5; border: 2px solid #A7F3D0; border-radius: 12px; padding: 14px 16px; text-align: center; margin-bottom: 6px;">
+                  <div style="font-size: 11px; font-weight: 800; color: #065F46; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">
+                    Timed Security Passcode (PIN)
+                  </div>
+                  <div style="font-family: 'SFMono-Regular', Consolas, monospace; font-size: 28px; font-weight: 900; letter-spacing: 6px; color: #047857;">
+                    {password}
+                  </div>
+                  <div style="font-size: 11px; color: #059669; margin-top: 4px; font-weight: 600;">
+                    Single-use session authentication key
+                  </div>
+                </div>
+              </div>
+
+              <!-- Primary Action Button (One-click launch with prefilled credentials) -->
+              <div style="text-align: center; margin: 26px 0 16px 0;">
+                <a href="{exam_link_with_creds}" style="display: inline-block; background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%); color: #FFFFFF; font-size: 15px; font-weight: 800; text-decoration: none; padding: 15px 36px; border-radius: 12px; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35); text-align: center;">
+                  🚀 Launch Examination Portal
+                </a>
+              </div>
+
+              <div style="text-align: center; margin-bottom: 24px;">
+                <span style="font-size: 12px; color: #64748B;">Or direct gateway link: </span>
+                <a href="{exam_link}" style="color: #2563EB; font-size: 12px; font-weight: 600; word-break: break-all; text-decoration: underline;">
+                  {exam_link}
+                </a>
+              </div>
+
+              <!-- Anti-Cheat & Candidate Instructions -->
+              <div style="background-color: #FFFBEB; border: 1px solid #FDE68A; border-radius: 12px; padding: 16px 18px; margin: 24px 0 12px 0;">
+                <div style="font-size: 12px; font-weight: 800; color: #92400E; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px;">
+                  ⚠️ Candidate Instructions &amp; Anti-Cheat Rules
+                </div>
+                <ul style="margin: 0; padding-left: 18px; font-size: 12px; color: #78350F; line-height: 1.6;">
+                  <li style="margin-bottom: 4px;"><strong>Supported Devices:</strong> Use a laptop, desktop, or tablet running updated Chrome, Firefox, or Edge.</li>
+                  <li style="margin-bottom: 4px;"><strong>AI Proctoring:</strong> Web camera and microphone access are required for identity verification.</li>
+                  <li style="margin-bottom: 4px;"><strong>Fullscreen Policy:</strong> Fullscreen mode is strictly enforced. Tab switching or exiting full screen triggers automated violation logs.</li>
+                  <li><strong>Punctuality:</strong> Log in 5-10 minutes prior to scheduled start time to complete camera setup.</li>
+                </ul>
+              </div>
+
+              <hr style="border: none; border-top: 1px solid #E2E8F0; margin: 26px 0 20px 0;" />
+
+              <!-- Support & Footer -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td>
+                    <div style="font-size: 13px; font-weight: 800; color: #0F172A; margin-bottom: 2px;">
+                      Testora Quiz Examination System
+                    </div>
+                    <div style="font-size: 11px; color: #64748B; line-height: 1.5;">
+                      AI-Powered Autonomous Proctoring &amp; Assessment Infrastructure
+                    </div>
+                    <div style="font-size: 11px; color: #94A3B8; margin-top: 6px;">
+                      Need assistance? Email: <a href="mailto:support@testoraquiz.com" style="color: #2563EB; text-decoration: none; font-weight: 600;">support@testoraquiz.com</a>
+                    </div>
+                    <div style="font-size: 10px; color: #94A3B8; margin-top: 8px;">
+                      This is an automated confidential notification intended solely for {student_name} ({email}).
+                    </div>
+                  </td>
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+"""
         
         logger.info(f"📧 [EMAIL DISPATCHED] Exam credentials email dispatched for candidate {student_name} (email={email}, exam_code={exam_code}, username={username})")
         self._send_smtp_email(email, subject, html_content)
@@ -428,36 +559,110 @@ class EmailService:
     ):
         """Dispatches an automated 15-minute pre-exam schedule reminder email."""
         exam_link = f"{settings.FRONTEND_URL}/exam/{exam_code}"
+        exam_link_with_creds = f"{settings.FRONTEND_URL}/exam/{exam_code}?user={quote(username)}&pin={quote(password)}"
         subject = f"⏰ 15-Minute Exam Reminder — {exam_name}"
         
         display_start = format_ist_datetime(start_time_str) if isinstance(start_time_str, datetime) or "T" in str(start_time_str) else str(start_time_str)
         if not display_start.endswith("IST"):
             display_start = f"{display_start} IST"
             
-        html_content = f"""
-        <!DOCTYPE html>
-        <html>
-        <body style="font-family: Arial, sans-serif; background-color: #FAF7F2; padding: 20px; color: #1C1917;">
-            <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; padding: 30px; border: 1px solid #E7E0D3;">
-                <span style="background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A; padding: 4px 12px; border-radius: 99px; font-size: 11px; font-weight: bold; text-transform: uppercase;">Upcoming Exam Starting Soon</span>
-                <h2 style="color: #9A3412; margin-top: 10px;">Your Exam Begins in 15 Minutes</h2>
-                <p>Hello <b>{student_name}</b>,</p>
-                <p>This is an automated schedule reminder that your examination <b>{exam_name}</b> (Code: <b style="color: #9A3412;">{exam_code}</b>) is starting at <b>{display_start}</b>.</p>
-                
-                <div style="background-color: #FBF9F5; border: 1px solid #E7E0D3; border-radius: 12px; padding: 20px; margin: 20px 0;">
-                    <p style="margin: 5px 0;"><b>Session Username:</b> <span style="color: #9A3412; font-family: monospace; font-size: 16px;">{username}</span></p>
-                    <p style="margin: 5px 0;"><b>Passcode / PIN:</b> <span style="color: #047857; font-family: monospace; font-size: 16px; background: #ECFDF5; padding: 2px 8px; border-radius: 4px;">{password}</span></p>
+        html_content = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>15-Minute Exam Reminder — Testora Quiz</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #F8FAFC; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; color: #0F172A;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #F8FAFC; padding: 24px 12px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; background-color: #FFFFFF; border-radius: 20px; overflow: hidden; border: 1px solid #E2E8F0; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08);">
+          
+          <!-- Urgent Alert Header -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #B45309 0%, #D97706 50%, #EA580C 100%); padding: 32px 28px; text-align: left;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td>
+                    <div style="display: inline-block; background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.35); color: #FFFFFF; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; padding: 5px 12px; border-radius: 9999px; margin-bottom: 12px;">
+                      ⏰ Starting in 15 Minutes
+                    </div>
+                    <h1 style="color: #FFFFFF; margin: 0 0 6px 0; font-size: 22px; font-weight: 800; line-height: 1.3;">
+                      Your Exam Begins in 15 Minutes
+                    </h1>
+                    <p style="color: #FEF3C7; margin: 0; font-size: 13px; font-weight: 500;">
+                      Waiting Room is Now Open &bull; Join Promptly
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Main Body Content -->
+          <tr>
+            <td style="padding: 28px 24px;">
+              <p style="font-size: 15px; line-height: 1.6; margin: 0 0 14px 0; color: #0F172A;">
+                Hello <strong>{student_name}</strong>,
+              </p>
+              <p style="font-size: 14px; line-height: 1.6; color: #334155; margin: 0 0 20px 0;">
+                This is an automated reminder that your scheduled examination <strong>{exam_name}</strong> (Code: <strong style="color: #2563EB;">{exam_code}</strong>) starts at <strong>{display_start}</strong>.
+              </p>
+
+              <!-- Credentials Card -->
+              <div style="background: #F8FAFC; border: 2px solid #E2E8F0; border-radius: 16px; padding: 20px; margin: 20px 0;">
+                <div style="font-size: 11px; font-weight: 800; color: #1E3A8A; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px;">
+                  🔑 Quick Access Credentials
                 </div>
-                
-                <p>Click below to join the waiting room countdown:</p>
-                <p><a href="{exam_link}" style="display: inline-block; background: #9A3412; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 10px; font-weight: bold;">Open Live Exam Gateway</a></p>
-                
-                <hr style="border: none; border-top: 1px solid #E7E0D3; margin-top: 30px;" />
-                <p style="font-size: 11px; color: #78716C;">Testora Quiz Proctoring Portal • Scheduled Window Notification • All Times in Indian Standard Time (IST)</p>
-            </div>
-        </body>
-        </html>
-        """
+
+                <div style="background-color: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 10px; padding: 12px 16px; margin-bottom: 12px;">
+                  <div style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; margin-bottom: 4px;">
+                    Session Username
+                  </div>
+                  <div style="font-family: 'SFMono-Regular', Consolas, monospace; font-size: 15px; font-weight: 700; color: #1E3A8A; word-break: break-all;">
+                    {username}
+                  </div>
+                </div>
+
+                <div style="background-color: #ECFDF5; border: 2px solid #A7F3D0; border-radius: 12px; padding: 12px 16px; text-align: center;">
+                  <div style="font-size: 11px; font-weight: 800; color: #065F46; text-transform: uppercase; margin-bottom: 4px;">
+                    Passcode PIN
+                  </div>
+                  <div style="font-family: 'SFMono-Regular', Consolas, monospace; font-size: 26px; font-weight: 900; letter-spacing: 6px; color: #047857;">
+                    {password}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Launch Waiting Room CTA -->
+              <div style="text-align: center; margin: 26px 0 16px 0;">
+                <a href="{exam_link_with_creds}" style="display: inline-block; background: linear-gradient(135deg, #EA580C 0%, #C2410C 100%); color: #FFFFFF; font-size: 15px; font-weight: 800; text-decoration: none; padding: 15px 36px; border-radius: 12px; box-shadow: 0 4px 14px rgba(234, 88, 12, 0.35); text-align: center;">
+                  ⏳ Enter Waiting Room Gateway &rarr;
+                </a>
+              </div>
+
+              <div style="text-align: center; margin-bottom: 24px;">
+                <span style="font-size: 12px; color: #64748B;">Direct link: </span>
+                <a href="{exam_link}" style="color: #EA580C; font-size: 12px; font-weight: 600; word-break: break-all;">
+                  {exam_link}
+                </a>
+              </div>
+
+              <hr style="border: none; border-top: 1px solid #E2E8F0; margin: 24px 0 16px 0;" />
+
+              <div style="font-size: 11px; color: #94A3B8; text-align: center;">
+                Testora Quiz Proctoring Portal &bull; All Times in Indian Standard Time (IST) &bull; Confidential
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+"""
         
         logger.info(f"⏰ [REMINDER SENT] 15-min reminder sent to {student_name} (email={email}) for exam {exam_code}")
         self._send_smtp_email(email, subject, html_content)

@@ -1168,28 +1168,44 @@ def resend_credentials_email(
         s_name = "Candidate"
         
         if cred.candidate:
-            s_name = cred.candidate.name_snapshot
+            s_name = cred.candidate.name_snapshot or s_name
             s_email = cred.candidate.email_snapshot
         elif cred.student and cred.student.user and cred.student.user.email:
             s_email = cred.student.user.email
-            s_name = cred.student.user.full_name
-        else:
-            # Skip unlinked/orphan credentials
+            s_name = cred.student.user.full_name or s_name
+
+        # Fallback 1: lookup candidate by cred.candidate_id directly if relation wasn't loaded
+        if not s_email and cred.candidate_id:
+            cand_obj = db.query(ExamCandidate).filter(ExamCandidate.id == cred.candidate_id).first()
+            if cand_obj:
+                s_email = cand_obj.email_snapshot
+                s_name = cand_obj.name_snapshot or s_name
+
+        # Fallback 2: if caller provided explicit email in query param
+        if not s_email and email:
+            s_email = email.strip()
+
+        if not s_email:
             continue
 
-        if s_email:
-            background_tasks.add_task(
-                email_service.send_exam_credentials_email,
-                student_name=s_name,
-                email=s_email,
-                exam_name=exam.name,
-                exam_code=exam.exam_code,
-                username=cred.username,
-                password=cred.password,
-                start_time=exam.start_time,
-                end_time=exam.end_time
-            )
-            dispatched_count += 1
+        background_tasks.add_task(
+            email_service.send_exam_credentials_email,
+            student_name=s_name,
+            email=s_email,
+            exam_name=exam.name,
+            exam_code=exam.exam_code,
+            username=cred.username,
+            password=cred.password,
+            start_time=exam.start_time,
+            end_time=exam.end_time
+        )
+        dispatched_count += 1
+
+    if dispatched_count == 0:
+        raise HTTPException(
+            status_code=400,
+            detail="No valid candidate email address found to dispatch credentials to. Please verify the candidate has an authorized email."
+        )
             
     return {
         "status": "success",

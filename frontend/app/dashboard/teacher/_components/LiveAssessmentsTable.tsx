@@ -1591,29 +1591,29 @@ export default function LiveAssessmentsTable({
       {/* ═══════ GENERATED CREDENTIALS PREVIEW MODAL ═══════ */}
       {credsModalData && (
         <div 
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-xs p-0 sm:p-4 animate-fadeIn"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-xs p-0 sm:p-4 pt-12 sm:pt-4 animate-fadeIn"
           onClick={() => setCredsModalData(null)}
         >
           <div 
-            className="bg-white dark:bg-[#111C31] border-t sm:border border-slate-200 dark:border-slate-800 rounded-t-3xl sm:rounded-2xl max-w-3xl w-full p-3 sm:p-5 shadow-2xl space-y-2.5 sm:space-y-4 max-h-[88dvh] sm:max-h-[90vh] flex flex-col transition-colors overflow-hidden"
+            className="bg-white dark:bg-[#111C31] border-t sm:border border-slate-200 dark:border-slate-800 rounded-t-3xl sm:rounded-2xl max-w-3xl w-full p-3.5 sm:p-5 shadow-2xl space-y-2.5 sm:space-y-4 max-h-[85dvh] sm:max-h-[90vh] flex flex-col transition-colors overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Mobile Drag Indicator */}
-            <div className="sm:hidden pt-1 pb-1 flex justify-center shrink-0">
+            <div className="sm:hidden pt-0.5 pb-1 flex justify-center shrink-0">
               <div className="w-10 h-1 bg-slate-300 dark:bg-slate-700 rounded-full" />
             </div>
 
-            {/* Modal Header (pinned at top, compact on mobile) */}
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 sm:pb-3 shrink-0 gap-2">
+            {/* Modal Header (pinned at top, compact & high-contrast on mobile) */}
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5 sm:pb-3 shrink-0 gap-2">
               <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                 <div className="p-2 sm:p-2.5 bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172B4D] dark:text-[#60A5FA] rounded-xl border border-[#2563EB]/20 shrink-0">
                   <Key className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="font-bold text-xs sm:text-base text-slate-900 dark:text-slate-100 truncate">
+                  <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-slate-100 truncate">
                     Candidate Passcodes &amp; Credentials
                   </h3>
-                  <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 truncate">
+                  <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 truncate">
                     Assessment: <b className="text-blue-600 dark:text-blue-400">{credsModalData.examName}</b> ({credsModalData.examCode}) • {credsModalData.creds.length} Candidates
                   </p>
                 </div>
@@ -1621,6 +1621,7 @@ export default function LiveAssessmentsTable({
               <button
                 onClick={() => setCredsModalData(null)}
                 className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer shrink-0"
+                aria-label="Close credentials preview"
               >
                 <X className="h-4 w-4 sm:h-5 sm:w-5" />
               </button>
@@ -1707,27 +1708,27 @@ export default function LiveAssessmentsTable({
                         <div key={idx} className="p-3.5 space-y-2.5">
                           <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0">
-                              <div className="font-bold text-xs text-[#242321] dark:text-[#F5F5F4] truncate">
+                              <div className="font-bold text-xs text-slate-900 dark:text-slate-100 truncate">
                                 {c.student_name || "Enrolled Student"}
                               </div>
                               {c.email && (
-                                <div className="text-[10px] text-[#716D67] truncate font-mono">{c.email}</div>
+                                <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate font-mono">{c.email}</div>
                               )}
                             </div>
-                            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#FAF8F5] dark:bg-[#201D1A] border border-[#E5E0D8] dark:border-[#292524] text-[#716D67] shrink-0">
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 shrink-0">
                               Roll: {c.roll_number || "—"}
                             </span>
                           </div>
 
-                          <div className="grid grid-cols-2 gap-2 bg-white dark:bg-[#171615] p-2.5 rounded-xl border border-[#E5E0D8] dark:border-[#292524] text-[11px]">
+                          <div className="grid grid-cols-2 gap-2 bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-[11px]">
                             <div>
-                              <span className="text-[10px] text-[#716D67] block">Exam Username</span>
-                              <span className="font-mono font-bold text-[#C84B18] text-xs break-all">
+                              <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-semibold">Exam Username</span>
+                              <span className="font-mono font-bold text-blue-600 dark:text-blue-400 text-xs break-all">
                                 {c.username}
                               </span>
                             </div>
                             <div>
-                              <span className="text-[10px] text-[#716D67] block">Timed Passcode</span>
+                              <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-semibold">Timed Passcode</span>
                               <span className="font-mono font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 rounded px-2 py-0.5 text-xs inline-block mt-0.5">
                                 {c.password}
                               </span>
@@ -1749,12 +1750,13 @@ export default function LiveAssessmentsTable({
                               type="button"
                               disabled={isSendingEmail}
                               onClick={() => handleResendSingleCredEmail(c)}
-                              className="flex-1 py-1.5 px-2 rounded-lg border border-[#E5E0D8] dark:border-[#292524] text-xs font-semibold text-[#716D67] hover:text-[#C84B18] bg-white dark:bg-[#171615] hover:bg-[#FAF8F5] transition-all flex items-center justify-center gap-1 cursor-pointer shadow-2xs"
+                              className="flex-1 py-1.5 px-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-300 bg-white dark:bg-slate-800 transition-all flex items-center justify-center gap-1 cursor-pointer shadow-2xs"
+                              title={`Send passcode email to ${c.email || c.student_name}`}
                             >
                               {isSendingEmail ? (
-                                <div className="w-3 h-3 border-2 border-[#C84B18] border-t-transparent rounded-full animate-spin" />
+                                <div className="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
                               ) : (
-                                <Mail className="h-3.5 w-3.5" />
+                                <Mail className="h-3.5 w-3.5 text-blue-600" />
                               )}
                               <span>Email</span>
                             </button>
@@ -1762,7 +1764,7 @@ export default function LiveAssessmentsTable({
                             <button
                               type="button"
                               onClick={() => handleCopySingleCred(`User: ${c.username}\nPIN: ${c.password}\nPortal: ${getFrontendBaseUrl()}/exam/${credsModalData.examCode}?user=${encodeURIComponent(c.username)}&pin=${encodeURIComponent(c.password)}`, rowKey)}
-                              className="flex-1 py-1.5 px-2 rounded-lg border border-[#E5E0D8] dark:border-[#292524] text-xs font-semibold text-[#716D67] hover:text-[#C84B18] bg-white dark:bg-[#171615] hover:bg-[#FAF8F5] transition-all flex items-center justify-center gap-1 cursor-pointer shadow-2xs"
+                              className="flex-1 py-1.5 px-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 bg-white dark:bg-slate-800 transition-all flex items-center justify-center gap-1 cursor-pointer shadow-2xs"
                             >
                               {isCopied ? (
                                 <>
