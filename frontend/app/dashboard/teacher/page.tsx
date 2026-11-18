@@ -2016,14 +2016,16 @@ export default function TeacherDashboard() {
         <div className="flex items-center justify-start gap-2 pb-1 mb-1">
           <button
             onClick={() => {
-              if (typeof window !== "undefined" && window.innerWidth < 768) {
+              if (activeSectionTab === "exams") {
+                switchSectionTab("overview");
+              } else if (typeof window !== "undefined" && window.innerWidth < 768) {
                 window.dispatchEvent(new CustomEvent("open-sidebar-menu"));
               } else {
                 switchSectionTab("overview");
               }
             }}
             className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold text-[#2563EB] dark:text-[#60A5FA] bg-[#EFF6FF] dark:bg-[#172B4D] hover:bg-blue-100 dark:hover:bg-[#1e3a66] border border-[#2563EB]/25 transition-all cursor-pointer shadow-2xs shrink-0 whitespace-nowrap"
-            title="Open Menu / Return to Dashboard"
+            title={activeSectionTab === "exams" ? "Back to Main Dashboard" : "Open Menu / Return to Dashboard"}
           >
             <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
             <span>Back</span>
