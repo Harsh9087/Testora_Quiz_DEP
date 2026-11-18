@@ -1767,9 +1767,14 @@ def get_exam_live_monitor(
     """
     Returns real-time proctoring telemetry for an active examination session.
     """
-    exam = db.query(Exam).filter(Exam.id == exam_id, Exam.is_deleted == False).first()
+    exam = db.query(Exam).filter(
+        (Exam.id == exam_id) | (Exam.exam_code == exam_id),
+        Exam.is_deleted == False
+    ).first()
     if not exam:
         raise HTTPException(status_code=404, detail="Exam not found")
+
+    actual_exam_id = exam.id
 
     # Multi-tenant ownership check
     if current_user.role != "super_admin":
@@ -1788,7 +1793,7 @@ def get_exam_live_monitor(
     candidates = db.query(ExamCandidate).options(
         joinedload(ExamCandidate.credential),
         selectinload(ExamCandidate.submissions)
-    ).filter(ExamCandidate.exam_id == exam_id).order_by(ExamCandidate.created_at.asc()).all()
+    ).filter(ExamCandidate.exam_id == actual_exam_id).order_by(ExamCandidate.created_at.asc()).all()
 
     # Self-heal / snapshot candidates if directory exists and snapshots not yet created
     if not candidates and exam.student_directory_id:
@@ -1796,11 +1801,11 @@ def get_exam_live_monitor(
         candidates = db.query(ExamCandidate).options(
             joinedload(ExamCandidate.credential),
             selectinload(ExamCandidate.submissions)
-        ).filter(ExamCandidate.exam_id == exam_id).order_by(ExamCandidate.created_at.asc()).all()
+        ).filter(ExamCandidate.exam_id == actual_exam_id).order_by(ExamCandidate.created_at.asc()).all()
 
     # Self-heal legacy credentials that have student_id but no candidate_id
     unlinked_creds = db.query(ExamCredential).filter(
-        ExamCredential.exam_id == exam_id,
+        ExamCredential.exam_id == actual_exam_id,
         ExamCredential.candidate_id.is_(None)
     ).all()
     if unlinked_creds:

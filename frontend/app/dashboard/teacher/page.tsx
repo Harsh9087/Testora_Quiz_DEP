@@ -1000,12 +1000,14 @@ export default function TeacherDashboard() {
 
         // Clean up URL and navigate immediately to the Main Dashboard overview
         if (typeof window !== "undefined") {
-          window.history.pushState(null, "", "/dashboard/teacher");
+          window.history.replaceState(null, "", "/dashboard/teacher");
         }
         setActiveSectionTab("overview");
-        router.replace("/dashboard/teacher");
         window.dispatchEvent(new CustomEvent("switch-tab", { detail: "overview" }));
         window.dispatchEvent(new CustomEvent("refresh-sidebar-stats"));
+        try {
+          router.replace("/dashboard/teacher");
+        } catch {}
         if (typeof window !== "undefined") {
           window.scrollTo({ top: 0, behavior: "smooth" });
         }

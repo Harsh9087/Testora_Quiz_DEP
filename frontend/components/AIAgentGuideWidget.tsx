@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useAuthStore } from "../store/authStore";
 import { 
   Bot, 
   Sparkles, 
@@ -268,6 +269,7 @@ export default function AIAgentGuideWidget({
   onOpenExamModal
 }: AIAgentGuideWidgetProps = {}) {
   const router = useRouter();
+  const { token } = useAuthStore();
   const [internalOpen, setInternalOpen] = useState(false);
   const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
 
@@ -601,7 +603,13 @@ export default function AIAgentGuideWidget({
         router.push("/" + topic.actionUrl);
       }
     } else {
-      router.push(topic.actionUrl);
+      // Check if user is logged in for dashboard routes
+      if (topic.actionUrl.startsWith("/dashboard") && !token) {
+        // Redirect to login page with return URL
+        router.push(`/login?redirect=${encodeURIComponent(topic.actionUrl)}`);
+      } else {
+        router.push(topic.actionUrl);
+      }
     }
   };
 
@@ -844,8 +852,15 @@ export default function AIAgentGuideWidget({
                     onClick={() => {
                       setIsOpen(false);
                       const el = document.getElementById("mock-tests");
-                      if (el) el.scrollIntoView({ behavior: "smooth" });
-                      else router.push("/dashboard/student?tab=mock-tests");
+                      if (el) {
+                        el.scrollIntoView({ behavior: "smooth" });
+                      } else {
+                        if (token) {
+                          router.push("/dashboard/student?tab=mock-tests");
+                        } else {
+                          router.push("/login?redirect=%2Fdashboard%2Fstudent%3Ftab%3Dmock-tests");
+                        }
+                      }
                     }}
                     className="p-2.5 rounded-xl bg-[#0D182E] hover:bg-[#122344] border border-blue-500/40 text-left transition-all group cursor-pointer"
                   >
@@ -860,7 +875,11 @@ export default function AIAgentGuideWidget({
                     type="button"
                     onClick={() => {
                       setIsOpen(false);
-                      router.push("/dashboard/study-material");
+                      if (token) {
+                        router.push("/dashboard/study-material");
+                      } else {
+                        router.push("/login?redirect=%2Fdashboard%2Fstudy-material");
+                      }
                     }}
                     className="p-2.5 rounded-xl bg-[#0D182E] hover:bg-[#122344] border border-purple-500/40 text-left transition-all group cursor-pointer"
                   >
@@ -876,8 +895,15 @@ export default function AIAgentGuideWidget({
                     onClick={() => {
                       setIsOpen(false);
                       const el = document.getElementById("form-builder");
-                      if (el) el.scrollIntoView({ behavior: "smooth" });
-                      else router.push("/dashboard/teacher?tab=custom-forms");
+                      if (el) {
+                        el.scrollIntoView({ behavior: "smooth" });
+                      } else {
+                        if (token) {
+                          router.push("/dashboard/teacher?tab=custom-forms");
+                        } else {
+                          router.push("/login?redirect=%2Fdashboard%2Fteacher%3Ftab%3Dcustom-forms");
+                        }
+                      }
                     }}
                     className="p-2.5 rounded-xl bg-[#0D182E] hover:bg-[#122344] border border-amber-500/40 text-left transition-all group cursor-pointer"
                   >

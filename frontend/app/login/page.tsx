@@ -190,9 +190,7 @@ function LoginContent() {
         throw new Error(data.detail || "Google authentication failed");
       }
 
-      const assignedRole = (data.role === "super_admin" || data.role === "inst_admin")
-        ? data.role 
-        : (selectedRole || data.role || "teacher");
+      const assignedRole = data.role || selectedRole || "teacher";
 
       if (data.workspace_id) {
         localStorage.setItem("workspaceId", data.workspace_id);
@@ -300,9 +298,16 @@ function LoginContent() {
       }
 
       const selectedRole = regRoleRef.current || regRole;
+      const roleInQuery = searchParams.get("role");
+      const rolePayload = roleInQuery || (authMode === "signup" ? selectedRole : undefined);
+
       const response = await apiFetch("/auth/login", {
         method: "POST",
-        body: JSON.stringify({ email, password, role: selectedRole }),
+        body: JSON.stringify({
+          email,
+          password,
+          ...(rolePayload ? { role: rolePayload } : {}),
+        }),
       });
 
       const data = await response.json();
@@ -311,9 +316,7 @@ function LoginContent() {
         throw new Error(data.detail || "Incorrect email or password");
       }
 
-      const assignedRole = (data.role === "super_admin" || data.role === "inst_admin")
-        ? data.role
-        : (selectedRole || data.role || "teacher");
+      const assignedRole = data.role || selectedRole || "teacher";
 
       if (data.workspace_id) {
         localStorage.setItem("workspaceId", data.workspace_id);

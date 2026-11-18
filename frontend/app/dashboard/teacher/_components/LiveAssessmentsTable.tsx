@@ -1161,10 +1161,11 @@ export default function LiveAssessmentsTable({
                           {activeDropdownExamId === exam.id && (
                             <div
                               onClick={(e) => e.stopPropagation()}
-                              style={{ maxHeight: "300px", overflowY: "auto", scrollbarGutter: "stable" }}
+                              onWheel={(e) => e.stopPropagation()}
+                              style={{ maxHeight: "280px", overflowY: "auto", scrollbarGutter: "stable" }}
                               className={`absolute right-0 ${
                                 isNearBottom ? "bottom-full mb-1.5" : "top-full mt-1.5"
-                              } w-64 rounded-2xl bg-white dark:bg-[#111C31] border border-slate-200/90 dark:border-slate-700/80 shadow-2xl py-1.5 z-50 text-left animate-in fade-in zoom-in-95 duration-150 divide-y divide-slate-100 dark:divide-slate-800/80 max-h-[300px] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-600`}
+                              } w-64 rounded-2xl bg-white dark:bg-[#111C31] border border-slate-200/90 dark:border-slate-700/80 shadow-2xl py-1.5 z-50 text-left animate-in fade-in zoom-in-95 duration-150 divide-y divide-slate-100 dark:divide-slate-800/80 max-h-[280px] overflow-y-auto overscroll-contain [scrollbar-width:thin] [scrollbar-color:#94a3b8_transparent] hover:[scrollbar-color:#64748b_transparent]`}
                             >
                               {/* Section 1: Performance & Results */}
                               <div className="p-1 space-y-0.5">
@@ -1785,6 +1786,7 @@ export default function LiveAssessmentsTable({
       {liveProctorExamId && (
         <LiveProctoringModal
           examId={liveProctorExamId}
+          exam={exams.find((e) => e.id === liveProctorExamId || e.exam_id === liveProctorExamId)}
           onClose={() => setLiveProctorExamId(null)}
         />
       )}

@@ -35,6 +35,7 @@ export default function LiveProctoringModal({
   const targetExamId = examId || exam?.id || exam?.exam_id;
   const [telemetry, setTelemetry] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [isExtending, setIsExtending] = useState(false);
@@ -49,11 +50,17 @@ export default function LiveProctoringModal({
   const fetchLiveTelemetry = async () => {
     if (!targetExamId) return;
     try {
-      const res = await apiFetch(`/exams/${targetExamId}/live-monitor`, { token });
+      const activeToken = token || (typeof window !== "undefined" ? (localStorage.getItem("token") || "") : "");
+      const res = await apiFetch(`/exams/${targetExamId}/live-monitor`, { token: activeToken });
       if (res.ok) {
         setTelemetry(await res.json());
+        setFetchError(null);
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        setFetchError(errData.detail || "Unable to load live telemetry");
       }
-    } catch {
+    } catch (err: any) {
+      setFetchError(err?.message || "Connection error to telemetry monitor");
     } finally {
       setLoading(false);
     }
@@ -89,7 +96,7 @@ export default function LiveProctoringModal({
   }, [targetExamId]);
 
   useEffect(() => {
-    if (!token || !targetExamId) return;
+    if (!targetExamId) return;
     fetchLiveTelemetry();
 
     if (!autoRefresh) return;
@@ -255,14 +262,14 @@ export default function LiveProctoringModal({
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
                   <h3 className="font-bold text-xs sm:text-base text-slate-900 dark:text-slate-100 truncate">
-                    Live Monitor: {telemetry?.exam?.name || "Assessment"}
+                    Live Monitor: {telemetry?.exam?.name || exam?.name || "Assessment"}
                   </h3>
                   <span className="px-1.5 py-0.2 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 text-[8px] sm:text-[9px] font-extrabold uppercase tracking-wider shrink-0">
                     LIVE
                   </span>
                 </div>
                 <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 truncate">
-                  Code: <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{telemetry?.exam?.exam_code}</span> • Real-time focus tracking
+                  Code: <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{telemetry?.exam?.exam_code || exam?.exam_code || exam?.code || "—"}</span> • Real-time focus tracking
                 </p>
               </div>
             </div>
@@ -447,8 +454,23 @@ export default function LiveProctoringModal({
               <p className="text-xs text-[#716D67]">Connecting to proctoring websocket stream...</p>
             </div>
           ) : filteredCandidates.length === 0 ? (
-            <div className="py-20 text-center text-xs text-[#716D67]">
-              No active candidates match your filter.
+            <div className="py-20 text-center text-xs text-[#716D67] space-y-2">
+              {fetchError ? (
+                <>
+                  <p className="text-rose-600 dark:text-rose-400 font-semibold">{fetchError}</p>
+                  <button
+                    type="button"
+                    onClick={fetchLiveTelemetry}
+                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-all cursor-pointer"
+                  >
+                    Retry Live Sync
+                  </button>
+                </>
+              ) : searchTerm ? (
+                <p>No active candidates match your filter.</p>
+              ) : (
+                <p>No candidates enrolled or active in this assessment session yet.</p>
+              )}
             </div>
           ) : (
             <>

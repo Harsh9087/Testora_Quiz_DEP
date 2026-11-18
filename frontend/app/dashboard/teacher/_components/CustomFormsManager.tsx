@@ -515,7 +515,10 @@ export default function CustomFormsManager({ token }: CustomFormsManagerProps) {
       const copy = [...prev];
       const opts = copy[fieldIndex].options ? [...copy[fieldIndex].options!] : [];
       opts.push(`Option ${opts.length + 1}`);
-      copy[fieldIndex].options = opts;
+      copy[fieldIndex] = {
+        ...copy[fieldIndex],
+        options: opts,
+      };
       return copy;
     });
   };
@@ -527,17 +530,20 @@ export default function CustomFormsManager({ token }: CustomFormsManagerProps) {
         const oldOpt = copy[fieldIndex].options![optionIndex];
         const nextOpts = [...copy[fieldIndex].options!];
         nextOpts[optionIndex] = newValue;
-        copy[fieldIndex].options = nextOpts;
 
-        if (copy[fieldIndex].option_images && oldOpt in copy[fieldIndex].option_images!) {
-          const nextOptImages = { ...copy[fieldIndex].option_images };
+        let nextOptImages = copy[fieldIndex].option_images ? { ...copy[fieldIndex].option_images } : undefined;
+        if (nextOptImages && oldOpt in nextOptImages) {
           const imgUrl = nextOptImages[oldOpt];
           delete nextOptImages[oldOpt];
           if (newValue) {
             nextOptImages[newValue] = imgUrl;
           }
-          copy[fieldIndex].option_images = nextOptImages;
         }
+        copy[fieldIndex] = {
+          ...copy[fieldIndex],
+          options: nextOpts,
+          ...(nextOptImages ? { option_images: nextOptImages } : {}),
+        };
       }
       return copy;
     });
@@ -548,12 +554,16 @@ export default function CustomFormsManager({ token }: CustomFormsManagerProps) {
       const copy = [...prev];
       if (copy[fieldIndex].options) {
         const removedOpt = copy[fieldIndex].options![optionIndex];
-        copy[fieldIndex].options = copy[fieldIndex].options!.filter((_, i) => i !== optionIndex);
-        if (copy[fieldIndex].option_images && removedOpt in copy[fieldIndex].option_images!) {
-          const nextOptImages = { ...copy[fieldIndex].option_images };
+        const nextOpts = copy[fieldIndex].options!.filter((_, i) => i !== optionIndex);
+        let nextOptImages = copy[fieldIndex].option_images ? { ...copy[fieldIndex].option_images } : undefined;
+        if (nextOptImages && removedOpt in nextOptImages) {
           delete nextOptImages[removedOpt];
-          copy[fieldIndex].option_images = nextOptImages;
         }
+        copy[fieldIndex] = {
+          ...copy[fieldIndex],
+          options: nextOpts,
+          ...(nextOptImages ? { option_images: nextOptImages } : {}),
+        };
       }
       return copy;
     });
@@ -1470,7 +1480,8 @@ export default function CustomFormsManager({ token }: CustomFormsManagerProps) {
                                     )}
                                     <input
                                       type="text"
-                                      value={opt}
+                                      value={typeof opt === "string" ? opt : (opt as any)?.label || ""}
+                                      onClick={(e) => e.stopPropagation()}
                                       onChange={(e) => handleUpdateOption(idx, optIdx, e.target.value)}
                                       className="w-full bg-transparent border-0 p-0 text-xs font-semibold text-stone-800 dark:text-stone-100 focus:outline-none placeholder-stone-400"
                                       placeholder={`Option ${optIdx + 1}`}

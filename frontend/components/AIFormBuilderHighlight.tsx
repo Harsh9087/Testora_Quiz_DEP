@@ -191,7 +191,7 @@ export default function AIFormBuilderHighlight({
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-wrap items-center gap-3 pt-2">
+            <div className="flex items-center gap-3 pt-2">
               <Link
                 href={exploreHref}
                 className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white font-bold text-sm shadow-md shadow-orange-600/25 transition-all flex items-center gap-2 cursor-pointer group"

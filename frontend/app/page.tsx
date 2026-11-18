@@ -1221,7 +1221,7 @@ export default function UnifiedHomePage() {
       {/* ══════════════════════════════════════════════════════════════════════
           3. HERO SECTION (Strong First Impression + Interactive Showcase)
       ══════════════════════════════════════════════════════════════════════ */}
-      <section className="relative overflow-hidden py-5 sm:py-8 md:py-12 lg:py-16 border-b border-slate-200/80 dark:border-slate-800/80 bg-radial from-blue-100/40 via-transparent to-transparent dark:from-blue-950/25">
+      <section className="relative overflow-hidden py-5 sm:py-8 md:py-12 lg:py-16 pb-8 sm:pb-12 md:pb-16 lg:pb-20 border-b border-slate-200/80 dark:border-slate-800/80 bg-radial from-blue-100/40 via-transparent to-transparent dark:from-blue-950/25">
 
         {/* Subtle Background Lighting & Dot Grid Effect */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-[radial-gradient(#2563EB_1px,transparent_1px)] [background-size:28px_28px] opacity-10 pointer-events-none" />
@@ -1311,17 +1311,17 @@ export default function UnifiedHomePage() {
             </div>
 
             {/* Right Column: Hero Video Showcase (lg:col-span-6) */}
-            <div className="lg:col-span-6 w-full pt-2 sm:pt-5 pb-2 order-2">
+            <div className="lg:col-span-6 w-full pt-2 sm:pt-5 pb-4 sm:pb-6 order-2">
               <div className="relative">
                 <PromoDashboardPlayer />
               </div>
-              <div className="mt-2 text-center lg:text-left text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 flex items-center justify-center lg:justify-start gap-1.5 pl-1">
+              <div className="mt-3 sm:mt-4 text-center lg:text-left text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 flex items-center justify-center lg:justify-start gap-1.5 pl-1">
                 <Sparkles className="w-3.5 h-3.5 text-blue-500 shrink-0" />
                 <span>Watch Testora Quiz in action: AI Synthesis, Automated Grading &amp; Proctor Radar.</span>
               </div>
 
               {/* Verified Trust Pillars (Mobile display directly below the video) */}
-              <div className="grid lg:hidden mt-3.5 grid-cols-2 gap-1.5 text-[10.5px] sm:text-xs text-slate-600 dark:text-slate-300 text-left max-w-md mx-auto">
+              <div className="grid lg:hidden mt-4 sm:mt-5 grid-cols-2 gap-1.5 text-[10.5px] sm:text-xs text-slate-600 dark:text-slate-300 text-left max-w-md mx-auto">
                 <div className="flex items-center gap-1.5 p-1.5 sm:p-2 rounded-xl bg-white/70 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/80 shadow-2xs">
                   <Cpu className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-500 shrink-0" />
                   <span className="truncate font-medium">Smart AI Engine</span>
