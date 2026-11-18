@@ -110,6 +110,7 @@ export default function RootLayout({
             `,
           }}
         />
+        <script src="https://checkout.razorpay.com/v1/checkout.js" async />
       </head>
       <body className={`${inter.className} antialiased min-h-screen selection:bg-blue-600/20 selection:text-blue-900 dark:selection:text-blue-200`}>
         <NavigationProgress />
