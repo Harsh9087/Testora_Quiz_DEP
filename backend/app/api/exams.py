@@ -910,12 +910,13 @@ def generate_credentials(
         raise HTTPException(status_code=404, detail="Exam not found")
         
     # Enforce mandatory per-test payment before passcodes/credentials can be generated or sent
-    is_sufficient, reason = payment_service.is_exam_payment_sufficient(exam, db)
-    if not is_sufficient:
-        raise HTTPException(
-            status_code=status.HTTP_402_PAYMENT_REQUIRED,
-            detail=f"Payment required before generating student credentials or sending invitations: {reason}"
-        )
+    if current_user.role not in ["super_admin", "admin"]:
+        is_sufficient, reason = payment_service.is_exam_payment_sufficient(exam, db)
+        if not is_sufficient:
+            raise HTTPException(
+                status_code=status.HTTP_402_PAYMENT_REQUIRED,
+                detail=f"Payment required before generating student credentials or sending invitations: {reason}"
+            )
         
     # Safe expires_at calculation (handles None end_time)
     base_expiry = to_utc_instant(exam.end_time) or (now_utc() + timedelta(days=30))
@@ -1119,12 +1120,13 @@ def resend_credentials_email(
         raise HTTPException(status_code=404, detail="Exam not found")
         
     # Enforce mandatory per-test payment before sending invitation emails
-    is_sufficient, reason = payment_service.is_exam_payment_sufficient(exam, db)
-    if not is_sufficient:
-        raise HTTPException(
-            status_code=status.HTTP_402_PAYMENT_REQUIRED,
-            detail=f"Payment required before sending candidate invitation emails: {reason}"
-        )
+    if current_user.role not in ["super_admin", "admin"]:
+        is_sufficient, reason = payment_service.is_exam_payment_sufficient(exam, db)
+        if not is_sufficient:
+            raise HTTPException(
+                status_code=status.HTTP_402_PAYMENT_REQUIRED,
+                detail=f"Payment required before sending candidate invitation emails: {reason}"
+            )
         
     query = db.query(ExamCredential).filter(ExamCredential.exam_id == exam.id)
     

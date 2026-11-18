@@ -1,7 +1,7 @@
 import os
 import json
 from typing import List, Optional, Dict, Any
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, Depends, HTTPException, Query, status, Response
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, Field
@@ -27,7 +27,7 @@ from app.models.support_ticket import SupportTicket, SupportTicketReply
 from app.models.notification import Notification
 import uuid
 from app.utils.security import RoleChecker, get_current_user, get_password_hash
-from app.utils.timezone import now_utc
+from app.utils.timezone import now_utc, to_utc_instant
 from app.services.coupon_service import coupon_service
 from app.schemas.coupon import (
     CouponCampaignCreate,
@@ -41,7 +41,7 @@ from app.schemas.coupon import (
 router = APIRouter(prefix="/admin", tags=["admin"])
 
 super_admin_required = RoleChecker(["super_admin"])
-admin_required = RoleChecker(["super_admin", "inst_admin"])
+admin_required = RoleChecker(["super_admin", "inst_admin", "admin"])
 
 
 # =============================================================================
@@ -64,6 +64,17 @@ class InstitutionUpdateRequest(BaseModel):
 class EmergencyStopRequest(BaseModel):
     reason: str = Field(..., min_length=3, max_length=255)
 
+class AdminExamUpdateRequest(BaseModel):
+    name: Optional[str] = None
+    duration_minutes: Optional[int] = None
+    total_marks: Optional[int] = None
+    passing_marks: Optional[int] = None
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
+    is_published: Optional[bool] = None
+    access_mode: Optional[str] = None
+    extend_minutes: Optional[int] = None
+
 
 # =============================================================================
 # 1. Overview & Platform Analytics
@@ -83,7 +94,8 @@ def get_admin_overview(
 
     if current_user.role != "super_admin" and current_user.institution_id:
         user_query = user_query.filter(User.institution_id == current_user.institution_id)
-        exam_query = exam_query.filter(Exam.institution_id == current_user.institution_id)
+        inst_teacher_ids = db.query(User.id).filter(User.institution_id == current_user.institution_id).subquery()
+        exam_query = exam_query.filter(Exam.created_by.in_(inst_teacher_ids))
         inst_query = inst_query.filter(Institution.id == current_user.institution_id)
 
     total_users = user_query.count()
@@ -729,7 +741,11 @@ def list_admin_institutions(
         teachers_count = db.query(User).filter(User.institution_id == inst.id, User.role.in_(["teacher", "inst_admin"]), User.is_deleted == False).count()
         students_count = db.query(User).filter(User.institution_id == inst.id, User.role == "student", User.is_deleted == False).count()
         depts_count = db.query(Department).filter(Department.institution_id == inst.id, Department.is_deleted == False).count()
-        exams_count = db.query(Exam).filter(Exam.institution_id == inst.id, Exam.is_deleted == False).count()
+        inst_user_ids = db.query(User.id).filter(User.institution_id == inst.id).subquery()
+        exams_count = db.query(Exam).filter(
+            (Exam.created_by.in_(inst_user_ids)) | (Exam.institution_name == inst.name),
+            Exam.is_deleted == False
+        ).count()
 
         res.append({
             "id": inst.id,
@@ -785,18 +801,41 @@ def list_admin_exams(
     current_user: User = Depends(admin_required),
     db: Session = Depends(get_db)
 ):
-    """Platform-wide assessment governance view."""
+    """Platform-wide assessment governance view with resilient data serialization."""
     query = db.query(Exam).filter(Exam.is_deleted == False)
 
+    target_inst_id = None
     if current_user.role != "super_admin" and current_user.institution_id:
-        query = query.filter(Exam.institution_id == current_user.institution_id)
+        target_inst_id = current_user.institution_id
     elif institution_id:
-        query = query.filter(Exam.institution_id == institution_id)
+        target_inst_id = institution_id
 
-    if status_filter == "published":
+    if target_inst_id:
+        inst_obj = db.query(Institution).filter(Institution.id == target_inst_id).first()
+        inst_user_ids = [u.id for u in db.query(User.id).filter(User.institution_id == target_inst_id).all()]
+        inst_workspace_ids = [w.id for w in db.query(Workspace.id).filter(Workspace.institution_id == target_inst_id).all()]
+        
+        conditions = []
+        if inst_user_ids:
+            conditions.append(Exam.created_by.in_(inst_user_ids))
+        if inst_workspace_ids:
+            conditions.append(Exam.workspace_id.in_(inst_workspace_ids))
+        if inst_obj:
+            conditions.append(Exam.institution_name == inst_obj.name)
+            
+        if conditions:
+            from sqlalchemy import or_
+            query = query.filter(or_(*conditions))
+        else:
+            query = query.filter(Exam.id == "none")
+
+    now = now_utc()
+    if status_filter in ("published", "active"):
         query = query.filter(Exam.is_published == True)
     elif status_filter == "draft":
         query = query.filter(Exam.is_published == False)
+    elif status_filter == "completed":
+        query = query.filter(Exam.is_published == True, Exam.end_time.isnot(None), Exam.end_time < now)
 
     if search:
         s = f"%{search.strip()}%"
@@ -807,48 +846,184 @@ def list_admin_exams(
     exams = query.order_by(Exam.created_at.desc()).offset(offset).limit(page_size).all()
 
     items = []
-    now = now_utc()
     for e in exams:
-        creator = db.query(User).filter(User.id == e.created_by).first()
-        inst = db.query(Institution).filter(Institution.id == e.institution_id).first() if e.institution_id else None
-        submissions_count = db.query(ExamSubmission).filter(ExamSubmission.exam_id == e.id, ExamSubmission.status == "submitted").count()
+        try:
+            creator = db.query(User).filter(User.id == e.created_by).first() if e.created_by else None
+            
+            inst_name = e.institution_name
+            if not inst_name and creator and creator.institution_id:
+                inst = db.query(Institution).filter(Institution.id == creator.institution_id).first()
+                if inst:
+                    inst_name = inst.name
+            if not inst_name and e.workspace_id:
+                ws = db.query(Workspace).filter(Workspace.id == e.workspace_id).first()
+                if ws:
+                    inst_name = ws.name
+            if not inst_name:
+                inst_name = "Independent / Personal"
 
-        end = e.end_time
-        if end.tzinfo is None:
-            end = end.replace(tzinfo=now.tzinfo)
-        computed_status = "completed" if now > end else ("published" if e.is_published else "draft")
+            submissions_count = db.query(ExamSubmission).filter(
+                ExamSubmission.exam_id == e.id, 
+                ExamSubmission.status == "submitted"
+            ).count()
 
-        q_count = len(e.questions) if e.questions else 0
-        items.append({
-            "id": e.id,
-            "name": e.name,
-            "exam_code": e.exam_code,
-            "status": computed_status,
-            "creator_name": creator.full_name if creator else "Unknown",
-            "creator_email": creator.email if creator else "unknown",
-            "institution_name": inst.name if inst else "Personal",
-            "questions_count": q_count,
-            "duration_minutes": e.duration_minutes,
-            "total_marks": e.total_marks,
-            "is_paid": e.is_paid,
-            "submissions_count": submissions_count,
-            "created_at": e.created_at.isoformat() if e.created_at else None
-        })
+            end_dt = to_utc_instant(e.end_time)
+            is_expired = bool(end_dt and now > end_dt)
+            
+            if is_expired:
+                computed_status = "completed"
+            elif e.is_published:
+                computed_status = "published"
+            else:
+                computed_status = "draft"
+
+            q_count = 0
+            if e.questions_json:
+                try:
+                    loaded = json.loads(e.questions_json)
+                    if isinstance(loaded, list):
+                        q_count = len(loaded)
+                except Exception:
+                    pass
+            elif e.blueprint_json:
+                try:
+                    b_loaded = json.loads(e.blueprint_json)
+                    if isinstance(b_loaded, dict) and "questions" in b_loaded:
+                        q_count = len(b_loaded["questions"])
+                    elif isinstance(b_loaded, list):
+                        q_count = len(b_loaded)
+                except Exception:
+                    pass
+
+            items.append({
+                "id": e.id,
+                "name": e.name,
+                "exam_code": e.exam_code,
+                "status": computed_status,
+                "is_published": bool(e.is_published),
+                "is_expired": is_expired,
+                "creator_name": creator.full_name if creator else (e.teacher_name_snapshot or "Unknown"),
+                "creator_email": creator.email if creator else (e.teacher_email_snapshot or "unknown"),
+                "institution_name": inst_name,
+                "questions_count": q_count,
+                "duration_minutes": e.duration_minutes or 0,
+                "total_marks": e.total_marks or 0,
+                "passing_marks": e.passing_marks or 0,
+                "is_paid": bool(e.is_paid),
+                "access_mode": e.access_mode or "ENROLLED_ONLY",
+                "submissions_count": submissions_count,
+                "start_time": e.start_time.isoformat() if e.start_time else None,
+                "end_time": e.end_time.isoformat() if e.end_time else None,
+                "created_at": e.created_at.isoformat() if e.created_at else None
+            })
+        except Exception as item_err:
+            print(f"[Admin Exams] Error serializing exam {e.id}: {item_err}")
+            continue
 
     return {
         "items": items,
         "total": total_count,
         "page": page,
         "page_size": page_size,
-        "total_pages": (total_count + page_size - 1) // page_size
+        "total_pages": (total_count + page_size - 1) // page_size if page_size > 0 else 1
     }
+
+
+@router.patch("/exams/{exam_id}")
+@router.put("/exams/{exam_id}")
+def update_admin_exam(
+    exam_id: str,
+    payload: AdminExamUpdateRequest,
+    current_user: User = Depends(admin_required),
+    db: Session = Depends(get_db)
+):
+    """Admin updates or intervenes in an assessment (extend time, edit config, toggle published)."""
+    exam = db.query(Exam).filter(Exam.id == exam_id, Exam.is_deleted == False).first()
+    if not exam:
+        raise HTTPException(status_code=404, detail="Assessment not found")
+
+    if payload.name is not None and payload.name.strip():
+        exam.name = payload.name.strip()
+    if payload.duration_minutes is not None and payload.duration_minutes > 0:
+        exam.duration_minutes = payload.duration_minutes
+    if payload.total_marks is not None and payload.total_marks >= 0:
+        exam.total_marks = payload.total_marks
+    if payload.passing_marks is not None and payload.passing_marks >= 0:
+        exam.passing_marks = payload.passing_marks
+    if payload.is_published is not None:
+        exam.is_published = payload.is_published
+    if payload.access_mode is not None:
+        exam.access_mode = payload.access_mode
+    if payload.start_time is not None:
+        exam.start_time = to_utc_instant(payload.start_time)
+    if payload.end_time is not None:
+        exam.end_time = to_utc_instant(payload.end_time)
+
+    # Emergency / Live time extension:
+    if payload.extend_minutes and payload.extend_minutes > 0:
+        base_end = to_utc_instant(exam.end_time) or now_utc()
+        now = now_utc()
+        new_end = (now if base_end < now else base_end) + timedelta(minutes=payload.extend_minutes)
+        exam.end_time = new_end
+        exam.duration_minutes = (exam.duration_minutes or 0) + payload.extend_minutes
+        # Re-activate published state so students can immediately proceed
+        exam.is_published = True
+
+    audit = AuditLog(
+        user_id=current_user.id,
+        action="EXAM_ADMIN_UPDATED",
+        details=json.dumps({
+            "exam_id": exam.id,
+            "name": exam.name,
+            "duration_minutes": exam.duration_minutes,
+            "end_time": exam.end_time.isoformat() if exam.end_time else None,
+            "is_published": exam.is_published,
+            "extended_by": payload.extend_minutes
+        })
+    )
+    db.add(audit)
+    db.commit()
+    db.refresh(exam)
+    return {
+        "success": True,
+        "message": f"Assessment '{exam.name}' updated successfully.",
+        "exam": {
+            "id": exam.id,
+            "name": exam.name,
+            "duration_minutes": exam.duration_minutes,
+            "end_time": exam.end_time.isoformat() if exam.end_time else None,
+            "is_published": exam.is_published
+        }
+    }
+
+
+@router.delete("/exams/{exam_id}")
+def delete_admin_exam(
+    exam_id: str,
+    current_user: User = Depends(admin_required),
+    db: Session = Depends(get_db)
+):
+    """Soft delete an assessment as admin."""
+    exam = db.query(Exam).filter(Exam.id == exam_id, Exam.is_deleted == False).first()
+    if not exam:
+        raise HTTPException(status_code=404, detail="Assessment not found")
+        
+    exam.is_deleted = True
+    audit = AuditLog(
+        user_id=current_user.id,
+        action="EXAM_ADMIN_DELETED",
+        details=json.dumps({"exam_id": exam.id, "name": exam.name, "exam_code": exam.exam_code})
+    )
+    db.add(audit)
+    db.commit()
+    return {"success": True, "message": f"Assessment '{exam.name}' deleted."}
 
 
 @router.post("/exams/{exam_id}/emergency-stop")
 def emergency_stop_exam(
     exam_id: str,
     payload: EmergencyStopRequest,
-    current_user: User = Depends(super_admin_required),
+    current_user: User = Depends(admin_required),
     db: Session = Depends(get_db)
 ):
     """Immediately stops and closes an assessment across all active testing candidates."""
