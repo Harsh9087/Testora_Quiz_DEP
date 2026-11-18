@@ -8,10 +8,12 @@ from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Response, BackgroundTasks, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
+from sqlalchemy import or_, func
 from typing import List, Optional
 from app.database import get_db
 from app.models.user import User, Student
 from app.models.exam import Exam, ExamCredential, ExamSubmission
+from app.models.candidate import ExamCandidate
 from app.models.institution import Department, Institution
 from app.schemas.student import StudentCreate, StudentResponse, InstitutionResponse
 from app.utils.security import get_password_hash, RoleChecker, get_current_user
@@ -443,30 +445,43 @@ def get_student_assigned_exams(
         db.refresh(student)
     
     results = []
+    user_email = (current_user.email or "").strip().lower()
+
     for exam in exams:
-        # Check if student already attempted this exam (attempted exams permanently stay in student history)
-        has_prior_attempt = False
+        # 1. Match any ExamCandidate snapshot for this student by email or roll number
+        cand = db.query(ExamCandidate).filter(
+            ExamCandidate.exam_id == exam.id,
+            or_(
+                func.lower(ExamCandidate.email_snapshot) == user_email,
+                ExamCandidate.roll_number_snapshot == getattr(student, "roll_number", "")
+            )
+        ).first()
+
+        # 2. Check if an attempt / submission already exists across all linked records
+        # (submitted via email credentials, candidate snapshot, or student user account)
+        sub_query_conds = [ExamSubmission.student_user_id == current_user.id]
         if student:
-            prior_sub = db.query(ExamSubmission).filter(
-                ExamSubmission.exam_id == exam.id,
-                (ExamSubmission.student_user_id == current_user.id) | (ExamSubmission.student_id == student.id)
-            ).first()
-            if prior_sub:
-                has_prior_attempt = True
+            sub_query_conds.append(ExamSubmission.student_id == student.id)
+        if cand:
+            sub_query_conds.append(ExamSubmission.candidate_id == cand.id)
+
+        submission = db.query(ExamSubmission).filter(
+            ExamSubmission.exam_id == exam.id,
+            or_(*sub_query_conds)
+        ).order_by(ExamSubmission.attempt_number.desc(), ExamSubmission.created_at.desc()).first()
+
+        has_prior_attempt = submission is not None
 
         # Check selective directory targeting if not already attempted
         if not is_teacher and not has_prior_attempt and exam.student_directory_id:
-            from app.models.candidate import ExamCandidate
-            is_cand = db.query(ExamCandidate).filter(
-                ExamCandidate.exam_id == exam.id,
-                (ExamCandidate.email_snapshot.ilike(current_user.email)) |
-                (ExamCandidate.roll_number_snapshot == getattr(student, "roll_number", ""))
-            ).first()
             has_existing_cred = db.query(ExamCredential).filter(
                 ExamCredential.exam_id == exam.id,
-                ExamCredential.student_id == getattr(student, "id", None)
+                or_(
+                    ExamCredential.student_id == getattr(student, "id", None),
+                    ExamCredential.candidate_id == (cand.id if cand else None)
+                )
             ).first()
-            if not is_cand and not has_existing_cred:
+            if not cand and not has_existing_cred:
                 continue
 
         # Check selective targeting if not already attempted
@@ -482,48 +497,103 @@ def get_student_assigned_exams(
             except Exception:
                 pass
 
+        # 3. Resolve the canonical credential
         cred = None
-        if student:
+
+        # First priority: if submission already exists with a credential, use the actual credential used
+        if submission and submission.credential_id:
+            cred = db.query(ExamCredential).filter(ExamCredential.id == submission.credential_id).first()
+
+        # Second priority: if candidate snapshot exists, use the candidate credential (sent via email)
+        if not cred and cand:
+            cred = db.query(ExamCredential).filter(
+                ExamCredential.exam_id == exam.id,
+                ExamCredential.candidate_id == cand.id
+            ).first()
+
+        # Third priority: check credential by student_id
+        if not cred and student:
             cred = db.query(ExamCredential).filter(
                 ExamCredential.exam_id == exam.id,
                 ExamCredential.student_id == student.id
             ).first()
-            if not cred and exam.is_published:
-                import secrets
-                clean_roll = "".join(c for c in (student.roll_number or current_user.email.split('@')[0]) if c.isalnum()).upper()[:16]
-                cand_username = f"{clean_roll}-{exam.exam_code}"[:40]
-                if db.query(ExamCredential).filter(ExamCredential.username == cand_username).first():
-                    cand_username = f"{cand_username}-{secrets.token_hex(2).upper()}"
-                cred = ExamCredential(
-                    exam_id=exam.id,
-                    student_id=student.id,
-                    username=cand_username,
-                    password=str(secrets.randbelow(900000) + 100000),
-                    expires_at=to_utc_instant(exam.end_time) or (now_utc() + timedelta(days=7))
-                )
-                db.add(cred)
-                try:
-                    db.commit()
-                    db.refresh(cred)
-                except Exception:
-                    db.rollback()
-                    cred = db.query(ExamCredential).filter(
-                        ExamCredential.exam_id == exam.id,
-                        ExamCredential.student_id == student.id
-                    ).first()
-            
-        submission = None
-        if cred:
+
+        # Fourth priority: match by username containing student's email prefix
+        if not cred and user_email:
+            clean_email_prefix = "".join(c for c in user_email.split('@')[0] if c.isalnum()).lower()
+            if clean_email_prefix:
+                cred = db.query(ExamCredential).filter(
+                    ExamCredential.exam_id == exam.id,
+                    func.lower(ExamCredential.username).contains(clean_email_prefix)
+                ).first()
+
+        # Automatically link credential to student if not yet associated
+        if cred and student and not cred.student_id:
+            cred.student_id = student.id
+            try:
+                db.commit()
+                db.refresh(cred)
+            except Exception:
+                db.rollback()
+
+        # If still no credential and exam is published, generate a new one
+        if not cred and exam.is_published and student:
+            import secrets
+            clean_roll = "".join(c for c in (student.roll_number or current_user.email.split('@')[0]) if c.isalnum()).upper()[:16]
+            cand_username = f"{clean_roll}-{exam.exam_code}"[:40]
+            if db.query(ExamCredential).filter(ExamCredential.username == cand_username).first():
+                cand_username = f"{cand_username}-{secrets.token_hex(2).upper()}"
+            cred = ExamCredential(
+                exam_id=exam.id,
+                candidate_id=cand.id if cand else None,
+                student_id=student.id,
+                username=cand_username,
+                password=str(secrets.randbelow(900000) + 100000),
+                expires_at=to_utc_instant(exam.end_time) or (now_utc() + timedelta(days=7))
+            )
+            db.add(cred)
+            try:
+                db.commit()
+                db.refresh(cred)
+            except Exception:
+                db.rollback()
+                cred = db.query(ExamCredential).filter(
+                    ExamCredential.exam_id == exam.id,
+                    or_(
+                        ExamCredential.student_id == student.id,
+                        ExamCredential.candidate_id == (cand.id if cand else None)
+                    )
+                ).first()
+
+        # If submission was not found above but cred exists, check by cred.id
+        if not submission and cred:
             submission = db.query(ExamSubmission).filter(
                 ExamSubmission.exam_id == exam.id,
                 ExamSubmission.credential_id == cred.id
             ).first()
-        elif student:
-            submission = db.query(ExamSubmission).join(ExamCredential).filter(
-                ExamSubmission.exam_id == exam.id,
-                ExamCredential.student_id == student.id
-            ).first()
-            
+
+        # Heal and ensure submission is permanently linked to the student and user account
+        if submission:
+            needs_sub_commit = False
+            if not submission.student_user_id:
+                submission.student_user_id = current_user.id
+                needs_sub_commit = True
+            if student and not submission.student_id:
+                submission.student_id = student.id
+                needs_sub_commit = True
+            if cand and not submission.candidate_id:
+                submission.candidate_id = cand.id
+                needs_sub_commit = True
+            if cred and not submission.credential_id:
+                submission.credential_id = cred.id
+                needs_sub_commit = True
+            if needs_sub_commit:
+                try:
+                    db.commit()
+                    db.refresh(submission)
+                except Exception:
+                    db.rollback()
+
         exam_end = to_utc_instant(exam.end_time)
         exam_start = to_utc_instant(exam.start_time)
         if exam_end and exam_end < now:
@@ -543,6 +613,8 @@ def get_student_assigned_exams(
         inst_name = exam.institution_name or (exam.creator.institution_name if exam.creator else None)
         subj_name = exam.subject_name_snapshot or (exam.subject.name if exam.subject else None)
 
+        has_submitted = submission is not None and submission.status in ["submitted", "auto_submitted", "graded", "completed", "evaluated"]
+
         results.append({
             "id": exam.id,
             "exam_id": exam.id,
@@ -556,7 +628,7 @@ def get_student_assigned_exams(
             "end_time": to_iso_utc(exam.end_time),
             "status": sched_status,
             "questions_count": questions_count,
-            "has_submitted": submission is not None and submission.status in ["submitted", "auto_submitted"],
+            "has_submitted": has_submitted,
             "attempt_status": submission.status if submission else "not_attempted",
             "submission_score": submission.score if submission else None,
             "submission_percentage": submission.percentage if submission else None,

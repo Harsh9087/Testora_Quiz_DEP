@@ -455,9 +455,16 @@ def get_my_progress(
     student_records = db.query(Student).filter(Student.user_id == current_user.id).all()
     student_ids = [s.id for s in student_records]
     
+    user_email = (current_user.email or "").strip().lower()
+    cand_ids = [c[0] for c in db.query(ExamCandidate.id).filter(
+        func.lower(ExamCandidate.email_snapshot) == user_email
+    ).all()] if user_email else []
+
     conds = [ExamSubmission.student_user_id == current_user.id]
     if student_ids:
         conds.append(ExamSubmission.student_id.in_(student_ids))
+    if cand_ids:
+        conds.append(ExamSubmission.candidate_id.in_(cand_ids))
         
     submissions = db.query(ExamSubmission).filter(
         ExamSubmission.status.in_(["submitted", "auto_submitted"]),
@@ -593,9 +600,16 @@ def get_my_submissions(
         student_records = db.query(Student).filter(Student.user_id == current_user.id).all()
         student_ids = [s.id for s in student_records]
         
+        user_email = (current_user.email or "").strip().lower()
+        cand_ids = [c[0] for c in db.query(ExamCandidate.id).filter(
+            func.lower(ExamCandidate.email_snapshot) == user_email
+        ).all()] if user_email else []
+
         conds = [ExamSubmission.student_user_id == current_user.id]
         if student_ids:
             conds.append(ExamSubmission.student_id.in_(student_ids))
+        if cand_ids:
+            conds.append(ExamSubmission.candidate_id.in_(cand_ids))
             
         submissions = db.query(ExamSubmission).filter(
             ExamSubmission.status.in_(valid_statuses),

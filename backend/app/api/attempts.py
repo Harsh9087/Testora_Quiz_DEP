@@ -333,6 +333,32 @@ def login_student(login_in: ExamLogin, exam_code: str, db: Session = Depends(get
     if cred and not cand and cred.candidate_id:
         cand = db.query(ExamCandidate).filter(ExamCandidate.id == cred.candidate_id).first()
 
+    cand_student_user = None
+    cand_student_rec = None
+    if cand and cand.email_snapshot:
+        c_email = cand.email_snapshot.strip().lower()
+        cand_student_user = db.query(User).filter(func.lower(User.email) == c_email, User.is_deleted == False).first()
+        if cand_student_user:
+            cand_student_rec = db.query(Student).filter(Student.user_id == cand_student_user.id).first()
+            if not cand_student_rec and cand_student_user.role == "student":
+                import secrets
+                prefix = "".join(c for c in cand_student_user.email.split("@")[0].upper() if c.isalnum())[:8] or "STU"
+                roll = f"STU-{prefix}-{secrets.token_hex(2).upper()}"
+                cand_student_rec = Student(
+                    user_id=cand_student_user.id,
+                    institution_id=cand_student_user.institution_id or exam.institution_id,
+                    roll_number=roll,
+                    status="active"
+                )
+                db.add(cand_student_rec)
+                db.flush()
+            if cred and cand_student_rec and not cred.student_id:
+                cred.student_id = cand_student_rec.id
+                db.flush()
+    elif cred and cred.student:
+        cand_student_rec = cred.student
+        cand_student_user = cred.student.user
+
     cand_name = "Candidate"
     if cand:
         cand_name = cand.name_snapshot
@@ -372,10 +398,11 @@ def login_student(login_in: ExamLogin, exam_code: str, db: Session = Depends(get
                 ExamSubmission.credential_id == cred.id
             ).order_by(ExamSubmission.attempt_number.desc()).first()
 
+    resolved_stu_id = cred.student_id if (cred and cred.student_id) else (cand_student_rec.id if cand_student_rec else None)
+    resolved_stu_user_id = cand_student_user.id if cand_student_user else (cred.student.user_id if (cred and cred.student) else None)
+
     if not sub:
         # FIRST LOGIN: Create attempt in not_started state without starting timer
-        resolved_stu_id = cred.student_id if cred else None
-        resolved_stu_user_id = cred.student.user_id if (cred and cred.student) else None
         sub = ExamSubmission(
             exam_id=exam.id,
             candidate_id=cand.id if cand else None,
@@ -398,10 +425,10 @@ def login_student(login_in: ExamLogin, exam_code: str, db: Session = Depends(get
     else:
         if cand and not sub.candidate_id:
             sub.candidate_id = cand.id
-        if not sub.student_id and cred and cred.student_id:
-            sub.student_id = cred.student_id
-        if not sub.student_user_id and cred and cred.student and cred.student.user_id:
-            sub.student_user_id = cred.student.user_id
+        if not sub.student_id and resolved_stu_id:
+            sub.student_id = resolved_stu_id
+        if not sub.student_user_id and resolved_stu_user_id:
+            sub.student_user_id = resolved_stu_user_id
         if not sub.questions_snapshot_json and exam.questions_json:
             sub.questions_snapshot_json = exam.questions_json
         # Only update heartbeat and deadline if attempt has legitimately started
@@ -866,6 +893,17 @@ def process_exam_submission(sub: ExamSubmission, db: Session, auto_submitted: bo
     # Synchronize candidate status
     if sub.candidate:
         sub.candidate.status = "SUBMITTED"
+
+    # Auto-link registered student account if submission was taken via candidate email
+    if not sub.student_user_id and sub.candidate and sub.candidate.email_snapshot:
+        u = db.query(User).filter(func.lower(User.email) == sub.candidate.email_snapshot.strip().lower(), User.is_deleted == False).first()
+        if u:
+            sub.student_user_id = u.id
+            s = db.query(Student).filter(Student.user_id == u.id).first()
+            if s and not sub.student_id:
+                sub.student_id = s.id
+            if s and sub.credential and not sub.credential.student_id:
+                sub.credential.student_id = s.id
 
     db.add(sub)
     db.commit()
