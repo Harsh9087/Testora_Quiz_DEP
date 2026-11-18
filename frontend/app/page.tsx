@@ -567,9 +567,6 @@ export default function UnifiedHomePage() {
                             <div className="truncate">
                               <div className="font-bold flex items-center gap-1.5">
                                 <span>Study Material</span>
-                                <span className="px-1.5 py-0.2 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 text-[9px] font-black uppercase tracking-wider">
-                                  NEW
-                                </span>
                               </div>
                               <div className="text-[10px] text-slate-400 dark:text-slate-500 font-normal truncate">Company notes &amp; DSA guides</div>
                             </div>
@@ -771,13 +768,10 @@ export default function UnifiedHomePage() {
                   <Link
                     href={studyMaterialHref}
                     onClick={() => setMobileMenuOpen(false)}
-                    className="py-1.5 px-2.5 rounded-lg bg-purple-50 dark:bg-purple-950/40 border border-purple-200/80 dark:border-purple-800/60 text-purple-800 dark:text-purple-300 text-[11px] font-bold flex items-center justify-between"
+                    className="py-1.5 px-2.5 rounded-lg bg-purple-50 dark:bg-purple-950/40 border border-purple-200/80 dark:border-purple-800/60 text-purple-800 dark:text-purple-300 text-[11px] font-bold flex items-center gap-1.5"
                   >
-                    <span className="flex items-center gap-1.5">
-                      <BookOpen className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-                      <span>Study Notes</span>
-                    </span>
-                    <span className="px-1.5 py-0.2 rounded-full bg-purple-600 text-white text-[9px] font-black">NEW</span>
+                    <BookOpen className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                    <span>Study Notes</span>
                   </Link>
                 </div>
               </div>

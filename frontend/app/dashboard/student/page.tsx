@@ -405,9 +405,6 @@ export default function StudentDashboard() {
             >
               <BookOpen className="h-3.5 w-3.5" />
               <span>Study Notes</span>
-              <span className="px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-purple-500 text-white ml-0.5">
-                NEW
-              </span>
             </button>
           </div>
 

@@ -53,7 +53,7 @@ export interface StudyMaterialItem {
 
 export const CATEGORY_TABS = [
   { slug: "all", name: "All Study Materials", icon: "FolderOpen", badge: "FREE", badge_color: "green" },
-  { slug: "company_notes", name: "Company Notes (TCS, Wipro & More)", icon: "Building2", badge: "NEW", badge_color: "purple" },
+  { slug: "company_notes", name: "Company Notes (TCS, Wipro & More)", icon: "Building2", badge: null, badge_color: null },
   { slug: "dsa", name: "DSA & Problem Solving", icon: "Code2", badge: "HOT", badge_color: "amber" },
   { slug: "web_development", name: "Web Development", icon: "Monitor", badge: null, badge_color: null },
   { slug: "cloud_computing", name: "Cloud Computing", icon: "Cloud", badge: null, badge_color: null },

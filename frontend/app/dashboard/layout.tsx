@@ -117,8 +117,8 @@ export default function DashboardLayout({
       slug: "company_notes",
       name: "Company Notes (TCS, Wipro & More)",
       icon: "Building2",
-      badge: "NEW",
-      badge_color: "purple",
+      badge: null,
+      badge_color: null,
       count: 2,
     },
     {
