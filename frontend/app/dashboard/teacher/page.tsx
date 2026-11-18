@@ -816,7 +816,7 @@ export default function TeacherDashboard() {
       if (res.ok) {
         const data = await res.json();
         const count = Array.isArray(data) ? data.length : (data.count || 0);
-        showToast(`Generated & emailed passcodes for ${count} candidates!`, "success");
+        showToast(`Generated passcodes for ${count} candidates!`, "success");
       } else {
         const err = await res.json().catch(() => ({}));
         showToast(err.detail || "Failed to generate candidate passcodes", "error");

@@ -8,7 +8,7 @@ import logging
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
-from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session, joinedload, selectinload
 from sqlalchemy import func, or_
@@ -889,12 +889,14 @@ def publish_results(
             
     return {"message": "Grades and response sheets published successfully."}
 
+@router.get("/{exam_id}/credentials", response_model=List[CredentialResponse])
 @router.post("/{exam_id}/credentials", response_model=List[CredentialResponse])
 @router.post("/{exam_id}/generate-passcodes", response_model=List[CredentialResponse])
 def generate_credentials(
     exam_id: str,
     background_tasks: BackgroundTasks,
     student_ids: Optional[List[str]] = None,
+    send_emails: bool = Query(False, description="Whether to dispatch automated emails upon credential generation"),
     current_user: User = Depends(teacher_required),
     db: Session = Depends(get_db)
 ):
@@ -989,8 +991,8 @@ def generate_credentials(
         else:
             cand_cred.expires_at = expires_at
 
-        # Send email if candidate has email
-        if cand.email_snapshot:
+        # Send email only if explicitly requested (default is False)
+        if send_emails and cand.email_snapshot:
             background_tasks.add_task(
                 email_service.send_exam_credentials_email,
                 student_name=cand.name_snapshot,
@@ -1047,7 +1049,7 @@ def generate_credentials(
                 existing.candidate_id = cand_id
             existing.expires_at = expires_at
 
-        if s.user and s.user.email:
+        if send_emails and s.user and s.user.email:
             background_tasks.add_task(
                 email_service.send_exam_credentials_email,
                 student_name=s.user.full_name,

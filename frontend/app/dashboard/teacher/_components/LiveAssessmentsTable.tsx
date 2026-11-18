@@ -164,7 +164,7 @@ export default function LiveAssessmentsTable({
     setLoadingCredsExamId(exam.id);
     setCredsSearch("");
     try {
-      const res = await apiFetch(`/exams/${exam.id}/credentials`, { token, method: "POST" });
+      const res = await apiFetch(`/exams/${exam.id}/credentials`, { token, method: "GET" });
       if (res.ok) {
         const data = await res.json();
         const credsList = Array.isArray(data) ? data : [];
@@ -174,7 +174,7 @@ export default function LiveAssessmentsTable({
           examCode: exam.exam_code || exam.code,
           creds: credsList,
         });
-        showToast(`Loaded ${credsList.length} candidate credentials. Emails dispatched automatically.`, "success");
+        showToast(`Loaded ${credsList.length} candidate credentials.`, "success");
       } else {
         if (res.status === 402 && onOpenPaymentModal) {
           onOpenPaymentModal(exam);
@@ -1780,7 +1780,7 @@ export default function LiveAssessmentsTable({
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0 pt-3 border-t border-[#E2E8F0] dark:border-[#263449]">
               <div className="text-[11px] text-[#64748B] dark:text-[#A3B1C6] flex items-center gap-1.5">
                 <ShieldCheck className="h-4 w-4 text-emerald-600" />
-                <span>Passcodes are sent automatically to students' authorized emails.</span>
+                <span>Passcodes are ready. Click "Resend All Emails" or the Email button to dispatch.</span>
               </div>
 
               <div className="flex items-center gap-2.5 w-full sm:w-auto">
