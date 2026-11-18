@@ -115,6 +115,16 @@ export default function PublicCustomFormPage() {
 
   const customColors = formMeta?.theme_settings;
 
+  // Banner Badge Text: Custom text from theme_settings, or null (hidden) if not provided or disabled
+  const bannerBadge = useMemo(() => {
+    if (formMeta?.theme_settings?.show_banner_badge === false) return null;
+    if (typeof formMeta?.theme_settings?.banner_badge === "string") {
+      const trimmed = formMeta.theme_settings.banner_badge.trim();
+      return trimmed.length > 0 ? trimmed : null;
+    }
+    return null;
+  }, [formMeta?.theme_settings]);
+
   const handleInputChange = (fieldId: string, value: any) => {
     setResponses((prev) => ({ ...prev, [fieldId]: value }));
   };
@@ -275,20 +285,24 @@ export default function PublicCustomFormPage() {
                   className="w-full h-full object-cover object-center"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                <div className="absolute bottom-4 left-5 right-5 text-white">
-                  <span className="px-2.5 py-1 rounded-md text-[10px] font-bold bg-white/20 backdrop-blur-md border border-white/30 uppercase tracking-wider">
-                    {theme.name}
-                  </span>
-                </div>
+                {bannerBadge && (
+                  <div className="absolute bottom-4 left-5 right-5 text-white">
+                    <span className="px-2.5 py-1 rounded-md text-[10px] font-bold bg-white/20 backdrop-blur-md border border-white/30 uppercase tracking-wider">
+                      {bannerBadge}
+                    </span>
+                  </div>
+                )}
               </div>
             ) : (
               <div 
-                className="w-full h-24 sm:h-28 relative border-b border-slate-200/40 dark:border-slate-800/40 flex items-end p-4"
+                className={`w-full ${bannerBadge ? "h-24 sm:h-28" : "h-14 sm:h-16"} relative border-b border-slate-200/40 dark:border-slate-800/40 flex items-end p-4 transition-all`}
                 style={{ background: theme.bannerGradient }}
               >
-                <div className="text-white/80 text-[10px] uppercase font-bold tracking-widest">
-                  {theme.category} • {theme.name}
-                </div>
+                {bannerBadge && (
+                  <div className="text-white/90 text-[10px] uppercase font-bold tracking-widest bg-white/10 px-2.5 py-1 rounded-md backdrop-blur-xs border border-white/20">
+                    {bannerBadge}
+                  </div>
+                )}
               </div>
             )}
 

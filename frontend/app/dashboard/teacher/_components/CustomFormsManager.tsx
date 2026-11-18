@@ -37,7 +37,9 @@ import {
   MicOff,
   Volume2,
   Download,
-  X
+  X,
+  Tag,
+  Type
 } from "lucide-react";
 import { apiFetch, getFrontendBaseUrl } from "../../../../lib/api";
 import QRCodeModal from "../../../../components/QRCodeModal";
@@ -138,6 +140,8 @@ export default function CustomFormsManager({ token }: CustomFormsManagerProps) {
     pageBackground?: string;
     cardBackground?: string;
     buttonBg?: string;
+    banner_badge?: string;
+    show_banner_badge?: boolean;
   }>({});
 
   const [themeCategoryFilter, setThemeCategoryFilter] = useState<string>("All");
@@ -292,6 +296,16 @@ export default function CustomFormsManager({ token }: CustomFormsManagerProps) {
   const activeThemeObj: FormTheme = useMemo(() => {
     return getFormTheme(builderTheme);
   }, [builderTheme]);
+
+  // Banner Badge Text: Custom tagline badge, or null if empty / removed
+  const builderBannerBadge = useMemo(() => {
+    if (customColors.show_banner_badge === false) return null;
+    if (typeof customColors.banner_badge === "string") {
+      const trimmed = customColors.banner_badge.trim();
+      return trimmed.length > 0 ? trimmed : null;
+    }
+    return null;
+  }, [customColors.show_banner_badge, customColors.banner_badge]);
 
   // Unique Theme Categories
   const themeCategories = useMemo(() => {
@@ -1700,6 +1714,122 @@ export default function CustomFormsManager({ token }: CustomFormsManagerProps) {
                     />
                   </div>
                 </div>
+
+                {/* Header Banner Badge & Tagline Text Customizer */}
+                <div className="bg-[#FAF8F5] dark:bg-[#1C1A18] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl p-4 sm:p-5 space-y-3.5 mt-5">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#E5E0D8]/80 dark:border-[#292524]/80 pb-3">
+                    <div className="flex items-center gap-2">
+                      <Tag className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                      <div>
+                        <h4 className="text-xs sm:text-sm font-bold text-[#242321] dark:text-[#F5F5F4]">
+                          Header Banner Badge / Tagline Text
+                        </h4>
+                        <p className="text-[11px] text-[#716D67] dark:text-[#A8A29E]">
+                          Edit or remove the text displayed inside the top banner. Leave blank to show clean banner without any text.
+                        </p>
+                      </div>
+                    </div>
+                    {customColors.banner_badge && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCustomColors((prev) => ({ ...prev, banner_badge: "", show_banner_badge: false }));
+                          showToast("Banner text removed");
+                        }}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-400 rounded-lg border border-rose-200 dark:border-rose-900 transition-colors cursor-pointer w-fit"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        <span>Remove / Clear Text</span>
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                    <div className="relative flex-1">
+                      <input
+                        type="text"
+                        value={customColors.banner_badge ?? ""}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setCustomColors((prev) => ({ 
+                            ...prev, 
+                            banner_badge: val,
+                            show_banner_badge: val.trim().length > 0
+                          }));
+                        }}
+                        placeholder="e.g. OFFICIAL REGISTRATION • 2026-27 (or leave blank for clean banner)"
+                        className="w-full px-3.5 py-2 text-xs rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-[#171615] text-[#242321] dark:text-[#F5F5F4] outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 placeholder:text-stone-400"
+                      />
+                      {customColors.banner_badge && (
+                        <button
+                          type="button"
+                          onClick={() => setCustomColors((prev) => ({ ...prev, banner_badge: "", show_banner_badge: false }))}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 dark:hover:text-stone-200"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCustomColors((prev) => ({ ...prev, banner_badge: "", show_banner_badge: false }));
+                          showToast("Banner text cleared (No badge)");
+                        }}
+                        className={`px-3 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                          !customColors.banner_badge
+                            ? "bg-blue-50 dark:bg-blue-950/40 border-blue-300 dark:border-blue-800 text-blue-700 dark:text-blue-300 font-bold"
+                            : "bg-white dark:bg-[#171615] border-stone-200 dark:border-stone-800 text-stone-600 dark:text-stone-400 hover:border-stone-400"
+                        }`}
+                      >
+                        No Badge (Clean)
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const preset = `${activeThemeObj.category.toUpperCase()} • ${activeThemeObj.name.toUpperCase()}`;
+                          setCustomColors((prev) => ({ ...prev, banner_badge: preset, show_banner_badge: true }));
+                          showToast("Set to theme name");
+                        }}
+                        className="px-2.5 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-[#171615] border border-stone-200 dark:border-stone-800 text-stone-600 dark:text-stone-400 hover:border-stone-400 transition-colors cursor-pointer"
+                        title="Use Theme Name as Badge"
+                      >
+                        Use Theme Name
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Quick Preset Tagline Chips */}
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                    <span className="text-[10px] uppercase font-bold text-[#716D67] mr-1">Quick Suggestions:</span>
+                    {[
+                      "OFFICIAL STUDENT REGISTRATION",
+                      "ACADEMIC ASSESSMENT • 2026",
+                      "CAMPUS SURVEY & FEEDBACK",
+                      "PLATFORM TESTING SESSION",
+                      "EVENT & WORKSHOP ADMISSION"
+                    ].map((chip) => (
+                      <button
+                        key={chip}
+                        type="button"
+                        onClick={() => {
+                          setCustomColors((prev) => ({ ...prev, banner_badge: chip, show_banner_badge: true }));
+                          showToast(`Applied badge: "${chip}"`);
+                        }}
+                        className={`px-2 py-1 text-[10px] font-bold rounded-md border transition-all cursor-pointer ${
+                          customColors.banner_badge === chip
+                            ? "bg-blue-600 text-white border-blue-600"
+                            : "bg-white dark:bg-[#171615] text-stone-600 dark:text-stone-300 border-stone-200 dark:border-stone-800 hover:border-blue-400"
+                        }`}
+                      >
+                        + {chip}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
 
             </div>
@@ -1742,21 +1872,143 @@ export default function CustomFormsManager({ token }: CustomFormsManagerProps) {
                         className="w-full h-full object-cover object-center"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                      <div className="absolute bottom-3 left-4 text-white">
-                        <span className="px-2.5 py-1 rounded-md text-[10px] font-bold bg-white/20 backdrop-blur-md border border-white/30 uppercase tracking-wider">
-                          Active Hero Banner
-                        </span>
-                      </div>
+                      {builderBannerBadge && (
+                        <div className="absolute bottom-3 left-4 text-white">
+                          <span className="px-2.5 py-1 rounded-md text-[10px] font-bold bg-white/20 backdrop-blur-md border border-white/30 uppercase tracking-wider">
+                            {builderBannerBadge}
+                          </span>
+                        </div>
+                      )}
                     </>
                   ) : (
                     <div 
                       className="w-full h-full flex flex-col justify-end p-5 text-white"
                       style={{ background: activeThemeObj.bannerGradient }}
                     >
-                      <span className="text-[11px] uppercase font-bold tracking-widest text-white/70">Theme Gradient Banner</span>
+                      {builderBannerBadge && (
+                        <span className="text-[10px] uppercase font-bold tracking-widest text-white/90 bg-white/10 px-2 py-0.5 rounded backdrop-blur-xs border border-white/20 w-fit mb-1">
+                          {builderBannerBadge}
+                        </span>
+                      )}
                       <h4 className="text-lg font-bold">{builderTitle || "Form Title"}</h4>
                     </div>
                   )}
+                </div>
+
+                {/* Banner Badge / Tagline Text Customizer */}
+                <div className="bg-[#FAF8F5] dark:bg-[#1C1A18] border border-[#E5E0D8] dark:border-[#292524] rounded-2xl p-4 sm:p-5 space-y-3.5">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#E5E0D8]/80 dark:border-[#292524]/80 pb-3">
+                    <div className="flex items-center gap-2">
+                      <Tag className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                      <div>
+                        <h4 className="text-xs sm:text-sm font-bold text-[#242321] dark:text-[#F5F5F4]">
+                          Header Banner Badge / Tagline Text
+                        </h4>
+                        <p className="text-[11px] text-[#716D67] dark:text-[#A8A29E]">
+                          Edit or remove the pill text displayed inside the banner. Leave blank to hide.
+                        </p>
+                      </div>
+                    </div>
+                    {customColors.banner_badge && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCustomColors((prev) => ({ ...prev, banner_badge: "", show_banner_badge: false }));
+                          showToast("Banner text removed");
+                        }}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-400 rounded-lg border border-rose-200 dark:border-rose-900 transition-colors cursor-pointer w-fit"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        <span>Remove / Clear Text</span>
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                    <div className="relative flex-1">
+                      <input
+                        type="text"
+                        value={customColors.banner_badge ?? ""}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setCustomColors((prev) => ({ 
+                            ...prev, 
+                            banner_badge: val,
+                            show_banner_badge: val.trim().length > 0
+                          }));
+                        }}
+                        placeholder="e.g. OFFICIAL REGISTRATION • 2026-27 (or leave blank for clean banner)"
+                        className="w-full px-3.5 py-2 text-xs rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-[#171615] text-[#242321] dark:text-[#F5F5F4] outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 placeholder:text-stone-400"
+                      />
+                      {customColors.banner_badge && (
+                        <button
+                          type="button"
+                          onClick={() => setCustomColors((prev) => ({ ...prev, banner_badge: "", show_banner_badge: false }))}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 dark:hover:text-stone-200"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCustomColors((prev) => ({ ...prev, banner_badge: "", show_banner_badge: false }));
+                          showToast("Banner text cleared (No badge)");
+                        }}
+                        className={`px-3 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                          !customColors.banner_badge
+                            ? "bg-blue-50 dark:bg-blue-950/40 border-blue-300 dark:border-blue-800 text-blue-700 dark:text-blue-300 font-bold"
+                            : "bg-white dark:bg-[#171615] border-stone-200 dark:border-stone-800 text-stone-600 dark:text-stone-400 hover:border-stone-400"
+                        }`}
+                      >
+                        No Badge (Clean)
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const preset = `${activeThemeObj.category.toUpperCase()} • ${activeThemeObj.name.toUpperCase()}`;
+                          setCustomColors((prev) => ({ ...prev, banner_badge: preset, show_banner_badge: true }));
+                          showToast("Set to theme name");
+                        }}
+                        className="px-2.5 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-[#171615] border border-stone-200 dark:border-stone-800 text-stone-600 dark:text-stone-400 hover:border-stone-400 transition-colors cursor-pointer"
+                        title="Use Theme Name as Badge"
+                      >
+                        Use Theme Name
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Quick Preset Tagline Chips */}
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                    <span className="text-[10px] uppercase font-bold text-[#716D67] mr-1">Quick Suggestions:</span>
+                    {[
+                      "OFFICIAL STUDENT REGISTRATION",
+                      "ACADEMIC ASSESSMENT • 2026",
+                      "CAMPUS SURVEY & FEEDBACK",
+                      "PLATFORM TESTING SESSION",
+                      "EVENT & WORKSHOP ADMISSION"
+                    ].map((chip) => (
+                      <button
+                        key={chip}
+                        type="button"
+                        onClick={() => {
+                          setCustomColors((prev) => ({ ...prev, banner_badge: chip, show_banner_badge: true }));
+                          showToast(`Applied badge: "${chip}"`);
+                        }}
+                        className={`px-2 py-1 text-[10px] font-bold rounded-md border transition-all cursor-pointer ${
+                          customColors.banner_badge === chip
+                            ? "bg-blue-600 text-white border-blue-600"
+                            : "bg-white dark:bg-[#171615] text-stone-600 dark:text-stone-300 border-stone-200 dark:border-stone-800 hover:border-blue-400"
+                        }`}
+                      >
+                        + {chip}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Custom URL Input */}
@@ -1876,20 +2128,24 @@ export default function CustomFormsManager({ token }: CustomFormsManagerProps) {
                           className="w-full h-full object-cover object-center"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                        <div className="absolute bottom-3 left-4 text-white">
-                          <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-white/20 backdrop-blur-md uppercase tracking-wider">
-                            {activeThemeObj.name}
-                          </span>
-                        </div>
+                        {builderBannerBadge && (
+                          <div className="absolute bottom-3 left-4 text-white">
+                            <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-white/20 backdrop-blur-md uppercase tracking-wider">
+                              {builderBannerBadge}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <div 
-                        className="w-full h-20 p-4 flex items-end text-white border-b border-slate-200/40"
+                        className={`w-full ${builderBannerBadge ? "h-20" : "h-14"} p-4 flex items-end text-white border-b border-slate-200/40 transition-all`}
                         style={{ background: activeThemeObj.bannerGradient }}
                       >
-                        <span className="text-[10px] uppercase font-bold tracking-widest text-white/80">
-                          {activeThemeObj.name}
-                        </span>
+                        {builderBannerBadge && (
+                          <span className="text-[10px] uppercase font-bold tracking-widest text-white/90 bg-white/10 px-2 py-0.5 rounded backdrop-blur-xs border border-white/20">
+                            {builderBannerBadge}
+                          </span>
+                        )}
                       </div>
                     )}
 
