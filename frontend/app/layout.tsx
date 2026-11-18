@@ -1,9 +1,22 @@
 import type { Metadata, Viewport } from "next";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import "katex/dist/katex.min.css";
 import Providers from "./providers/Providers";
 import InstallPwaModal from "../components/InstallPwaModal";
 import NavigationProgress from "../components/NavigationProgress";
+
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-mono",
+});
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -46,7 +59,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" data-theme="light" suppressHydrationWarning data-scroll-behavior="smooth">
+    <html lang="en" data-theme="light" suppressHydrationWarning data-scroll-behavior="smooth" className={`${inter.variable} ${jetbrainsMono.variable}`}>
       <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" type="image/png" sizes="32x32" href="/icon.png" />
@@ -98,7 +111,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="antialiased min-h-screen selection:bg-blue-600/20 selection:text-blue-900 dark:selection:text-blue-200">
+      <body className={`${inter.className} antialiased min-h-screen selection:bg-blue-600/20 selection:text-blue-900 dark:selection:text-blue-200`}>
         <NavigationProgress />
         <Providers>
           {children}

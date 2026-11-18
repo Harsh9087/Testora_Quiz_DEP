@@ -10,6 +10,21 @@ const nextConfig = {
   outputFileTracingRoot: path.join(__dirname),
   reactStrictMode: true,
   devIndicators: false,
+  poweredByHeader: false,
+  compress: true,
+  experimental: {
+    optimizePackageImports: [
+      'lucide-react',
+      'recharts',
+      'framer-motion',
+      'katex',
+      '@tanstack/react-query',
+    ],
+  },
+  images: {
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 60 * 60 * 24 * 30,
+  },
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -48,6 +63,24 @@ const nextConfig = {
           {
             key: 'Cross-Origin-Opener-Policy',
             value: 'same-origin-allow-popups',
+          },
+        ],
+      },
+      {
+        source: '/_next/static/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/images/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=86400, stale-while-revalidate=604800',
           },
         ],
       },
