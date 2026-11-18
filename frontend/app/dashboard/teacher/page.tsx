@@ -160,13 +160,30 @@ export default function TeacherDashboard() {
         window.scrollTo(0, 0);
       }
     };
+    const handleOpenLive = (e: any) => {
+      switchSectionTab("exams");
+      const targetExam = e?.detail?.exam;
+      if (targetExam) {
+        setLiveProctorExam(targetExam);
+        setLiveProctorAlerts([]);
+      } else if (exams && exams.length > 0) {
+        const active = exams.find((x: any) => x.is_published || x.status === "active") || exams[0];
+        if (active) {
+          setLiveProctorExam(active);
+          setLiveProctorAlerts([]);
+        }
+      }
+    };
+
     window.addEventListener("hashchange", handleUrlSync);
     window.addEventListener("popstate", handleUrlSync);
     window.addEventListener("switch-tab", handleCustom);
+    window.addEventListener("open-live-monitor", handleOpenLive);
     return () => {
       window.removeEventListener("hashchange", handleUrlSync);
       window.removeEventListener("popstate", handleUrlSync);
       window.removeEventListener("switch-tab", handleCustom);
+      window.removeEventListener("open-live-monitor", handleOpenLive);
     };
   }, []);
   

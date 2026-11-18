@@ -269,7 +269,7 @@ export default function LiveProctoringModal({
                   </span>
                 </div>
                 <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 truncate">
-                  Code: <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{telemetry?.exam?.exam_code || exam?.exam_code || exam?.code || exam?.id || targetExamId || "—"}</span> • Real-time focus tracking
+                  Code: <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{telemetry?.exam?.exam_code || exam?.exam_code || exam?.code || exam?.id || targetExamId || "ACTIVE"}</span> • Real-time focus tracking
                 </p>
               </div>
             </div>
@@ -466,10 +466,39 @@ export default function LiveProctoringModal({
                     Retry Live Sync
                   </button>
                 </>
-              ) : searchTerm ? (
-                <p>No active candidates match your filter.</p>
+              ) : searchTerm.trim() ? (
+                <div className="py-12 text-center text-xs text-slate-500 dark:text-slate-400 space-y-1">
+                  <p className="font-semibold">No active candidates match "{searchTerm}".</p>
+                  <button
+                    type="button"
+                    onClick={() => setSearchTerm("")}
+                    className="text-blue-600 dark:text-blue-400 font-bold hover:underline cursor-pointer"
+                  >
+                    Clear Filter
+                  </button>
+                </div>
               ) : (
-                <p>No candidates enrolled or active in this assessment session yet.</p>
+                <div className="py-12 px-4 max-w-sm mx-auto text-center space-y-3">
+                  <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 mx-auto flex items-center justify-center">
+                    <Radio className="h-6 w-6 animate-pulse" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                      Live Proctoring Room is Active
+                    </h4>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                      Candidates will automatically appear here with real-time focus, question progress, and anti-cheat tracking once they begin the assessment.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddStudentModal(true)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs transition-all cursor-pointer"
+                  >
+                    <UserPlus className="h-3.5 w-3.5" />
+                    <span>Enroll Students Now</span>
+                  </button>
+                </div>
               )}
             </div>
           ) : (
@@ -694,9 +723,11 @@ export default function LiveProctoringModal({
           <button
             type="button"
             onClick={onClose}
-            className="w-full sm:w-auto px-4 py-2 rounded-xl border border-[#E5E0D8] dark:border-[#292524] text-xs font-semibold text-[#716D67] hover:text-[#242321] hover:bg-[#F7F4EF] dark:hover:bg-[#1D1B19] transition-colors cursor-pointer text-center"
+            className="w-full sm:w-auto px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer text-center flex items-center justify-center gap-1.5"
+            title="Exit live monitor view (Assessment remains active for candidates)"
           >
-            Close Room
+            <X className="h-3.5 w-3.5" />
+            <span>Close Monitor</span>
           </button>
         </div>
 

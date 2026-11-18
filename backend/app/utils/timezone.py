@@ -41,10 +41,22 @@ def to_utc_instant(dt: Optional[Union[datetime, str]]) -> Optional[datetime]:
         # Handle trailing Z
         if val.endswith("Z"):
             val = val[:-1] + "+00:00"
-        parsed = datetime.fromisoformat(val)
-        if parsed.tzinfo is None:
-            parsed = parsed.replace(tzinfo=UTC)
-        return parsed.astimezone(UTC)
+        try:
+            # Replace space with T if needed
+            val_clean = val.replace(" ", "T") if " " in val and "T" not in val else val
+            parsed = datetime.fromisoformat(val_clean)
+            if parsed.tzinfo is None:
+                parsed = parsed.replace(tzinfo=UTC)
+            return parsed.astimezone(UTC)
+        except Exception:
+            # Fallback for alternative date formats
+            for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d"):
+                try:
+                    parsed = datetime.strptime(val[:19], fmt).replace(tzinfo=UTC)
+                    return parsed
+                except Exception:
+                    continue
+            return None
 
     if isinstance(dt, datetime):
         if dt.tzinfo is not None:

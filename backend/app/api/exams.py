@@ -1777,9 +1777,17 @@ def get_exam_live_monitor(
     actual_exam_id = exam.id
 
     # Multi-tenant ownership check
-    if current_user.role != "super_admin":
+    if current_user.role not in ["super_admin", "admin"]:
         teacher_ws_ids = [m.workspace_id for m in db.query(WorkspaceMember).filter(WorkspaceMember.user_id == current_user.id).all()]
-        if not (exam.created_by == current_user.id or (exam.workspace_id and exam.workspace_id in teacher_ws_ids)):
+        is_creator = exam.created_by == current_user.id
+        in_workspace = bool(exam.workspace_id and exam.workspace_id in teacher_ws_ids)
+        same_institution = bool(
+            current_user.institution_id and (
+                getattr(exam, "institution_id", None) == current_user.institution_id or
+                (exam.creator and getattr(exam.creator, "institution_id", None) == current_user.institution_id)
+            )
+        )
+        if not (is_creator or in_workspace or same_institution):
             raise HTTPException(status_code=403, detail="Access denied to monitor this exam")
 
     total_questions = 0
@@ -1789,253 +1797,349 @@ def get_exam_live_monitor(
         except Exception:
             total_questions = 0
 
-    # Load canonical candidates with eager-loaded credential and submissions (eliminates N+1 queries)
-    candidates = db.query(ExamCandidate).options(
-        joinedload(ExamCandidate.credential),
-        selectinload(ExamCandidate.submissions)
-    ).filter(ExamCandidate.exam_id == actual_exam_id).order_by(ExamCandidate.created_at.asc()).all()
-
-    # Self-heal / snapshot candidates if directory exists and snapshots not yet created
-    if not candidates and exam.student_directory_id:
-        snapshot_candidates_for_exam(exam, exam.student_directory_id, db)
+    try:
+        # Load canonical candidates with eager-loaded credential and submissions (eliminates N+1 queries)
         candidates = db.query(ExamCandidate).options(
             joinedload(ExamCandidate.credential),
             selectinload(ExamCandidate.submissions)
         ).filter(ExamCandidate.exam_id == actual_exam_id).order_by(ExamCandidate.created_at.asc()).all()
 
-    # Self-heal legacy credentials that have student_id but no candidate_id
-    unlinked_creds = db.query(ExamCredential).filter(
-        ExamCredential.exam_id == actual_exam_id,
-        ExamCredential.candidate_id.is_(None)
-    ).all()
-    if unlinked_creds:
-        needs_reload = False
-        for uc in unlinked_creds:
-            if uc.student and uc.student.user:
-                cand = db.query(ExamCandidate).filter(
-                    ExamCandidate.exam_id == exam.id,
-                    or_(
-                        func.lower(ExamCandidate.email_snapshot) == uc.student.user.email.strip().lower(),
-                        ExamCandidate.roll_number_snapshot == uc.student.roll_number
-                    )
-                ).first()
-                if not cand:
-                    cand = ExamCandidate(
-                        exam_id=exam.id,
-                        name_snapshot=uc.student.user.full_name,
-                        email_snapshot=uc.student.user.email,
-                        roll_number_snapshot=uc.student.roll_number,
-                        status="PENDING"
-                    )
-                    db.add(cand)
-                    db.flush()
-                uc.candidate_id = cand.id
-                needs_reload = True
-        if needs_reload:
-            db.commit()
-            candidates = db.query(ExamCandidate).options(
-                joinedload(ExamCandidate.credential),
-                selectinload(ExamCandidate.submissions)
-            ).filter(ExamCandidate.exam_id == actual_exam_id).order_by(ExamCandidate.created_at.asc()).all()
+        # Self-heal / snapshot candidates if directory exists and snapshots not yet created
+        if not candidates and exam.student_directory_id:
+            try:
+                snapshot_candidates_for_exam(exam, exam.student_directory_id, db)
+                candidates = db.query(ExamCandidate).options(
+                    joinedload(ExamCandidate.credential),
+                    selectinload(ExamCandidate.submissions)
+                ).filter(ExamCandidate.exam_id == actual_exam_id).order_by(ExamCandidate.created_at.asc()).all()
+            except Exception:
+                pass
 
-    # Deduplicate candidates by student email so each distinct student appears only once
-    # Candidates with active submissions or credentials are prioritized as canonical
-    candidates = sorted(
-        candidates,
-        key=lambda c: (len(c.submissions or []), 1 if c.credential else 0),
-        reverse=True
-    )
-    deduped_candidates = []
-    seen_emails = set()
-    for c in candidates:
-        email_key = (c.email_snapshot or "").strip().lower()
-        if not email_key or "anonymous" in (c.name_snapshot or "").lower():
-            continue
-        if email_key in seen_emails:
-            continue
-        seen_emails.add(email_key)
-        deduped_candidates.append(c)
-    candidates = deduped_candidates
-
-    now = now_utc()
-    
-    # 1. Batch query proctoring log counts to avoid N+1 queries
-    proctor_counts = dict(
-        db.query(ProctoringLog.submission_id, func.count(ProctoringLog.id))
-        .join(ExamSubmission, ProctoringLog.submission_id == ExamSubmission.id)
-        .filter(ExamSubmission.exam_id == actual_exam_id)
-        .group_by(ProctoringLog.submission_id)
-        .all()
-    )
-
-    candidates_list = []
-    active_in_room_count = 0
-    answering_now_count = 0
-    submitted_count = 0
-    disconnected_count = 0
-    not_started_count = 0
-
-    for cand in candidates:
-        cred = cand.credential
-        cand_subs = sorted(cand.submissions or [], key=lambda s: s.attempt_number)
-        sub = cand_subs[-1] if cand_subs else None
-        total_attempts = len(cand_subs)
-
-        # Explicitly ignore any corrupted or dummy candidate records
-        if not cand.name_snapshot or "anonymous" in cand.name_snapshot.lower():
-            continue
-
-        username = cred.username if cred else "N/A"
-        answered_count = 0
-        submission_status = "not_started"
-        connection_status = "offline"
-        score = None
-        started_at = None
-        submitted_at = None
-
-        if sub:
-            started_at = to_iso_utc(sub.started_at)
-            score = sub.score
-
-            if sub.answers_json:
+        # Self-heal legacy credentials that have student_id but no candidate_id
+        unlinked_creds = db.query(ExamCredential).filter(
+            ExamCredential.exam_id == actual_exam_id,
+            ExamCredential.candidate_id.is_(None)
+        ).all()
+        if unlinked_creds:
+            needs_reload = False
+            for uc in unlinked_creds:
+                if uc.student and uc.student.user:
+                    email_clean = (uc.student.user.email or "").strip().lower()
+                    roll_no = uc.student.roll_number
+                    conds = []
+                    if email_clean:
+                        conds.append(func.lower(ExamCandidate.email_snapshot) == email_clean)
+                    if roll_no:
+                        conds.append(ExamCandidate.roll_number_snapshot == roll_no)
+                    cand = None
+                    if conds:
+                        cand = db.query(ExamCandidate).filter(
+                            ExamCandidate.exam_id == exam.id,
+                            or_(*conds)
+                        ).first()
+                    if not cand:
+                        cand = ExamCandidate(
+                            exam_id=exam.id,
+                            name_snapshot=uc.student.user.full_name or uc.student.user.email or "Student",
+                            email_snapshot=uc.student.user.email or "",
+                            roll_number_snapshot=uc.student.roll_number,
+                            status="PENDING"
+                        )
+                        db.add(cand)
+                        db.flush()
+                    uc.candidate_id = cand.id
+                    needs_reload = True
+            if needs_reload:
                 try:
-                    ans_dict = json.loads(sub.answers_json)
-                    answered_count = len(ans_dict)
-                except Exception:
-                    answered_count = 0
-
-            # Auto-submit expired sessions on live sweep (only for started sessions)
-            if sub.status in ["started", "in_progress", "submitting"] and sub.started_at:
-                effective_deadline = to_utc_instant(sub.deadline_at) or (to_utc_instant(sub.started_at) + timedelta(minutes=exam.duration_minutes))
-                exam_end_dt = to_utc_instant(exam.end_time)
-                if exam_end_dt and exam_end_dt < effective_deadline:
-                    effective_deadline = exam_end_dt
-
-                if now >= effective_deadline:
-                    sub.status = "auto_submitted"
-                    sub.auto_submit_reason = "TIME_EXPIRED"
-                    sub.submitted_at = effective_deadline
                     db.commit()
+                except Exception:
+                    db.rollback()
+                candidates = db.query(ExamCandidate).options(
+                    joinedload(ExamCandidate.credential),
+                    selectinload(ExamCandidate.submissions)
+                ).filter(ExamCandidate.exam_id == actual_exam_id).order_by(ExamCandidate.created_at.asc()).all()
 
-            if sub.status in ["submitted", "auto_submitted", "graded"]:
-                submission_status = "auto_submitted" if sub.status == "auto_submitted" else "submitted"
-                connection_status = "completed"
-                submitted_at = to_iso_utc(sub.submitted_at)
-                submitted_count += 1
-            elif sub.status == "not_started" or sub.started_at is None:
-                submission_status = "not_started"
-                connection_status = "offline"
-                not_started_count += 1
-            else:
-                submission_status = "in_progress"
-                last_seen = to_utc_instant(sub.last_seen_at) or to_utc_instant(sub.started_at)
-                diff_sec = (now - last_seen).total_seconds() if last_seen else 999.0
-
-                if diff_sec < 30:
-                    connection_status = "online"
-                    active_in_room_count += 1
-                    answering_now_count += 1
-                elif diff_sec <= 90:
-                    connection_status = "disconnected"
-                    disconnected_count += 1
-                else:
-                    connection_status = "offline"
-                    disconnected_count += 1
-        else:
-            not_started_count += 1
-
-        exam_end_dt = to_utc_instant(exam.end_time)
-        can_grant_reattempt = bool(
-            sub and 
-            sub.status == "auto_submitted" and 
-            sub.auto_submit_reason == "TAB_SWITCH" and 
-            sub.tab_switch_count >= 1 and 
-            total_attempts < 2 and
-            (not exam_end_dt or now < exam_end_dt)
+        # Deduplicate candidates by student email so each distinct student appears only once
+        candidates = sorted(
+            candidates,
+            key=lambda c: (len(c.submissions or []), 1 if c.credential else 0),
+            reverse=True
         )
+        deduped_candidates = []
+        seen_emails = set()
+        for c in candidates:
+            email_key = (c.email_snapshot or "").strip().lower()
+            if not email_key or "anonymous" in (c.name_snapshot or "").lower():
+                continue
+            if email_key in seen_emails:
+                continue
+            seen_emails.add(email_key)
+            deduped_candidates.append(c)
+        candidates = deduped_candidates
 
-        attempts_history = [
-            {
-                "submission_id": s.id,
-                "attempt_number": s.attempt_number,
-                "status": s.status,
-                "raw_status": s.status,
-                "auto_submit_reason": s.auto_submit_reason,
-                "tab_switch_count": s.tab_switch_count,
-                "score": s.score,
-                "is_counted_for_result": s.is_counted_for_result,
-                "started_at": to_iso_utc(s.started_at),
-                "started_at_ist": format_ist_time(s.started_at) if s.started_at else None,
-                "submitted_at": to_iso_utc(s.submitted_at),
-                "submitted_at_ist": format_ist_time(s.submitted_at) if s.submitted_at else None,
-                "deadline_at_ist": format_ist_time(s.deadline_at) if s.deadline_at else None,
-            }
-            for s in cand_subs
-        ]
+        now = now_utc()
+        
+        # 1. Batch query proctoring log counts to avoid N+1 queries
+        proctor_counts = {}
+        try:
+            proctor_counts = dict(
+                db.query(ProctoringLog.submission_id, func.count(ProctoringLog.id))
+                .join(ExamSubmission, ProctoringLog.submission_id == ExamSubmission.id)
+                .filter(ExamSubmission.exam_id == actual_exam_id)
+                .group_by(ProctoringLog.submission_id)
+                .all()
+            )
+        except Exception:
+            proctor_counts = {}
 
-        proctor_flags_count = proctor_counts.get(sub.id, 0) if sub else 0
+        candidates_list = []
+        active_in_room_count = 0
+        answering_now_count = 0
+        submitted_count = 0
+        disconnected_count = 0
+        not_started_count = 0
+        has_auto_submits = False
 
-        candidates_list.append({
-            "candidate_id": cand.id,
-            "credential_id": cred.id if cred else None,
-            "student_id": cand.directory_student_id,
-            "name": cand.name_snapshot,
-            "email": cand.email_snapshot or "N/A",
-            "roll_number": cand.roll_number_snapshot or "N/A",
-            "username": username,
-            "status": submission_status,
-            "raw_status": sub.status if sub else "not_started",
-            "auto_submit_reason": sub.auto_submit_reason if sub else None,
-            "tab_switch_count": sub.tab_switch_count if sub else 0,
-            "attempt_number": sub.attempt_number if sub else 1,
-            "total_attempts": total_attempts,
-            "can_grant_reattempt": can_grant_reattempt,
-            "is_counted_for_result": sub.is_counted_for_result if sub else True,
-            "attempts_history": attempts_history,
-            "connection_status": connection_status,
-            "answered_count": answered_count,
-            "total_questions": total_questions,
-            "proctor_flags_count": proctor_flags_count,
-            "score": score,
-            "started_at": started_at,
-            "started_at_ist": format_ist_time(sub.started_at) if (sub and sub.started_at) else None,
-            "submitted_at": submitted_at,
-            "submitted_at_ist": format_ist_time(sub.submitted_at) if (sub and sub.submitted_at) else None,
-            "last_seen_at": to_iso_utc(sub.last_seen_at) if (sub and sub.last_seen_at) else None,
-            "last_seen_at_ist": format_ist_time(sub.last_seen_at) if (sub and sub.last_seen_at) else None
-        })
+        for cand in candidates:
+            cred = cand.credential
+            cand_subs = sorted(cand.submissions or [], key=lambda s: (s.attempt_number or 1))
+            sub = cand_subs[-1] if cand_subs else None
+            total_attempts = len(cand_subs)
 
-    return {
-        "exam": {
-            "id": exam.id,
-            "name": exam.name,
-            "exam_code": exam.exam_code,
-            "duration_minutes": exam.duration_minutes,
-            "start_time": to_iso_utc(exam.start_time),
-            "end_time": to_iso_utc(exam.end_time),
-            "start_time_ist": format_ist_datetime(exam.start_time),
-            "end_time_ist": format_ist_datetime(exam.end_time),
-            "is_published": exam.is_published,
-            "total_questions": total_questions
-        },
-        "summary": {
-            "total_assigned": len(candidates_list),
-            "logged_in": active_in_room_count,
-            "active_in_room": active_in_room_count,
-            "active_count": active_in_room_count,
-            "in_progress": answering_now_count,
-            "answering_now": answering_now_count,
-            "answering_now_count": answering_now_count,
-            "submitted": submitted_count,
-            "submitted_count": submitted_count,
-            "disconnected": disconnected_count,
-            "not_started": not_started_count,
-            "not_started_count": not_started_count
-        },
-        "server_time": to_iso_utc(now),
-        "server_time_ist": format_ist_datetime(now),
-        "candidates": candidates_list
-    }
+            if not cand.name_snapshot or "anonymous" in cand.name_snapshot.lower():
+                continue
+
+            username = cred.username if cred else "N/A"
+            answered_count = 0
+            submission_status = "not_started"
+            connection_status = "offline"
+            score = None
+            started_at = None
+            submitted_at = None
+
+            if sub:
+                started_at = to_iso_utc(sub.started_at)
+                score = sub.score
+
+                if sub.answers_json:
+                    try:
+                        ans_dict = json.loads(sub.answers_json)
+                        answered_count = len(ans_dict)
+                    except Exception:
+                        answered_count = 0
+
+                # Auto-submit expired sessions on live sweep (only for started sessions)
+                if sub.status in ["started", "in_progress", "submitting"] and sub.started_at:
+                    duration = exam.duration_minutes or 60
+                    effective_deadline = to_utc_instant(sub.deadline_at) or (to_utc_instant(sub.started_at) + timedelta(minutes=duration))
+                    exam_end_dt = to_utc_instant(exam.end_time)
+                    if exam_end_dt and exam_end_dt < effective_deadline:
+                        effective_deadline = exam_end_dt
+
+                    if now >= effective_deadline:
+                        sub.status = "auto_submitted"
+                        sub.auto_submit_reason = "TIME_EXPIRED"
+                        sub.submitted_at = effective_deadline
+                        has_auto_submits = True
+
+                if sub.status in ["submitted", "auto_submitted", "graded"]:
+                    submission_status = "auto_submitted" if sub.status == "auto_submitted" else "submitted"
+                    connection_status = "completed"
+                    submitted_at = to_iso_utc(sub.submitted_at)
+                    submitted_count += 1
+                elif sub.status == "not_started" or sub.started_at is None:
+                    submission_status = "not_started"
+                    connection_status = "offline"
+                    not_started_count += 1
+                else:
+                    submission_status = "in_progress"
+                    last_seen = to_utc_instant(sub.last_seen_at) or to_utc_instant(sub.started_at)
+                    diff_sec = (now - last_seen).total_seconds() if last_seen else 999.0
+
+                    if diff_sec < 30:
+                        connection_status = "online"
+                        active_in_room_count += 1
+                        answering_now_count += 1
+                    elif diff_sec <= 90:
+                        connection_status = "disconnected"
+                        disconnected_count += 1
+                    else:
+                        connection_status = "offline"
+                        disconnected_count += 1
+            else:
+                not_started_count += 1
+
+            exam_end_dt = to_utc_instant(exam.end_time)
+            can_grant_reattempt = bool(
+                sub and 
+                sub.status == "auto_submitted" and 
+                sub.auto_submit_reason == "TAB_SWITCH" and 
+                (sub.tab_switch_count or 0) >= 1 and 
+                total_attempts < 2 and
+                (not exam_end_dt or now < exam_end_dt)
+            )
+
+            attempts_history = []
+            for s in cand_subs:
+                try:
+                    s_started_ist = format_ist_time(s.started_at) if s.started_at else None
+                except Exception:
+                    s_started_ist = None
+                try:
+                    s_sub_ist = format_ist_time(s.submitted_at) if s.submitted_at else None
+                except Exception:
+                    s_sub_ist = None
+                try:
+                    s_dead_ist = format_ist_time(s.deadline_at) if s.deadline_at else None
+                except Exception:
+                    s_dead_ist = None
+
+                attempts_history.append({
+                    "submission_id": s.id,
+                    "attempt_number": s.attempt_number or 1,
+                    "status": s.status,
+                    "raw_status": s.status,
+                    "auto_submit_reason": s.auto_submit_reason,
+                    "tab_switch_count": s.tab_switch_count or 0,
+                    "score": s.score,
+                    "is_counted_for_result": s.is_counted_for_result,
+                    "started_at": to_iso_utc(s.started_at),
+                    "started_at_ist": s_started_ist,
+                    "submitted_at": to_iso_utc(s.submitted_at),
+                    "submitted_at_ist": s_sub_ist,
+                    "deadline_at_ist": s_dead_ist,
+                })
+
+            proctor_flags_count = proctor_counts.get(sub.id, 0) if sub else 0
+
+            try:
+                c_started_ist = format_ist_time(sub.started_at) if (sub and sub.started_at) else None
+            except Exception:
+                c_started_ist = None
+            try:
+                c_sub_ist = format_ist_time(sub.submitted_at) if (sub and sub.submitted_at) else None
+            except Exception:
+                c_sub_ist = None
+            try:
+                c_seen_ist = format_ist_time(sub.last_seen_at) if (sub and sub.last_seen_at) else None
+            except Exception:
+                c_seen_ist = None
+
+            candidates_list.append({
+                "candidate_id": cand.id,
+                "credential_id": cred.id if cred else None,
+                "student_id": cand.directory_student_id,
+                "name": cand.name_snapshot,
+                "email": cand.email_snapshot or "N/A",
+                "roll_number": cand.roll_number_snapshot or "N/A",
+                "username": username,
+                "status": submission_status,
+                "raw_status": sub.status if sub else "not_started",
+                "auto_submit_reason": sub.auto_submit_reason if sub else None,
+                "tab_switch_count": (sub.tab_switch_count if sub else 0) or 0,
+                "attempt_number": (sub.attempt_number if sub else 1) or 1,
+                "total_attempts": total_attempts,
+                "can_grant_reattempt": can_grant_reattempt,
+                "is_counted_for_result": sub.is_counted_for_result if sub else True,
+                "attempts_history": attempts_history,
+                "connection_status": connection_status,
+                "answered_count": answered_count,
+                "total_questions": total_questions,
+                "proctor_flags_count": proctor_flags_count,
+                "score": score,
+                "started_at": started_at,
+                "started_at_ist": c_started_ist,
+                "submitted_at": submitted_at,
+                "submitted_at_ist": c_sub_ist,
+                "last_seen_at": to_iso_utc(sub.last_seen_at) if (sub and sub.last_seen_at) else None,
+                "last_seen_at_ist": c_seen_ist
+            })
+
+        if has_auto_submits:
+            try:
+                db.commit()
+            except Exception:
+                db.rollback()
+
+        try:
+            exam_start_ist = format_ist_datetime(exam.start_time)
+        except Exception:
+            exam_start_ist = None
+        try:
+            exam_end_ist = format_ist_datetime(exam.end_time)
+        except Exception:
+            exam_end_ist = None
+        try:
+            server_now_ist = format_ist_datetime(now)
+        except Exception:
+            server_now_ist = None
+
+        return {
+            "exam": {
+                "id": exam.id,
+                "name": exam.name,
+                "exam_code": exam.exam_code or exam.id,
+                "duration_minutes": exam.duration_minutes or 0,
+                "start_time": to_iso_utc(exam.start_time),
+                "end_time": to_iso_utc(exam.end_time),
+                "start_time_ist": exam_start_ist,
+                "end_time_ist": exam_end_ist,
+                "is_published": exam.is_published,
+                "total_questions": total_questions
+            },
+            "summary": {
+                "total_assigned": len(candidates_list),
+                "logged_in": active_in_room_count,
+                "active_in_room": active_in_room_count,
+                "active_count": active_in_room_count,
+                "in_progress": answering_now_count,
+                "answering_now": answering_now_count,
+                "answering_now_count": answering_now_count,
+                "submitted": submitted_count,
+                "submitted_count": submitted_count,
+                "disconnected": disconnected_count,
+                "not_started": not_started_count,
+                "not_started_count": not_started_count
+            },
+            "server_time": to_iso_utc(now),
+            "server_time_ist": server_now_ist,
+            "candidates": candidates_list
+        }
+    except Exception as exc:
+        import traceback
+        traceback.print_exc()
+        now = now_utc()
+        return {
+            "exam": {
+                "id": exam.id,
+                "name": exam.name,
+                "exam_code": exam.exam_code or exam.id,
+                "duration_minutes": exam.duration_minutes or 0,
+                "start_time": to_iso_utc(exam.start_time),
+                "end_time": to_iso_utc(exam.end_time),
+                "start_time_ist": None,
+                "end_time_ist": None,
+                "is_published": exam.is_published,
+                "total_questions": total_questions
+            },
+            "summary": {
+                "total_assigned": 0,
+                "logged_in": 0,
+                "active_in_room": 0,
+                "active_count": 0,
+                "in_progress": 0,
+                "answering_now": 0,
+                "answering_now_count": 0,
+                "submitted": 0,
+                "submitted_count": 0,
+                "disconnected": 0,
+                "not_started": 0,
+                "not_started_count": 0
+            },
+            "server_time": to_iso_utc(now),
+            "server_time_ist": None,
+            "candidates": []
+        }
 
 # ─── Abandoned Attempt Helpers ────────────────────────────────────────────────
 
