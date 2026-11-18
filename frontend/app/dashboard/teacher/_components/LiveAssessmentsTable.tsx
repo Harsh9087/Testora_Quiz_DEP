@@ -987,7 +987,7 @@ export default function LiveAssessmentsTable({
       </div>
 
       {/* Desktop Table View (>= 768px) */}
-      <div className="hidden md:block overflow-x-auto min-h-[380px] pb-28">
+      <div className="hidden md:block overflow-x-auto min-h-[420px] pb-36">
         <table className="w-full text-left text-xs border-collapse">
           <thead>
             <tr className="border-b border-slate-200/90 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/60 text-slate-500 dark:text-slate-400 text-[11px] font-bold tracking-wider uppercase">
@@ -1068,12 +1068,15 @@ export default function LiveAssessmentsTable({
               displayedExams.map((exam, idx) => {
                 const sched = getExamScheduleInfo(exam);
                 const isLoadingCreds = loadingCredsExamId === exam.id;
-                const isNearBottom = idx >= Math.max(0, exams.length - 2);
+                // Only flip upwards if table has at least 6 items and row is near the bottom
+                const isNearBottom = displayedExams.length >= 6 && idx >= displayedExams.length - 2;
 
                 return (
                   <tr
                     key={exam.id}
-                    className="border-b border-slate-100 dark:border-slate-800/60 hover:bg-blue-50/20 dark:hover:bg-blue-950/10 transition-colors group"
+                    className={`border-b border-slate-100 dark:border-slate-800/60 hover:bg-blue-50/20 dark:hover:bg-blue-950/10 transition-colors group ${
+                      activeDropdownExamId === exam.id ? "relative z-30" : ""
+                    }`}
                   >
                     {/* Status & Payment Tag */}
                     <td className="py-3.5 px-4 whitespace-nowrap">
@@ -1251,7 +1254,7 @@ export default function LiveAssessmentsTable({
                         </a>
 
                         {/* 3. Dropdown Menu Trigger */}
-                        <div className="relative">
+                        <div className={`relative ${activeDropdownExamId === exam.id ? "z-40" : ""}`}>
                           <button
                             type="button"
                             onClick={(e) => {
@@ -1274,10 +1277,10 @@ export default function LiveAssessmentsTable({
                             <div
                               onClick={(e) => e.stopPropagation()}
                               onWheel={(e) => e.stopPropagation()}
-                              style={{ maxHeight: "280px", overflowY: "auto", scrollbarGutter: "stable" }}
+                              style={{ maxHeight: "320px", overflowY: "auto", scrollbarGutter: "stable" }}
                               className={`absolute right-0 ${
                                 isNearBottom ? "bottom-full mb-1.5" : "top-full mt-1.5"
-                              } w-64 rounded-2xl bg-white dark:bg-[#111C31] border border-slate-200/90 dark:border-slate-700/80 shadow-2xl py-1.5 z-50 text-left animate-in fade-in zoom-in-95 duration-150 divide-y divide-slate-100 dark:divide-slate-800/80 max-h-[280px] overflow-y-auto overscroll-contain [scrollbar-width:thin] [scrollbar-color:#94a3b8_transparent] hover:[scrollbar-color:#64748b_transparent]`}
+                              } w-64 rounded-2xl bg-white dark:bg-[#111C31] border border-slate-200/90 dark:border-slate-700/80 shadow-2xl py-1.5 z-[60] text-left animate-in fade-in zoom-in-95 duration-150 divide-y divide-slate-100 dark:divide-slate-800/80 max-h-[320px] overflow-y-auto overscroll-contain [scrollbar-width:thin] [scrollbar-color:#94a3b8_transparent] hover:[scrollbar-color:#64748b_transparent]`}
                             >
                               {/* Section 1: Performance & Results */}
                               <div className="p-1 space-y-0.5">
