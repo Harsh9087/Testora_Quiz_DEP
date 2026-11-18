@@ -63,6 +63,7 @@ class CredentialResponse(BaseModel):
     username: str
     password: str
     student_id: Optional[str] = None
+    candidate_id: Optional[str] = None
     student_name: Optional[str] = None
     email: Optional[str] = None
     roll_number: Optional[str] = None

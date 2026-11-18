@@ -188,18 +188,31 @@ export default function LiveAssessmentsTable({
     }
   };
 
-  const handleResendSingleCredEmail = async (studentId: string | undefined, studentName: string, email?: string) => {
+  const handleResendSingleCredEmail = async (candidate: {
+    student_id?: string;
+    candidate_id?: string;
+    student_name?: string;
+    email?: string;
+    username?: string;
+  }) => {
     if (!credsModalData) return;
-    setResendingStudentId(studentId || studentName);
+    const studentName = candidate.student_name || "Candidate";
+    const targetKey = candidate.username || candidate.candidate_id || candidate.student_id || studentName;
+    setResendingStudentId(targetKey);
     try {
-      const url = studentId 
-        ? `/exams/${credsModalData.examId}/resend-credentials-email?student_id=${studentId}`
-        : `/exams/${credsModalData.examId}/resend-credentials-email`;
+      const params = new URLSearchParams();
+      if (candidate.candidate_id) params.set("candidate_id", candidate.candidate_id);
+      if (candidate.student_id) params.set("student_id", candidate.student_id);
+      if (candidate.email) params.set("email", candidate.email);
+      if (candidate.username) params.set("username", candidate.username);
+
+      const url = `/exams/${credsModalData.examId}/resend-credentials-email?${params.toString()}`;
       const res = await apiFetch(url, { token, method: "POST" });
       if (res.ok) {
-        showToast(`Email with credentials sent to ${email || studentName}!`, "success");
+        showToast(`Email with credentials sent to ${candidate.email || studentName}!`, "success");
       } else {
-        showToast(`Failed to send email to ${studentName}`, "error");
+        const err = await res.json().catch(() => ({}));
+        showToast(err.detail || `Failed to send email to ${studentName}`, "error");
       }
     } catch {
       showToast("Network error sending email", "error");
@@ -1495,67 +1508,73 @@ export default function LiveAssessmentsTable({
       {/* ═══════ GENERATED CREDENTIALS PREVIEW MODAL ═══════ */}
       {credsModalData && (
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-2 sm:p-4 animate-fadeIn"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-xs p-0 sm:p-4 animate-fadeIn"
           onClick={() => setCredsModalData(null)}
         >
           <div 
-            className="bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-2xl max-w-3xl w-full p-4 sm:p-6 shadow-2xl space-y-4 max-h-[90vh] flex flex-col transition-colors"
+            className="bg-white dark:bg-[#111C31] border-t sm:border border-slate-200 dark:border-slate-800 rounded-t-3xl sm:rounded-2xl max-w-3xl w-full p-3 sm:p-5 shadow-2xl space-y-2.5 sm:space-y-4 max-h-[88dvh] sm:max-h-[90vh] flex flex-col transition-colors overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-[#E2E8F0] dark:border-[#263449] pb-4 shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172B4D] dark:text-[#60A5FA] rounded-xl border border-[#2563EB]/20">
-                  <Key className="h-5 w-5" />
+            {/* Mobile Drag Indicator */}
+            <div className="sm:hidden pt-1 pb-1 flex justify-center shrink-0">
+              <div className="w-10 h-1 bg-slate-300 dark:bg-slate-700 rounded-full" />
+            </div>
+
+            {/* Modal Header (pinned at top, compact on mobile) */}
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 sm:pb-3 shrink-0 gap-2">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                <div className="p-2 sm:p-2.5 bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172B4D] dark:text-[#60A5FA] rounded-xl border border-[#2563EB]/20 shrink-0">
+                  <Key className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
-                <div>
-                  <h3 className="font-bold text-base text-[#111827] dark:text-[#F1F5F9]">
-                    Candidate Access Credentials Preview
+                <div className="min-w-0">
+                  <h3 className="font-bold text-xs sm:text-base text-slate-900 dark:text-slate-100 truncate">
+                    Candidate Passcodes &amp; Credentials
                   </h3>
-                  <p className="text-xs text-[#64748B] dark:text-[#A3B1C6]">
-                    Assessment: <b className="text-[#2563EB] dark:text-[#60A5FA]">{credsModalData.examName}</b> ({credsModalData.examCode}) • {credsModalData.creds.length} Candidates Enrolled
+                  <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 truncate">
+                    Assessment: <b className="text-blue-600 dark:text-blue-400">{credsModalData.examName}</b> ({credsModalData.examCode}) • {credsModalData.creds.length} Candidates
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setCredsModalData(null)}
-                className="p-1.5 rounded-lg text-[#64748B] hover:bg-[#E2E8F0]/40 dark:hover:bg-[#263449] transition-all cursor-pointer"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer shrink-0"
               >
-                <X className="h-5 w-5" />
+                <X className="h-4 w-4 sm:h-5 sm:w-5" />
               </button>
             </div>
 
-            {/* Search & Bulk Copy / Resend Toolbar */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
-              <div className="relative flex-1">
-                <Search className="h-3.5 w-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#64748B]" />
+            {/* Search & Bulk Action Toolbar */}
+            <div className="space-y-2 shrink-0">
+              <div className="relative w-full">
+                <Search className="h-3.5 w-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
                   value={credsSearch}
                   onChange={(e) => setCredsSearch(e.target.value)}
                   placeholder="Search candidate name, email, roll number, or username..."
-                  className="w-full bg-[#F8FAFC] dark:bg-[#17243A] border border-[#E2E8F0] dark:border-[#263449] rounded-lg pl-8 pr-3 py-1.5 text-xs text-[#111827] dark:text-[#F1F5F9] focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                  className="w-full bg-[#F8FAFC] dark:bg-[#17243A] border border-slate-200 dark:border-slate-800 rounded-xl pl-8.5 pr-3 py-1.5 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
 
-              <div className="flex items-center gap-2 flex-wrap">
+              {/* Action buttons row - horizontal scrollable on mobile */}
+              <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-0.5 text-xs shrink-0">
                 <button
                   type="button"
                   onClick={() => handleCopyDirectExamLink(credsModalData.examCode)}
-                  className="px-2.5 sm:px-3 py-1.5 rounded-lg border border-[#2563EB]/30 bg-[#EFF6FF] dark:bg-[#172B4D] text-xs font-semibold text-[#2563EB] dark:text-[#60A5FA] hover:bg-[#DBEAFE] dark:hover:bg-[#1E3A8A]/50 flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
+                  className="px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-900/60 bg-blue-50/70 dark:bg-blue-950/40 text-[11px] font-semibold text-blue-700 dark:text-blue-300 hover:bg-blue-100 flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap shrink-0"
                   title="Copy direct shareable exam URL"
                 >
-                  <ExternalLink className="h-3.5 w-3.5" />
+                  <ExternalLink className="h-3 w-3" />
                   <span>Copy Link</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={handleShareAllWhatsApp}
-                  className="px-2.5 sm:px-3 py-1.5 rounded-lg border border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/40 text-xs font-semibold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
+                  className="px-2.5 py-1 rounded-lg border border-emerald-200 dark:border-emerald-900/60 bg-emerald-50/70 dark:bg-emerald-950/40 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap shrink-0"
                   title="Share assessment invitation on WhatsApp"
                 >
-                  <Share2 className="h-3.5 w-3.5 text-emerald-600" />
+                  <Share2 className="h-3 w-3 text-emerald-600" />
                   <span>WhatsApp Invite</span>
                 </button>
 
@@ -1563,13 +1582,13 @@ export default function LiveAssessmentsTable({
                   type="button"
                   disabled={isResendingAll}
                   onClick={handleResendAllEmails}
-                  className="px-2.5 sm:px-3 py-1.5 rounded-lg border border-[#2563EB]/30 bg-[#EFF6FF] dark:bg-[#172B4D] text-xs font-semibold text-[#2563EB] dark:text-[#60A5FA] hover:bg-[#DBEAFE] dark:hover:bg-[#1E3A8A]/50 flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
+                  className="px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-900/60 bg-blue-50/70 dark:bg-blue-950/40 text-[11px] font-semibold text-blue-700 dark:text-blue-300 hover:bg-blue-100 flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap shrink-0"
                   title="Resend access passcodes email to all enrolled candidates"
                 >
                   {isResendingAll ? (
-                    <div className="w-3.5 h-3.5 border-2 border-[#2563EB] border-t-transparent rounded-full animate-spin" />
+                    <div className="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
                   ) : (
-                    <Mail className="h-3.5 w-3.5" />
+                    <Mail className="h-3 w-3" />
                   )}
                   <span>Resend All Emails</span>
                 </button>
@@ -1577,10 +1596,10 @@ export default function LiveAssessmentsTable({
                 <button
                   type="button"
                   onClick={handleCopyAllCredentials}
-                  className="px-2.5 sm:px-3 py-1.5 rounded-lg border border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-[#111C31] text-xs font-semibold text-[#64748B] hover:text-[#111827] dark:hover:text-white flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
+                  className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C31] text-[11px] font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-50 flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap shrink-0"
                   title="Copy formatted list of all candidate credentials"
                 >
-                  <Copy className="h-3.5 w-3.5 text-[#2563EB] dark:text-[#60A5FA]" />
+                  <Copy className="h-3 w-3 text-blue-600 dark:text-blue-400" />
                   <span>Copy All</span>
                 </button>
               </div>
@@ -1599,7 +1618,7 @@ export default function LiveAssessmentsTable({
                     {filteredCreds.map((c, idx) => {
                       const rowKey = `${c.username}_${idx}`;
                       const isCopied = copiedKey === rowKey;
-                      const isSendingEmail = resendingStudentId === (c.student_id || c.student_name);
+                      const isSendingEmail = resendingStudentId === (c.username || c.candidate_id || c.student_id || c.student_name);
 
                       return (
                         <div key={idx} className="p-3.5 space-y-2.5">
@@ -1646,7 +1665,7 @@ export default function LiveAssessmentsTable({
                             <button
                               type="button"
                               disabled={isSendingEmail}
-                              onClick={() => handleResendSingleCredEmail(c.student_id, c.student_name, c.email)}
+                              onClick={() => handleResendSingleCredEmail(c)}
                               className="flex-1 py-1.5 px-2 rounded-lg border border-[#E5E0D8] dark:border-[#292524] text-xs font-semibold text-[#716D67] hover:text-[#C84B18] bg-white dark:bg-[#171615] hover:bg-[#FAF8F5] transition-all flex items-center justify-center gap-1 cursor-pointer shadow-2xs"
                             >
                               {isSendingEmail ? (
@@ -1696,7 +1715,7 @@ export default function LiveAssessmentsTable({
                         {filteredCreds.map((c, idx) => {
                           const rowKey = `${c.username}_${idx}`;
                           const isCopied = copiedKey === rowKey;
-                          const isSendingEmail = resendingStudentId === (c.student_id || c.student_name);
+                          const isSendingEmail = resendingStudentId === (c.username || c.candidate_id || c.student_id || c.student_name);
 
                           return (
                             <tr key={idx} className="hover:bg-[#F8FAFC] dark:hover:bg-[#17243A] transition-all">
@@ -1734,7 +1753,7 @@ export default function LiveAssessmentsTable({
                                   <button
                                     type="button"
                                     disabled={isSendingEmail}
-                                    onClick={() => handleResendSingleCredEmail(c.student_id, c.student_name, c.email)}
+                                    onClick={() => handleResendSingleCredEmail(c)}
                                     className="px-2 py-1 rounded border border-[#E2E8F0] dark:border-[#263449] text-[11px] font-semibold text-[#64748B] hover:text-[#2563EB] hover:bg-white dark:hover:bg-[#111C31] transition-all inline-flex items-center gap-1 cursor-pointer"
                                     title={`Resend passcode email to ${c.email || c.student_name}`}
                                   >

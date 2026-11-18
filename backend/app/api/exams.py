@@ -1090,6 +1090,7 @@ def generate_credentials(
             username=username,
             password=password,
             student_id=student_id_val,
+            candidate_id=cand.id,
             student_name=cand.name_snapshot or "Enrolled Candidate",
             email=cand.email_snapshot,
             roll_number=cand.roll_number_snapshot or "",
@@ -1103,6 +1104,9 @@ def resend_credentials_email(
     exam_id: str,
     background_tasks: BackgroundTasks,
     student_id: Optional[str] = None,
+    candidate_id: Optional[str] = None,
+    email: Optional[str] = None,
+    username: Optional[str] = None,
     current_user: User = Depends(teacher_required),
     db: Session = Depends(get_db)
 ):
@@ -1122,18 +1126,38 @@ def resend_credentials_email(
             detail=f"Payment required before sending candidate invitation emails: {reason}"
         )
         
-    query = db.query(ExamCredential).filter(ExamCredential.exam_id == exam_id)
+    query = db.query(ExamCredential).filter(ExamCredential.exam_id == exam.id)
+    
+    match_conds = []
+    if candidate_id:
+        match_conds.append(ExamCredential.candidate_id == candidate_id)
     if student_id:
-        query = query.filter(
-            or_(
-                ExamCredential.student_id == student_id,
-                ExamCredential.candidate_id == student_id
-            )
-        )
+        match_conds.append(ExamCredential.student_id == student_id)
+        match_conds.append(ExamCredential.candidate_id == student_id)
+        match_conds.append(ExamCredential.candidate.has(ExamCandidate.directory_student_id == student_id))
+    if username:
+        match_conds.append(func.lower(ExamCredential.username) == username.strip().lower())
+    if email:
+        clean_email = email.strip().lower()
+        match_conds.append(ExamCredential.candidate.has(func.lower(ExamCandidate.email_snapshot) == clean_email))
+        match_conds.append(ExamCredential.student.has(Student.user.has(func.lower(User.email) == clean_email)))
+
+    if match_conds:
+        query = query.filter(or_(*match_conds))
         
     credentials = query.all()
+    if not credentials and email:
+        clean_email = email.strip().lower()
+        cand = db.query(ExamCandidate).filter(
+            ExamCandidate.exam_id == exam.id,
+            func.lower(ExamCandidate.email_snapshot) == clean_email
+        ).first()
+        if cand and cand.credential:
+            credentials = [cand.credential]
+
     if not credentials:
-        raise HTTPException(status_code=404, detail="No credentials found for this assessment. Please generate them first.")
+        target_info = email or username or student_id or candidate_id or "all"
+        raise HTTPException(status_code=404, detail=f"No credentials found for candidate ({target_info}). Please ensure candidate is enrolled.")
         
     dispatched_count = 0
     
