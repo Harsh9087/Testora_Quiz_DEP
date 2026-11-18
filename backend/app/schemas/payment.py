@@ -71,6 +71,14 @@ class ExamBillPreviewResponse(BaseModel):
     needs_additional_payment: bool
     can_publish: bool
     payment_status: str # "paid", "unpaid", "additional_payment_required"
+
+    # Formatted display strings
+    rate_per_unit_formatted: Optional[str] = None
+    subtotal_formatted: Optional[str] = None
+    tax_formatted: Optional[str] = None
+    total_formatted: Optional[str] = None
+    paid_amount_formatted: Optional[str] = None
+    additional_amount_due_formatted: Optional[str] = None
     
     # Prepaid Credits wallet fields
     user_credits_balance: int = 0

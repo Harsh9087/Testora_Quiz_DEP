@@ -357,6 +357,7 @@ export default function DashboardLayout({
       fetchUserCredits();
     };
     window.addEventListener("refresh-sidebar-stats", handleRefreshStats);
+    window.addEventListener("credits-updated", fetchUserCredits);
 
     const handleAvatarUpdated = (e: any) => {
       const newUrl = e?.detail ?? (typeof window !== "undefined" ? localStorage.getItem("avatarUrl") : null);
@@ -402,6 +403,7 @@ export default function DashboardLayout({
         document.removeEventListener("visibilitychange", handleVisibilityChange);
       }
       window.removeEventListener("refresh-sidebar-stats", handleRefreshStats);
+      window.removeEventListener("credits-updated", fetchUserCredits);
       window.removeEventListener("avatar-updated", handleAvatarUpdated);
       window.removeEventListener("open-credit-recharge", handleOpenRecharge);
       window.removeEventListener("open-sidebar-menu", handleOpenSidebarMenu);

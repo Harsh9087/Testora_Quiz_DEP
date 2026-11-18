@@ -270,6 +270,13 @@ class PaymentService:
         has_sufficient_credits = (user_credits >= credits_required) and (credits_required > 0)
         can_pay_with_credits = has_sufficient_credits and (not is_paid or needs_additional)
 
+        rate_formatted = f"₹{bill['rate_per_unit_inr']:.2f}"
+        subtotal_formatted = f"₹{bill['subtotal_paise'] / 100.0:.2f}"
+        tax_formatted = f"₹{bill['tax_paise'] / 100.0:.2f}"
+        total_formatted = bill["formatted_amount"]
+        paid_formatted = f"₹{paid_amount / 100.0:.2f}"
+        additional_due_formatted = f"₹{additional_amount_due / 100.0:.2f}"
+
         return ExamBillPreviewResponse(
             exam_id=exam.id,
             exam_name=exam.name,
@@ -279,18 +286,24 @@ class PaymentService:
             billable_units=current_units,
             rate_per_unit_paise=bill["rate_per_unit_paise"],
             rate_per_unit_inr=bill["rate_per_unit_inr"],
+            rate_per_unit_formatted=rate_formatted,
             subtotal_paise=bill["subtotal_paise"],
+            subtotal_formatted=subtotal_formatted,
             tax_paise=bill["tax_paise"],
+            tax_formatted=tax_formatted,
             tax_percentage=bill["tax_percentage"],
             total_paise=bill["total_paise"],
             total_inr=bill["total_inr"],
+            total_formatted=total_formatted,
             currency=bill["currency"],
             formatted_amount=bill["formatted_amount"],
             is_paid=is_paid,
             paid_amount_paise=paid_amount,
+            paid_amount_formatted=paid_formatted,
             paid_student_count=paid_students,
             paid_question_count=paid_questions,
             additional_amount_due_paise=additional_amount_due,
+            additional_amount_due_formatted=additional_due_formatted,
             needs_additional_payment=needs_additional,
             can_publish=can_publish,
             payment_status=payment_status,

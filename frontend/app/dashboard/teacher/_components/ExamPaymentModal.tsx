@@ -21,7 +21,8 @@ import {
   ChevronRight,
   FileText,
   Coins,
-  Zap
+  Zap,
+  Wallet
 } from "lucide-react";
 import { apiFetch, API_V1 } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
@@ -30,28 +31,32 @@ import { useToast } from "@/components/Toast";
 interface ExamBillPreview {
   exam_id: string;
   exam_name: string;
+  exam_code?: string;
   student_count: number;
   question_count: number;
   billable_units: number;
   rate_per_unit_paise: number;
-  rate_per_unit_formatted: string;
+  rate_per_unit_formatted?: string;
+  rate_per_unit_inr?: number;
   subtotal_paise: number;
-  subtotal_formatted: string;
-  gst_percentage: number;
+  subtotal_formatted?: string;
+  gst_percentage?: number;
+  tax_percentage?: number;
   tax_paise: number;
-  tax_formatted: string;
+  tax_formatted?: string;
   total_paise: number;
-  total_formatted: string;
+  total_formatted?: string;
+  formatted_amount?: string;
   currency: string;
   is_paid: boolean;
   can_publish: boolean;
   needs_additional_payment: boolean;
   additional_amount_due_paise: number;
-  additional_amount_due_formatted: string;
+  additional_amount_due_formatted?: string;
   paid_student_count: number;
   paid_question_count: number;
   paid_amount_paise: number;
-  paid_amount_formatted: string;
+  paid_amount_formatted?: string;
   payment_status: string;
 
   // Prepaid Credit Wallet fields
@@ -71,7 +76,7 @@ interface ExamPaymentModalProps {
 }
 
 type ModalState = "PREVIEW" | "CHECKOUT" | "VERIFYING" | "SUCCESS" | "FAILED";
-type PaymentMethod = "RAZORPAY" | "CREDITS";
+type PaymentMethod = "CREDITS" | "RAZORPAY";
 
 export default function ExamPaymentModal({
   isOpen,
@@ -85,7 +90,7 @@ export default function ExamPaymentModal({
   const { showToast } = useToast();
 
   const [modalState, setModalState] = useState<ModalState>("PREVIEW");
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("RAZORPAY");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("CREDITS");
   const [loadingPreview, setLoadingPreview] = useState<boolean>(true);
   const [isPayingWithCredits, setIsPayingWithCredits] = useState<boolean>(false);
   const [preview, setPreview] = useState<ExamBillPreview | null>(null);
@@ -98,6 +103,16 @@ export default function ExamPaymentModal({
     order_db_id?: string;
   } | null>(null);
   const [isPublishingNow, setIsPublishingNow] = useState<boolean>(false);
+
+  const formatCurrency = (paise?: number, formatted?: string) => {
+    if (formatted && formatted.trim() && formatted !== "₹" && !formatted.includes("undefined")) {
+      return formatted;
+    }
+    if (paise !== undefined && paise !== null) {
+      return `₹${(paise / 100).toFixed(2)}`;
+    }
+    return "₹0.00";
+  };
 
   // Dynamically load Razorpay standard checkout script if not present
   const loadRazorpayScript = (): Promise<boolean> => {
@@ -124,12 +139,20 @@ export default function ExamPaymentModal({
       if (res.ok) {
         const data: ExamBillPreview = await res.json();
         setPreview(data);
+
+        // Intelligently default to CREDITS if the educator has sufficient credits
+        if (data.has_sufficient_credits || (data.user_credits_balance > 0 && data.user_credits_balance >= data.credits_required)) {
+          setPaymentMethod("CREDITS");
+        } else {
+          setPaymentMethod("RAZORPAY");
+        }
+
         if (data.is_paid && !data.needs_additional_payment) {
           setSuccessData({
-            invoice_number: `INV-${exam.exam_code}`,
+            invoice_number: `INV-${exam.exam_code || "TEST"}`,
             razorpay_order_id: "PREVIOUSLY_SETTLED",
             razorpay_payment_id: "PAID",
-            amount_paid_formatted: data.paid_amount_formatted,
+            amount_paid_formatted: formatCurrency(data.paid_amount_paise, data.paid_amount_formatted),
             order_db_id: exam.id,
           });
           setModalState("SUCCESS");
@@ -193,7 +216,7 @@ export default function ExamPaymentModal({
       const scriptLoaded = await loadRazorpayScript();
 
       const isSimulated =
-        orderData.order_id.startsWith("order_sim_") ||
+        orderData.order_id?.startsWith("order_sim_") ||
         orderData.key_id === "rzp_test_placeholder" ||
         !orderData.key_id;
 
@@ -202,7 +225,7 @@ export default function ExamPaymentModal({
           `[Razorpay Mock Checkout Simulation]\n\n` +
           `Order ID: ${orderData.order_id}\n` +
           `Assessment: ${orderData.exam_name}\n` +
-          `Amount: ${orderData.formatted_amount}\n\n` +
+          `Amount: ${orderData.formatted_amount || formatCurrency(orderData.amount)}\n\n` +
           `Click OK to simulate successful card/UPI payment.`
         );
 
@@ -270,7 +293,7 @@ export default function ExamPaymentModal({
   };
 
   const verifyPaymentOnBackend = async (
-    payload: {
+    verificationPayload: {
       exam_id: string;
       razorpay_order_id: string;
       razorpay_payment_id: string;
@@ -280,28 +303,34 @@ export default function ExamPaymentModal({
   ) => {
     try {
       setModalState("VERIFYING");
-      const verifyRes = await apiFetch("/payments/exam/verify-payment", {
+      const res = await apiFetch("/payments/exam/verify-payment", {
         method: "POST",
         token,
-        body: JSON.stringify(payload),
+        body: JSON.stringify(verificationPayload),
       });
 
-      if (!verifyRes.ok) {
-        const err = await verifyRes.json().catch(() => ({}));
-        throw new Error(err.detail || "Payment verification failed. Please contact billing support.");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || "Cryptographic payment verification failed.");
       }
 
-      const verifyData = await verifyRes.json();
+      const verifyData = await res.json();
       setSuccessData({
-        invoice_number: verifyData.invoice_number || `INV-${Date.now().toString().slice(-6)}`,
-        razorpay_order_id: payload.razorpay_order_id,
-        razorpay_payment_id: payload.razorpay_payment_id,
-        amount_paid_formatted: orderData?.formatted_amount || preview?.total_formatted,
-        order_db_id: verifyData.payment_order_id || payload.razorpay_order_id,
+        invoice_number: verifyData.invoice_number || `INV-${exam.exam_code}`,
+        razorpay_order_id: verificationPayload.razorpay_order_id,
+        razorpay_payment_id: verificationPayload.razorpay_payment_id,
+        amount_paid_formatted: orderData.formatted_amount || formatCurrency(orderData.amount),
+        order_db_id: verifyData.order_id,
       });
 
       setModalState("SUCCESS");
-      showToast("Payment verified! Assessment is unlocked for publishing and distribution.", "success");
+      showToast("Payment verified and assessment unlocked successfully!", "success");
+
+      // Broadcast event so UI updates immediately
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("credits-updated"));
+        window.dispatchEvent(new Event("refresh-sidebar-stats"));
+      }
 
       if (onPaymentSuccess) {
         onPaymentSuccess(exam.id);
@@ -339,6 +368,12 @@ export default function ExamPaymentModal({
       setModalState("SUCCESS");
       showToast(data.message || "Assessment unlocked successfully using prepaid credits!", "success");
 
+      // Immediately notify dashboard to refresh header credits balance counter!
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("credits-updated"));
+        window.dispatchEvent(new Event("refresh-sidebar-stats"));
+      }
+
       if (onPaymentSuccess) {
         onPaymentSuccess(exam.id);
       }
@@ -363,7 +398,7 @@ export default function ExamPaymentModal({
     try {
       const res = await apiFetch(`/exams/${exam.id}/publish`, { token, method: "POST" });
       if (res.ok) {
-        showToast("Assessment published successfully! Students can now start.", "success");
+        showToast("Assessment published successfully! Students can now attempt.", "success");
         if (onAutoPublish) onAutoPublish(exam.id);
         onClose();
       } else {
@@ -379,75 +414,80 @@ export default function ExamPaymentModal({
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs animate-fadeIn"
       onClick={() => {
         if (!isPublishingNow) onClose();
       }}
     >
       <div 
-        className="w-full max-w-lg bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-scaleUp transition-colors"
+        className="w-full max-w-lg bg-white dark:bg-[#111C31] border-t sm:border border-[#E2E8F0] dark:border-[#263449] rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[88dvh] sm:max-h-[90vh] animate-scaleUp transition-colors"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Mobile Drag Indicator */}
+        <div className="sm:hidden pt-2 pb-1 flex justify-center shrink-0">
+          <div className="w-10 h-1 bg-slate-300 dark:bg-slate-700 rounded-full" />
+        </div>
+
         {/* Header Bar */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#E2E8F0] dark:border-[#263449] bg-[#F8FAFC] dark:bg-[#17243A]">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172B4D] dark:text-[#60A5FA] border border-[#2563EB]/20">
-              <CreditCard className="h-5 w-5" />
+        <div className="flex items-center justify-between px-4 py-3 sm:px-6 sm:py-3.5 border-b border-[#E2E8F0] dark:border-[#263449] bg-[#F8FAFC] dark:bg-[#17243A] shrink-0">
+          <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+            <div className="p-1.5 sm:p-2 rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 border border-blue-200 dark:border-blue-900 shrink-0">
+              <CreditCard className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
-            <div>
-              <h2 className="text-base font-bold text-[#111827] dark:text-[#F1F5F9] leading-tight">
-                Mandatory Assessment Billing
+            <div className="min-w-0">
+              <h2 className="text-sm sm:text-base font-bold text-[#111827] dark:text-[#F1F5F9] leading-tight truncate">
+                Assessment Billing &amp; Unlock
               </h2>
-              <p className="text-[11px] text-[#64748B] dark:text-[#A3B1C6]">
-                Razorpay Per-Test Verified Licensing
+              <p className="text-[10px] sm:text-[11px] text-[#64748B] dark:text-[#A3B1C6] truncate">
+                Prepaid Credits or Razorpay Per-Test Licensing
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-[#64748B] hover:text-[#111827] dark:hover:text-[#F1F5F9] hover:bg-[#E2E8F0]/40 dark:hover:bg-[#263449] transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer shrink-0"
           >
-            <X className="h-4 w-4" />
+            <X className="h-4 w-4 sm:h-5 sm:w-5" />
           </button>
         </div>
 
         {/* Content Body */}
-        <div className="p-6 overflow-y-auto space-y-5">
+        <div className="p-3.5 sm:p-5 overflow-y-auto space-y-3 sm:space-y-4 flex-1">
           {/* STATE 1: PREVIEW & ITEMIZED INVOICE */}
           {modalState === "PREVIEW" && (
             <>
               {/* Exam Info Card */}
-              <div className="p-3.5 rounded-xl border border-[#E2E8F0] dark:border-[#263449] bg-[#F8FAFC] dark:bg-[#17243A]">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#2563EB] dark:text-[#60A5FA]">
-                    Assessment Target
+              <div className="p-2.5 sm:p-3 rounded-xl border border-[#E2E8F0] dark:border-[#263449] bg-[#F8FAFC] dark:bg-[#17243A]">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
+                    ASSESSMENT TARGET
                   </span>
-                  <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                  <span className="text-[10px] sm:text-[11px] font-mono px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 shrink-0">
                     {exam.exam_code}
                   </span>
                 </div>
-                <h3 className="font-semibold text-sm text-[#111827] dark:text-[#F1F5F9] mt-1 line-clamp-1">
+                <h3 className="font-semibold text-xs sm:text-sm text-[#111827] dark:text-[#F1F5F9] mt-1 line-clamp-1">
                   {exam.name}
                 </h3>
               </div>
 
               {loadingPreview ? (
-                <div className="py-12 flex flex-col items-center justify-center gap-3">
-                  <RefreshCw className="h-7 w-7 text-[#2563EB] dark:text-[#3B82F6] animate-spin" />
-                  <p className="text-xs text-[#64748B] dark:text-[#A3B1C6]">
-                    Calculating billable units based on enrolled roster and question blueprint...
+                <div className="py-10 flex flex-col items-center justify-center gap-2">
+                  <RefreshCw className="h-6 w-6 text-blue-600 dark:text-blue-400 animate-spin" />
+                  <p className="text-xs text-slate-500">
+                    Calculating billable units based on enrolled roster...
                   </p>
                 </div>
               ) : errorMessage ? (
-                <div className="p-4 rounded-xl border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300 space-y-2">
-                  <div className="flex items-center gap-2 font-semibold text-xs">
-                    <AlertCircle className="h-4 w-4 text-red-600" />
+                <div className="p-3.5 rounded-xl border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300 space-y-1.5">
+                  <div className="flex items-center gap-1.5 font-semibold text-xs">
+                    <AlertCircle className="h-4 w-4 text-red-600 shrink-0" />
                     <span>Billing Calculation Notice</span>
                   </div>
                   <p className="text-xs">{errorMessage}</p>
                   <button
                     onClick={fetchBillPreview}
-                    className="text-xs underline font-medium hover:opacity-80 cursor-pointer"
+                    className="text-xs underline font-medium hover:opacity-80 cursor-pointer pt-1"
                   >
                     Retry Calculation
                   </button>
@@ -455,10 +495,10 @@ export default function ExamPaymentModal({
               ) : preview ? (
                 <>
                   {/* Billable Formula Metric Card */}
-                  <div className="p-4 rounded-xl border border-[#E2E8F0] dark:border-[#263449] bg-[#F8FAFC] dark:bg-[#17243A] space-y-3">
+                  <div className="p-3 sm:p-3.5 rounded-xl border border-[#E2E8F0] dark:border-[#263449] bg-[#F8FAFC] dark:bg-[#17243A] space-y-2.5">
                     <div className="flex items-center justify-between text-xs font-semibold text-[#111827] dark:text-[#F1F5F9]">
                       <div className="flex items-center gap-1.5">
-                        <Calculator className="h-4 w-4 text-[#2563EB] dark:text-[#60A5FA]" />
+                        <Calculator className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
                         <span>Billing Formula</span>
                       </div>
                       <span className="text-[11px] text-[#64748B] dark:text-[#A3B1C6]">
@@ -466,30 +506,30 @@ export default function ExamPaymentModal({
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-2 py-2 border-y border-[#E2E8F0] dark:border-[#263449] text-center">
-                      <div className="bg-white dark:bg-[#111C31] p-2 rounded-lg border border-[#E2E8F0] dark:border-[#263449]">
+                    <div className="grid grid-cols-3 gap-2 py-1.5 border-y border-[#E2E8F0] dark:border-[#263449] text-center">
+                      <div className="bg-white dark:bg-[#111C31] p-1.5 sm:p-2 rounded-lg border border-[#E2E8F0] dark:border-[#263449]">
                         <div className="text-[10px] text-[#64748B] dark:text-[#A3B1C6] flex items-center justify-center gap-1">
                           <Users className="h-3 w-3" /> Students
                         </div>
-                        <div className="text-base font-bold text-[#111827] dark:text-[#F1F5F9] mt-0.5">
+                        <div className="text-sm sm:text-base font-bold text-[#111827] dark:text-[#F1F5F9] mt-0.5">
                           {preview.student_count}
                         </div>
                       </div>
 
-                      <div className="bg-white dark:bg-[#111C31] p-2 rounded-lg border border-[#E2E8F0] dark:border-[#263449]">
+                      <div className="bg-white dark:bg-[#111C31] p-1.5 sm:p-2 rounded-lg border border-[#E2E8F0] dark:border-[#263449]">
                         <div className="text-[10px] text-[#64748B] dark:text-[#A3B1C6] flex items-center justify-center gap-1">
                           <BookOpen className="h-3 w-3" /> Questions
                         </div>
-                        <div className="text-base font-bold text-[#111827] dark:text-[#F1F5F9] mt-0.5">
+                        <div className="text-sm sm:text-base font-bold text-[#111827] dark:text-[#F1F5F9] mt-0.5">
                           {preview.question_count}
                         </div>
                       </div>
 
-                      <div className="bg-white dark:bg-[#111C31] p-2 rounded-lg border border-[#2563EB]/40">
-                        <div className="text-[10px] text-[#2563EB] dark:text-[#60A5FA] font-semibold">
+                      <div className="bg-white dark:bg-[#111C31] p-1.5 sm:p-2 rounded-lg border border-blue-500/40">
+                        <div className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold">
                           Total Units
                         </div>
-                        <div className="text-base font-bold text-[#2563EB] dark:text-[#60A5FA] mt-0.5">
+                        <div className="text-sm sm:text-base font-bold text-blue-600 dark:text-blue-400 mt-0.5">
                           {preview.billable_units}
                         </div>
                       </div>
@@ -498,109 +538,73 @@ export default function ExamPaymentModal({
                     <div className="flex items-center justify-between text-[11px] text-[#64748B] dark:text-[#A3B1C6]">
                       <span>Rate per attempt unit:</span>
                       <span className="font-semibold text-[#111827] dark:text-[#F1F5F9]">
-                        {preview.rate_per_unit_formatted}
+                        {formatCurrency(preview.rate_per_unit_paise, preview.rate_per_unit_formatted)}
                       </span>
                     </div>
                   </div>
 
                   {/* Top-Up Alert if configuration was expanded */}
                   {preview.needs_additional_payment && (
-                    <div className="p-3.5 rounded-xl border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 text-xs space-y-1">
+                    <div className="p-3 rounded-xl border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 text-xs space-y-1">
                       <div className="font-semibold flex items-center gap-1.5">
-                        <AlertCircle className="h-3.5 w-3.5 text-amber-600" />
+                        <AlertCircle className="h-3.5 w-3.5 text-amber-600 shrink-0" />
                         <span>Assessment Configuration Expanded</span>
                       </div>
                       <p className="text-[11px] opacity-90 leading-relaxed">
-                        This test was previously paid for {preview.paid_student_count} students × {preview.paid_question_count} questions ({preview.paid_amount_formatted}).
-                        Additional candidates or questions were added. Only the delta top-up of {preview.additional_amount_due_formatted} is required.
+                        This test was previously paid for {preview.paid_student_count} students × {preview.paid_question_count} questions.
+                        Additional candidates were added. Delta top-up: {formatCurrency(preview.additional_amount_due_paise, preview.additional_amount_due_formatted)}.
                       </p>
                     </div>
                   )}
 
-                  {/* Payment Method Selector: Direct Razorpay vs Prepaid Credits */}
-                  <div className="flex rounded-xl bg-[#F8FAFC] dark:bg-[#17243A] p-1 border border-[#E2E8F0] dark:border-[#263449]">
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod("RAZORPAY")}
-                      className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                        paymentMethod === "RAZORPAY"
-                          ? "bg-white dark:bg-[#111C31] text-[#2563EB] dark:text-[#60A5FA] shadow-xs"
-                          : "text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9]"
-                      }`}
-                    >
-                      <CreditCard className="h-3.5 w-3.5" />
-                      <span>Direct Pay (INR ₹)</span>
-                    </button>
+                  {/* Payment Method Selector: Prepaid Credits vs Direct Razorpay */}
+                  <div className="grid grid-cols-2 rounded-xl bg-slate-100 dark:bg-[#17243A] p-1 border border-[#E2E8F0] dark:border-[#263449] gap-1">
                     <button
                       type="button"
                       onClick={() => setPaymentMethod("CREDITS")}
-                      className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                      className={`py-2 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                         paymentMethod === "CREDITS"
-                          ? "bg-white dark:bg-[#111C31] text-[#2563EB] dark:text-[#60A5FA] shadow-xs"
+                          ? "bg-white dark:bg-[#111C31] text-amber-600 dark:text-amber-400 shadow-xs border border-amber-500/20"
                           : "text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9]"
                       }`}
                     >
-                      <Coins className="h-3.5 w-3.5 text-amber-500" />
-                      <span>Prepaid Credits ({preview.user_credits_balance ?? 0})</span>
+                      <Coins className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                      <span className="truncate">Prepaid Credits ({(preview.user_credits_balance ?? 0).toLocaleString()})</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod("RAZORPAY")}
+                      className={`py-2 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                        paymentMethod === "RAZORPAY"
+                          ? "bg-white dark:bg-[#111C31] text-blue-600 dark:text-blue-400 shadow-xs border border-blue-500/20"
+                          : "text-[#64748B] dark:text-[#A3B1C6] hover:text-[#111827] dark:hover:text-[#F1F5F9]"
+                      }`}
+                    >
+                      <CreditCard className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+                      <span className="truncate">Direct Pay ({formatCurrency(preview.total_paise, preview.total_formatted)})</span>
                     </button>
                   </div>
 
-                  {/* TAB 1: DIRECT RAZORPAY BILLING */}
-                  {paymentMethod === "RAZORPAY" && (
-                    <div className="space-y-2 border-t border-[#E2E8F0] dark:border-[#263449] pt-3 text-xs">
-                      <div className="flex items-center justify-between text-[#64748B] dark:text-[#A3B1C6]">
-                        <span>Subtotal ({preview.billable_units} units @ {preview.rate_per_unit_formatted})</span>
-                        <span className="font-medium text-[#111827] dark:text-[#F1F5F9]">
-                          {preview.subtotal_formatted}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center justify-between text-[#64748B] dark:text-[#A3B1C6]">
-                        <span>Applicable GST ({preview.gst_percentage}%)</span>
-                        <span className="font-medium text-[#111827] dark:text-[#F1F5F9]">
-                          {preview.tax_formatted}
-                        </span>
-                      </div>
-
-                      {preview.paid_amount_paise > 0 && (
-                        <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-400">
-                          <span>Already Paid Credit</span>
-                          <span className="font-medium">
-                            -{preview.paid_amount_formatted}
-                          </span>
-                        </div>
-                      )}
-
-                      <div className="flex items-center justify-between text-sm font-bold border-t border-[#E2E8F0] dark:border-[#263449] pt-2 text-[#111827] dark:text-[#F1F5F9]">
-                        <span>Total Amount Payable</span>
-                        <span className="text-base text-[#2563EB] dark:text-[#60A5FA]">
-                          {preview.needs_additional_payment 
-                            ? preview.additional_amount_due_formatted 
-                            : preview.total_formatted}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* TAB 2: PREPAID CREDITS BILLING */}
+                  {/* TAB 1: PREPAID CREDITS BILLING (DEFAULT) */}
                   {paymentMethod === "CREDITS" && (
-                    <div className="p-4 rounded-xl border border-amber-200 dark:border-amber-900/40 bg-amber-50/50 dark:bg-amber-950/20 space-y-3 text-xs">
+                    <div className="p-3.5 sm:p-4 rounded-xl border border-amber-200 dark:border-amber-900/40 bg-amber-50/60 dark:bg-amber-950/20 space-y-2.5 text-xs">
                       <div className="flex justify-between items-center text-[#64748B] dark:text-[#A3B1C6]">
-                        <span>Credits Required:</span>
-                        <span className="font-bold text-sm text-[#111827] dark:text-[#F1F5F9]">
+                        <span>Credits Required to Unlock:</span>
+                        <span className="font-bold text-xs sm:text-sm text-slate-900 dark:text-slate-100">
                           {preview.credits_required.toLocaleString()} Credits
                         </span>
                       </div>
 
                       <div className="flex justify-between items-center text-[#64748B] dark:text-[#A3B1C6]">
                         <span>Your Current Balance:</span>
-                        <span className="font-bold text-sm text-amber-600 dark:text-amber-400">
+                        <span className="font-bold text-xs sm:text-sm text-amber-600 dark:text-amber-400">
                           {preview.user_credits_balance.toLocaleString()} Credits
                         </span>
                       </div>
 
                       <div className="border-t border-amber-200/60 dark:border-amber-900/40 pt-2 flex justify-between items-center">
-                        <span className="font-medium text-[#111827] dark:text-[#F1F5F9]">Remaining After Unlock:</span>
+                        <span className="font-medium text-slate-900 dark:text-slate-200">Balance After Unlock:</span>
                         <span className={`font-bold ${
                           preview.has_sufficient_credits 
                             ? "text-emerald-600 dark:text-emerald-400" 
@@ -608,18 +612,18 @@ export default function ExamPaymentModal({
                         }`}>
                           {preview.has_sufficient_credits
                             ? `${(preview.user_credits_balance - preview.credits_required).toLocaleString()} Credits`
-                            : "Insufficient Balance"}
+                            : "Insufficient Credits"}
                         </span>
                       </div>
 
                       {!preview.has_sufficient_credits && (
-                        <div className="p-2.5 rounded-lg bg-red-100/80 dark:bg-red-950/50 text-red-700 dark:text-red-300 flex items-center justify-between text-[11px]">
+                        <div className="p-2.5 rounded-lg bg-red-100/80 dark:bg-red-950/50 text-red-700 dark:text-red-300 flex items-center justify-between text-[11px] gap-2">
                           <span>Short by {(preview.credits_required - preview.user_credits_balance).toLocaleString()} credits.</span>
                           {onOpenRecharge && (
                             <button
                               type="button"
                               onClick={onOpenRecharge}
-                              className="font-bold underline text-red-800 dark:text-red-200 hover:opacity-80 cursor-pointer"
+                              className="font-bold underline text-red-800 dark:text-red-200 hover:opacity-80 cursor-pointer shrink-0"
                             >
                               Recharge Now
                             </button>
@@ -629,14 +633,52 @@ export default function ExamPaymentModal({
                     </div>
                   )}
 
-                  {/* Security Assurance */}
-                  <div className="flex items-center justify-center gap-4 text-[10px] text-[#64748B] dark:text-[#A3B1C6] pt-1">
+                  {/* TAB 2: DIRECT RAZORPAY BILLING */}
+                  {paymentMethod === "RAZORPAY" && (
+                    <div className="p-3.5 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 space-y-2 text-xs">
+                      <div className="flex items-center justify-between text-[#64748B] dark:text-[#A3B1C6]">
+                        <span>Subtotal ({preview.billable_units} units @ {formatCurrency(preview.rate_per_unit_paise, preview.rate_per_unit_formatted)})</span>
+                        <span className="font-medium text-[#111827] dark:text-[#F1F5F9]">
+                          {formatCurrency(preview.subtotal_paise, preview.subtotal_formatted)}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between text-[#64748B] dark:text-[#A3B1C6]">
+                        <span>Applicable GST ({preview.gst_percentage ?? preview.tax_percentage ?? 18}%)</span>
+                        <span className="font-medium text-[#111827] dark:text-[#F1F5F9]">
+                          +{formatCurrency(preview.tax_paise, preview.tax_formatted)}
+                        </span>
+                      </div>
+
+                      {preview.paid_amount_paise > 0 && (
+                        <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-400">
+                          <span>Already Paid Credit</span>
+                          <span className="font-medium">
+                            -{formatCurrency(preview.paid_amount_paise, preview.paid_amount_formatted)}
+                          </span>
+                        </div>
+                      )}
+
+                      <div className="flex items-center justify-between text-xs sm:text-sm font-bold border-t border-[#E2E8F0] dark:border-[#263449] pt-2 text-[#111827] dark:text-[#F1F5F9]">
+                        <span>Total Amount Payable</span>
+                        <span className="text-sm sm:text-base text-blue-600 dark:text-blue-400">
+                          {formatCurrency(
+                            preview.needs_additional_payment ? preview.additional_amount_due_paise : preview.total_paise,
+                            preview.needs_additional_payment ? preview.additional_amount_due_formatted : preview.total_formatted
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Security Assurance Badges */}
+                  <div className="flex items-center justify-center gap-4 text-[10px] text-slate-500 pt-0.5">
                     <div className="flex items-center gap-1">
                       <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
                       <span>Razorpay Certified</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <Lock className="h-3.5 w-3.5 text-[#2563EB]" />
+                      <Lock className="h-3.5 w-3.5 text-blue-600" />
                       <span>HMAC-SHA256 Verified</span>
                     </div>
                   </div>
@@ -647,17 +689,17 @@ export default function ExamPaymentModal({
 
           {/* STATE 2: CHECKOUT LOADING */}
           {modalState === "CHECKOUT" && (
-            <div className="py-12 flex flex-col items-center justify-center text-center space-y-4">
+            <div className="py-10 flex flex-col items-center justify-center text-center space-y-3">
               <div className="relative">
-                <div className="w-16 h-16 rounded-full border-4 border-[#2563EB]/20 border-t-[#2563EB] animate-spin" />
-                <CreditCard className="h-6 w-6 text-[#2563EB] absolute inset-0 m-auto" />
+                <div className="w-14 h-14 rounded-full border-4 border-blue-500/20 border-t-blue-600 animate-spin" />
+                <CreditCard className="h-5 w-5 text-blue-600 absolute inset-0 m-auto" />
               </div>
               <div className="space-y-1">
-                <h3 className="font-bold text-base text-[#111827] dark:text-[#F1F5F9]">
-                  Opening Razorpay Checkout
+                <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">
+                  Opening Payment Gateway
                 </h3>
-                <p className="text-xs text-[#64748B] dark:text-[#A3B1C6] max-w-xs">
-                  Connecting to secure payment gateway. Complete your payment in the popup window.
+                <p className="text-xs text-slate-500 max-w-xs">
+                  Connecting to secure Razorpay portal. Complete payment in popup window.
                 </p>
               </div>
             </div>
@@ -665,16 +707,16 @@ export default function ExamPaymentModal({
 
           {/* STATE 3: VERIFYING PAYMENT */}
           {modalState === "VERIFYING" && (
-            <div className="py-12 flex flex-col items-center justify-center text-center space-y-4">
+            <div className="py-10 flex flex-col items-center justify-center text-center space-y-3">
               <div className="relative">
-                <div className="w-16 h-16 rounded-full border-4 border-emerald-500/20 border-t-emerald-600 animate-spin" />
-                <ShieldCheck className="h-6 w-6 text-emerald-600 absolute inset-0 m-auto" />
+                <div className="w-14 h-14 rounded-full border-4 border-emerald-500/20 border-t-emerald-600 animate-spin" />
+                <ShieldCheck className="h-5 w-5 text-emerald-600 absolute inset-0 m-auto" />
               </div>
               <div className="space-y-1">
-                <h3 className="font-bold text-base text-[#111827] dark:text-[#F1F5F9]">
+                <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">
                   Verifying Cryptographic Signature
                 </h3>
-                <p className="text-xs text-[#64748B] dark:text-[#A3B1C6] max-w-xs">
+                <p className="text-xs text-slate-500 max-w-xs">
                   Authenticating server-side HMAC-SHA256 signature and unlocking assessment credentials...
                 </p>
               </div>
@@ -683,58 +725,58 @@ export default function ExamPaymentModal({
 
           {/* STATE 4: SUCCESS */}
           {modalState === "SUCCESS" && successData && (
-            <div className="py-4 space-y-5 text-center">
-              <div className="w-14 h-14 rounded-full bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700 flex items-center justify-center mx-auto text-emerald-600 dark:text-emerald-400">
-                <CheckCircle2 className="h-8 w-8" />
+            <div className="py-3 space-y-4 text-center">
+              <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700 flex items-center justify-center mx-auto text-emerald-600 dark:text-emerald-400">
+                <CheckCircle2 className="h-6 w-6" />
               </div>
 
               <div className="space-y-1">
-                <h3 className="font-bold text-lg text-[#111827] dark:text-[#F1F5F9]">
-                  Payment Verified & Assessment Unlocked!
+                <h3 className="font-bold text-base text-slate-900 dark:text-white">
+                  Payment Verified &amp; Assessment Unlocked!
                 </h3>
-                <p className="text-xs text-[#64748B] dark:text-[#A3B1C6]">
-                  Your test is licensed. You can now publish, dispatch candidate emails, share WhatsApp invites, or export credentials.
+                <p className="text-xs text-slate-500">
+                  Your test is licensed. You can now publish live, dispatch candidate emails, or generate passcodes.
                 </p>
               </div>
 
               {/* Receipt Summary Card */}
-              <div className="p-4 rounded-xl border border-[#E2E8F0] dark:border-[#263449] bg-[#F8FAFC] dark:bg-[#17243A] text-left text-xs space-y-2">
-                <div className="flex justify-between items-center pb-2 border-b border-[#E2E8F0] dark:border-[#263449]">
-                  <span className="text-[#64748B] dark:text-[#A3B1C6]">Official Tax Invoice:</span>
-                  <span className="font-mono font-bold text-[#111827] dark:text-[#F1F5F9]">
+              <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 text-left text-xs space-y-2">
+                <div className="flex justify-between items-center pb-2 border-b border-slate-200 dark:border-slate-800">
+                  <span className="text-slate-500">Tax Invoice / Receipt:</span>
+                  <span className="font-mono font-bold text-slate-900 dark:text-white">
                     {successData.invoice_number}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-[#64748B] dark:text-[#A3B1C6]">Amount Paid:</span>
+                  <span className="text-slate-500">Amount Paid:</span>
                   <span className="font-bold text-emerald-600 dark:text-emerald-400">
                     {successData.amount_paid_formatted}
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-[#64748B] dark:text-[#A3B1C6]">Razorpay Order ID:</span>
-                  <span className="font-mono text-[#64748B] dark:text-[#A3B1C6]">
+                  <span className="text-slate-500">Transaction ID:</span>
+                  <span className="font-mono text-slate-600 dark:text-slate-400">
                     {successData.razorpay_order_id}
                   </span>
                 </div>
               </div>
 
               {/* Action Buttons in Success */}
-              <div className="flex flex-col gap-2 pt-2">
+              <div className="flex flex-col gap-2 pt-1">
                 <button
                   type="button"
                   onClick={() => handlePrintReceipt()}
-                  className="w-full py-2.5 px-4 rounded-xl border border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-[#111C31] hover:bg-[#F8FAFC] dark:hover:bg-[#17243A] text-[#111827] dark:text-[#F1F5F9] text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                  className="w-full py-2 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
                 >
-                  <Printer className="h-4 w-4 text-[#2563EB] dark:text-[#60A5FA]" />
-                  <span>Download / Print Tax Invoice</span>
+                  <Printer className="h-3.5 w-3.5 text-blue-600" />
+                  <span>Download / Print Invoice</span>
                 </button>
 
                 <button
                   type="button"
                   disabled={isPublishingNow}
                   onClick={handlePublishNow}
-                  className="w-full py-2.5 px-4 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition-all shadow-md"
+                  className="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-md cursor-pointer"
                 >
                   {isPublishingNow ? (
                     <RefreshCw className="h-4 w-4 animate-spin" />
@@ -755,26 +797,26 @@ export default function ExamPaymentModal({
               </div>
 
               <div className="space-y-1">
-                <h3 className="font-bold text-base text-[#111827] dark:text-[#F1F5F9]">
+                <h3 className="font-bold text-base text-slate-900 dark:text-white">
                   Payment Failed or Interrupted
                 </h3>
-                <p className="text-xs text-[#64748B] dark:text-[#A3B1C6] max-w-sm mx-auto">
-                  {errorMessage || "The transaction could not be verified. No charges were captured, or your test remains locked."}
+                <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                  {errorMessage || "The transaction could not be completed. No charges were captured."}
                 </p>
               </div>
 
-              <div className="flex items-center justify-center gap-3 pt-2">
+              <div className="flex items-center justify-center gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setModalState("PREVIEW")}
-                  className="px-4 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#263449] text-xs font-medium text-[#111827] dark:text-[#F1F5F9] hover:bg-[#F8FAFC] dark:hover:bg-[#17243A] transition-colors cursor-pointer"
+                  className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-700 dark:text-slate-300"
                 >
                   Review Bill
                 </button>
                 <button
                   type="button"
-                  onClick={handleInitiatePayment}
-                  className="px-4 py-2 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold transition-all shadow-md cursor-pointer"
+                  onClick={paymentMethod === "CREDITS" ? handlePayWithCredits : handleInitiatePayment}
+                  className="px-4 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md"
                 >
                   Retry Payment
                 </button>
@@ -783,15 +825,15 @@ export default function ExamPaymentModal({
           )}
         </div>
 
-        {/* Footer Actions (Only visible in PREVIEW state) */}
+        {/* Footer Actions (PREVIEW state) */}
         {modalState === "PREVIEW" && (
-          <div className="px-6 py-4 border-t border-[#E2E8F0] dark:border-[#263449] bg-[#F8FAFC]/80 dark:bg-[#17243A]/80 flex items-center justify-between gap-3">
+          <div className="px-3.5 py-2.5 sm:px-6 sm:py-3.5 border-t border-[#E2E8F0] dark:border-[#263449] bg-[#F8FAFC]/90 dark:bg-[#17243A]/90 shrink-0 flex items-center justify-between gap-2">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl border border-[#E2E8F0] dark:border-[#263449] text-xs font-medium text-[#64748B] hover:text-[#111827] dark:hover:text-[#F1F5F9] transition-colors cursor-pointer"
+              className="px-3 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
             >
-              Cancel / Keep as Draft
+              Cancel
             </button>
 
             {paymentMethod === "CREDITS" ? (
@@ -800,7 +842,7 @@ export default function ExamPaymentModal({
                   type="button"
                   disabled={loadingPreview || !!errorMessage || !preview || isPayingWithCredits}
                   onClick={handlePayWithCredits}
-                  className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white text-xs font-bold flex items-center gap-2 shadow-md cursor-pointer transition-all"
+                  className="px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white text-xs sm:text-sm font-bold flex items-center gap-1.5 shadow-md cursor-pointer transition-all"
                 >
                   {isPayingWithCredits ? (
                     <RefreshCw className="h-3.5 w-3.5 animate-spin" />
@@ -816,7 +858,7 @@ export default function ExamPaymentModal({
                 <button
                   type="button"
                   onClick={onOpenRecharge}
-                  className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold flex items-center gap-2 shadow-md cursor-pointer transition-all"
+                  className="px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs sm:text-sm font-bold flex items-center gap-1.5 shadow-md cursor-pointer transition-all"
                 >
                   <Coins className="h-3.5 w-3.5" />
                   <span>Recharge Wallet Now</span>
@@ -828,10 +870,13 @@ export default function ExamPaymentModal({
                 type="button"
                 disabled={loadingPreview || !!errorMessage || !preview}
                 onClick={handleInitiatePayment}
-                className="px-5 py-2.5 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] disabled:opacity-50 text-white text-xs font-bold flex items-center gap-2 shadow-md cursor-pointer transition-all"
+                className="px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs sm:text-sm font-bold flex items-center gap-1.5 shadow-md cursor-pointer transition-all"
               >
                 <span>
-                  Pay & Unlock ({preview ? (preview.needs_additional_payment ? preview.additional_amount_due_formatted : preview.total_formatted) : "..."})
+                  Pay {formatCurrency(
+                    preview?.needs_additional_payment ? preview.additional_amount_due_paise : preview?.total_paise,
+                    preview?.needs_additional_payment ? preview.additional_amount_due_formatted : preview?.total_formatted
+                  )} &amp; Unlock
                 </span>
                 <ArrowRight className="h-3.5 w-3.5" />
               </button>
@@ -840,11 +885,11 @@ export default function ExamPaymentModal({
         )}
 
         {modalState === "SUCCESS" && (
-          <div className="px-6 py-3 border-t border-[#E2E8F0] dark:border-[#263449] bg-[#F8FAFC] dark:bg-[#17243A] flex justify-end">
+          <div className="px-4 py-2.5 border-t border-[#E2E8F0] dark:border-[#263449] bg-[#F8FAFC] dark:bg-[#17243A] shrink-0 flex justify-end">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-1.5 rounded-lg text-xs font-medium text-[#64748B] hover:text-[#111827] dark:hover:text-[#F1F5F9] cursor-pointer"
+              className="px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
             >
               Close
             </button>
