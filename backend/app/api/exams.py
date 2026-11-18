@@ -63,7 +63,7 @@ def snapshot_candidates_for_exam(exam: Exam, directory_id: str, db: Session, com
     # 0. Resolve actual directory UUID if name or code provided
     actual_dir_id = directory_id
     if directory_id:
-        clean_dir_str = str(directory_id).strip()
+        clean_dir_str = directory_id.strip()
         dir_record = db.query(StudentDirectory).filter(
             (StudentDirectory.id == clean_dir_str) | (func.lower(StudentDirectory.name) == func.lower(clean_dir_str)),
             StudentDirectory.is_deleted == False
@@ -255,22 +255,22 @@ def generate_exam_from_kb(
     
     # Authoritative determination of requested total question count
     total_count = None
-    if req.num_questions and int(req.num_questions) > 0:
-        total_count = int(req.num_questions)
+    if req.num_questions and req.num_questions > 0:
+        total_count = req.num_questions
     elif bp.get("num_questions") and int(bp.get("num_questions")) > 0:
         total_count = int(bp.get("num_questions"))
     elif bp.get("total_questions") and int(bp.get("total_questions")) > 0:
         total_count = int(bp.get("total_questions"))
     elif q_type_req == "mixed":
-        mcq_c = int(req.num_mcq) if (req.num_mcq and int(req.num_mcq) > 0) else int(bp.get("num_mcq") or 3)
-        sub_c = int(req.num_subjective) if (req.num_subjective and int(req.num_subjective) > 0) else int(bp.get("num_subjective") or 2)
+        mcq_c = req.num_mcq if (req.num_mcq and req.num_mcq > 0) else int(bp.get("num_mcq") or 3)
+        sub_c = req.num_subjective if (req.num_subjective and req.num_subjective > 0) else int(bp.get("num_subjective") or 2)
         total_count = mcq_c + sub_c
     elif q_type_req == "subjective":
-        total_count = int(req.num_subjective) if (req.num_subjective and int(req.num_subjective) > 0) else int(bp.get("num_subjective") or 5)
-    elif req.num_mcq and int(req.num_mcq) > 0:
-        total_count = int(req.num_mcq)
-    elif req.num_subjective and int(req.num_subjective) > 0:
-        total_count = int(req.num_subjective)
+        total_count = req.num_subjective if (req.num_subjective and req.num_subjective > 0) else int(bp.get("num_subjective") or 5)
+    elif req.num_mcq and req.num_mcq > 0:
+        total_count = req.num_mcq
+    elif req.num_subjective and req.num_subjective > 0:
+        total_count = req.num_subjective
 
     if not total_count or total_count <= 0:
         total_count = 5
@@ -378,7 +378,7 @@ def generate_exam_from_kb(
     # 5. Resolve student directory safely within current workspace or created by user (by UUID or name)
     resolved_directory_id = None
     if req.student_directory_id:
-        clean_dir_input = str(req.student_directory_id).strip()
+        clean_dir_input = req.student_directory_id.strip()
         from sqlalchemy import or_
         target_dir = db.query(StudentDirectory).filter(
             (StudentDirectory.id == clean_dir_input) | (func.lower(StudentDirectory.name) == func.lower(clean_dir_input)),
@@ -408,9 +408,9 @@ def generate_exam_from_kb(
         dur = req.duration_minutes or 30
 
         # Schedule bounds validation
-        exam_start = to_utc_instant(req.start_time) if req.start_time else (now - timedelta(seconds=10))
-        exam_end = to_utc_instant(req.end_time) if req.end_time else (exam_start + timedelta(days=30))
-        if exam_end <= exam_start:
+        exam_start = (to_utc_instant(req.start_time) if req.start_time else None) or (now - timedelta(seconds=10))
+        exam_end = to_utc_instant(req.end_time) if req.end_time else None
+        if not exam_end or exam_end <= exam_start:
             exam_end = exam_start + timedelta(days=30)
 
         # Assessments can be drafted freely without payment.
@@ -611,9 +611,9 @@ def create_exam(
     exam_code = generate_unique_exam_code(db, subj.name or "quiz")
     
     now = now_utc()
-    c_start = to_utc_instant(exam_in.start_time) if exam_in.start_time else (now - timedelta(seconds=10))
-    c_end = to_utc_instant(exam_in.end_time) if exam_in.end_time else (c_start + timedelta(days=30))
-    if c_end <= c_start:
+    c_start = (to_utc_instant(exam_in.start_time) if exam_in.start_time else None) or (now - timedelta(seconds=10))
+    c_end = to_utc_instant(exam_in.end_time) if exam_in.end_time else None
+    if not c_end or c_end <= c_start:
         c_end = c_start + timedelta(days=30)
     
     access_mode = (exam_in.settings or {}).get("access_mode")
@@ -757,7 +757,7 @@ def publish_exam(
         exam.start_time = now - timedelta(seconds=30)
         
     # Ensure end_time is open and valid relative to start_time
-    exam_start = to_utc_instant(exam.start_time)
+    exam_start = to_utc_instant(exam.start_time) or (now - timedelta(seconds=30))
     exam_end = to_utc_instant(exam.end_time)
     if not exam_end or exam_end <= exam_start:
         exam.end_time = exam_start + timedelta(days=30)
@@ -916,7 +916,7 @@ def generate_credentials(
         )
         
     # Safe expires_at calculation (handles None end_time)
-    base_expiry = to_utc_instant(exam.end_time) if exam.end_time else (now_utc() + timedelta(days=30))
+    base_expiry = to_utc_instant(exam.end_time) or (now_utc() + timedelta(days=30))
     expires_at = base_expiry + timedelta(hours=1)
     
     # 1. Check if exam already has candidate snapshots
@@ -1081,7 +1081,7 @@ def generate_credentials(
         c = cand.credential
         username = c.username if c else "N/A"
         password = c.password if c else "N/A"
-        expires_at_val = c.expires_at if (c and c.expires_at) else expires_at
+        expires_at_val = to_utc_instant(c.expires_at) if (c and c.expires_at) else expires_at
         student_id_val = c.student_id if (c and c.student_id) else cand.directory_student_id
         
         resp.append(CredentialResponse(
@@ -1091,7 +1091,7 @@ def generate_credentials(
             student_name=cand.name_snapshot or "Enrolled Candidate",
             email=cand.email_snapshot,
             roll_number=cand.roll_number_snapshot or "",
-            expires_at=expires_at_val
+            expires_at=expires_at_val or expires_at
         ))
         
     return resp
@@ -1862,7 +1862,7 @@ def get_exam_live_monitor(
         # Deduplicate candidates by student email so each distinct student appears only once
         candidates = sorted(
             candidates,
-            key=lambda c: (len(c.submissions or []), 1 if c.credential else 0),
+            key=lambda c: (len(list(c.submissions)) if c.submissions else 0, 1 if c.credential else 0),
             reverse=True
         )
         deduped_candidates = []
@@ -1931,16 +1931,21 @@ def get_exam_live_monitor(
                 # Auto-submit expired sessions on live sweep (only for started sessions)
                 if sub.status in ["started", "in_progress", "submitting"] and sub.started_at:
                     duration = exam.duration_minutes or 60
-                    effective_deadline = to_utc_instant(sub.deadline_at) or (to_utc_instant(sub.started_at) + timedelta(minutes=duration))
-                    exam_end_dt = to_utc_instant(exam.end_time)
-                    if exam_end_dt and exam_end_dt < effective_deadline:
-                        effective_deadline = exam_end_dt
+                    sub_started = to_utc_instant(sub.started_at)
+                    effective_deadline = to_utc_instant(sub.deadline_at)
+                    if not effective_deadline and sub_started:
+                        effective_deadline = sub_started + timedelta(minutes=duration)
 
-                    if now >= effective_deadline:
-                        sub.status = "auto_submitted"
-                        sub.auto_submit_reason = "TIME_EXPIRED"
-                        sub.submitted_at = effective_deadline
-                        has_auto_submits = True
+                    if effective_deadline:
+                        exam_end_dt = to_utc_instant(exam.end_time)
+                        if exam_end_dt and exam_end_dt < effective_deadline:
+                            effective_deadline = exam_end_dt
+
+                        if now >= effective_deadline:
+                            sub.status = "auto_submitted"
+                            sub.auto_submit_reason = "TIME_EXPIRED"
+                            sub.submitted_at = effective_deadline
+                            has_auto_submits = True
 
                 if sub.status in ["submitted", "auto_submitted", "graded"]:
                     submission_status = "auto_submitted" if sub.status == "auto_submitted" else "submitted"
@@ -2306,7 +2311,9 @@ def extend_exam_time(
     creds = db.query(ExamCredential).filter(ExamCredential.exam_id == exam_id).all()
     for c in creds:
         if c.expires_at:
-            c.expires_at = to_utc_instant(c.expires_at) + timedelta(minutes=payload.extra_minutes)
+            c_exp = to_utc_instant(c.expires_at)
+            if c_exp:
+                c.expires_at = c_exp + timedelta(minutes=payload.extra_minutes)
     
     # Extend deadline_at for all active/in-progress student submissions
     active_subs = db.query(ExamSubmission).filter(
@@ -2315,7 +2322,9 @@ def extend_exam_time(
     ).all()
     for sub in active_subs:
         if sub.deadline_at:
-            sub.deadline_at = to_utc_instant(sub.deadline_at) + timedelta(minutes=payload.extra_minutes)
+            s_dead = to_utc_instant(sub.deadline_at)
+            if s_dead:
+                sub.deadline_at = s_dead + timedelta(minutes=payload.extra_minutes)
     
     db.commit()
     db.refresh(exam)
