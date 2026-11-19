@@ -880,7 +880,7 @@ export default function AdminExamsPage() {
                   ) : (
                     <Mail className="h-3 w-3" />
                   )}
-                  <span>Resend All Emails</span>
+                  <span>Send All Emails</span>
                 </button>
               </div>
             </div>

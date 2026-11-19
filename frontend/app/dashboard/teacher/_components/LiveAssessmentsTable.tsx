@@ -252,10 +252,10 @@ export default function LiveAssessmentsTable({
         const data = await res.json();
         showToast(`Dispatched credentials emails to all ${data.dispatched_count || credsModalData.creds.length} candidates!`, "success");
       } else {
-        showToast("Failed to resend credentials emails", "error");
+        showToast("Failed to send credentials emails", "error");
       }
     } catch {
-      showToast("Network error resending emails", "error");
+      showToast("Network error sending emails", "error");
     } finally {
       setIsResendingAll(false);
     }
@@ -1667,7 +1667,7 @@ export default function LiveAssessmentsTable({
           onClick={() => setCredsModalData(null)}
         >
           <div 
-            className="bg-white dark:bg-[#111C31] border-t sm:border border-slate-200 dark:border-slate-800 rounded-t-3xl sm:rounded-2xl max-w-3xl w-full p-3.5 sm:p-5 shadow-2xl space-y-2.5 sm:space-y-4 max-h-[85dvh] sm:max-h-[90vh] flex flex-col transition-colors overflow-hidden"
+            className="bg-white dark:bg-[#111C31] border-t sm:border border-slate-200 dark:border-slate-800 rounded-t-3xl sm:rounded-2xl max-w-4xl lg:max-w-5xl w-full p-4 sm:p-5 shadow-2xl space-y-3 sm:space-y-4 max-h-[88dvh] sm:max-h-[90vh] flex flex-col transition-colors overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Mobile Drag Indicator */}
@@ -1675,10 +1675,10 @@ export default function LiveAssessmentsTable({
               <div className="w-10 h-1 bg-slate-300 dark:bg-slate-700 rounded-full" />
             </div>
 
-            {/* Modal Header (pinned at top, compact & high-contrast on mobile) */}
+            {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5 sm:pb-3 shrink-0 gap-2">
-              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                <div className="p-2 sm:p-2.5 bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172B4D] dark:text-[#60A5FA] rounded-xl border border-[#2563EB]/20 shrink-0">
+              <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                <div className="p-2 sm:p-2.5 bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 rounded-xl border border-blue-200/60 dark:border-blue-800/60 shrink-0">
                   <Key className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
                 <div className="min-w-0">
@@ -1686,7 +1686,7 @@ export default function LiveAssessmentsTable({
                     Candidate Passcodes &amp; Credentials
                   </h3>
                   <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 truncate">
-                    Assessment: <b className="text-blue-600 dark:text-blue-400">{credsModalData.examName}</b> ({credsModalData.examCode}) • {credsModalData.creds.length} Candidates
+                    Assessment: <b className="text-blue-600 dark:text-blue-400">{credsModalData.examName}</b> ({credsModalData.examCode}) • <span className="font-semibold text-slate-700 dark:text-slate-300">{credsModalData.creds.length} Candidates</span>
                   </p>
                 </div>
               </div>
@@ -1700,24 +1700,24 @@ export default function LiveAssessmentsTable({
             </div>
 
             {/* Search & Bulk Action Toolbar */}
-            <div className="space-y-2 shrink-0">
-              <div className="relative w-full">
+            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5 shrink-0">
+              <div className="relative flex-1 min-w-[220px]">
                 <Search className="h-3.5 w-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
                   value={credsSearch}
                   onChange={(e) => setCredsSearch(e.target.value)}
                   placeholder="Search candidate name, email, roll number, or username..."
-                  className="w-full bg-[#F8FAFC] dark:bg-[#17243A] border border-slate-200 dark:border-slate-800 rounded-xl pl-8.5 pr-3 py-1.5 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full bg-[#F8FAFC] dark:bg-[#17243A] border border-slate-200 dark:border-slate-800 rounded-xl pl-8.5 pr-3 py-1.5 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
 
-              {/* Action buttons row - horizontal scrollable on mobile */}
+              {/* Action buttons row - horizontal scrollable on small screens */}
               <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-0.5 text-xs shrink-0">
                 <button
                   type="button"
                   onClick={() => handleCopyDirectExamLink(credsModalData.examCode)}
-                  className="px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-900/60 bg-blue-50/70 dark:bg-blue-950/40 text-[11px] font-semibold text-blue-700 dark:text-blue-300 hover:bg-blue-100 flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap shrink-0"
+                  className="h-8 px-2.5 rounded-lg border border-blue-200 dark:border-blue-900/60 bg-blue-50/70 dark:bg-blue-950/40 text-[11px] font-semibold text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/50 flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap shrink-0 shadow-2xs"
                   title="Copy direct shareable exam URL"
                 >
                   <ExternalLink className="h-3 w-3" />
@@ -1727,10 +1727,10 @@ export default function LiveAssessmentsTable({
                 <button
                   type="button"
                   onClick={handleShareAllWhatsApp}
-                  className="px-2.5 py-1 rounded-lg border border-emerald-200 dark:border-emerald-900/60 bg-emerald-50/70 dark:bg-emerald-950/40 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap shrink-0"
+                  className="h-8 px-2.5 rounded-lg border border-emerald-200 dark:border-emerald-900/60 bg-emerald-50/70 dark:bg-emerald-950/40 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap shrink-0 shadow-2xs"
                   title="Share assessment invitation on WhatsApp"
                 >
-                  <Share2 className="h-3 w-3 text-emerald-600" />
+                  <Share2 className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
                   <span>WhatsApp Invite</span>
                 </button>
 
@@ -1738,21 +1738,21 @@ export default function LiveAssessmentsTable({
                   type="button"
                   disabled={isResendingAll}
                   onClick={handleResendAllEmails}
-                  className="px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-900/60 bg-blue-50/70 dark:bg-blue-950/40 text-[11px] font-semibold text-blue-700 dark:text-blue-300 hover:bg-blue-100 flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap shrink-0"
-                  title="Resend access passcodes email to all enrolled candidates"
+                  className="h-8 px-3 rounded-lg border border-indigo-200 dark:border-indigo-900/60 bg-indigo-50/80 dark:bg-indigo-950/40 text-[11px] font-semibold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap shrink-0 shadow-2xs"
+                  title="Send access passcodes email to all enrolled candidates"
                 >
                   {isResendingAll ? (
-                    <div className="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                    <div className="w-3 h-3 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
                   ) : (
-                    <Mail className="h-3 w-3" />
+                    <Mail className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
                   )}
-                  <span>Resend All Emails</span>
+                  <span>Send All Emails</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={handleCopyAllCredentials}
-                  className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C31] text-[11px] font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-50 flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap shrink-0"
+                  className="h-8 px-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C31] text-[11px] font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-50 flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap shrink-0 shadow-2xs"
                   title="Copy formatted list of all candidate credentials"
                 >
                   <Copy className="h-3 w-3 text-blue-600 dark:text-blue-400" />
@@ -1777,76 +1777,77 @@ export default function LiveAssessmentsTable({
                       const isSendingEmail = resendingStudentId === (c.username || c.candidate_id || c.student_id || c.student_name);
 
                       return (
-                        <div key={idx} className="p-3.5 space-y-2.5">
+                        <div key={idx} className="p-3.5 space-y-2.5 bg-white dark:bg-[#111C31]">
                           <div className="flex items-start justify-between gap-2">
-                            <div className="min-w-0">
+                            <div className="min-w-0 flex-1">
                               <div className="font-bold text-xs text-slate-900 dark:text-slate-100 truncate">
                                 {c.student_name || "Enrolled Student"}
                               </div>
                               {c.email && (
-                                <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate font-mono">{c.email}</div>
+                                <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate font-mono mt-0.5">{c.email}</div>
                               )}
                             </div>
-                            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 shrink-0">
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 shrink-0">
                               Roll: {c.roll_number || "—"}
                             </span>
                           </div>
 
                           <div className="grid grid-cols-2 gap-2 bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-[11px]">
-                            <div>
-                              <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-semibold">Exam Username</span>
+                            <div className="min-w-0">
+                              <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-semibold mb-0.5">Exam Username</span>
                               <span className="font-mono font-bold text-blue-600 dark:text-blue-400 text-xs break-all">
                                 {c.username}
                               </span>
                             </div>
-                            <div>
-                              <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-semibold">Timed Passcode</span>
-                              <span className="font-mono font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 rounded px-2 py-0.5 text-xs inline-block mt-0.5">
+                            <div className="min-w-0">
+                              <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-semibold mb-0.5">Timed Passcode</span>
+                              <span className="font-mono font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 rounded px-2 py-0.5 text-xs inline-block">
                                 {c.password}
                               </span>
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-1.5 flex-wrap">
+                          {/* 3 Action Buttons in equal grid */}
+                          <div className="grid grid-cols-3 gap-1.5 pt-0.5">
                             <button
                               type="button"
                               onClick={() => handleShareStudentWhatsApp(c)}
-                              className="flex-1 py-1.5 px-2 rounded-lg border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50 dark:bg-emerald-950/40 text-xs font-semibold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-all flex items-center justify-center gap-1 cursor-pointer shadow-2xs"
+                              className="py-1.5 px-2 rounded-lg border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50 dark:bg-emerald-950/40 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-all flex items-center justify-center gap-1 cursor-pointer shadow-2xs"
                               title="Share personalized exam link & credentials on WhatsApp"
                             >
-                              <Share2 className="h-3 w-3 text-emerald-600" />
-                              <span>WhatsApp</span>
+                              <Share2 className="h-3 w-3 text-emerald-600 shrink-0" />
+                              <span className="truncate">WhatsApp</span>
                             </button>
 
                             <button
                               type="button"
                               disabled={isSendingEmail}
                               onClick={() => handleResendSingleCredEmail(c)}
-                              className="flex-1 py-1.5 px-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-300 bg-white dark:bg-slate-800 transition-all flex items-center justify-center gap-1 cursor-pointer shadow-2xs"
+                              className="py-1.5 px-2 rounded-lg border border-blue-200 dark:border-blue-800/60 bg-blue-50/70 dark:bg-blue-950/40 text-[11px] font-semibold text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all flex items-center justify-center gap-1 cursor-pointer shadow-2xs"
                               title={`Send passcode email to ${c.email || c.student_name}`}
                             >
                               {isSendingEmail ? (
-                                <div className="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                                <div className="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin shrink-0" />
                               ) : (
-                                <Mail className="h-3.5 w-3.5 text-blue-600" />
+                                <Mail className="h-3 w-3 text-blue-600 shrink-0" />
                               )}
-                              <span>Email</span>
+                              <span className="truncate">Send Email</span>
                             </button>
 
                             <button
                               type="button"
                               onClick={() => handleCopySingleCred(`User: ${c.username}\nPIN: ${c.password}\nPortal: ${getFrontendBaseUrl()}/exam/${credsModalData.examCode}?user=${encodeURIComponent(c.username)}&pin=${encodeURIComponent(c.password)}`, rowKey)}
-                              className="flex-1 py-1.5 px-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 bg-white dark:bg-slate-800 transition-all flex items-center justify-center gap-1 cursor-pointer shadow-2xs"
+                              className="py-1.5 px-2 rounded-lg border border-slate-200 dark:border-slate-700 text-[11px] font-semibold text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 bg-white dark:bg-slate-800 transition-all flex items-center justify-center gap-1 cursor-pointer shadow-2xs"
                             >
                               {isCopied ? (
                                 <>
-                                  <Check className="h-3.5 w-3.5 text-emerald-600" />
-                                  <span className="text-emerald-600">Copied</span>
+                                  <Check className="h-3 w-3 text-emerald-600 shrink-0" />
+                                  <span className="text-emerald-600 truncate">Copied</span>
                                 </>
                               ) : (
                                 <>
-                                  <Copy className="h-3.5 w-3.5" />
-                                  <span>Copy</span>
+                                  <Copy className="h-3 w-3 text-slate-500 shrink-0" />
+                                  <span className="truncate">Copy</span>
                                 </>
                               )}
                             </button>
@@ -1857,15 +1858,15 @@ export default function LiveAssessmentsTable({
                   </div>
 
                   {/* Desktop Table View (>= 768px) */}
-                  <div className="hidden md:block">
-                    <table className="w-full text-xs text-left border-collapse">
+                  <div className="hidden md:block overflow-x-auto">
+                    <table className="w-full text-xs text-left border-collapse min-w-[720px]">
                       <thead className="bg-[#F8FAFC] dark:bg-[#17243A] text-[#64748B] dark:text-[#A3B1C6] uppercase font-bold sticky top-0 z-10 border-b border-[#E2E8F0] dark:border-[#263449]">
                         <tr>
-                          <th className="py-2.5 px-3">Candidate</th>
-                          <th className="py-2.5 px-3">Roll No.</th>
-                          <th className="py-2.5 px-3">Exam Username</th>
-                          <th className="py-2.5 px-3">Timed PIN</th>
-                          <th className="py-2.5 px-3 text-right">Actions</th>
+                          <th className="py-2.5 px-3 min-w-[170px]">Candidate</th>
+                          <th className="py-2.5 px-3 w-20 text-center">Roll No.</th>
+                          <th className="py-2.5 px-3 min-w-[150px]">Exam Username</th>
+                          <th className="py-2.5 px-3 w-28 text-center">Timed PIN</th>
+                          <th className="py-2.5 px-3 w-[270px] text-right">Actions</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-[#E2E8F0] dark:divide-[#263449]">
@@ -1875,35 +1876,37 @@ export default function LiveAssessmentsTable({
                           const isSendingEmail = resendingStudentId === (c.username || c.candidate_id || c.student_id || c.student_name);
 
                           return (
-                            <tr key={idx} className="hover:bg-[#F8FAFC] dark:hover:bg-[#17243A] transition-all">
+                            <tr key={idx} className="hover:bg-blue-50/30 dark:hover:bg-[#1e2d44]/50 transition-colors">
                               <td className="py-2.5 px-3">
-                                <div className="font-semibold text-[#111827] dark:text-[#F1F5F9]">
+                                <div className="font-semibold text-[#111827] dark:text-[#F1F5F9] truncate max-w-[200px]">
                                   {c.student_name || "Enrolled Student"}
                                 </div>
                                 {c.email && (
-                                  <div className="text-[10px] text-[#64748B] dark:text-[#A3B1C6] font-mono">{c.email}</div>
+                                  <div className="text-[10px] text-[#64748B] dark:text-[#A3B1C6] font-mono truncate max-w-[200px] mt-0.5">{c.email}</div>
                                 )}
                               </td>
-                              <td className="py-2.5 px-3 font-mono text-[#64748B] dark:text-[#A3B1C6] text-[11px]">
+                              <td className="py-2.5 px-3 font-mono text-[#64748B] dark:text-[#A3B1C6] text-[11px] text-center">
                                 {c.roll_number || "—"}
                               </td>
                               <td className="py-2.5 px-3 font-mono font-bold text-[#2563EB] dark:text-[#60A5FA] text-[11px]">
-                                {c.username}
+                                <span className="bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800/60 rounded px-2 py-0.5">
+                                  {c.username}
+                                </span>
                               </td>
-                              <td className="py-2.5 px-3">
-                                <span className="font-mono font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 rounded px-2 py-0.5 text-xs">
+                              <td className="py-2.5 px-3 text-center">
+                                <span className="font-mono font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 rounded px-2.5 py-0.5 text-xs inline-block">
                                   {c.password}
                                 </span>
                               </td>
-                              <td className="py-2.5 px-3 text-right">
-                                <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                              <td className="py-2.5 px-3 text-right whitespace-nowrap">
+                                <div className="inline-flex items-center justify-end gap-1.5 whitespace-nowrap">
                                   <button
                                     type="button"
                                     onClick={() => handleShareStudentWhatsApp(c)}
-                                    className="px-2 py-1 rounded border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50 dark:bg-emerald-950/40 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-all inline-flex items-center gap-1 cursor-pointer"
+                                    className="h-7 px-2.5 rounded-lg border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50 dark:bg-emerald-950/40 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-all inline-flex items-center gap-1 cursor-pointer shrink-0 shadow-2xs"
                                     title={`Share personalized credentials & link to ${c.student_name} on WhatsApp`}
                                   >
-                                    <Share2 className="h-3 w-3 text-emerald-600" />
+                                    <Share2 className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
                                     <span>WhatsApp</span>
                                   </button>
 
@@ -1911,21 +1914,21 @@ export default function LiveAssessmentsTable({
                                     type="button"
                                     disabled={isSendingEmail}
                                     onClick={() => handleResendSingleCredEmail(c)}
-                                    className="px-2 py-1 rounded border border-[#E2E8F0] dark:border-[#263449] text-[11px] font-semibold text-[#64748B] hover:text-[#2563EB] hover:bg-white dark:hover:bg-[#111C31] transition-all inline-flex items-center gap-1 cursor-pointer"
-                                    title={`Resend passcode email to ${c.email || c.student_name}`}
+                                    className="h-7 px-2.5 rounded-lg border border-blue-200 dark:border-blue-800/60 bg-blue-50/70 dark:bg-blue-950/40 text-[11px] font-semibold text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all inline-flex items-center gap-1 cursor-pointer shrink-0 shadow-2xs"
+                                    title={`Send passcode email to ${c.email || c.student_name}`}
                                   >
                                     {isSendingEmail ? (
-                                      <div className="w-3 h-3 border-2 border-[#2563EB] border-t-transparent rounded-full animate-spin" />
+                                      <div className="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
                                     ) : (
-                                      <Mail className="h-3 w-3" />
+                                      <Mail className="h-3 w-3 text-blue-600 dark:text-blue-400" />
                                     )}
-                                    <span className="hidden sm:inline">Send Email</span>
+                                    <span>Send Email</span>
                                   </button>
 
                                   <button
                                     type="button"
                                     onClick={() => handleCopySingleCred(`User: ${c.username}\nPIN: ${c.password}\nPortal: ${getFrontendBaseUrl()}/exam/${credsModalData.examCode}?user=${encodeURIComponent(c.username)}&pin=${encodeURIComponent(c.password)}`, rowKey)}
-                                    className="px-2 py-1 rounded border border-[#E2E8F0] dark:border-[#263449] text-[11px] font-semibold text-[#64748B] hover:text-[#2563EB] hover:bg-white dark:hover:bg-[#111C31] transition-all inline-flex items-center gap-1 cursor-pointer"
+                                    className="h-7 px-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-[11px] font-semibold text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-50 dark:hover:bg-slate-700/60 transition-all inline-flex items-center gap-1 cursor-pointer shrink-0 shadow-2xs"
                                     title="Copy candidate login credentials"
                                   >
                                     {isCopied ? (
@@ -1935,7 +1938,7 @@ export default function LiveAssessmentsTable({
                                       </>
                                     ) : (
                                       <>
-                                        <Copy className="h-3 w-3" />
+                                        <Copy className="h-3 w-3 text-slate-500" />
                                         <span>Copy</span>
                                       </>
                                     )}
@@ -1954,9 +1957,9 @@ export default function LiveAssessmentsTable({
 
             {/* Modal Bottom Actions */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0 pt-3 border-t border-[#E2E8F0] dark:border-[#263449]">
-              <div className="text-[11px] text-[#64748B] dark:text-[#A3B1C6] flex items-center gap-1.5">
-                <ShieldCheck className="h-4 w-4 text-emerald-600" />
-                <span>Passcodes are ready. Click "Resend All Emails" or the Email button to dispatch.</span>
+              <div className="text-[11px] text-[#64748B] dark:text-[#A3B1C6] flex items-center gap-1.5 text-center sm:text-left">
+                <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
+                <span>Passcodes are ready. Click &quot;Send All Emails&quot; or the Email button to dispatch.</span>
               </div>
 
               <div className="flex items-center gap-2.5 w-full sm:w-auto">
