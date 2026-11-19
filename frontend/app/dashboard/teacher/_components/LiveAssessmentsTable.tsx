@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import QRCode from "qrcode";
 import { 
   Eye, Radio, StopCircle, Sparkles, Printer, Key, QrCode, Trash2, 
   Download, X, Play, Search, Copy, Check, ExternalLink, ShieldCheck, Mail, CopyPlus,
@@ -72,6 +73,26 @@ export default function LiveAssessmentsTable({
   
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [qrModalExam, setQrModalExam] = useState<any | null>(null);
+  const [qrDataUrl, setQrDataUrl] = useState<string>("");
+
+  useEffect(() => {
+    if (qrModalExam && qrModalExam.exam_code) {
+      const examUrl = `${getFrontendBaseUrl()}/exam/${qrModalExam.exam_code.trim()}`;
+      QRCode.toDataURL(examUrl, {
+        width: 480,
+        margin: 4,
+        errorCorrectionLevel: "H",
+        color: {
+          dark: "#0F172A",
+          light: "#FFFFFF",
+        },
+      })
+        .then((dataUrl: string) => setQrDataUrl(dataUrl))
+        .catch((err: any) => console.error("Error generating exam QR code:", err));
+    } else {
+      setQrDataUrl("");
+    }
+  }, [qrModalExam]);
   const [credsModalData, setCredsModalData] = useState<{ examName: string; examId: string; examCode: string; creds: any[] } | null>(null);
   const [loadingCredsExamId, setLoadingCredsExamId] = useState<string | null>(null);
   const [credsSearch, setCredsSearch] = useState("");
@@ -1527,63 +1548,114 @@ export default function LiveAssessmentsTable({
           onClick={() => setQrModalExam(null)}
         >
           <div 
-            className="bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 text-center relative transition-colors"
+            className="bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl space-y-4 text-center relative transition-colors"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={() => setQrModalExam(null)}
-              className="absolute top-4 right-4 p-1 rounded-lg text-[#64748B] hover:bg-[#E2E8F0]/40 dark:hover:bg-[#263449] transition-all cursor-pointer"
+              className="absolute top-4 right-4 p-1.5 rounded-xl text-[#64748B] hover:bg-[#E2E8F0]/40 dark:hover:bg-[#263449] transition-all cursor-pointer"
             >
               <X className="h-5 w-5" />
             </button>
 
-            <div className="space-y-1">
-              <div className="inline-flex p-3 rounded-2xl bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172B4D] dark:text-[#60A5FA] border border-[#2563EB]/20 mb-1">
-                <QrCode className="h-6 w-6" />
+            {/* Header info */}
+            <div className="space-y-1.5 pt-1">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800 text-[11px] font-bold uppercase tracking-wider">
+                <QrCode className="h-3.5 w-3.5" />
+                <span>Direct Examination Portal</span>
               </div>
-              <h3 className="text-base font-bold text-[#111827] dark:text-[#F1F5F9]">{qrModalExam.name}</h3>
-              <p className="text-xs text-[#64748B] dark:text-[#A3B1C6]">Scan with mobile camera to launch exam portal</p>
+              <h3 className="text-base sm:text-lg font-bold text-[#111827] dark:text-[#F1F5F9] line-clamp-1">
+                {qrModalExam.name}
+              </h3>
+              <p className="text-xs text-[#64748B] dark:text-[#A3B1C6]">
+                Scan with any mobile camera, Google Lens, or WhatsApp scanner to open test portal
+              </p>
             </div>
 
             {/* High-Resolution QR Code */}
-            <div className="bg-white p-4 inline-block mx-auto rounded-xl border border-[#E2E8F0] shadow-inner">
-              <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-                  `${getFrontendBaseUrl()}/exam/${qrModalExam.exam_code}`
-                )}`}
-                alt={`QR Code for ${qrModalExam.name}`}
-                className="w-44 h-44 mx-auto rounded"
-              />
+            <div className="bg-white p-3.5 inline-block mx-auto rounded-2xl border border-slate-200 shadow-md">
+              {qrDataUrl ? (
+                <img
+                  src={qrDataUrl}
+                  alt={`QR Code for ${qrModalExam.name}`}
+                  className="w-48 h-48 sm:w-56 sm:h-56 mx-auto rounded-lg"
+                />
+              ) : (
+                <div className="w-48 h-48 sm:w-56 sm:h-56 flex items-center justify-center">
+                  <div className="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                </div>
+              )}
             </div>
 
+            {/* Candidate Quick Guide */}
+            <div className="bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-900/60 rounded-xl p-2.5 text-[11px] text-blue-800 dark:text-blue-300 text-center font-medium">
+              💡 Point camera at QR &amp; tap the <strong className="font-bold underline">"testoraquiz.com"</strong> link bubble to open test immediately.
+            </div>
+
+            {/* Direct Link & Copy */}
             <div className="space-y-2 text-xs">
               <div className="bg-[#F8FAFC] dark:bg-[#17243A] border border-[#E2E8F0] dark:border-[#263449] rounded-xl p-2.5 flex items-center justify-between gap-2">
-                <span className="font-mono font-bold text-[#2563EB] dark:text-[#60A5FA] truncate text-[11px]">
+                <span className="font-mono font-bold text-[#2563EB] dark:text-[#60A5FA] truncate text-[11px] select-all">
                   {getFrontendBaseUrl()}/exam/{qrModalExam.exam_code}
                 </span>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(`${getFrontendBaseUrl()}/exam/${qrModalExam.exam_code}`);
-                    showToast("Exam portal URL copied to clipboard!", "success");
-                  }}
-                  className="bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] px-2 py-1 rounded text-xs font-bold text-[#2563EB] dark:text-[#60A5FA] hover:bg-[#F8FAFC] shrink-0 cursor-pointer"
-                >
-                  Copy
-                </button>
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${getFrontendBaseUrl()}/exam/${qrModalExam.exam_code}`);
+                      showToast("Exam portal URL copied to clipboard!", "success");
+                    }}
+                    className="bg-white dark:bg-[#111C31] border border-[#E2E8F0] dark:border-[#263449] px-2.5 py-1 rounded-lg text-xs font-bold text-[#2563EB] dark:text-[#60A5FA] hover:bg-[#F8FAFC] transition-colors cursor-pointer"
+                  >
+                    Copy
+                  </button>
+                  <a
+                    href={`${getFrontendBaseUrl()}/exam/${qrModalExam.exam_code}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-1 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-white dark:hover:bg-slate-800 transition-colors"
+                    title="Open test link directly in new tab"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                  </a>
+                </div>
               </div>
 
-              <div className="text-[11px] text-[#64748B] dark:text-[#A3B1C6]">
-                Exam Code: <b className="font-mono text-[#2563EB] dark:text-[#60A5FA]">{qrModalExam.exam_code}</b>
+              <div className="flex items-center justify-between text-[11px] text-[#64748B] dark:text-[#A3B1C6] px-1">
+                <span>Exam Code: <b className="font-mono text-[#2563EB] dark:text-[#60A5FA] text-xs">{qrModalExam.exam_code}</b></span>
+                <span>Candidates: <b className="text-slate-800 dark:text-slate-200">{qrModalExam.student_count || 0} enrolled</b></span>
               </div>
             </div>
 
-            <button
-              onClick={() => window.print()}
-              className="w-full py-2.5 text-xs font-bold rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white flex items-center justify-center gap-1.5 shadow-md cursor-pointer transition-all"
-            >
-              <Printer className="h-4 w-4" />
-              <span>Print QR Code Flyer</span>
-            </button>
+            {/* Actions: Download PNG & Print Flyer */}
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  if (!qrDataUrl) return;
+                  const a = document.createElement("a");
+                  a.href = qrDataUrl;
+                  a.download = `Exam_QR_${qrModalExam.exam_code}.png`;
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  showToast("QR code image downloaded!", "success");
+                }}
+                className="py-2.5 px-3 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#17243A] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs"
+              >
+                <Download className="h-3.5 w-3.5" />
+                <span>Save QR Image</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="py-2.5 px-3 text-xs font-bold rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white flex items-center justify-center gap-1.5 shadow-md cursor-pointer transition-all"
+              >
+                <Printer className="h-3.5 w-3.5" />
+                <span>Print Notice Flyer</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
