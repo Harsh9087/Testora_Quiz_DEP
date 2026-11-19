@@ -149,10 +149,14 @@ export default function CreditRechargeModal({
       const orderData = await orderRes.json();
       const scriptLoaded = await loadRazorpayScript();
 
+      const razorpayKey =
+        orderData.key_id && orderData.key_id !== "rzp_test_placeholder"
+          ? orderData.key_id
+          : (process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_live_Td11TGMx7SlljQ");
+
       const isSimulated =
-        orderData.order_id.startsWith("order_rec_") ||
-        orderData.key_id === "rzp_test_placeholder" ||
-        !orderData.key_id;
+        orderData.order_id.startsWith("order_rec_") &&
+        (!orderData.key_id || orderData.key_id === "rzp_test_placeholder");
 
       if (isSimulated || !scriptLoaded) {
         const userConfirmed = window.confirm(
@@ -185,7 +189,7 @@ export default function CreditRechargeModal({
 
       // 2. Open Razorpay Standard Checkout
       const rzpOptions = {
-        key: orderData.key_id,
+        key: razorpayKey,
         amount: orderData.amount,
         currency: orderData.currency || "INR",
         name: "Testora Quiz",

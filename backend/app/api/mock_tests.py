@@ -2308,9 +2308,10 @@ def create_mock_test_order(
     }
 
     razorpay_order_id = ""
-    if payment_service._client and settings.RAZORPAY_KEY_SECRET:
+    key_secret = settings.RAZORPAY_KEY_SECRET or "yHRXKzrD1e5z0irAOfjMciEa"
+    if payment_service.client and key_secret:
         try:
-            rzp_order = payment_service._client.order.create({
+            rzp_order = payment_service.client.order.create({
                 "amount": amount_paise,
                 "currency": "INR",
                 "receipt": receipt,
@@ -2364,7 +2365,7 @@ def create_mock_test_order(
         order_id=razorpay_order_id,
         amount=amount_paise,
         currency="INR",
-        key_id=settings.RAZORPAY_KEY_ID or "rzp_test_placeholder",
+        key_id=settings.RAZORPAY_KEY_ID or "rzp_live_Td11TGMx7SlljQ",
         test_id=test.id,
         test_title=test.title,
         company_name=test.company_name,
@@ -2390,12 +2391,13 @@ def verify_mock_test_payment(
     if not test:
         raise HTTPException(status_code=404, detail="Mock test not found.")
 
-    if payment_service._client and settings.RAZORPAY_KEY_SECRET:
+    key_secret = settings.RAZORPAY_KEY_SECRET or "yHRXKzrD1e5z0irAOfjMciEa"
+    if payment_service.client and key_secret:
         if not req.razorpay_signature.startswith("simulated_"):
             try:
                 data = f"{req.razorpay_order_id}|{req.razorpay_payment_id}"
                 expected_sig = hmac.new(
-                    settings.RAZORPAY_KEY_SECRET.encode("utf-8"),
+                    key_secret.encode("utf-8"),
                     data.encode("utf-8"),
                     hashlib.sha256
                 ).hexdigest()

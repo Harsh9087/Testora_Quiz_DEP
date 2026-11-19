@@ -332,10 +332,14 @@ export default function PricingSection() {
       const orderData = await res.json();
       const isScriptLoaded = await loadRazorpayScript();
 
+      const razorpayKey =
+        orderData.key_id && orderData.key_id !== "rzp_test_placeholder"
+          ? orderData.key_id
+          : (process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_live_Td11TGMx7SlljQ");
+
       const isSimulation =
-        orderData.order_id?.startsWith("order_rec_") ||
-        orderData.order_id?.startsWith("order_demo_") ||
-        orderData.key_id === "rzp_test_placeholder";
+        (orderData.order_id?.startsWith("order_rec_") || orderData.order_id?.startsWith("order_demo_")) &&
+        (!orderData.key_id || orderData.key_id === "rzp_test_placeholder");
 
       if (isSimulation || !isScriptLoaded) {
         const confirmSim = window.confirm(
@@ -361,7 +365,7 @@ export default function PricingSection() {
 
       // Live Razorpay Checkout
       const options = {
-        key: orderData.key_id,
+        key: razorpayKey,
         amount: orderData.amount,
         currency: orderData.currency || "INR",
         name: "Testora Quiz",

@@ -148,7 +148,14 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
       const isScriptLoaded = await loadRazorpayScript();
 
       // Check if real Razorpay keys are configured or if operating in simulation mode
-      const isSimulation = orderData.order_id.startsWith("order_demo_") || orderData.key_id === "rzp_test_placeholder";
+      const razorpayKey =
+        orderData.key_id && orderData.key_id !== "rzp_test_placeholder"
+          ? orderData.key_id
+          : (process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_live_Td11TGMx7SlljQ");
+
+      const isSimulation =
+        orderData.order_id.startsWith("order_demo_") &&
+        (!orderData.key_id || orderData.key_id === "rzp_test_placeholder");
 
       if (isSimulation || !isScriptLoaded) {
         // Fallback simulation for local development / testing without live keys
@@ -168,7 +175,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
 
       // 2. Open standard Razorpay Checkout Modal
       const options = {
-        key: orderData.key_id,
+        key: razorpayKey,
         amount: orderData.amount,
         currency: orderData.currency,
         name: "Testora Quiz",

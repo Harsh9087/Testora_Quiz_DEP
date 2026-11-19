@@ -124,18 +124,26 @@ class PaymentService:
 
     def _init_client(self):
         """Initializes Razorpay client if API keys are configured."""
-        if settings.RAZORPAY_KEY_ID and settings.RAZORPAY_KEY_SECRET:
+        key_id = settings.RAZORPAY_KEY_ID or "rzp_live_Td11TGMx7SlljQ"
+        key_secret = settings.RAZORPAY_KEY_SECRET or "yHRXKzrD1e5z0irAOfjMciEa"
+        if key_id and key_secret:
             try:
                 import razorpay
                 self._client = razorpay.Client(
-                    auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET)
+                    auth=(key_id, key_secret)
                 )
-                logger.info("Razorpay SDK client initialized successfully.")
+                logger.info("Razorpay SDK client initialized successfully with live credentials.")
             except Exception as e:
                 logger.warning(f"Failed to initialize Razorpay SDK: {e}")
                 self._client = None
         else:
             self._client = None
+
+    @property
+    def client(self):
+        if self._client is None:
+            self._init_client()
+        return self._client
 
     # =========================================================================
     # Per-Test Bill Calculation & Billable Units Inspection
@@ -365,9 +373,9 @@ class PaymentService:
         razorpay_order_id = ""
 
         # Call live Razorpay API if credentials exist
-        if self._client:
+        if self.client:
             try:
-                rzp_order = self._client.order.create({
+                rzp_order = self.client.order.create({
                     "amount": amount_to_pay,
                     "currency": preview.currency,
                     "receipt": receipt,
@@ -414,7 +422,7 @@ class PaymentService:
             order_id=razorpay_order_id,
             amount=amount_to_pay,
             currency=preview.currency,
-            key_id=settings.RAZORPAY_KEY_ID or "rzp_test_placeholder",
+            key_id=settings.RAZORPAY_KEY_ID or "rzp_live_Td11TGMx7SlljQ",
             exam_id=exam.id,
             exam_name=exam.name,
             exam_code=exam.exam_code,
@@ -478,11 +486,12 @@ class PaymentService:
             )
 
         # Signature verification
-        if self._client and settings.RAZORPAY_KEY_SECRET:
+        key_secret = settings.RAZORPAY_KEY_SECRET or "yHRXKzrD1e5z0irAOfjMciEa"
+        if self.client and key_secret:
             try:
                 data = f"{razorpay_order_id}|{razorpay_payment_id}"
                 expected_signature = hmac.new(
-                    settings.RAZORPAY_KEY_SECRET.encode("utf-8"),
+                    key_secret.encode("utf-8"),
                     data.encode("utf-8"),
                     hashlib.sha256
                 ).hexdigest()
@@ -807,9 +816,9 @@ class PaymentService:
             order_notes.update(notes)
 
         razorpay_order_id = ""
-        if self._client:
+        if self.client:
             try:
-                rzp_order = self._client.order.create({
+                rzp_order = self.client.order.create({
                     "amount": plan.amount,
                     "currency": plan.currency,
                     "receipt": receipt,
@@ -846,7 +855,7 @@ class PaymentService:
             "order_id": razorpay_order_id,
             "amount": plan.amount,
             "currency": plan.currency,
-            "key_id": settings.RAZORPAY_KEY_ID or "rzp_test_placeholder",
+            "key_id": settings.RAZORPAY_KEY_ID or "rzp_live_Td11TGMx7SlljQ",
             "plan_id": plan.id,
             "plan_name": plan.name,
             "user_name": user.full_name,
@@ -964,9 +973,9 @@ class PaymentService:
         }
 
         razorpay_order_id = ""
-        if self._client:
+        if self.client:
             try:
-                rzp_order = self._client.order.create({
+                rzp_order = self.client.order.create({
                     "amount": amount_paise,
                     "currency": "INR",
                     "receipt": receipt,
@@ -1007,7 +1016,7 @@ class PaymentService:
             order_id=razorpay_order_id,
             amount=amount_paise,
             currency="INR",
-            key_id=settings.RAZORPAY_KEY_ID or "rzp_test_placeholder",
+            key_id=settings.RAZORPAY_KEY_ID or "rzp_live_Td11TGMx7SlljQ",
             package_id=actual_plan_code,
             package_name=pkg_name,
             credits_added=credits_to_add,
@@ -1063,11 +1072,12 @@ class PaymentService:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="User account not found during recharge verification.")
 
         # Signature verification
-        if self._client and settings.RAZORPAY_KEY_SECRET:
+        key_secret = settings.RAZORPAY_KEY_SECRET or "yHRXKzrD1e5z0irAOfjMciEa"
+        if self.client and key_secret:
             try:
                 data = f"{razorpay_order_id}|{razorpay_payment_id}"
                 expected_signature = hmac.new(
-                    settings.RAZORPAY_KEY_SECRET.encode("utf-8"),
+                    key_secret.encode("utf-8"),
                     data.encode("utf-8"),
                     hashlib.sha256
                 ).hexdigest()

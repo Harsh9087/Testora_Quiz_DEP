@@ -29,8 +29,8 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_SECRET: str = ""
     
     # Razorpay Payment Gateway
-    RAZORPAY_KEY_ID: str = ""
-    RAZORPAY_KEY_SECRET: str = ""
+    RAZORPAY_KEY_ID: str = "rzp_live_Td11TGMx7SlljQ"
+    RAZORPAY_KEY_SECRET: str = "yHRXKzrD1e5z0irAOfjMciEa"
     RAZORPAY_WEBHOOK_SECRET: Optional[str] = None
     
     # Pricing & Credit Rates (paise integer calculations)
